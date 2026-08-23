@@ -90,6 +90,7 @@ async def trojan_ws_tunnel(ws: WebSocket):
     """
     await ws.accept()
     ip = _ws_client_ip(ws)
+    is_ping_test = (ws.headers.get("x-emix-ping") == "1")
     conn_id = secrets.token_urlsafe(6)
     writer = None
     uuid = None
@@ -119,7 +120,8 @@ async def trojan_ws_tunnel(ws: WebSocket):
             "bytes": 0,
         }
         logger.info(f"✅ Trojan-WS [{conn_id}] uuid={uuid[:8]}… ip={ip} total={len(connections)}")
-        log_activity("connection", f"اتصال Trojan جدید از {ip} (کانفیگ {link.get('label','?')})", "info")
+        if not is_ping_test:
+            log_activity("connection", f"اتصال Trojan جدید از {ip} (کانفیگ {link.get('label','?')})", "info")
 
         if not await check_and_use(uuid, hlen):
             await ws.close(code=1008, reason="quota/disabled")

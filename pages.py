@@ -1602,6 +1602,85 @@ html,body{max-width:100%;overflow-x:hidden}
 .log-timeline i{color:#FF6A45}
 
 </style>
+<style>
+/* ═══════════════════════════════════════════════════════════════════════════
+   EMIX Motion Layer — لایه‌ی روان‌سازی (فقط کیفیت حرکت؛ بدون تغییر طراحی)
+   ▸ این بلاک صرفاً انیمیشن/ترنزیشن اضافه می‌کند؛ هیچ رنگ/چیدمانی را override نمی‌کند
+   ▸ اگر حذف شود، پنل دقیقاً مثل قبل کار می‌کند
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── ۱) حرکت نرم سراسری ── */
+html{scroll-behavior:smooth}
+body,.pg,.card,.cfg-card,.btn,.nav-it,.cm-modal,
+.cfg-sub-tag,.proto-chip,.ubar-f,.tog,.info-item
+{transition-timing-function:cubic-bezier(.32,.72,0,1)}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001s !important;transition-duration:.001s !important;scroll-behavior:auto !important}
+}
+
+/* ── ۲) کارت‌های کانفیگ: شناور شدن نرم و بازخورد لمسی ── */
+.cfg-card{will-change:transform}
+.cfg-card:hover{transform:translateY(-2px);box-shadow:0 10px 34px -14px rgba(255,61,46,.22),var(--shadow)}
+.cfg-card:active{transform:translateY(0) scale(.997)}
+.cfg-card.selected{transform:translateY(-1px)}
+
+/* ── ۳) دکمه‌ها: بازخورد فشار نرم‌تر (طراحی موجود دست‌نخورده) ── */
+.btn{position:relative}
+.btn:disabled{opacity:.55;cursor:not-allowed;filter:saturate(.6)}
+.btn-icon{transition:transform .18s cubic-bezier(.32,.72,0,1),filter .18s,opacity .18s,background .18s,border-color .18s,color .18s}
+.btn-icon:not(:disabled):hover i{transform:scale(1.12)}
+.btn-icon i{transition:transform .18s cubic-bezier(.32,.72,0,1)}
+.btn-icon:not(:disabled):active{transform:scale(.9)}
+
+/* ── ۴) بج پینگ: تغییر رنگ نرم + پاپ ظریف هنگام نتیجه ── */
+.cfg-sub-tag{transition:color .35s,background .35s,border-color .35s}
+.ping-pop{animation:pingPop .45s cubic-bezier(.34,1.56,.64,1)}
+@keyframes pingPop{0%{transform:scale(.8);opacity:.4}60%{transform:scale(1.06)}100%{transform:scale(1);opacity:1}}
+.ping-dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0;animation:pingPulse 1.2s ease-in-out infinite}
+@keyframes pingPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.72)}}
+
+/* ── ۵) حالت بارگذاری پینگ: سه‌نقطه‌ی موجی به‌جای متن خشک ── */
+.ping-wave{display:inline-flex;gap:2.5px;align-items:center;margin-right:2px}
+.ping-wave span{width:3.5px;height:3.5px;border-radius:50%;background:currentColor;animation:pingWave 1s ease-in-out infinite}
+.ping-wave span:nth-child(2){animation-delay:.15s}
+.ping-wave span:nth-child(3){animation-delay:.3s}
+@keyframes pingWave{0%,100%{transform:translateY(0);opacity:.45}50%{transform:translateY(-3.5px);opacity:1}}
+
+/* ── ۶) توست: ورود فنری ── */
+.toast.show{animation:toastIn .38s cubic-bezier(.34,1.4,.64,1)}
+@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(26px) scale(.92)}to{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}}
+.toast.warn{border-color:rgba(245,158,11,.3);background:var(--amber-bg);color:var(--amber-t)}
+
+/* ── ۷) سوییچ بین صفحات: محو نرم ── */
+.pg.on{animation:pgIn .3s cubic-bezier(.32,.72,0,1)}
+@keyframes pgIn{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+
+/* ── ۸) نوار پیشرفت پینگ روی دکمه‌ی «تست همه» ── */
+#ping-all-btn{overflow:hidden;position:relative}
+#ping-all-btn .ping-prog{position:absolute;inset:0;background:linear-gradient(90deg,transparent,var(--accent-d),transparent);transform:translateX(-100%);pointer-events:none}
+#ping-all-btn.running .ping-prog{animation:progSweep 1.1s linear infinite}
+@keyframes progSweep{to{transform:translateX(100%)}}
+
+/* ── ۹) اعداد: شمارش نرم (کلاس کمکی JS) ── */
+.num-tick{display:inline-block;transition:transform .2s cubic-bezier(.34,1.56,.64,1)}
+.num-tick.tick{transform:translateY(-2px) scale(1.08)}
+
+/* ── ۱۰) سوییچ فعال/غیرفعال: حرکت نرم‌تر ── */
+.tog{transition:background .3s,border-color .3s,box-shadow .3s}
+.tog::after{transition:bottom .3s cubic-bezier(.34,1.56,.64,1),transform .3s cubic-bezier(.34,1.56,.64,1),background .3s}
+.tog:active::after{transform:scale(1.15)}
+
+/* ── ۱۱) کارت‌های داخل صفحه: ورود پلکانی ظریف (فقط هنگام ورود به صفحه) ── */
+body.cascade #links-grid .cfg-card{animation:cardCascade .4s cubic-bezier(.32,.72,0,1) backwards}
+body.cascade #links-grid .cfg-card:nth-child(1){animation-delay:.02s}
+body.cascade #links-grid .cfg-card:nth-child(2){animation-delay:.05s}
+body.cascade #links-grid .cfg-card:nth-child(3){animation-delay:.08s}
+body.cascade #links-grid .cfg-card:nth-child(4){animation-delay:.11s}
+body.cascade #links-grid .cfg-card:nth-child(5){animation-delay:.14s}
+body.cascade #links-grid .cfg-card:nth-child(6){animation-delay:.17s}
+body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
+@keyframes cardCascade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+</style>
 </head>
 <body>
 <div class="toast" id="toast"></div>
@@ -2697,6 +2776,9 @@ html,body{max-width:100%;overflow-x:hidden}
       <button class="btn btn-g" id="zeus-nav-btn" style="margin-right:8px" onclick="openModal('modal-zeus-proxy');zpCheckTokenState()">
         <i class="ti ti-bolt"></i> Zeus proxy
       </button>
+      <button class="btn btn-g" id="ping-all-btn" style="margin-right:8px" onclick="pingAllLinks(this)">
+        <i class="ti ti-activity-heartbeat"></i> تست پینگ همه
+      </button>
     </div>
     <div class="tb-right">
       <label class="links-selectall" id="links-selectall-wrap" style="display:none">
@@ -3206,6 +3288,8 @@ overlay.addEventListener('click',closeSb);
 function navTo(name){
   document.querySelectorAll('.nav-it').forEach(n=>n.classList.toggle('on',n.dataset.pg===name));
   document.querySelectorAll('.pg').forEach(p=>p.classList.toggle('on',p.id==='pg-'+name));
+  // ورود پلکانی کارت‌ها فقط هنگام سوییچ صفحه
+  if(name==='links'){document.body.classList.add('cascade');setTimeout(()=>document.body.classList.remove('cascade'),650)}
   const loaders={links:loadLinks,connections:loadConns,errors:loadErrs,subscriptions:loadSubsPage,subgroups:loadSubs,logs:loadActivity,updates:loadVersion,support:loadSupportMsgs,nodes:loadNodesPage};  if(loaders[name])loaders[name]();
   closeSb();window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -3302,6 +3386,126 @@ async function loadActivity(){
   }catch(e){console.error(e)}
 }
 let allSubsList=[],allLinksList=[],onlineNodesList=[];
+/* ══════ تست پینگ و سلامت کانفیگ‌ها ══════ */
+async function clientRtt(){
+  // سنجش RTT واقعی مرورگر → سرور (۲ بار، حداقل مقدار)
+  const ts=[];
+  for(let i=0;i<2;i++){
+    const t0=performance.now();
+    try{ await fetch('/api/ping',{cache:'no-store'}); ts.push(Math.round(performance.now()-t0)); }catch(e){}
+  }
+  return ts.length?Math.min(...ts):null;
+}
+function pingWaveHtml(){return '<span class="ping-wave"><span></span><span></span><span></span></span>'}
+function pingMsClass(ms){return ms==null?'var(--green)':ms<500?'var(--green)':ms<1200?'var(--amber)':'var(--red)'}
+function pingBadgeHtml(l){
+  const p=l.last_ping;
+  if(!p) return `<span class="cfg-sub-tag" id="pb-${l.uuid}" style="color:var(--t3);cursor:pointer" onclick="pingLink('${l.uuid}',this)" title="تست نشده — کلیک برای تست"><i class="ti ti-activity"></i> تست نشده</span>`;
+  const tip=`تست: ${p.test||''}\nهدف: ${p.target||''}\nWS: ${p.ws_ms!=null?Math.round(p.ws_ms)+'ms':'—'}\nتونل: ${p.e2e_ms!=null?Math.round(p.e2e_ms)+'ms':'—'}\n${p.detail||''}\n${p.checked_at?new Date(p.checked_at).toLocaleString('fa-IR'):''}`;
+  if(p.ok){
+    const ms=p.e2e_ms!=null?Math.round(p.e2e_ms):null;
+    return `<span class="cfg-sub-tag" id="pb-${l.uuid}" style="color:${pingMsClass(ms)};cursor:pointer" onclick="pingLink('${l.uuid}',this)" title="${tip}"><i class="ti ti-activity"></i> تونل ${ms!=null?toFa(ms)+'ms':'✓'}</span>`;
+  }
+  return `<span class="cfg-sub-tag" id="pb-${l.uuid}" style="color:var(--red-t);cursor:pointer" onclick="pingLink('${l.uuid}',this)" title="${tip}"><i class="ti ti-wifi-off"></i> قطع</span>`;
+}
+function renderPingBadge(uuid,d,rtt){
+  const el=document.getElementById('pb-'+uuid);
+  if(!el) return;
+  if(d&&d.ok){
+    const ms=d.e2e_ms!=null?Math.round(d.e2e_ms):null;
+    el.style.color=pingMsClass(ms);
+    el.innerHTML=`<i class="ti ti-activity"></i> تونل ${ms!=null?toFa(ms)+'ms':'✓'}${rtt!=null?' · من '+toFa(rtt)+'ms':''}`;
+    el.title=`WS: ${d.ws_ms!=null?Math.round(d.ws_ms)+'ms':'—'} | تونل: ${d.e2e_ms!=null?Math.round(d.e2e_ms)+'ms':'—'} | پینگ شما: ${rtt!=null?rtt+'ms':'—'}`;
+  }else{
+    el.style.color='var(--red-t)';
+    el.innerHTML=`<i class="ti ti-wifi-off"></i> قطع`;
+    el.title=(d&&d.detail)?d.detail:'تست ناموفق';
+  }
+  // پاپ ظریف هنگام رسیدن نتیجه
+  el.classList.remove('ping-pop');
+  void el.offsetWidth; // ری‌استارت انیمیشن
+  el.classList.add('ping-pop');
+}
+function pingLoading(uuid){
+  const el=document.getElementById('pb-'+uuid);
+  if(el){el.style.color='var(--t3)';el.innerHTML=pingWaveHtml()+' تست'}
+}
+async function pingLink(uuid,btn){
+  const ic=btn?btn.querySelector('i'):null;
+  pingLoading(uuid);
+  if(ic){ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite'}
+  try{
+    const [rtt,r]=await Promise.all([clientRtt(),authF(`/api/links/${uuid}/ping`,{method:'POST'})]);
+    const d=await r.json();
+    renderPingBadge(uuid,d,rtt);
+    if(d.ok) toast(`تونل سالم — ${d.e2e_ms!=null?Math.round(d.e2e_ms)+'ms':''}${rtt!=null?' · پینگ شما '+rtt+'ms':''}`,'ok');
+    else toast('تست ناموفق: '+(d.detail||'نامشخص'),'err');
+  }catch(e){
+    const el=document.getElementById('pb-'+uuid);
+    if(el){el.style.color='var(--red-t)';el.innerHTML='<i class="ti ti-wifi-off"></i> خطا'}
+    toast('خطا در تست پینگ','err');
+  }finally{
+    if(ic){ic.className='ti ti-activity';ic.style.animation=''}
+  }
+}
+async function pingNodeLink(uuid,btn,nodeId){
+  const ic=btn?btn.querySelector('i'):null;
+  pingLoading(uuid);
+  if(ic){ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite'}
+  try{
+    const r=await authF(`/api/nodes/${nodeId}/links/${uuid}/ping`,{method:'POST'});
+    const d=await r.json();
+    renderPingBadge(uuid,d,null);
+    if(d.ok) toast(`تونل نود سالم — ${d.e2e_ms!=null?Math.round(d.e2e_ms)+'ms':''}`,'ok');
+    else toast('تست ناموفق: '+(d.detail||'نامشخص'),'err');
+  }catch(e){
+    const el=document.getElementById('pb-'+uuid);
+    if(el){el.style.color='var(--red-t)';el.innerHTML='<i class="ti ti-wifi-off"></i> خطا'}
+    toast('خطا در تست پینگ نود','err');
+  }finally{
+    if(ic){ic.className='ti ti-activity';ic.style.animation=''}
+  }
+}
+async function pingAllLinks(btn){
+  const targets=allLinksList.filter(l=>!l._nodeId);
+  if(!targets.length){toast('کانفیگ محلی برای تست وجود ندارد','err');return}
+  const ic=btn.querySelector('i');
+  const label=btn.innerHTML;
+  ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite';
+  btn.disabled=true;
+  btn.classList.add('running');
+  targets.forEach(l=>pingLoading(l.uuid));
+  let done=0,ok=0,bad=0;
+  const CONC=3; // هم‌زمانی — آپدیت زنده‌ی بج‌ها بدون فشار به سرور
+  async function worker(list){
+    for(const l of list){
+      try{
+        const r=await authF(`/api/links/${l.uuid}/ping`,{method:'POST'});
+        const d=await r.json();
+        l.last_ping=d;
+        renderPingBadge(l.uuid,d,null);
+        if(d.ok) ok++; else bad++;
+      }catch(e){
+        bad++;
+        const el=document.getElementById('pb-'+l.uuid);
+        if(el){el.style.color='var(--red-t)';el.innerHTML='<i class="ti ti-wifi-off"></i> خطا'}
+      }
+      done++;
+      btn.innerHTML=`<i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i> تست ${toFa(done)}/${toFa(targets.length)} <span class="ping-prog"></span>`;
+    }
+  }
+  // تقسیم لیست بین worker ها برای پیشرفت هم‌زمان
+  const queues=Array.from({length:Math.min(CONC,targets.length)},(_,i)=>targets.filter((_,j)=>j%CONC===i));
+  try{
+    await Promise.all(queues.map(q=>worker(q)));
+    toast(`تست کامل شد — ${toFa(ok)} سالم، ${toFa(bad)} قطع`,bad?'warn':'ok');
+  }finally{
+    btn.classList.remove('running');
+    btn.disabled=false;
+    ic.style.animation='';
+    btn.innerHTML=label;
+  }
+}
 async function loadLinks(){
   try{
     const [lr,sr,nr,zr]=await Promise.all([authF('/api/links'),authF('/api/subs'),authF('/api/nodes/aggregate').catch(()=>null),authF('/api/zeus-proxy/status').catch(()=>null)]);
@@ -3380,6 +3584,7 @@ async function loadLinks(){
       <div class="cfg-divider-v"></div>
       <div class="cfg-badges-col">
         ${protoBadge(l.protocol)}
+        ${pingBadgeHtml(l)}
         ${isMt && l.ad_tag ? `<span class="cfg-sub-tag" style="background:linear-gradient(135deg,rgba(255,122,61,.18),rgba(232,89,12,.12));color:#FFB199;padding:3px 9px;border-radius:20px;border:1px solid rgba(255,122,61,.25);font-weight:700"><i class="ti ti-speakerphone" style="color:#FFB199"></i> تبلیغ فعال</span>` : ''}
         ${isMt && l.mtproto_public_host ? `<span class="cfg-sub-tag"><i class="ti ti-route"></i> ${esc(l.mtproto_public_host)}:${l.mtproto_public_port}</span>` : ''}
         ${isMt && !l.mtproto_public_host && l.mtproto_public_pending ? `<span class="cfg-sub-tag" style="color:var(--amber-t)"><i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i> در حال ساخت TCP Proxy عمومی...</span>` : ''}
@@ -3391,6 +3596,7 @@ async function loadLinks(){
         <div class="cfg-actions">
         <button class="tog${allowed?' on':''}" onclick="toggleActive('${l.uuid}',${!l.active}${isNode?`,'${l._nodeId}'`:''})" title="فعال/غیرفعال"></button>
         ${!isNode?adBtn:''}
+        ${!isNode?`<button class="btn btn-sm btn-g btn-icon" onclick="pingLink('${l.uuid}',this)" title="تست پینگ و سلامت تونل"><i class="ti ti-activity"></i></button>`:`<button class="btn btn-sm btn-g btn-icon" onclick="pingNodeLink('${l.uuid}',this,'${l._nodeId}')" title="تست پینگ روی نود"><i class="ti ti-activity"></i></button>`}
         <button class="btn btn-sm btn-g btn-icon" onclick="navigator.clipboard.writeText('${esc(l.vless_link)}').then(()=>toast('لینک کپی شد','ok'))" title="کپی لینک"><i class="ti ti-copy"></i></button>
         ${isMt
           ? `<button class="btn btn-sm btn-g btn-icon" onclick="openMtInfoModal('${esc(l.label)}','${esc(l.mtproto_secret||'')}','${esc(l.vless_link)}',${!!l.mtproto_public_host})" title="اطلاعات پروکسی"><i class="ti ti-info-circle"></i></button>`

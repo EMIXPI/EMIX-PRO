@@ -94,6 +94,7 @@ async def relay_tcp_to_ws(ws: WebSocket, reader: asyncio.StreamReader, stream: _
 async def shadowsocks_ws_tunnel(ws: WebSocket):
     await ws.accept()
     ip = _ws_client_ip(ws)
+    is_ping_test = (ws.headers.get("x-emix-ping") == "1")
     conn_id = secrets.token_urlsafe(6)
     writer = None
     uuid = None
@@ -147,7 +148,8 @@ async def shadowsocks_ws_tunnel(ws: WebSocket):
             "bytes": 0,
         }
         logger.info(f"✅ SS-WS [{conn_id}] uuid={uuid[:8]}… ip={ip} total={len(connections)}")
-        log_activity("connection", f"اتصال Shadowsocks جدید از {ip} (کانفیگ {link.get('label','?')})", "info")
+        if not is_ping_test:
+            log_activity("connection", f"اتصال Shadowsocks جدید از {ip} (کانفیگ {link.get('label','?')})", "info")
 
         # اولین chunk رمزگشایی‌شده شامل هدر SOCKS5-like آدرس مقصد + احتمالاً payload اولیه است
         first_payload = chunks[0]

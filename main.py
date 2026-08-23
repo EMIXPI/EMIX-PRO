@@ -2756,6 +2756,15 @@ async def dashboard(request: Request):
 async def test_ws_redirect():
     return HTMLResponse(content="<script>location.href='/dashboard'</script>")
 
+
+# ══════════════════════════════════════════════════════════════════════════════
+# ماژول سلامت و تست پینگ (کاملاً جدا از هسته — link_health.py)
+# اگر این ماژول حذف شود، پنل و همه‌ی تونل‌ها بدون تغییر کار می‌کنند.
+# ══════════════════════════════════════════════════════════════════════════════
+import link_health
+link_health.register_routes(app)
+
+
 if __name__ == "__main__":
     uvicorn.run(
         app,

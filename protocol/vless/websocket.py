@@ -43,6 +43,7 @@ async def websocket_tunnel(ws: WebSocket, uuid: str):
         return
 
     ip = _ws_client_ip(ws)
+    is_ping_test = (ws.headers.get("x-emix-ping") == "1")
     conn_id = secrets.token_urlsafe(6)
     connections[conn_id] = {
         "uuid": uuid,
@@ -52,7 +53,8 @@ async def websocket_tunnel(ws: WebSocket, uuid: str):
         "bytes": 0,
     }
     logger.info(f"✅ WS [{conn_id}] uuid={uuid[:8]}… ip={ip} total={len(connections)}")
-    log_activity("connection", f"اتصال جدید از {ip} (کانفیگ {link.get('label','?')})", "info")
+    if not is_ping_test:
+        log_activity("connection", f"اتصال جدید از {ip} (کانفیگ {link.get('label','?')})", "info")
     writer = None
 
     try:
