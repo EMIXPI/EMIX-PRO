@@ -2764,6 +2764,13 @@ async def test_ws_redirect():
 import link_health
 link_health.register_routes(app)
 
+# ══════════════════════════════════════════════════════════════════════════════
+# ماژول پل ایران — مصرف داخلی + شتاب‌دهی (کاملاً جدا از هسته — bridge_boost.py)
+# اگر این ماژول حذف شود، پنل و همه‌ی تونل‌ها بدون تغییر کار می‌کنند.
+# ══════════════════════════════════════════════════════════════════════════════
+import bridge_boost
+bridge_boost.register_routes(app)
+
 
 if __name__ == "__main__":
     uvicorn.run(

@@ -2687,6 +2687,7 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
     <div class="nav-sec">پنل</div>
     <div class="nav-it on" data-pg="overview"><i class="ti ti-layout-dashboard"></i> داشبورد</div>
     <div class="nav-it" data-pg="links"><i class="ti ti-link-plus"></i> کانفیگ‌ها <span class="nav-badge" id="links-nb">0</span></div>
+    <div class="nav-it" data-pg="bridge"><i class="ti ti-flag"></i> پل ایران <span class="nav-badge" id="bridge-nb" style="display:none">فعال</span></div>
     <div class="nav-it" data-pg="subgroups"><i class="ti ti-folders"></i> گروه‌های ساب <span class="nav-badge" id="subs-nb">0</span></div>
     <div class="nav-it" data-pg="subscriptions"><i class="ti ti-rss"></i> سابسکریپشن</div>
     <div class="nav-it" data-pg="traffic"><i class="ti ti-chart-area"></i> ترافیک</div>
@@ -2823,6 +2824,94 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
   <div class="cfg-grid" id="links-grid"></div>
   <div class="empty" id="links-empty" style="display:none"><i class="ti ti-link-off"></i><p>هنوز کانفیگی وجود ندارد</p></div>
 </section>
+
+<!-- ════════════════════════ پل ایران ════════════════════════ -->
+<section class="pg" id="pg-bridge">
+  <div class="node-hero" style="margin-bottom:18px">
+    <div class="node-hero-top">
+      <div class="node-hero-title">
+        <div class="node-hero-icon"><i class="ti ti-flag"></i></div>
+        <div>
+          <div class="tb-title">پل ایران — مصرف داخلی + شتاب‌دهی</div>
+          <div class="tb-sub">ضریب ۲.۷ اپراتور فقط روی ترافیک بین‌المللی اعمال می‌شود؛ با این پل، مسیر شما داخلی می‌شود</div>
+        </div>
+      </div>
+      <div class="tb-right">
+        <span class="badge bg-blue" id="bridge-status-badge">غیرفعال</span>
+      </div>
+    </div>
+    <div class="node-hero-metrics">
+      <div class="node-metric">
+        <div class="node-metric-top"><i class="ti ti-route"></i><span class="node-metric-label">مسیر بدون پل</span></div>
+        <div class="node-metric-val" style="font-size:15px">گوشی ──✈──► Railway</div>
+        <div class="node-metric-sub" style="color:var(--red-t)">بین‌المللی · ضریب ۲.۷</div>
+      </div>
+      <div class="node-metric">
+        <div class="node-metric-top"><i class="ti ti-flag"></i><span class="node-metric-label">مسیر با پل</span></div>
+        <div class="node-metric-val" style="font-size:15px">گوشی ─► ایران ─► Railway</div>
+        <div class="node-metric-sub" style="color:var(--green-t)">داخلی · ضریب ۱ + سرعت بهتر</div>
+      </div>
+      <div class="node-metric">
+        <div class="node-metric-top"><i class="ti ti-bolt"></i><span class="node-metric-label">وضعیت پل</span></div>
+        <div class="node-metric-val" id="bridge-metric-status">—</div>
+        <div class="node-metric-sub" id="bridge-metric-sub">تست نشده</div>
+      </div>
+      <div class="node-metric">
+        <div class="node-metric-top"><i class="ti ti-clock-pause"></i><span class="node-metric-label">تاخیر پل</span></div>
+        <div class="node-metric-val" id="bridge-metric-ms">—</div>
+        <div class="node-metric-sub">هندشیک TLS از مسیر پل</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="conn-toolbar" style="margin-bottom:14px">
+    <div class="conn-toolbar-title"><i class="ti ti-server-2"></i> تنظیم پل</div>
+  </div>
+  <div class="card" style="margin-bottom:18px">
+    <div class="card-title"><i class="ti ti-settings"></i> سرور داخل ایران</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+      <div class="fg" style="flex:1;min-width:220px">
+        <label>آدرس سرور ایران (IP یا دامنه)</label>
+        <input id="br-host" placeholder="مثلاً 185.51.x.x یا ir.example.com" style="width:100%;direction:ltr;text-align:left">
+      </div>
+      <div class="fg" style="width:110px">
+        <label>پورت پل</label>
+        <input id="br-port" type="number" value="443" style="width:100%;direction:ltr;text-align:left">
+      </div>
+      <button class="btn btn-p" onclick="brSaveConfig(this)"><i class="ti ti-device-floppy"></i> ذخیره</button>
+      <button class="btn btn-g" onclick="brTestBridge(this)"><i class="ti ti-activity"></i> تست پل</button>
+    </div>
+    <div class="cl" style="margin-top:10px"><i class="ti ti-info-circle"></i><span>پورت پیش‌فرض ۴۴۳ است. اگر ISP پورت ۴۴۳ سرور شما را نمی‌بندد همان ۴۴۳ بهتر است؛ در غیر این صورت هر پورت دلخواه را روی سرور باز کنید و همین‌جا وارد کنید.</span></div>
+  </div>
+
+  <div class="conn-toolbar" style="margin-bottom:14px">
+    <div class="conn-toolbar-title"><i class="ti ti-terminal-2"></i> راه‌اندازی سرور ایران (۳ دقیقه)</div>
+  </div>
+  <div class="card" style="margin-bottom:18px">
+    <div class="card-title">
+      <i class="ti ti-script"></i> اسکریپت نصب خودکار
+      <span class="ml-auto" style="display:flex;gap:6px">
+        <button class="btn btn-g btn-sm" onclick="brCopyScript()"><i class="ti ti-copy"></i> کپی اسکریپت</button>
+        <button class="btn btn-g btn-sm" onclick="brShowNginx()"><i class="ti ti-brand-nginx"></i> نسخه nginx</button>
+      </span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div class="cl"><i class="ti ti-circle-number-1"></i><span>یک سرور مجازی داخل ایران بگیرید (هر VPS ارزان ایرانی با ترافیک نامحدود کافی است)</span></div>
+      <div class="cl"><i class="ti ti-circle-number-2"></i><span>اسکریپت زیر را با دسترسی root روی آن اجرا کنید — socat و سرویس systemd خودکار نصب می‌شود</span></div>
+      <div class="cl"><i class="ti ti-circle-number-3"></i><span>آدرس سرور را در فرم بالا ذخیره کنید و دکمه «تست پل» را بزنید</span></div>
+      <pre id="br-script" style="background:var(--bg);border:1px solid var(--card-b);border-radius:10px;padding:14px;font-size:11px;direction:ltr;text-align:left;overflow-x:auto;max-height:260px;overflow-y:auto;font-family:monospace"></pre>
+    </div>
+  </div>
+
+  <div class="conn-toolbar" style="margin-bottom:14px">
+    <div class="conn-toolbar-title"><i class="ti ti-link"></i> کانفیگ‌های پل‌دار <span class="badge bg-blue" id="bridge-links-cnt">۰</span></div>
+  </div>
+  <div class="card">
+    <div id="bridge-links-list"><div class="empty"><i class="ti ti-flag-off"></i><p>ابتدا آدرس سرور ایران را ذخیره کنید</p></div></div>
+    <div class="cl amber" style="margin-top:10px"><i class="ti ti-alert-triangle"></i><span>لینک‌های پل‌دار دقیقاً همان کانفیگ‌های فعلی شما هستند؛ فقط «آدرس اتصال» به سرور ایران تغییر کرده و SNI/Host همان دامنه‌ی پنل می‌ماند. کد اصلی پروتکل‌ها دست نمی‌خورد و کانفیگ‌های قبلی هم همچنان کار می‌کنند.</span></div>
+  </div>
+</section>
+
 <section class="pg" id="pg-subgroups">
   <div class="topbar">
     <div><div class="tb-title"><i class="ti ti-folders"></i> گروه‌های ساب</div><div class="tb-sub">هر گروه یک صفحه پابلیک مجزا با کانفیگ‌های خودش دارد</div></div>
@@ -3290,7 +3379,7 @@ function navTo(name){
   document.querySelectorAll('.pg').forEach(p=>p.classList.toggle('on',p.id==='pg-'+name));
   // ورود پلکانی کارت‌ها فقط هنگام سوییچ صفحه
   if(name==='links'){document.body.classList.add('cascade');setTimeout(()=>document.body.classList.remove('cascade'),650)}
-  const loaders={links:loadLinks,connections:loadConns,errors:loadErrs,subscriptions:loadSubsPage,subgroups:loadSubs,logs:loadActivity,updates:loadVersion,support:loadSupportMsgs,nodes:loadNodesPage};  if(loaders[name])loaders[name]();
+  const loaders={links:loadLinks,bridge:loadBridgePage,connections:loadConns,errors:loadErrs,subscriptions:loadSubsPage,subgroups:loadSubs,logs:loadActivity,updates:loadVersion,support:loadSupportMsgs,nodes:loadNodesPage};  if(loaders[name])loaders[name]();
   closeSb();window.scrollTo({top:0,behavior:'smooth'});
 }
 document.querySelectorAll('.nav-it').forEach(el=>el.addEventListener('click',()=>navTo(el.dataset.pg)));
@@ -3505,6 +3594,103 @@ async function pingAllLinks(btn){
     ic.style.animation='';
     btn.innerHTML=label;
   }
+}
+/* ══════ پل ایران — مصرف داخلی + شتاب‌دهی ══════ */
+let bridgeScriptCache='';
+async function loadBridgePage(){
+  try{
+    const [cr,sr]=await Promise.all([authF('/api/bridge/config'),authF('/api/bridge/script').catch(()=>null)]);
+    const cfg=await cr.json();
+    document.getElementById('br-host').value=cfg.bridge_host||'';
+    document.getElementById('br-port').value=cfg.bridge_port||443;
+    if(sr&&sr.ok){bridgeScriptCache=await sr.text();document.getElementById('br-script').textContent=bridgeScriptCache}
+    const badge=document.getElementById('bridge-status-badge');
+    const nb=document.getElementById('bridge-nb');
+    if(cfg.bridge_host){badge.textContent='فعال';badge.className='badge bg-green';nb.style.display=''}
+    else{badge.textContent='غیرفعال';badge.className='badge bg-blue';nb.style.display='none'}
+    if(cfg.bridge_host) await brLoadLinks();
+  }catch(e){console.error(e)}
+}
+async function brSaveConfig(btn){
+  const host=document.getElementById('br-host').value.trim();
+  const port=parseInt(document.getElementById('br-port').value)||443;
+  if(!host){toast('آدرس سرور ایران را وارد کنید','err');return}
+  const ic=btn.querySelector('i');ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite';btn.disabled=true;
+  try{
+    const r=await authF('/api/bridge/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({bridge_host:host,bridge_port:port})});
+    const d=await r.json();
+    if(!r.ok){toast(d.detail||'خطا در ذخیره','err');return}
+    toast('تنظیمات پل ذخیره شد','ok');
+    // رفرش اسکریپت با پورت جدید
+    const sr=await authF('/api/bridge/script');
+    if(sr.ok){bridgeScriptCache=await sr.text();document.getElementById('br-script').textContent=bridgeScriptCache}
+    await loadBridgePage();
+  }catch(e){toast('خطا در ذخیره','err')}
+  finally{ic.className='ti ti-device-floppy';ic.style.animation='';btn.disabled=false}
+}
+async function brTestBridge(btn){
+  const host=document.getElementById('br-host').value.trim();
+  if(!host){toast('ابتدا آدرس سرور ایران را ذخیره کنید','err');return}
+  const ic=btn.querySelector('i');ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite';btn.disabled=true;
+  document.getElementById('bridge-metric-status').textContent='در حال تست...';
+  document.getElementById('bridge-metric-sub').textContent='اتصال TLS از مسیر پنل → سرور ایران → پنل';
+  try{
+    const r=await authF('/api/bridge/test',{method:'POST'});
+    const d=await r.json();
+    const st=document.getElementById('bridge-metric-status'),sub=document.getElementById('bridge-metric-sub'),ms=document.getElementById('bridge-metric-ms');
+    if(d.ok){
+      st.textContent='سالم ✓';st.style.color='var(--green-t)';
+      ms.textContent=d.ms!=null?toFa(Math.round(d.ms))+'ms':'✓';
+      sub.textContent=d.detail||'زنجیره کامل کار می‌کند';
+      toast('پل سالم است — '+d.detail,'ok');
+    }else{
+      st.textContent='قطع';st.style.color='var(--red-t)';
+      ms.textContent='—';
+      sub.textContent=d.detail||'تست ناموفق';
+      toast('تست پل ناموفق: '+d.detail,'err');
+    }
+  }catch(e){
+    document.getElementById('bridge-metric-status').textContent='خطا';
+    toast('خطا در تست پل','err');
+  }finally{ic.className='ti ti-activity';ic.style.animation='';btn.disabled=false}
+}
+async function brLoadLinks(){
+  const list=document.getElementById('bridge-links-list');
+  try{
+    const r=await authF('/api/bridge/links');
+    const d=await r.json();
+    const links=d.links||[];
+    document.getElementById('bridge-links-cnt').textContent=toFa(links.length)+' کانفیگ';
+    if(!links.length){
+      list.innerHTML='<div class="empty"><i class="ti ti-flag-off"></i><p>کانفیگ فعالی برای پل‌دادن وجود ندارد</p></div>';
+      return;
+    }
+    list.innerHTML=links.map(l=>`
+      <div style="display:flex;align-items:center;gap:10px;padding:11px 4px;border-bottom:1px solid var(--card-b);flex-wrap:wrap">
+        ${protoBadge(l.protocol)}
+        <div style="flex:1;min-width:140px">
+          <div style="font-weight:600;font-size:12.5px">${esc(l.label)}</div>
+          <div style="font-size:9.5px;color:var(--t3);direction:ltr;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:420px">${esc(l.bridged)}</div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-sm btn-g btn-icon" onclick="navigator.clipboard.writeText('${esc(l.bridged)}').then(()=>toast('لینک پل‌دار کپی شد','ok'))" title="کپی لینک پل‌دار"><i class="ti ti-copy"></i></button>
+          <button class="btn btn-sm btn-g btn-icon" onclick="showQR('${esc(l.bridged)}')" title="QR"><i class="ti ti-qrcode"></i></button>
+          <button class="btn btn-sm btn-g btn-icon" onclick="navigator.clipboard.writeText('${esc(l.original)}').then(()=>toast('لینک اصلی کپی شد','ok'))" title="لینک اصلی (بدون پل)"><i class="ti ti-external-link"></i></button>
+        </div>
+      </div>`).join('');
+  }catch(e){
+    list.innerHTML='<div class="empty"><i class="ti ti-alert-triangle"></i><p>خطا در دریافت لینک‌ها</p></div>';
+  }
+}
+function brCopyScript(){
+  if(!bridgeScriptCache)return;
+  navigator.clipboard.writeText(bridgeScriptCache).then(()=>toast('اسکریپت نصب کپی شد — روی سرور ایران اجرایش کنید','ok'));
+}
+async function brShowNginx(){
+  try{
+    const r=await authF('/api/bridge/script?fmt=nginx');
+    if(r.ok){bridgeScriptCache=await r.text();document.getElementById('br-script').textContent=bridgeScriptCache;toast('نسخه nginx نمایش داده شد','ok')}
+  }catch(e){toast('خطا در دریافت نسخه nginx','err')}
 }
 async function loadLinks(){
   try{
