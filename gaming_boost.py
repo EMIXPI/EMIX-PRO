@@ -61,8 +61,9 @@ from main import (
 GAMING_FILE = DATA_DIR / "gaming_config.json"
 
 DEFAULTS = {
-    "worker_domain": "",     # مثل: emix-gateway.username.workers.dev
-    "worker_token": "",      # Secret EMIX_TOKEN روی worker (برای افزودن لوکیشن)
+    # پیش‌تنظیم‌شده: گیت‌وی کلادفلر این پروژه (دیپلوی خودکار شده)
+    "worker_domain": "emix-gateway.personalemixone.workers.dev",
+    "worker_token": "emix-gw-7f3a9c2e5b1d84f6a0c9e3d7b5f21h8k4",
     "vps_ip": "",            # IP سرور ایران (پارس‌پک) — ورودی پایدار
     "vps_port": 443,
     "best_ip": "",           # نتیجه‌ی اسکن کلاینت
@@ -552,6 +553,74 @@ def register_routes(app) -> None:
     @app.get("/api/gaming/candidates")
     async def gaming_candidates(_=Depends(require_auth)):
         return {"ok": True, "ips": _candidate_ips()}
+
+    @app.get("/api/gaming/inbounds")
+    async def gaming_inbounds(_=Depends(require_auth)):
+        """لیست اینباندهای ورودی گیت‌وی کلادفلر — بدون نیاز به سرور اضافه:
+        هر IP آنیکست سالم = یک اینباند مستقل (همان وورکر، از لبه‌ی متفاوت).
+        شامل ورودی VPS ایران (اگر تنظیم شده) و ورودی خودِ دامنه‌ی وورکر."""
+        cfg = _load_cfg()
+        wd = _norm_domain(cfg.get("worker_domain", ""))
+        if not wd:
+            return {"ok": False, "error": "دامنه‌ی worker تنظیم نشده"}
+
+        inbounds = []
+        # ۱) اینباند اصلی: دامنه‌ی وورکر (DNS خودکار کلادفلر → نزدیک‌ترین PoP)
+        inbounds.append({
+            "id": "worker-domain",
+            "label": "گیت‌وی (خودکار — نزدیک‌ترین PoP)",
+            "type": "domain",
+            "entry": wd,
+            "port": 443,
+            "latency_ms": None,
+            "note": "DNS کلادفلر خودش نزدیک‌ترین دیتاسنتر را برای هر کاربر انتخاب می‌کند",
+        })
+        # ۲) اینباندهای IP اسکن‌شده — هر IP سالم یک ورودی مستقل
+        for i, r in enumerate((cfg.get("scan_results") or [])[:5]):
+            inbounds.append({
+                "id": f"scan-{i+1}",
+                "label": f"IP اسکن‌شده #{i+1}",
+                "type": "ip",
+                "entry": r.get("ip", ""),
+                "port": 443,
+                "latency_ms": r.get("min_ms"),
+                "jitter_ms": r.get("jitter_ms"),
+                "note": "از اسکن مرورگر شما — مستقیم به همین IP وصل می‌شود",
+            })
+        # ۳) ورودی VPS ایران (اگر تنظیم شده) — پایدارترین
+        if cfg.get("vps_ip"):
+            inbounds.append({
+                "id": "vps",
+                "label": "VPS ایران (پایدار — ضد قطعی)",
+                "type": "vps",
+                "entry": cfg["vps_ip"],
+                "port": int(cfg.get("vps_port") or 443),
+                "latency_ms": None,
+                "note": "از سرور ایران عبور می‌کند — مناسب وقتی IPهای کلادفلر قطع می‌شوند",
+            })
+
+        # تست سلامت فعال هر اینباند (اتصال TCP واقعی از پنل)
+        async def _check(ib: dict) -> None:
+            try:
+                t0 = time.time()
+                reader, writer = await asyncio.wait_for(
+                    asyncio.open_connection(ib["entry"], int(ib["port"])), timeout=6.0)
+                writer.close()
+                try:
+                    await writer.wait_closed()
+                except Exception:
+                    pass
+                ib["healthy"] = True
+                ib["connect_ms"] = round((time.time() - t0) * 1000, 1)
+            except Exception as exc:
+                ib["healthy"] = False
+                ib["error"] = f"{type(exc).__name__}: اتصال برقرار نشد"
+
+        await asyncio.gather(*[_check(ib) for ib in inbounds], return_exceptions=True)
+        healthy_count = sum(1 for ib in inbounds if ib.get("healthy"))
+        return {"ok": True, "worker_domain": wd, "inbounds": inbounds,
+                "healthy_count": healthy_count,
+                "detail": "اینباندها روی خودِ وورکر کلادفلر هستند — بدون سرور اضافه؛ هر IP آنیکست کلادفلر یک ورودی مستقل است"}
 
     @app.post("/api/gaming/scan")
     async def gaming_scan(request: Request, _=Depends(require_auth)):

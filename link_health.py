@@ -156,13 +156,15 @@ def _ping_ms(t0: float) -> float:
 # پروب‌های تونل — هر کدوم کلاینت واقعی همان پروتکل را بازی می‌کنند
 # ══════════════════════════════════════════════════════════════════════════════
 async def _probe_ws_tunnel(kind: str, uid: str, link: dict, use_ed: bool = False,
-                           ws_base: str | None = None, no_verify: bool = False) -> dict:
+                           ws_base: str | None = None, no_verify: bool = False,
+                           path_prefix: str = "") -> dict:
     """تست کامل تونل WebSocket (vless / trojan / shadowsocks).
     ws_base=None → مسیر عمومی خود پنل؛ ws_base=wss://host → تست از مسیر پل (مثل کلاینتِ لینک پل‌دار).
+    path_prefix → پیشوند مسیر (مثل /loc/auto برای تست از مسیر گیت‌وی کلادفلر).
     use_ed=True → بار اولیه در هندشیک (0-RTT) ارسال می‌شود — برای تست A/B توربو."""
     if ws_base is None:
         ws_base, _ = _ping_public_bases()
-    uri = {"vless": f"{ws_base}/ws/{uid}", "trojan": f"{ws_base}/trojan-ws", "ss": f"{ws_base}/ss-ws"}[kind]
+    uri = {"vless": f"{ws_base}{path_prefix}/ws/{uid}", "trojan": f"{ws_base}{path_prefix}/trojan-ws", "ss": f"{ws_base}{path_prefix}/ss-ws"}[kind]
     t0 = time.perf_counter()
     ws_ms = None
     e2e_ms = None
@@ -217,19 +219,21 @@ async def _probe_ws_tunnel(kind: str, uid: str, link: dict, use_ed: bool = False
 
 
 async def _probe_xhttp_tunnel(kind: str, uid: str, link: dict,
-                              http_base: str | None = None, no_verify: bool = False) -> dict:
+                              http_base: str | None = None, no_verify: bool = False,
+                              path_prefix: str = "") -> dict:
     """تست تونل XHTTP (packet-up / stream-up) — GET دانلینک + POST آپلینک با هدر واقعی پروتکل.
-    http_base=None → مسیر عمومی خود پنل؛ در غیر این صورت تست از مسیر پل."""
+    http_base=None → مسیر عمومی خود پنل؛ در غیر این صورت تست از مسیر پل.
+    path_prefix → پیشوند مسیر برای تست از مسیر گیت‌وی کلادفلر."""
     if http_base is None:
         _, http_base = _ping_public_bases()
     prefix = "xhttp-siz10" if kind == "vless" else "txhttp-siz10"
     mode = "packet-up" if link.get("protocol", "").endswith("packet-up") else "stream-up"
     sid = secrets.token_hex(8)
     probe = _vless_probe_bytes(uid) if kind == "vless" else _trojan_probe_bytes(uid)
-    down_url = f"{http_base}/{prefix}/{mode}/{uid}/{sid}"
+    down_url = f"{http_base}{path_prefix}/{prefix}/{mode}/{uid}/{sid}"
     up_url = (
-        f"{http_base}/{prefix}/packet-up/{uid}/{sid}/0" if mode == "packet-up"
-        else f"{http_base}/{prefix}/stream-up/{uid}/{sid}"
+        f"{http_base}{path_prefix}/{prefix}/packet-up/{uid}/{sid}/0" if mode == "packet-up"
+        else f"{http_base}{path_prefix}/{prefix}/stream-up/{uid}/{sid}"
     )
 
     t0 = time.perf_counter()
@@ -287,9 +291,31 @@ async def _probe_tcp_connect(host: str, port: int) -> dict:
 # ══════════════════════════════════════════════════════════════════════════════
 # دیسپچر اصلی — تشخیص پروتکل و اجرای تست مناسب
 # ══════════════════════════════════════════════════════════════════════════════
-async def _run_link_ping(uid: str, link: dict) -> dict:
-    """اجرای تست مناسب برای هر پروتکل + ثبت نتیجه روی لینک (last_ping)."""
+async def _worker_via_params(via: str) -> tuple[str | None, str]:
+    """برای via=worker: (ws_base, path_prefix) گیت‌وی کلادفلر را برمی‌گرداند.
+    در حالت direct → (None, "") یعنی مسیر پیش‌فرض پنل."""
+    if via != "worker":
+        return None, ""
+    try:
+        import gaming_boost as _gb
+        cfg = _gb._load_cfg()
+        wd = _gb._norm_domain(cfg.get("worker_domain", ""))
+        if not wd:
+            raise RuntimeError("دامنه‌ی worker در تنظیمات گیمینگ ذخیره نشده — اول تب گیمینگ را تنظیم کنید")
+        return f"wss://{wd}", "/loc/auto"
+    except RuntimeError:
+        raise
+    except Exception as exc:
+        raise RuntimeError(f"گیت‌وی کلادفلر در دسترس نیست: {exc}")
+
+
+async def _run_link_ping(uid: str, link: dict, via: str = "direct") -> dict:
+    """اجرای تست مناسب برای هر پروتکل + ثبت نتیجه روی لینک (last_ping).
+    via=direct → مسیر خود پنل | via=worker → از مسیر گیت‌وی کلادفلر (سلامت خروجی واقعی)."""
     proto = link.get("protocol", DEFAULT_PROTOCOL)
+    ws_base_override, path_prefix = await _worker_via_params(via) if via == "worker" else (None, "")
+    # برای xhttp مسیر http_base هم لازم است
+    http_base_override = f"https://{ws_base_override[6:]}" if ws_base_override else None
     if not is_link_allowed(link):
         result = {
             "ok": False,
@@ -298,28 +324,31 @@ async def _run_link_ping(uid: str, link: dict) -> dict:
             "checked_at": datetime.now().isoformat(),
         }
     elif proto == "vless-ws":
-        result = {"protocol": proto, "test": "ws-tunnel", **await _probe_ws_tunnel("vless", uid, link)}
+        result = {"protocol": proto, "test": "ws-tunnel", "via": via, **await _probe_ws_tunnel("vless", uid, link, ws_base=ws_base_override, path_prefix=path_prefix)}
     elif proto == "trojan-ws":
-        result = {"protocol": proto, "test": "ws-tunnel", **await _probe_ws_tunnel("trojan", uid, link)}
+        result = {"protocol": proto, "test": "ws-tunnel", "via": via, **await _probe_ws_tunnel("trojan", uid, link, ws_base=ws_base_override, path_prefix=path_prefix)}
     elif proto == "shadowsocks":
-        result = {"protocol": proto, "test": "ws-tunnel", **await _probe_ws_tunnel("ss", uid, link)}
+        result = {"protocol": proto, "test": "ws-tunnel", "via": via, **await _probe_ws_tunnel("ss", uid, link, ws_base=ws_base_override, path_prefix=path_prefix)}
     elif proto.startswith("trojan-xhttp-"):
-        result = {"protocol": proto, "test": "xhttp-tunnel", **await _probe_xhttp_tunnel("trojan", uid, link)}
+        result = {"protocol": proto, "test": "xhttp-tunnel", "via": via, **await _probe_xhttp_tunnel("trojan", uid, link, http_base=http_base_override, path_prefix=path_prefix)}
     elif proto.startswith("xhttp-") or proto.startswith("vless-xhttp"):
-        result = {"protocol": proto, "test": "xhttp-tunnel", **await _probe_xhttp_tunnel("vless", uid, link)}
+        result = {"protocol": proto, "test": "xhttp-tunnel", "via": via, **await _probe_xhttp_tunnel("vless", uid, link, http_base=http_base_override, path_prefix=path_prefix)}
     elif proto == "mtproto":
-        pub_host = link.get("mtproto_public_host")
-        pub_port = link.get("mtproto_public_port") or link.get("mtproto_port")
-        if pub_host and pub_port:
-            result = {"protocol": proto, "test": "tcp-connect", **await _probe_tcp_connect(pub_host, int(pub_port))}
+        if via == "worker":
+            result = {"ok": False, "protocol": proto, "via": via, "detail": "MTProto روی TCP خام است و از گیت‌وی HTTP کلادفلر عبور نمی‌کند — از TCP Proxy ریلوی استفاده کنید"}
         else:
-            local_port = link.get("mtproto_port")
-            if local_port:
-                result = {"protocol": proto, "test": "tcp-local", **await _probe_tcp_connect("127.0.0.1", int(local_port)), "detail_prefix": "فقط پروسه محلی تست شد (TCP Proxy عمومی ندارید)"}
+            pub_host = link.get("mtproto_public_host")
+            pub_port = link.get("mtproto_public_port") or link.get("mtproto_port")
+            if pub_host and pub_port:
+                result = {"protocol": proto, "test": "tcp-connect", "via": via, **await _probe_tcp_connect(pub_host, int(pub_port))}
             else:
-                result = {"ok": False, "protocol": proto, "detail": "پورت MTProto یافت نشد"}
+                local_port = link.get("mtproto_port")
+                if local_port:
+                    result = {"protocol": proto, "test": "tcp-local", "via": via, **await _probe_tcp_connect("127.0.0.1", int(local_port)), "detail_prefix": "فقط پروسه محلی تست شد (TCP Proxy عمومی ندارید)"}
+                else:
+                    result = {"ok": False, "protocol": proto, "via": via, "detail": "پورت MTProto یافت نشد"}
     else:
-        result = {"ok": False, "protocol": proto, "detail": f"پروتکل «{proto}» تست خودکار ندارد"}
+        result = {"ok": False, "protocol": proto, "via": via, "detail": f"پروتکل «{proto}» تست خودکار ندارد"}
 
     result.setdefault("ok", False)
     result["target"] = f"{PING_TEST_HOST}:{PING_TEST_PORT}" if result.get("test") in ("ws-tunnel", "xhttp-tunnel") else None
@@ -349,16 +378,20 @@ def register_routes(app) -> None:
         )
 
     @app.post("/api/links/{uid}/ping")
-    async def api_ping_link(uid: str, _=Depends(require_auth)):
+    async def api_ping_link(uid: str, via: str = "direct", _=Depends(require_auth)):
         async with LINKS_LOCK:
             link = LINKS.get(uid)
         if not link:
             raise HTTPException(status_code=404, detail="کانفیگ یافت نشد")
-        return await _run_link_ping(uid, link)
+        try:
+            return await _run_link_ping(uid, link, via=via)
+        except RuntimeError as exc:
+            return {"ok": False, "via": via, "detail": str(exc)}
 
     @app.post("/api/links/ping-all")
-    async def api_ping_all_links(_=Depends(require_auth)):
-        """تست همه‌ی کانفیگ‌های محلی با هم‌زمانی محدود (۴ تا)."""
+    async def api_ping_all_links(via: str = "direct", _=Depends(require_auth)):
+        """تست همه‌ی کانفیگ‌های محلی با هم‌زمانی محدود (۴ تا).
+        via=worker → تست همه از مسیر گیت‌وی کلادفلر (سلامت خروجی واقعی)."""
         async with LINKS_LOCK:
             targets = [(uid, dict(d)) for uid, d in LINKS.items()]
         sem = asyncio.Semaphore(4)
@@ -366,13 +399,13 @@ def register_routes(app) -> None:
         async def _one(uid: str, link: dict):
             async with sem:
                 try:
-                    return {"uuid": uid, "result": await _run_link_ping(uid, link)}
+                    return {"uuid": uid, "result": await _run_link_ping(uid, link, via=via)}
                 except Exception as exc:
                     return {"uuid": uid, "result": {"ok": False, "detail": f"{type(exc).__name__}: {exc}"}}
 
         results = await asyncio.gather(*[_one(u, d) for u, d in targets])
         ok_n = sum(1 for r in results if r["result"].get("ok"))
-        return {"total": len(results), "ok": ok_n, "failed": len(results) - ok_n, "results": list(results)}
+        return {"total": len(results), "ok": ok_n, "failed": len(results) - ok_n, "via": via, "results": list(results)}
 
     @app.post("/api/links/best")
     async def api_best_links(_=Depends(require_auth)):

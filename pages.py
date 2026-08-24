@@ -2784,6 +2784,32 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
       <button class="btn btn-p btn-sm" onclick="refreshAll()"><i class="ti ti-refresh"></i> رفرش</button>
     </div>
   </div>
+
+  <!-- هشدار volume — فقط وقتی دیتا دائمی نیست نمایش داده می‌شود -->
+  <div id="volume-warn" class="card" style="margin-bottom:14px;border:1px solid var(--amber-t);display:none">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <i class="ti ti-database-off" style="font-size:22px;color:var(--amber-t)"></i>
+      <div style="flex:1;min-width:220px">
+        <div style="font-weight:700;font-size:12.5px;color:var(--amber-t)">⚠ دیتای شما هنوز دائمی نیست — حجم (Volume) متصل نشده</div>
+        <div style="font-size:11px;color:var(--t3);margin-top:3px">بدون volume، با هر دیپلوی یا ری‌استارت، همه‌ی کانفیگ‌ها و تنظیمات پاک می‌شوند. با یک کلیک volume بسازید (نیازمند توکن Railway که قبلاً ذخیره شده).</div>
+      </div>
+      <button class="btn btn-g" onclick="ensureVolume(this)"><i class="ti ti-database-plus"></i> ساخت خودکار Volume</button>
+    </div>
+  </div>
+
+  <!-- کارت سلامت کلی سیستم -->
+  <div class="card" style="margin-bottom:14px">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+      <i class="ti ti-heartbeat" style="font-size:20px;color:var(--green-t)"></i>
+      <div style="flex:1;min-width:180px">
+        <div style="font-weight:700;font-size:13px">سلامت کلی پنل</div>
+        <div style="font-size:11px;color:var(--t3)">بررسی همه‌ی بخش‌ها تا خروجی: ماژول‌ها، دیتا، پروکسی‌ها، گیت‌وی کلادفلر و پل</div>
+      </div>
+      <button class="btn btn-g" id="health-all-btn" onclick="runHealthAll(this)"><i class="ti ti-stethoscope"></i> بررسی سلامت همه‌چیز</button>
+    </div>
+    <div id="health-all-result" style="display:none"></div>
+  </div>
+
   <div class="metrics">
     <div class="metric"><div class="m-icon"><i class="ti ti-plug-connected"></i></div><div class="m-label">اتصالات فعال</div><div class="m-val" id="m-conns">—</div><div class="m-sub"><span class="dot dg pulse"></span> WebSocket / XHTTP زنده</div></div>
     <div class="metric"><div class="m-icon"><i class="ti ti-transfer"></i></div><div class="m-label">کل ترافیک</div><div class="m-val" id="m-traffic">—<span class="m-unit">MB</span></div><div class="m-sub">از راه‌اندازی</div></div>
@@ -4761,6 +4787,86 @@ async function zeusSecurityCheck(){
 
 /* ═════════════════ مرکز گیمینگ — اسکنر IP + لوکیشن + کانفیگ گیمینگ ═════════════════ */
 let gamingCfg={},gamingScanBusy=false;
+
+/* ═════════════════ زیرساخت: Volume خودکار + سلامت کلی ═════════════════ */
+async function checkVolumeBanner(){
+  try{
+    const r=await authF('/api/system/infra/status');
+    if(!r.ok)return;
+    const j=await r.json();
+    const w=document.getElementById('volume-warn');
+    if(w&&j.on_railway&&!j.volume_mounted){w.style.display=''}
+  }catch(e){}
+}
+async function ensureVolume(btn){
+  const ic=btn.querySelector('i');ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite';btn.disabled=true;
+  try{
+    const r=await authF('/api/system/infra/ensure-volume',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});
+    const j=await r.json().catch(()=>({ok:false,error:'پاسخ نامعتبر'}));
+    if(j.ok){
+      toast(j.message||'Volume ساخته شد','ok');
+      document.getElementById('volume-warn').style.display='none';
+    }else{toast(j.error||'خطا در ساخت volume','err')}
+  }catch(e){toast('خطا','err')}
+  finally{ic.className='ti ti-database-plus';ic.style.animation='';btn.disabled=false}
+}
+async function runHealthAll(btn){
+  const ic=btn.querySelector('i');ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite';btn.disabled=true;
+  const box=document.getElementById('health-all-result');
+  box.style.display='';box.innerHTML='<div style="font-size:12px;color:var(--t3);padding:8px"><i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i> در حال بررسی همه‌ی بخش‌ها (تا ۴۵ ثانیه)...</div>';
+  try{
+    const r=await authF('/api/system/health-all');
+    if(!r.ok){box.innerHTML='<span style="color:var(--red-t);font-size:12px">خطا در دریافت گزارش سلامت</span>';return}
+    const j=await r.json();
+    const secs=Object.entries(j.sections||{});
+    const rowHtml=(label,s)=>{
+      const ok=s.ok;
+      const col=ok?'var(--green-t)':'var(--red-t)';
+      const icon=ok?'<i class="ti ti-circle-check"></i>':'<i class="ti ti-circle-x"></i>';
+      let extra='';
+      if(s.error)extra+=` — <span style="color:var(--t3)">${s.error}</span>`;
+      if(s.detail&&typeof s.detail==='string')extra+=` — <span style="color:var(--t3)">${s.detail}</span>`;
+      if(s.mounted===false&&s.ok===false)extra='';
+      const lat=s.latency_ms!=null?` <span class="badge bg-blue" style="font-size:9.5px">${toFa(s.latency_ms)}ms</span>`:'';
+      return `<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--bg);border-radius:8px;border:1px solid var(--card-b);margin-bottom:6px">
+        <span style="color:${col}">${icon}</span>
+        <div style="flex:1;font-size:12px"><b>${label}</b><span style="font-size:11px;color:var(--t2)">${extra}</span></div>
+        ${lat}
+        <span class="badge ${ok?'bg-green':'bg-red'}" style="font-size:9.5px">${ok?'سالم':'مشکل'}</span>
+      </div>`;
+    };
+    const labels={'panel':'هسته‌ی پنل','volume':'دیتای دائمی (Volume)','links':'کانفیگ‌ها','mtproto':'پروسه‌های MTProto','tcp_proxies':'TCP Proxies ریلوی','cf_gateway':'گیت‌وی کلادفلر','bridge':'پل ایران','module:zeus_features':'ماژول ZEUS Pro','module:gaming_boost':'ماژول مرکز گیمینگ','module:bridge_boost':'ماژول پل ایران','module:turbo_boost':'ماژول توربو','module:clean_ip_boost':'ماژول آی‌پی تمیز','module:link_health':'ماژول تست پینگ'};
+    let html=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+      <span class="badge ${j.ok?'bg-green':'bg-red'}">${j.ok?'همه‌چیز سالم ✓':'مشکلاتی پیدا شد'}</span>
+      <span style="font-size:11px;color:var(--t3)">${toFa(secs.filter(([_,s])=>s.ok).length)} از ${toFa(secs.length)} بخش سالم</span>
+    </div>`;
+    // بخش‌های مهم اول
+    const order=['panel','volume','links','mtproto','tcp_proxies','cf_gateway','bridge'];
+    const rest=secs.filter(([k])=>!order.includes(k)&&!k.startsWith('module:'));
+    const mods=secs.filter(([k])=>k.startsWith('module:'));
+    for(const k of order){const f=secs.find(([kk])=>kk===k);if(f)html+=rowHtml(labels[k]||k,f[1])}
+    if(mods.length){
+      const modOk=mods.filter(([_,s])=>s.ok).length;
+      html+=`<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--bg);border-radius:8px;border:1px solid var(--card-b);margin-bottom:6px">
+        <span style="color:${modOk===mods.length?'var(--green-t)':'var(--amber-t)'}"><i class="ti ti-plug-connected"></i></span>
+        <div style="flex:1;font-size:12px"><b>ماژول‌های افزونه</b><span style="font-size:11px;color:var(--t3)"> — ${toFa(modOk)}/${toFa(mods.length)} بارگذاری کامل</span></div>
+        <span class="badge ${modOk===mods.length?'bg-green':'bg-amber'}" style="font-size:9.5px">${modOk===mods.length?'سالم':'ناقص'}</span>
+      </div>`;
+    }
+    box.innerHTML=html;
+    toast(j.ok?'همه‌ی بخش‌ها سالم هستند':'برخی بخش‌ها مشکل دارند — جزئیات در کارت',j.ok?'ok':'err');
+  }catch(e){box.innerHTML='<span style="color:var(--red-t);font-size:12px">خطا در بررسی سلامت</span>'}
+  finally{ic.className='ti ti-stethoscope';ic.style.animation='';btn.disabled=false}
+}
+/* تست همه‌ی کانفیگ‌ها از مسیر گیت‌وی کلادفلر (پینگ واقعی خروجی) */
+async function pingAllViaWorker(){
+  try{
+    const r=await authF('/api/links/ping-all?via=worker',{method:'POST'});
+    if(!r.ok){toast('خطا','err');return}
+    const j=await r.json();
+    toast(`تست از مسیر گیت‌وی: ${toFa(j.ok)} از ${toFa(j.total)} سالم`,j.ok>0?'ok':'err');
+  }catch(e){toast('خطا','err')}
+}
 const COLO_NAMES={IST:'استانبول 🇹🇷',FRA:'فرانکفورت 🇩🇪',MRS:'مارسی 🇫🇷',BAH:'بحرین 🇧🇭',DXB:'دبی 🇦🇪',AMS:'آمستردام 🇳🇱',LHR:'لندن 🇬🇧',CDG:'پاریس 🇫🇷',MIL:'میلان 🇮🇹',VIE:'وین 🇦🇹',WAW:'ورشو 🇵🇱',KIV:'کیشیناو 🇲🇩',DME:'مسکو 🇷🇺',TAS:'تاشکند 🇺🇿',ALA:'آلماتی 🇰🇿',SIN:'سنگاپور 🇸🇬',DXB2:'دبی۲',TLV:'تل‌آویو',DOH:'دوحه 🇶🇦',KWI:'کویت 🇰🇼'};
 
 async function loadGamingPage(){
@@ -6039,7 +6145,7 @@ async function fetchDefaultVless(){
 }
 function cpText(id){navigator.clipboard.writeText(document.getElementById(id).textContent).then(()=>toast('کپی شد ✓','ok'))}
 function qrFor(id){showQR(document.getElementById(id).textContent)}
-function refreshAll(){fetchStats();fetchDefaultVless();loadLinks();if(document.getElementById('pg-subgroups').classList.contains('on'))loadSubs();if(document.getElementById('pg-subscriptions').classList.contains('on'))loadSubsPage();if(document.getElementById('pg-connections').classList.contains('on'))loadConns();if(document.getElementById('pg-logs').classList.contains('on'))loadActivity();toast('رفرش شد','ok')}
+function refreshAll(){fetchStats();fetchDefaultVless();loadLinks();checkVolumeBanner();if(document.getElementById('pg-subgroups').classList.contains('on'))loadSubs();if(document.getElementById('pg-subscriptions').classList.contains('on'))loadSubsPage();if(document.getElementById('pg-connections').classList.contains('on'))loadConns();if(document.getElementById('pg-logs').classList.contains('on'))loadActivity();toast('رفرش شد','ok')}
 async function changePw(){
   const cur=document.getElementById('cp-cur').value,nw=document.getElementById('cp-new').value,cf=document.getElementById('cp-cf').value;
   if(!cur||!nw||!cf){toast('همه فیلدها را پر کنید','err');return}
@@ -6313,6 +6419,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   initCharts();
   document.getElementById('set-host').textContent = location.host;
   loadLoggingSetting();
+  checkVolumeBanner();
   document.getElementById('sub-all-url') && 
     (document.getElementById('sub-all-url').textContent = 
       location.protocol + '//' + location.host + '/sub-all');

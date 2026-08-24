@@ -209,12 +209,32 @@ async def _delete_proxy(client: httpx.AsyncClient, token: str, proxy_id: str):
         _log(f"⚠ حذف proxy نامطلوب ({proxy_id[:8]}…) ناموفق بود: {exc}")
 
 
+async def _verify_proxy_tcp(domain: str, port: int, tries: int = 3, delay: float = 1.2) -> bool:
+    """تأیید واقعی سلامت پروکسی: اتصال TCP از خود پنل به دامنه:پورت عمومی.
+    اگر پروسه‌ی MTProto هنوز بالا نیامده باشد چند بار تلاش می‌شود."""
+    for i in range(tries):
+        try:
+            reader, writer = await asyncio.wait_for(
+                asyncio.open_connection(domain, int(port)), timeout=6.0)
+            writer.close()
+            try:
+                await writer.wait_closed()
+            except Exception:
+                pass
+            return True
+        except Exception:
+            if i < tries - 1:
+                await asyncio.sleep(delay)
+    return False
+
+
 async def _single_attempt(client: httpx.AsyncClient, token: str, service_id: str,
                            environment_id: str, application_port: int,
                            attempt_no: int, winner_holder: dict, reachable: set,
-                           win_lock: asyncio.Lock):
+                           win_lock: asyncio.Lock, auto_mode: bool = False):
     """یک تلاش برای ساخت پروکسی. اگر دامنه جزو دامنه‌های سالم بود و هنوز برنده‌ای
-    اعلام نشده، این را برنده می‌کند؛ در غیر این صورت بلافاصله حذف می‌شود."""
+    اعلام نشده، این را برنده می‌کند؛ در غیر این صورت بلافاصله حذف می‌شود.
+    در حالت خودکار (بدون پینگ مرورگر) برنده فقط بعد از تأیید اتصال TCP واقعی است."""
     try:
         proxy = await _create_proxy(client, token, service_id, environment_id, application_port)
     except _AuthError as exc:
@@ -237,6 +257,16 @@ async def _single_attempt(client: httpx.AsyncClient, token: str, service_id: str
         await _delete_proxy(client, token, proxy_id)
         return "rejected"
 
+    # حالت خودکار: تأیید با اتصال TCP واقعی (نه فقط پذیرش دامنه)
+    if auto_mode:
+        pub_port = proxy.get("proxyPort")
+        ok_tcp = await _verify_proxy_tcp(domain, int(pub_port)) if pub_port else False
+        if not ok_tcp:
+            _log(f"تلاش {attempt_no}: دامنه‌ی {domain_raw} با اتصال TCP واقعی پاسخ نداد — حذف و تلاش بعدی")
+            await _delete_proxy(client, token, proxy_id)
+            return "rejected"
+        _log(f"تلاش {attempt_no}: ✓ اتصال TCP واقعی به {domain_raw}:{pub_port} برقرار شد")
+
     async with win_lock:
         if winner_holder.get("result") is not None:
             await _delete_proxy(client, token, proxy_id)
@@ -252,15 +282,17 @@ async def _single_attempt(client: httpx.AsyncClient, token: str, service_id: str
 
 
 async def run_bot_proxy_job(token: str, application_port: int, reachable: set):
+    # حالت خودکار: اگر دامنه‌ی سالمی از مرورگر نفرستاده شده باشد، همه‌ی دامنه‌ها
+    # قابل قبولند (پروکسی ساخته‌شده بعداً با اتصال واقعی TCP تأیید می‌شود)
     if not reachable:
-        bot_proxy_state.update({
-            "running": False, "phase": "error",
-            "error": "هیچ دامنه‌ی سالمی از مرحله‌ی پینگ ارسال نشده بود",
-        })
-        return
+        reachable = set(KNOWN_DOMAINS)
+        _log("حالت خودکار: هیچ دامنه‌ی سالمی ارسال نشد — هر دامنه‌ای که ریلوی بدهد پذیرفته و با اتصال TCP واقعی تأیید می‌شود")
 
     win_lock = asyncio.Lock()
     winner_holder: dict = {"result": None}
+    auto_mode = reachable == set(KNOWN_DOMAINS)
+    if auto_mode:
+        _log("حالت خودکار: تأیید هر پروکسی با اتصال TCP واقعی انجام می‌شود")
 
     bot_proxy_state.update({
         "running": True, "phase": "searching", "progress": 0, "attempts": 0,
@@ -295,7 +327,7 @@ async def run_bot_proxy_job(token: str, application_port: int, reachable: set):
                         _single_attempt(
                             client, token, service_id, environment_id,
                             application_port, total_attempts, winner_holder,
-                            reachable, win_lock,
+                            reachable, win_lock, auto_mode,
                         )
                     )
 
@@ -357,9 +389,24 @@ async def run_bot_proxy_job(token: str, application_port: int, reachable: set):
             "stopped_by_user": True,
         })
         _log("⏹ فرآیند توسط کاربر متوقف شد")
+    except Exception as exc:
+        # 🐛 فیکس باگ «قفل شدن»: قبلاً اگر خطای غیرمنتظره‌ای رخ می‌داد، running=True
+        # می‌ماند و دیگر هیچ جست‌وجوی جدیدی شروع نمی‌شد (خطای ۴۰۹). حالا همیشه
+        # state ریست می‌شود تا کاربر بتواند دوباره تلاش کند.
+        bot_proxy_state.update({
+            "running": False,
+            "phase": "error",
+            "error": f"خطای غیرمنتظره: {type(exc).__name__}: {exc}",
+        })
+        _log(f"❌ خطای غیرمنتظره (فرآیند آزاد شد، می‌توانید دوباره تلاش کنید): {exc}")
+    finally:
+        # تضمین نهایی: هیچ حالتی نباید running=True بماند بعد از پایان تسک
+        if bot_proxy_state.get("running"):
+            bot_proxy_state["running"] = False
+            _log("🔓 فرآیند ساخت TCP Proxy آزاد شد")
 
 
-def start_job(token: Optional[str], application_port: int, reachable_domains: Optional[list] = None):
+def start_job(token: Optional[str], application_port: int, reachable_domains: Optional[list] = None, force: bool = False):
     global _task
     token = (token or "").strip()
     if not token:
@@ -367,11 +414,15 @@ def start_job(token: Optional[str], application_port: int, reachable_domains: Op
     if not token:
         raise RuntimeError("توکن Railway وارد نشده و توکن ذخیره‌شده‌ای هم وجود ندارد")
     if bot_proxy_state["running"]:
-        raise RuntimeError("یک فرآیند ساخت TCP Proxy از قبل در حال اجراست")
+        # 🐛 فیکس باگ «قفل شدن»: اگر تسک قبلی واقعاً زنده باشد و کاربر force نزده، رد می‌شود؛
+        # ولی اگر تسک زنده نیست (کرش کرده و state جا مانده)، خودکار آزاد می‌شود.
+        task_alive = _task is not None and not _task.done()
+        if task_alive and not force:
+            raise RuntimeError("یک فرآیند ساخت TCP Proxy از قبل در حال اجراست — چند لحظه صبر کنید یا اول «توقف» را بزنید")
+        _log("🔓 فرآیند قفل‌شده‌ی قبلی (تسک مرده) خودکار آزاد شد")
 
     reachable = {_norm_domain(d) for d in (reachable_domains or []) if _norm_domain(d)}
-    if not reachable:
-        raise RuntimeError("اول باید مرحله‌ی پینگ دامنه‌ها (از مرورگر خودت) انجام شود")
+    # حالت خودکار: بدون دامنه‌ی سالم هم شروع می‌شود (هر دامنه پذیرفته + تأیید TCP)
 
     save_token(token)
     _task = asyncio.create_task(run_bot_proxy_job(token, application_port, reachable))

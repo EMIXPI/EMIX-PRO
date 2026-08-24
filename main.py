@@ -1309,8 +1309,9 @@ async def api_bot_tcp_proxy_start(request: Request, _=Depends(require_auth)):
         raise HTTPException(status_code=400, detail="پورت (یا uuid لینک) مشخص نشده")
     port = int(port)
     reachable_domains = body.get("reachable_domains") or []
+    force = bool(body.get("force"))
     try:
-        bottokentcpproxy.start_job(token, port, reachable_domains=reachable_domains)
+        bottokentcpproxy.start_job(token, port, reachable_domains=reachable_domains, force=force)
     except RuntimeError as exc:
         raise HTTPException(status_code=409, detail=str(exc))
     log_activity("system", "جست‌وجوی TCP Proxy آغاز شد", "info")
@@ -2912,6 +2913,17 @@ except Exception as _exc:
     logger.error(f"[bootstrap] gaming_boost بارگذاری نشد (نادیده گرفته شد): {_exc}")
 
 
+# ═════════════════════════════════════════════════════════════════════════════
+# ماژول زیرساخت ریلوی — volume خودکار + سلامت‌سنجی کل پنل (railway_infra.py)
+# اگر این ماژول حذف شود یا خطا بدهد، پنل و همه‌ی تونل‌ها بدون تغییر کار می‌کنند.
+# ═════════════════════════════════════════════════════════════════════════════
+try:
+    import railway_infra
+    railway_infra.register_routes(app)
+except Exception as _exc:
+    logger.error(f"[bootstrap] railway_infra بارگذاری نشد (نادیده گرفته شد): {_exc}")
+
+
 # ══════════════════════════════════════════════════════════════════════════════
 # /api/deployment-version — برای تأیید نسخه‌ی دیپلوی‌شده روی Railway
 # کاربر می‌تواند با مقایسه‌ی نسخه، تأیید کند که آیا Railway کد جدید را دیپلوی
@@ -2919,7 +2931,7 @@ except Exception as _exc:
 # تا قبل از لاگین هم قابل بررسی باشد. (از /api/version استفاده نمی‌کنیم چون
 # آن مسیر قبلاً برای بررسی به‌روزرسانی در نظر گرفته شده است.)
 # ══════════════════════════════════════════════════════════════════════════════
-EMIX_VERSION = "9.4.0-gaming"
+EMIX_VERSION = "9.5.0-infra"
 EMIX_BUILD_DATE = "2026-08-24"
 
 @app.get("/api/deployment-version")
@@ -2936,7 +2948,8 @@ async def api_deployment_version():
         "has_bridge": True,
         "has_turbo": True,
         "has_gaming": True,
-        "features_summary": "ISP selector + TLS Mask + Smart Mode + Security + Clean IPs + Bridge CDN/VPS + Turbo 0-RTT + Gaming Center (IP scanner + multi-location + game presets + CF Gateway)",
+        "has_infra": True,
+        "features_summary": "ISP selector + TLS Mask + Smart Mode + Security + Clean IPs + Bridge CDN/VPS + Turbo 0-RTT + Gaming Center + CF Gateway deployed + Auto Volume + Full Health Check",
     }
 
 

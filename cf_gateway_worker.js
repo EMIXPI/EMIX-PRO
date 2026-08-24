@@ -27,7 +27,7 @@
 //   بعد لینک کاربر این‌طور می‌شود: /loc/tr/ws/{uuid}
 // ══════════════════════════════════════════════════════════════════════════════
 
-const GATEWAY_VERSION = '1.1.0';
+const GATEWAY_VERSION = '1.2.0';
 
 // ─── لوکیشن‌های پیش‌فرض (وقتی KV وصل نیست یا خالی است) ───
 // برای افزودن لوکیشن جدید همین‌جا اضافه کنید یا از پنل (KV) استفاده کنید
@@ -94,7 +94,7 @@ export default {
     // ─── عمومی: وضعیت گیت‌وی (پنل + تست پینگ + تشخیص PoP) ───
     if (url.pathname === '/gateway-status') {
       const locs = await getLocations(env);
-      return json({
+      const payload = {
         ok: true,
         gateway: 'emix-gateway',
         version: GATEWAY_VERSION,
@@ -113,7 +113,45 @@ export default {
           upstream: v.upstream,
           note: v.note || '',
         })),
-      });
+      };
+      // ?check=1 → سلامت هر لوکیشن به‌صورت فعال تست می‌شود (تأخیر واقعی تا آپ‌استریم)
+      if (url.searchParams.get('check') === '1') {
+        const checks = await Promise.all(Object.entries(locs).map(async ([name, v]) => {
+          const t0 = Date.now();
+          try {
+            const r = await fetch(`https://${v.upstream}/api/ping`, {
+              method: 'GET',
+              signal: AbortSignal.timeout(8000),
+              headers: { 'x-emix-gateway-check': '1' },
+            });
+            return {
+              name,
+              ok: r.ok,
+              status: r.status,
+              latency_ms: Date.now() - t0,
+            };
+          } catch (e) {
+            return { name, ok: false, status: 0, latency_ms: Date.now() - t0, error: String(e && e.message || e).slice(0, 120) };
+          }
+        }));
+        payload.location_health = checks;
+        payload.all_healthy = checks.every(c => c.ok);
+      }
+      return json(payload);
+    }
+
+    // ─── سلامت سبک برای مانیتورینگ پنل (بدون احراز هویت) ───
+    if (url.pathname === '/health') {
+      const t0 = Date.now();
+      try {
+        const r = await fetch(`https://${DEFAULT_LOCATIONS.auto.upstream}/api/ping`, {
+          method: 'GET',
+          signal: AbortSignal.timeout(6000),
+        });
+        return json({ ok: r.ok, gateway: 'emix-gateway', upstream_ok: r.ok, latency_ms: Date.now() - t0, colo: (request.cf && request.cf.colo) || null });
+      } catch (e) {
+        return json({ ok: false, upstream_ok: false, latency_ms: Date.now() - t0, error: String(e && e.message || e).slice(0, 120) }, 502);
+      }
     }
 
     // ─── ادمین: مدیریت لوکیشن‌ها (نیازمند X-EMIX-Token) ───
