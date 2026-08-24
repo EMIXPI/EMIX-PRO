@@ -27,7 +27,7 @@
 //   بعد لینک کاربر این‌طور می‌شود: /loc/tr/ws/{uuid}
 // ══════════════════════════════════════════════════════════════════════════════
 
-const GATEWAY_VERSION = '1.2.0';
+const GATEWAY_VERSION = '1.3.0';
 
 // ─── لوکیشن‌های پیش‌فرض (وقتی KV وصل نیست یا خالی است) ───
 // برای افزودن لوکیشن جدید همین‌جا اضافه کنید یا از پنل (KV) استفاده کنید
@@ -220,6 +220,14 @@ export default {
       resp = await fetch(proxyReq);
     } catch (e) {
       return json({ ok: false, error: 'خطای آپ‌استریم: ' + e.message, upstream: loc.upstream, location: locName }, 502);
+    }
+
+    // ⚠ حیاتی برای WebSocket: پاسخ 101 (Switching Protocols) قابل بازسازی با
+    // new Response() نیست — کد status 101 در سازنده‌ی Response مجاز نیست و باعث
+    // خطای 500 و قطع همه‌ی تونل‌های WS می‌شود. برای آپگرید WS باید پاسخ اصلی
+    // دقیقاً همان‌طور که هست برگردد (استریم دوطرفه‌ی WebSocket حفظ می‌شود).
+    if (resp.status === 101 || resp.websocket) {
+      return resp;
     }
 
     const h = new Headers(resp.headers);

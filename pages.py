@@ -1,4 +1,4 @@
-# pages.py  -  EMIX v9.2
+# pages.py  -  EMIX v9.5.1
 # شامل: LOGIN_HTML, DASHBOARD_HTML, get_public_page_html()
 
 LOGIN_HTML = r"""<!DOCTYPE html>
@@ -114,8 +114,8 @@ body{
 @keyframes rotang{to{--ang:360deg}}
 @property --ang{syntax:'<angle>';inherits:false;initial-value:0deg}
 
-.brand{display:flex;align-items:center;gap:13px;margin-bottom:28px}
-.brand-img{width:46px;height:46px;border-radius:13px;overflow:hidden;border:1px solid var(--border);flex-shrink:0;position:relative;box-shadow:0 0 0 4px var(--card-in);animation:brandpulse 3.2s ease-in-out infinite}
+.brand{display:flex;flex-direction:column;align-items:center;gap:12px;margin-bottom:24px;text-align:center}
+.brand-img{width:64px;height:64px;border-radius:16px;overflow:hidden;border:1px solid var(--border);flex-shrink:0;position:relative;box-shadow:0 0 0 4px var(--card-in);animation:brandpulse 3.2s ease-in-out infinite}
 @keyframes brandpulse{0%,100%{box-shadow:0 0 0 4px var(--card-in)}50%{box-shadow:0 0 0 6px var(--glow-signal)}}
 .brand-img img{width:100%;height:100%;object-fit:cover;display:block}
 .brand-name{font-size:15.5px;font-weight:800;color:var(--text);letter-spacing:-.01em}
@@ -232,7 +232,7 @@ input:focus~.ic-lock{color:var(--accent2);animation:wiggle .4s ease}
   <div class="card" id="card">
     <div class="brand">
       <div class="brand-img"><svg viewBox="0 0 100 100" width="100%" height="100%" role="img" aria-label="EMIX logo"><rect width="100" height="100" fill="#030303"/><circle cx="50" cy="48" r="45" fill="#0B0B0B" stroke="#5A160E" stroke-width="2"/><circle cx="50" cy="48" r="42" fill="none" stroke="#FF3B24" stroke-width="1" opacity=".7"/><path d="M72 24H39C29 24 23 30 23 40V61C23 71 29 77 39 77H73M39 50H64C72 50 76 46 80 39" fill="none" stroke="#7A170F" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" opacity=".6"/><path d="M72 24H39C29 24 23 30 23 40V61C23 71 29 77 39 77H73M39 50H64C72 50 76 46 80 39" fill="none" stroke="#FF4028" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/><text x="50" y="91" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" font-weight="800" letter-spacing="3" fill="#FF3B24">EMIX</text></svg></div>
-      <div><div class="brand-name">EMIX <span style="background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">PRO</span></div><div class="brand-sub">Multi-Protocol Gateway <span class="mono">· v9.2</span></div></div>
+      <div><div class="brand-name">EMIX <span style="background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">PRO</span></div><div class="brand-sub">Multi-Protocol Gateway <span class="mono">· v9.5</span></div></div>
     </div>
     <h1>ورود به مرکز مدیریت</h1>
 
@@ -251,12 +251,6 @@ input:focus~.ic-lock{color:var(--accent2);animation:wiggle .4s ease}
       </div>
       <button class="btn" type="submit" id="btn"><i class="ti ti-shield-check"></i> ورود امن به داشبورد</button>
     </form>
-
-    <div class="features">
-      <span class="feat"><i class="ti ti-lock-square"></i> TLS 1.3</span>
-      <span class="feat"><i class="ti ti-rocket"></i> 0-RTT Turbo</span>
-      <span class="feat"><i class="ti ti-arrows-shuffle"></i> Multi-Protocol</span>
-    </div>
 
     <div class="footer">کانال رسمی<a href="https://t.me/emixpi" target="_blank" rel="noopener"><i class="ti ti-brand-telegram"></i>@emixpi</a></div>
   </div>
@@ -1025,6 +1019,17 @@ a{color:inherit;text-decoration:none}
 .node-hero .tb-title{font-size:18px}
 .node-hero .tb-sub{max-width:420px}
 .node-hero-metrics{position:relative;z-index:1;display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:16px}
+/* ─── ریسپانسیو بخش گیمینگ/ZEUS — جلوگیری از overlap و overflow موبایل ─── */
+@media(max-width:900px){.node-hero-metrics{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:520px){
+  .node-hero-metrics{grid-template-columns:1fr}
+  .node-hero-top{flex-direction:column;align-items:flex-start;gap:10px}
+  .node-metric-val{font-size:13px !important;word-break:break-all}
+  #gaming-scan-table table{font-size:10px}
+  #gaming-scan-table th,#gaming-scan-table td{padding:4px 4px !important}
+  #pg-gaming pre{max-height:200px;font-size:9px}
+  #gaming-loc-list-box>div{width:100%}
+}
 .node-metric{background:rgba(0,0,0,.14);border:1px solid var(--card-b);border-radius:12px;padding:10px 12px;transition:.2s}
 .node-metric:hover{border-color:var(--card-bh);transform:translateY(-2px)}
 .node-metric-top{display:flex;align-items:center;gap:7px;margin-bottom:8px}
@@ -2745,7 +2750,7 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
   <button class="sb-close" id="close-sb"><i class="ti ti-x"></i></button>
   <div class="logo">
     <div class="logo-img"><svg viewBox="0 0 100 100" width="100%" height="100%" role="img" aria-label="EMIX logo"><rect width="100" height="100" fill="#030303"/><circle cx="50" cy="48" r="45" fill="#0B0B0B" stroke="#5A160E" stroke-width="2"/><circle cx="50" cy="48" r="42" fill="none" stroke="#FF3B24" stroke-width="1" opacity=".7"/><path d="M72 24H39C29 24 23 30 23 40V61C23 71 29 77 39 77H73M39 50H64C72 50 76 46 80 39" fill="none" stroke="#7A170F" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" opacity=".6"/><path d="M72 24H39C29 24 23 30 23 40V61C23 71 29 77 39 77H73M39 50H64C72 50 76 46 80 39" fill="none" stroke="#FF4028" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/><text x="50" y="91" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" font-weight="800" letter-spacing="3" fill="#FF3B24">EMIX</text></svg></div>
-    <div><div class="logo-name">EMIX</div><div class="logo-sub">Gateway · v9.2</div></div>
+    <div><div class="logo-name">EMIX</div><div class="logo-sub">Gateway · v9.5</div></div>
   </div>
   <div class="nav-wrap">
     <div class="nav-sec">پنل</div>
@@ -2878,7 +2883,7 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
     </div>
   </div>
   <div class="dash-footer">
-    <span class="df-text">EMIX PRO v9.3.0-zeus · Railway · 2026 · با ISP + TLS Mask + Smart + Security</span>
+    <span class="df-text">EMIX PRO v9.5.1 · Railway · 2026 · ZEUS + گیمینگ + گیت‌وی کلادفلر</span>
     <a class="df-link" href="https://t.me/emixpi" target="_blank"><i class="ti ti-brand-telegram"></i> t.me/emixpi</a>
   </div>
 </section>
@@ -3005,14 +3010,14 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
       <div style="display:flex;align-items:center;gap:12px">
         <div style="width:44px;height:44px;border-radius:12px;background:var(--green-bg);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ti-cloud" style="font-size:22px;color:var(--green-t)"></i></div>
         <div style="flex:1">
-          <div style="font-weight:700;font-size:13.5px">🌐 CDN ایرانی (رایگان!) <span style="font-size:9px;background:var(--green-bg);color:var(--green-t);padding:2px 7px;border-radius:10px;margin-right:4px">بدون خرید سرور</span></div>
-          <div style="font-size:10.5px;color:var(--t3);margin-top:3px">ترافیک از لبه‌ی اروان داخل ایران رد می‌شود · استتار کامل</div>
+          <div style="font-weight:700;font-size:13.5px">🌐 CDN ایرانی (نیازمند پلن پولی + دامنه)</div>
+          <div style="font-size:10.5px;color:var(--t3);margin-top:3px">ترافیک از لبه‌ی اروان داخل ایران رد می‌شود · برای مبدأ خارجی باید کیف پول شارژ شود</div>
         </div>
         <div class="br-mode-check" style="width:20px;height:20px;border-radius:50%;border:2px solid var(--t3);display:flex;align-items:center;justify-content:center"><i class="ti ti-check" style="font-size:12px;opacity:0"></i></div>
       </div>
       <div style="font-size:10px;color:var(--t3);margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
-        <span class="cfg-sub-tag">هزینه: رایگان</span>
-        <span class="cfg-sub-tag">مصرف سبک/متوسط</span>
+        <span class="cfg-sub-tag">هزینه: پولی (شارژ کیف پول)</span>
+        <span class="cfg-sub-tag">دامنه اختصاصی لازم است</span>
         <span class="cfg-sub-tag">استتار: عالی</span>
       </div>
     </div>
@@ -3020,13 +3025,13 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
 
   <!-- راهنمای حالت CDN (اروان) -->
   <div class="card" id="br-cdn-guide" style="margin-bottom:18px;display:none">
-    <div class="card-title"><i class="ti ti-cloud" style="color:var(--green-t)"></i> راه‌اندازی رایگان با ابر آروان (بدون خرید سرور)</div>
+    <div class="card-title"><i class="ti ti-cloud" style="color:var(--green-t)"></i> راه‌اندازی با ابر آروان (پلن پولی)</div>
     <div style="display:flex;flex-direction:column;gap:10px">
-      <div class="cl"><i class="ti ti-circle-number-1" style="color:var(--green-t)"></i><span>در <b>arvancloud.ir</b> ثبت‌نام کنید (رایگان) و در بخش CDN دامنه‌ی خود را ثبت کنید — دامنه‌ی .ir ارزان یا هر دامنه‌ای که دارید</span></div>
+      <div class="cl"><i class="ti ti-circle-number-1" style="color:var(--green-t)"></i><span>در <b>arvancloud.ir</b> ثبت‌نام کنید، کیف پول را شارژ کنید و یک <b>دامنه‌ی اختصاصی</b> ثبت کنید (دامنه‌ی وورکر رایگان اروان فقط صفحه‌ی Hello, World! برمی‌گرداند و به مبدأ خارجی فوروارد نمی‌شود)</span></div>
       <div class="cl"><i class="ti ti-circle-number-2" style="color:var(--green-t)"></i><span>نیم‌سرورهای دامنه را به نیم‌سرورهای اروان تغییر دهید، سپس رکورد زیر بسازید: <b style="direction:ltr;display:inline-block">CNAME: sub → your-panel.up.railway.app</b> با پروکسی (ابر) <b>روشن</b></span></div>
-      <div class="cl"><i class="ti ti-circle-number-3" style="color:var(--green-t)"></i><span>در تنظیمات CDN اروان: <b>WebSocket را فعال</b> کنید و گزینه‌ی <b>بازنویسی هدر Host به مبدأ</b> را روشن کنید + گواهی SSL رایگان را فعال کنید</span></div>
-      <div class="cl"><i class="ti ti-circle-number-4" style="color:var(--green-t)"></i><span>همان دامنه (مثلاً <b style="direction:ltr;display:inline-block">sub.yourdomain.ir</b>) را در فرم زیر وارد و ذخیره کنید — تمام! ترافیک شما از این‌پس داخلی محاسبه می‌شود و دقیقاً مثل مرور یک سایت ایرانی معمولی به نظر می‌رسد</span></div>
-      <div class="cl amber"><i class="ti ti-alert-triangle"></i><span>پلن رایگان اروان محدودیت ترافیک دارد (حدود ۲۰GB در ماه — برای مصرف شخصی سبک کافی است). برای مصرف بیشتر، همین مسیر با پل VPS یا پلن پولی اروان را بگیرید.</span></div>
+      <div class="cl"><i class="ti ti-circle-number-3" style="color:var(--green-t)"></i><span>در تنظیمات CDN اروان: <b>WebSocket را فعال</b> کنید و گزینه‌ی <b>بازنویسی هدر Host به مبدأ</b> را روشن کنید + گواهی SSL را فعال کنید</span></div>
+      <div class="cl"><i class="ti ti-circle-number-4" style="color:var(--green-t)"></i><span>همان دامنه (مثلاً <b style="direction:ltr;display:inline-block">sub.yourdomain.ir</b>) را در فرم زیر وارد و ذخیره کنید — ترافیک شما داخلی محاسبه می‌شود</span></div>
+      <div class="cl amber"><i class="ti ti-alert-triangle"></i><span>اگر می‌خواهید <b>رایگان</b> و بدون خرید سرور پل داشته باشید، از <b>گیت‌وی کلادفلر</b> در تب «گیمینگ» استفاده کنید — وورکر رایگان با ۱۰۰ هزار درخواست در روز و اسکنر IP داخلی. برای پل اروان، پلن پولی + دامنه لازم است.</span></div>
     </div>
   </div>
 
@@ -3117,11 +3122,17 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
             <td style="padding:9px 8px;text-align:center;color:var(--amber-t)">خوب</td>
             <td style="padding:9px 8px;text-align:center;color:var(--amber-t)">✅ سرور</td>
           </tr>
+          <tr>
+            <td style="padding:9px 8px">⭐ CDN ایرانی (ابَر آروان)</td>
+            <td style="padding:9px 8px;text-align:center;color:var(--green-t)">۱ ✅</td>
+            <td style="padding:9px 8px;text-align:center;color:var(--green-t)">عالی</td>
+            <td style="padding:9px 8px;text-align:center;color:var(--amber-t)">پلن پولی + دامنه</td>
+          </tr>
           <tr style="background:var(--green-bg)">
-            <td style="padding:9px 8px;font-weight:700">⭐ CDN ایرانی (ابَر آروان)</td>
-            <td style="padding:9px 8px;text-align:center;color:var(--green-t);font-weight:700">۱ ✅</td>
+            <td style="padding:9px 8px;font-weight:700">🆕 گیت‌وی کلادفلر (تب گیمینگ)</td>
+            <td style="padding:9px 8px;text-align:center;color:var(--amber-t)">داخلی تا لبه</td>
             <td style="padding:9px 8px;text-align:center;color:var(--green-t);font-weight:700">عالی</td>
-            <td style="padding:9px 8px;text-align:center;color:var(--green-t);font-weight:700">❌ رایگان!</td>
+            <td style="padding:9px 8px;text-align:center;color:var(--green-t);font-weight:700">رایگان (۱۰۰k/روز)</td>
           </tr>
         </tbody>
       </table>
@@ -3468,14 +3479,30 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
     <div id="gaming-scan-summary" style="margin-top:12px;font-size:12px;display:none"></div>
   </div>
 
-  <!-- ۳) مولتی‌لوکیشن -->
+  <!-- ۳) اینباندهای گیت‌وی (مولتی‌ورودی روی خود وورکر — بدون خرید سرور) -->
   <div class="conn-toolbar" style="margin-bottom:14px">
-    <div class="conn-toolbar-title"><i class="ti ti-world"></i> مولتی‌لوکیشن — خروجی ترکیه / روسیه / ...</div>
+    <div class="conn-toolbar-title"><i class="ti ti-door-enter"></i> اینباندهای گیت‌وی — چند ورودی روی خودِ وورکر (بدون سرور اضافه)</div>
   </div>
   <div class="card" style="margin-bottom:18px">
-    <div class="card-title"><i class="ti ti-flag"></i> لوکیشن‌های گیت‌وی</div>
+    <div class="card-title"><i class="ti ti-door-enter"></i> اینباندهای ورودی (Entry Points)</div>
     <div style="font-size:11.5px;color:var(--t3);margin-bottom:14px;line-height:1.8">
-      هر لوکیشن = یک بک‌اند با دامنه‌ی معتبر که پروتکل WS را سرو می‌کند (مثل یه سرور ترکیه/روسیه با Xray). مسیر کانفیگ <code style="direction:ltr;display:inline-block">/loc/tr/...</code> روی Worker به همان بک‌اند می‌رود. برای گیمینگ، لوکیشن خروج تعیین‌کننده‌ی پینگ به سرور بازی است — <b>auto (آمریکا) برای گیمینگ ایده‌آل نیست؛ ترکیه بهترین گزینه برای سرورهای MENA/اروپاست.</b>
+      هر IP آنیکست کلادفلر = یک ورودی مستقل به <b>همان وورکر</b> — مثل داشتن چند سرور ورودی، بدون خرید هیچ سروری. اینباند موردنظر را تست کنید و با کلیک روی «استفاده»، IP آن در فیلد ساخت کانفیگ قرار می‌گیرد.
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
+      <button class="btn btn-g" onclick="gamingLoadInbounds(this)"><i class="ti ti-plug-connected"></i> تست و نمایش اینباندها</button>
+      <span id="gaming-inbounds-summary" style="font-size:11px;color:var(--t3)"></span>
+    </div>
+    <div id="gaming-inbounds-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px"></div>
+  </div>
+
+  <!-- ۳-ب) لوکیشن‌های خروج (نیازمند بک‌اند اختصاصی) -->
+  <div class="conn-toolbar" style="margin-bottom:14px">
+    <div class="conn-toolbar-title"><i class="ti ti-world"></i> لوکیشن‌های خروج — ترکیه / روسیه / ... (اختیاری)</div>
+  </div>
+  <div class="card" style="margin-bottom:18px">
+    <div class="card-title"><i class="ti ti-flag"></i> لوکیشن‌های خروج (اختیاری — برای پینگ بهتر به سرور بازی)</div>
+    <div style="font-size:11.5px;color:var(--t3);margin-bottom:14px;line-height:1.8">
+      <b>فعلاً فقط «auto» فعال است</b> — همان بک‌اند اصلی روی Railway. برای لوکیشن خروج ترکیه/روسیه باید یه سرور با دامنه‌ی معتبر داشته باشی که WS سرو کند (اختیاری — مسیر <code style="direction:ltr;display:inline-block">/loc/tr/...</code> روی Worker به آن می‌رود). <b>برای چند ورودی رایگان بدون سرور، از بخش «اینباندهای گیت‌وی» بالا استفاده کن.</b>
     </div>
     <div id="gaming-loc-list-box" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px"></div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px">
@@ -3858,7 +3885,7 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
       </div>
       <div class="srv-tiles">
         <div class="srv-tile"><div class="srv-tile-icon"><i class="ti ti-route"></i></div><div class="srv-tile-text"><div class="srv-tile-label">پورت</div><div class="srv-tile-val">443 (TLS)</div></div></div>
-        <div class="srv-tile"><div class="srv-tile-icon"><i class="ti ti-versions"></i></div><div class="srv-tile-text"><div class="srv-tile-label">نسخه</div><div class="srv-tile-val">v9.2</div></div></div>
+        <div class="srv-tile"><div class="srv-tile-icon"><i class="ti ti-versions"></i></div><div class="srv-tile-text"><div class="srv-tile-label">نسخه</div><div class="srv-tile-val" id="srv-version-val">v9.5.1</div></div></div>
         <div class="srv-tile"><div class="srv-tile-icon"><i class="ti ti-brand-fastapi"></i></div><div class="srv-tile-text"><div class="srv-tile-label">فریم‌ورک</div><div class="srv-tile-val">FastAPI + Uvicorn</div></div></div>
         <div class="srv-tile"><div class="srv-tile-icon"><i class="ti ti-cloud"></i></div><div class="srv-tile-text"><div class="srv-tile-label">پلتفرم</div><div class="srv-tile-val">Railway</div></div></div>
         <div class="srv-tile" style="grid-column:1/-1"><div class="srv-tile-icon"><i class="ti ti-device-floppy"></i></div><div class="srv-tile-text"><div class="srv-tile-label">ذخیره‌سازی</div><div class="srv-tile-val">JSON File (/data)</div></div></div>
@@ -4885,7 +4912,7 @@ async function loadGamingPage(){
     document.getElementById('gaming-best-ip').textContent=gamingCfg.best_ip||'—';
     document.getElementById('gaming-best-ms').textContent=gamingCfg.best_ip_ms?('تأخیر: '+toFa(Math.round(gamingCfg.best_ip_ms))+' ms'):(gamingCfg.last_scan_ts?('اسکن قدیمی — دوباره اسکن کن'):'هنوز اسکن نشده');
     gamingRenderPresets();
-    if(gamingCfg.ready){gamingRefreshLocations(true)}
+    if(gamingCfg.ready){gamingRefreshLocations(true);gamingLoadInbounds(null)}
     if(gamingCfg.best_ip){document.getElementById('gaming-override-ip').value=gamingCfg.best_ip}
   }catch(e){console.error('loadGamingPage',e);toast('خطا در بارگذاری مرکز گیمینگ','err')}
 }
@@ -4966,6 +4993,47 @@ function gamingFillLocSelect(locs){
   sel.innerHTML='<option value="auto">🌍 auto — Railway</option>'+locs.filter(l=>l.name!=='auto')
     .map(l=>`<option value="${l.name}">${l.flag||''} ${l.label||l.name}</option>`).join('');
   if(cur)sel.value=cur;
+}
+/* ─── اینباندهای گیت‌وی — چند ورودی روی خود وورکر ─── */
+async function gamingLoadInbounds(btn){
+  const ic=btn?btn.querySelector('i'):null;
+  if(ic){ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite';if(btn)btn.disabled=true}
+  const list=document.getElementById('gaming-inbounds-list');
+  const sum=document.getElementById('gaming-inbounds-summary');
+  try{
+    const r=await authF('/api/gaming/inbounds');
+    if(!r.ok){if(sum)sum.textContent='خطا در دریافت اینباندها';return}
+    const j=await r.json();
+    if(!j.ok){if(sum)sum.textContent=j.error||'خطا';return}
+    const ibs=j.inbounds||[];
+    if(sum)sum.textContent=toFa(j.healthy_count||0)+' از '+toFa(ibs.length)+' اینباند سالم';
+    list.innerHTML=ibs.map(ib=>{
+      const ok=ib.healthy;
+      const col=ok?'var(--green-t)':'var(--red-t)';
+      const icon=ok?'ti-circle-check':'ti-circle-x';
+      const lat=ib.connect_ms!=null?toFa(Math.round(ib.connect_ms))+'ms':(ib.latency_ms!=null?toFa(Math.round(ib.latency_ms))+'ms (اسکن)':'—');
+      const latJit=(ib.jitter_ms!=null&&ib.type==='ip')?' · jitter '+toFa(Math.round(ib.jitter_ms))+'ms':'';
+      return `<div style="padding:12px;background:var(--bg);border-radius:12px;border:1px solid ${ok?'var(--card-b)':'rgba(251,113,133,.35)'}">
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:7px">
+          <i class="ti ${icon}" style="color:${col};font-size:15px"></i>
+          <div style="flex:1;font-weight:700;font-size:11.5px">${ib.label}</div>
+          <span class="badge ${ok?'bg-green':'bg-red'}" style="font-size:9px">${ok?'سالم':'قطع'}</span>
+        </div>
+        <div dir="ltr" style="font-size:10px;font-family:monospace;color:var(--t2);text-align:left;word-break:break-all">${ib.entry}:${ib.port}</div>
+        <div style="font-size:10px;color:var(--t3);margin-top:5px">${lat}${latJit} · ${ib.note||''}</div>
+        <button class="btn btn-sm btn-g" style="width:100%;margin-top:8px" onclick="gamingUseInbound('${ib.entry}')"><i class="ti ti-check"></i> استفاده در ساخت کانفیگ</button>
+      </div>`}).join('');
+    toast('اینباندها تست شد: '+toFa(j.healthy_count||0)+' سالم','ok');
+  }catch(e){if(sum)sum.textContent='خطا';toast('خطا','err')}
+  finally{if(ic){ic.className='ti ti-plug-connected';ic.style.animation='';if(btn)btn.disabled=false}}
+}
+function gamingUseInbound(entry){
+  if(!entry)return;
+  document.getElementById('gaming-override-ip').value=entry;
+  const sel=document.getElementById('gaming-entry');
+  if(sel&&entry.match(/^\d+\.\d+\.\d+\.\d+$/)){sel.value='direct'}
+  toast('ورودی «'+entry+'» در فیلد ساخت کانفیگ قرار گرفت — حالا «تولید لینک‌ها» را بزن','ok');
+  document.getElementById('gaming-override-ip').scrollIntoView({behavior:'smooth',block:'center'});
 }
 async function gamingRefreshLocations(silent){
   try{
@@ -5091,6 +5159,11 @@ function gamingRenderScanTable(results){
     </tr>`}).join('');
 }
 /* ─── تولید کانفیگ گیمینگ ─── */
+function gamingCopyLink(btn){
+  const u=decodeURIComponent(btn.dataset.gl||'');
+  if(!u){toast('لینک خالی است','err');return}
+  navigator.clipboard.writeText(u).then(()=>toast('لینک گیمینگ کپی شد','ok')).catch(()=>toast('کپی ناموفق — دستی انتخاب و کپی کنید','err'));
+}
 async function gamingGenLinks(){
   try{
     const body={entry:document.getElementById('gaming-entry').value,
@@ -5106,10 +5179,11 @@ async function gamingGenLinks(){
       (j.links||[]).map(l=>`<div style="margin-bottom:10px;padding:10px;background:var(--card-in);border-radius:8px">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
           <span class="badge bg-blue" style="font-size:10px">${l.protocol}</span><b>${l.label}</b>
-          <button class="btn btn-sm btn-g" style="margin-right:auto" onclick="navigator.clipboard.writeText(${JSON.stringify(l.gaming)}).then(()=>toast('لینک گیمینگ کپی شد','ok'))"><i class="ti ti-copy"></i> کپی لینک گیمینگ</button>
+          <button class="btn btn-sm btn-g" style="margin-right:auto" data-gl="${encodeURIComponent(l.gaming)}" onclick="gamingCopyLink(this)"><i class="ti ti-copy"></i> کپی لینک گیمینگ</button>
         </div>
         <div dir="ltr" style="font-size:10px;font-family:monospace;color:var(--t3);word-break:break-all;direction:ltr;text-align:left">${l.gaming}</div>
       </div>`).join('')+'</div>';
+    document.querySelectorAll('[data-gl]:not([data-bound])').forEach(b=>b.dataset.bound='1');
     toast('لینک‌های گیمینگ ساخته شد','ok');
   }catch(e){toast('خطا','err')}
 }
@@ -5126,9 +5200,11 @@ async function gamingGenJson(){
     const txt=JSON.stringify(j.xray,null,2);
     box.innerHTML='<div style="padding:14px;background:var(--bg);border-radius:10px;border:1px solid var(--card-b);font-size:12px">'+
       '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><b>JSON گیمینگ — '+j.label+'</b>'+
-      '<button class="btn btn-sm btn-g" style="margin-right:auto" onclick="navigator.clipboard.writeText('+JSON.stringify(txt)+').then(()=>toast(\'JSON کپی شد\',\'ok\'))"><i class="ti ti-copy"></i> کپی JSON</button></div>'+
+      '<button class="btn btn-sm btn-g" style="margin-right:auto" id="gaming-json-copy"><i class="ti ti-copy"></i> کپی JSON</button></div>'+
       '<div style="font-size:10.5px;color:var(--t3);margin-bottom:8px">در v2rayNG: تنظیمات ← از کلیپ‌بورد import · شامل fragment ضد DPI + بدون mux + tcpNoDelay</div>'+
       '<pre dir="ltr" style="font-size:10px;font-family:monospace;max-height:300px;overflow:auto;background:var(--card-in);padding:10px;border-radius:8px;white-space:pre-wrap">'+txt.replace(/</g,'&lt;')+'</pre></div>';
+    const cpBtn=document.getElementById('gaming-json-copy');
+    if(cpBtn)cpBtn.onclick=()=>navigator.clipboard.writeText(txt).then(()=>toast('JSON کپی شد','ok'));
     toast('JSON گیمینگ ساخته شد','ok');
   }catch(e){toast('خطا','err')}
 }
@@ -6479,6 +6555,15 @@ function timeAgoFa(ts){
 }
 
 async function loadVersion(){
+  // نسخه‌ی واقعی دیپلوی‌شده — از /api/deployment-version (بدون احراز هویت)
+  try{
+    const dr=await fetch('/api/deployment-version',{cache:'no-store'});
+    if(dr.ok){
+      const dv=await dr.json();
+      const el=document.getElementById('srv-version-val');
+      if(el&&dv.version)el.textContent='v'+dv.version;
+    }
+  }catch(e){}
   try{
     const r=await authF('/api/version'), d=await r.json();
     const cur=d.current||{}, lat=d.latest||{};
@@ -8011,7 +8096,7 @@ html,body{{min-height:100%;background:var(--bg);font-family:var(--serif);color:v
   <div class="top">
     <div class="brand">
       <div class="brand-img"><svg viewBox="0 0 100 100" width="100%" height="100%" role="img" aria-label="EMIX logo"><rect width="100" height="100" fill="#030303"/><circle cx="50" cy="48" r="45" fill="#0B0B0B" stroke="#5A160E" stroke-width="2"/><circle cx="50" cy="48" r="42" fill="none" stroke="#FF3B24" stroke-width="1" opacity=".7"/><path d="M72 24H39C29 24 23 30 23 40V61C23 71 29 77 39 77H73M39 50H64C72 50 76 46 80 39" fill="none" stroke="#7A170F" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" opacity=".6"/><path d="M72 24H39C29 24 23 30 23 40V61C23 71 29 77 39 77H73M39 50H64C72 50 76 46 80 39" fill="none" stroke="#FF4028" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/><text x="50" y="91" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" font-weight="800" letter-spacing="3" fill="#FF3B24">EMIX</text></svg></div>
-      <div><div class="brand-name">EMIX</div><div class="brand-sub">Gateway · v9.2</div></div>
+      <div><div class="brand-name">EMIX</div><div class="brand-sub">Gateway · v9.5</div></div>
     </div>
     <div class="top-actions">
       <button class="icon-btn" id="theme-toggle" onclick="toggleTheme()" title="تغییر تم"><i class="ti ti-sun" id="theme-icon"></i></button>
@@ -8021,7 +8106,7 @@ html,body{{min-height:100%;background:var(--bg);font-family:var(--serif);color:v
   <div id="root">
     <div class="empty-state"><i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i>در حال بارگذاری...</div>
   </div>
-  <div class="footer">کانال رسمی: <a href="https://t.me/emixpi" target="_blank">@emixpi</a> · EMIX v9.2</div>
+  <div class="footer">کانال رسمی: <a href="https://t.me/emixpi" target="_blank">@emixpi</a> · EMIX v9.5</div>
 </div>
 <script>
 const UUID_KEY='{uuid_key}';
