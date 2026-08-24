@@ -178,17 +178,115 @@ async def _bridged_links() -> list[dict]:
 # تست واقعی پل — اتصال TLS از پنل به سرور ایران و برگشت به خود پنل
 # اگر هندشیک TLS با گواهی Railway از مسیر پل موفق شود، کل زنجیره سالم است.
 # ══════════════════════════════════════════════════════════════════════════════
+async def _preflight_arvan_cname(bridge_host: str) -> dict:
+    """بررسی واقعی CNAME اروان قبل از تست TLS.
+    اگر دامنه‌ی Arvan به‌درستی به Railway CNAME نشده باشد، صفحه‌ی «Hello, World!»
+    اروان برمی‌گردد. این تابع آن را تشخیص می‌دهد و راه‌حل دقیق را می‌گوید.
+
+    ۳ حالت ممکن:
+    - cname-ok:       دامنه به‌درستی به EMIX CNAME شده (پاسخ JSON EMIX برگشت)
+    - cname-missing:  CNAME اصلاً ثبت نشده یا به مقصد اشتباه اشاره دارد
+                     (صفحه‌ی «Hello, World!» یا 404 یا خطای DNS)
+    - cname-uncertain: پاسخ غیرمنتظره — تست را ادامه بده
+    """
+    import httpx
+    try:
+        async with httpx.AsyncClient(
+            timeout=8.0,
+            follow_redirects=False,
+            verify=False,  # گواهی ممکن است روی لبه‌ی اروان باشد یا Railway
+        ) as c:
+            # ۱. GET / — اگر CNAME درست باشد، پاسخ JSON سرویس EMIX برگشت
+            try:
+                r = await c.get(f"https://{bridge_host}/")
+            except Exception as exc:
+                return {
+                    "ok": False,
+                    "stage": "preflight-dns",
+                    "detail": f"DNS یا اتصال ناموفق به {bridge_host}: {type(exc).__name__}: {str(exc)[:100]} — "
+                              f"احتمالاً رکورد CNAME هنوز در DNS اروان ثبت نشده یا DNS هنوز propagate نشده.",
+                }
+            body = (r.text or "")[:1500].lower() if r.status_code == 200 else ""
+            # ۲. تشخیص صفحه‌ی پیش‌فرض اروان (Hello, World)
+            if "hello, world" in body or ("arvan" in body and "cdn" in body):
+                return {
+                    "ok": False,
+                    "stage": "cname-missing",
+                    "detail": (
+                        f"⚠️ دامنه‌ی {bridge_host} به‌درستی به Railway CNAME نشده — "
+                        f"صفحه‌ی پیش‌فرض «Hello, World!» اروان برمی‌گردد (HTTP {r.status_code}). "
+                        f"\n\n🔧 راه‌حل گام‌به‌گام:\n"
+                        f"1. وارد پنل اروان شو (arvancloud.com)\n"
+                        f"2. به بخش DNS برو\n"
+                        f"3. رکورد جدید بساز:\n"
+                        f"   - نوع: CNAME\n"
+                        f"   - نام/Host: ساب‌دامنه‌ی شما (مثلاً mytunnel)\n"
+                        f"   - مقدار/Target: emix-pro-production.up.railway.app\n"
+                        f"   - پروکسی (CDN): روشن ✓\n"
+                        f"4. ۵-۱۰ دقیقه صبر کن تا DNS propagate شود\n"
+                        f"5. دوباره اینجا «تست اتصال» را بزن"
+                    ),
+                    "http_status": r.status_code,
+                    "body_snippet": body[:200],
+                }
+            # ۳. اگر پاسخ JSON با service=EMIX است، یعنی CNAME درست است
+            try:
+                j = r.json()
+                if isinstance(j, dict) and j.get("service") == "EMIX":
+                    return {
+                        "ok": True,
+                        "stage": "cname-ok",
+                        "detail": f"✅ CNAME سالم — دامنه‌ی {bridge_host} به Railway/EMIX وصله (نسخه‌ی {j.get('version', '?')})",
+                        "http_status": r.status_code,
+                        "detected_version": j.get("version"),
+                    }
+            except Exception:
+                pass
+            # ۴. پاسخ غیرمنتظره — احتمالاً CNAME به جایی وصله ولی مقصد غریبه
+            return {
+                "ok": True,  # اجازه بده تست TLS ادامه یابد
+                "stage": "cname-uncertain",
+                "detail": f"پاسخ غیرمنتظره از {bridge_host} (HTTP {r.status_code}) — تست TLS ادامه می‌یابد",
+                "http_status": r.status_code,
+                "body_snippet": body[:200],
+            }
+    except Exception as exc:
+        return {
+            "ok": False,
+            "stage": "preflight-error",
+            "detail": f"خطای پیش‌بررسی: {type(exc).__name__}: {str(exc)[:120]}",
+        }
+
+
 async def _test_bridge(cfg: dict) -> dict:
     """
     تست واقعی زنجیره‌ی پل — اتصال TLS از مسیر پنل → پل → مقصد.
     حالت VPS:  SNI = دامنه‌ی Railway (گواهی Railway باید از مسیر سرور برگردد)
     حالت CDN:  SNI = دامنه‌ی خود کاربر (روی لبه‌ی اروان TLS خاتمه می‌یابد)
+
+    مرحله‌ی ۰ (فقط حالت CDN): پیش‌بررسی CNAME — تشخیص صفحه‌ی «Hello, World!»
+    مرحله‌ی ۱: هندشیک TLS واقعی
+    مرحله‌ی ۲: تونل کامل WebSocket از مسیر پل
     """
     bridge_host = cfg.get("bridge_host")
     if not bridge_host:
         return {"ok": False, "detail": "ابتدا آدرس پل را ذخیره کنید"}
     target = _target_domain(cfg)
     mode = cfg.get("mode", "vps")
+
+    # ── مرحله ۰: پیش‌بررسی CNAME اروان (فقط حالت CDN) ──────────────────────
+    # اگر CNAME درست ثبت نشده باشد، صفحه‌ی «Hello, World!» برمی‌گردد و تست‌های
+    # بعدی بی‌فایده‌اند. این پیش‌بررسی کاربر را زودتر راهنمایی می‌کند.
+    if mode == "cdn":
+        preflight = await _preflight_arvan_cname(bridge_host)
+        if not preflight.get("ok"):
+            return {
+                **preflight,
+                "chain": f"پنل → {bridge_host} (لبه‌ی CDN ایران) → {target}",
+                "checked_at": datetime.now().isoformat(),
+            }
+        # اگر cname-ok بود، log کن و ادامه بده
+        logger.info(f"[bridge] preflight CNAME: {preflight.get('stage')} — {preflight.get('detail', '')[:80]}")
 
     # ── مرحله ۱: TLS (مثل قبل) ──
     if mode == "cdn":
@@ -466,6 +564,24 @@ def register_routes(app) -> None:
     async def bridge_test(_=Depends(require_auth)):
         cfg = _load_cfg()
         result = await _test_bridge(cfg)
+        result["checked_at"] = datetime.now().isoformat()
+        return result
+
+    @app.get("/api/bridge/preflight")
+    async def bridge_preflight_get(_=Depends(require_auth)):
+        """بررسی مستقل CNAME اروان — بدون اجرای تست کامل TLS.
+        کاربر می‌تواند بعد از ثبت CNAME در پنل اروان، اینجا را چک کند تا
+        ببیند آیا CNAME به‌درستی به Railway/EMIX وصل شده است."""
+        cfg = _load_cfg()
+        bridge_host = cfg.get("bridge_host", "")
+        if not bridge_host:
+            return {
+                "ok": False,
+                "stage": "no-config",
+                "detail": "ابتدا در صفحه‌ی پل ایران، دامنه‌ی Arvan خود را وارد و ذخیره کنید",
+            }
+        result = await _preflight_arvan_cname(bridge_host)
+        result["bridge_host"] = bridge_host
         result["checked_at"] = datetime.now().isoformat()
         return result
 

@@ -3045,6 +3045,7 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
       </div>
       <button class="btn btn-p" onclick="brSaveConfig(this)"><i class="ti ti-device-floppy"></i> ذخیره</button>
       <button class="btn btn-g" onclick="brTestBridge(this)"><i class="ti ti-activity"></i> تست پل</button>
+      <button class="btn btn-blue" onclick="brTestCNAME(this)"><i class="ti ti-link"></i> تست CNAME اروان</button>
     </div>
     <div class="cl" style="margin-top:10px" id="br-form-note"><i class="ti ti-info-circle"></i><span>پورت پیش‌فرض ۴۴۳ است. اگر ISP پورت ۴۴۳ سرور شما را نمی‌بندد همان ۴۴۳ بهتر است؛ در غیر این صورت هر پورت دلخواه را روی سرور باز کنید و همین‌جا وارد کنید.</span></div>
   </div>
@@ -4246,6 +4247,11 @@ async function brTestBridge(btn){
       ms.textContent=d.ms!=null?toFa(Math.round(d.ms))+'ms':'✓';
       sub.textContent=d.detail||'زنجیره کامل کار می‌کند';
       toast('پل سالم است — '+d.detail,'ok');
+    }else if(d.stage==='cname-missing' || d.stage==='preflight-dns' || d.stage==='preflight-error'){
+      st.textContent='CNAME اروان';st.style.color='var(--amber-t)';
+      ms.textContent='⚠️';
+      sub.innerHTML=(d.detail||'CNAME اروان به‌درستی تنظیم نشده').replace(/\n/g,'<br>');
+      toast('CNAME اروان به Railway وصل نیست — '+d.detail,'err');
     }else{
       st.textContent=d.stage==='ws-rejected'?'تنظیم اروان لازم':d.stage==='tls'?'TLS قطع':'تونل قطع';st.style.color='var(--red-t)';
       ms.textContent=d.ms!=null?toFa(Math.round(d.ms))+'ms':'—';
@@ -4256,6 +4262,34 @@ async function brTestBridge(btn){
     document.getElementById('bridge-metric-status').textContent='خطا';
     toast('خطا در تست پل','err');
   }finally{ic.className='ti ti-activity';ic.style.animation='';btn.disabled=false}
+}
+async function brTestCNAME(btn){
+  const ic=btn.querySelector('i');ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite';btn.disabled=true;
+  try{
+    const r=await authF('/api/bridge/preflight');
+    const d=await r.json();
+    const st=document.getElementById('bridge-metric-status'),sub=document.getElementById('bridge-metric-sub'),ms=document.getElementById('bridge-metric-ms');
+    if(d.ok){
+      if(d.stage==='cname-ok'){
+        st.textContent='CNAME ✓';st.style.color='var(--green-t)';
+        ms.textContent='✓';
+        sub.textContent=d.detail||'دامنه به Railway وصله';
+        toast(d.detail,'ok');
+      }else{
+        st.textContent='بررسی...';st.style.color='var(--t3)';
+        ms.textContent='?';
+        sub.textContent=d.detail||'پاسخ غیرمنتظره';
+        toast(d.detail,'info');
+      }
+    }else{
+      st.textContent='CNAME ✗';st.style.color='var(--amber-t)';
+      ms.textContent='⚠️';
+      sub.innerHTML=(d.detail||'CNAME تنظیم نشده').replace(/\n/g,'<br>');
+      toast('CNAME تنظیم نشده — '+d.detail,'err');
+    }
+  }catch(e){
+    toast('خطا در تست CNAME','err');
+  }finally{ic.className='ti ti-link';ic.style.animation='';btn.disabled=false}
 }
 async function brLoadLinks(){
   const list=document.getElementById('bridge-links-list');
