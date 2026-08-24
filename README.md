@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://capsule-render.vercel.app/api?type=waving&color=0:0f2027,50:203a43,100:2c5364&height=220&section=header&text=EMIX&fontSize=60&fontColor=ffffff&animation=fadeIn&fontAlignY=38&desc=Multi-Protocol%20Proxy%20Management%20Panel&descAlignY=58&descSize=18" width="100%"/>
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:0f2027,50:203a43,100:2c5364&height=220&section=header&text=EMIX%20PRO&fontSize=56&fontColor=ffffff&animation=fadeIn&fontAlignY=38&desc=Multi-Protocol%20Proxy%20Management%20Panel&descAlignY=58&descSize=18" width="100%"/>
 
 <a href="#-english"><img src="https://img.shields.io/badge/🇬🇧-English-0f2027?style=for-the-badge" /></a>
 <a href="#-فارسی"><img src="https://img.shields.io/badge/🇮🇷-فارسی-203a43?style=for-the-badge" /></a>
@@ -18,16 +18,16 @@
 
 <br/>
 
-<a href="https://railway.com/new/template?template=https://github.com/EMIXPI/EMIX">
+<a href="https://railway.com/new/template?template=https://github.com/EMIXPI/EMIX-PRO">
   <img src="https://railway.com/button.svg" alt="Deploy on Railway" width="180"/>
 </a>
 
 **⬆️ One-Click Deploy** — Railway auto-configures the port (`PORT`), start command, and healthcheck (`/api/ping`) from `railway.toml`. After deploy, just hit **Settings → Networking → Generate Domain** and open `/dashboard`.
 
-![Stars](https://img.shields.io/github/stars/your-username/EMIX?style=social)
-![Forks](https://img.shields.io/github/forks/your-username/EMIX?style=social)
-![Last Commit](https://img.shields.io/github/last-commit/your-username/EMIX?color=2c5364)
-![Repo Size](https://img.shields.io/github/repo-size/your-username/EMIX?color=0f2027)
+![Stars](https://img.shields.io/github/stars/EMIXPI/EMIX-PRO?style=social)
+![Forks](https://img.shields.io/github/forks/EMIXPI/EMIX-PRO?style=social)
+![Last Commit](https://img.shields.io/github/last-commit/EMIXPI/EMIX-PRO?color=2c5364)
+![Repo Size](https://img.shields.io/github/repo-size/EMIXPI/EMIX-PRO?color=0f2027)
 
 </div>
 
@@ -36,7 +36,7 @@
 ---
 
 <div align="center">
-<h1>🇬🇧 English</h1>
+<h1>🇬🇧 EMIX PRO — English</h1>
 </div>
 
 ## 📖 Table of Contents
@@ -59,7 +59,7 @@
 
 ## 🚀 Overview
 
-**EMIX** is a fast, modern, self-hosted **multi-protocol proxy management panel**, built with **Python + FastAPI**, designed to deploy in minutes on **Railway**.
+**EMIX PRO** is a fast, modern, self-hosted **multi-protocol proxy management panel**, built with **Python + FastAPI**, designed to deploy in minutes on **Railway**.
 
 It gives you a beautiful admin dashboard to create, monitor, and manage proxy links across multiple protocols — with per-link traffic quotas, live connection stats, and QR code generation — all from a single lightweight service.
 
@@ -189,7 +189,7 @@ EMIX/
 
 ### Option 1 — One-Click (recommended)
 
-[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/new/template?template=https://github.com/EMIXPI/EMIX)
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/new/template?template=https://github.com/EMIXPI/EMIX-PRO)
 
 1. Click the button above — Railway opens with this repo pre-loaded
 2. **Deploy** — everything is auto-configured from `railway.toml`:
@@ -209,7 +209,7 @@ EMIX/
 **Fork this repository**
 
 ```
-https://github.com/your-username/EMIX/fork
+https://github.com/EMIXPI/EMIX-PRO/fork
 ```
 
 </td>
@@ -260,7 +260,7 @@ Copy the default VLESS link and import it into your client (v2rayNG, NekoBox, St
 
 ```bash
 # Clone your fork
-git clone https://github.com/<your-username>/EMIX.git
+git clone https://github.com/EMIXPI/EMIX-PRO.git
 cd EMIX
 
 # Create a virtual environment
@@ -339,7 +339,7 @@ If this project helped you, consider supporting its development:
 [![Donate](https://img.shields.io/badge/Donate-PayPal-blue.svg?style=for-the-badge&logo=paypal)]([https://your-donate-link.com](https://your-donate-link.com))
 [![Wallets](https://img.shields.io/badge/Crypto-Wallets-f7931a?style=for-the-badge&logo=bitcoin)]([https://wallets.example.com](https://your-donate-link.com))
 
-**Made with ❤️ by [EMIX](https://github.com/your-username)**
+**Made with ❤️ by [EMIX PRO](https://github.com/your-username)**
 
 </div>
 
@@ -350,7 +350,7 @@ If this project helped you, consider supporting its development:
 <br/>
 
 <div align="center" dir="rtl">
-<h1>🇮🇷 فارسی</h1>
+<h1>🇮🇷 EMIX PRO — فارسی</h1>
 </div>
 
 ## 📖 فهرست مطالب
@@ -372,7 +372,7 @@ If this project helped you, consider supporting its development:
 
 ## 🚀 معرفی
 
-**EMIX** یک پنل مدیریت پروکسی چندپروتکلی، سریع و مدرن است که با **Python + FastAPI** ساخته شده و در چند دقیقه روی **Railway** قابل دیپلوی است.
+**EMIX PRO** یک پنل مدیریت پروکسی چندپروتکلی، سریع و مدرن است که با **Python + FastAPI** ساخته شده و در چند دقیقه روی **Railway** قابل دیپلوی است.
 
 این پروژه یک داشبورد مدیریتی زیبا در اختیارتان می‌گذارد تا لینک‌های پروکسی را در پروتکل‌های مختلف بسازید، مانیتور کنید و مدیریت کنید — همراه با محدودیت ترافیک اختصاصی برای هر لینک، آمار اتصالات زنده و خروجی QR Code، همه از طریق یک سرویس سبک و یکپارچه.
 
@@ -502,7 +502,7 @@ EMIX/
 
 ### روش ۱ — یک‌کلیکی (پیشنهادی) 🚀
 
-[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/new/template?template=https://github.com/EMIXPI/EMIX)
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/new/template?template=https://github.com/EMIXPI/EMIX-PRO)
 
 1. روی دکمه‌ی بالا کلیک کنید — Railway با همین ریپو باز می‌شود
 2. **Deploy** بزنید — همه‌چیز از `railway.toml` خودکار تنظیم می‌شود:
@@ -522,7 +522,7 @@ EMIX/
 **فورک کردن این ریپازیتوری**
 
 ```
-https://github.com/your-username/EMIX/fork
+https://github.com/EMIXPI/EMIX-PRO/fork
 ```
 
 </td>
@@ -573,7 +573,7 @@ https://your-app.up.railway.app/dashboard
 
 ```bash
 # کلون کردن فورک شما
-git clone https://github.com/<your-username>/EMIX.git
+git clone https://github.com/EMIXPI/EMIX-PRO.git
 cd EMIX
 
 # ساخت محیط مجازی
