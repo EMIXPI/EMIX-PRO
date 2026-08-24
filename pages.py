@@ -5,10 +5,11 @@ LOGIN_HTML = r"""<!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ورود · EMIX</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<title>ورود · EMIX PRO</title>
+<link rel="preload" href="/assets/fonts.css" as="style" onerror="this.remove()">
+<link rel="stylesheet" href="/assets/fonts.css" onerror="this.remove()">
+<link rel="stylesheet" href="/assets/tabler-icons.min.css" onerror="this.href='https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css'">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" media="print" onload="this.media='all'">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{
@@ -183,6 +184,15 @@ input:focus~.ic-lock{color:var(--accent2);animation:wiggle .4s ease}
 .footer a{color:var(--accent2);font-weight:700;text-decoration:none;display:flex;align-items:center;gap:5px;transition:.18s}
 .footer a:hover{filter:brightness(1.25);transform:translateY(-1px)}
 
+/* ══════ هشدار Caps Lock ══════ */
+.caps-warn{display:none;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.3);border-radius:10px;padding:9px 13px;margin-bottom:14px;font-size:11.5px;color:#FCD34D;align-items:center;gap:8px}
+.caps-warn.show{display:flex;animation:fadeup .25s ease}
+
+/* ══════ بج‌های قابلیت — حس محصول حرفه‌ای ══════ */
+.features{display:flex;gap:7px;justify-content:center;margin-top:20px;flex-wrap:wrap;animation:fadeup .5s cubic-bezier(.16,1,.3,1) .48s backwards}
+.feat{display:inline-flex;align-items:center;gap:5px;font-size:9.5px;font-weight:600;color:var(--mid);background:var(--card-in);border:1px solid var(--border);border-radius:999px;padding:5px 11px;letter-spacing:.02em}
+.feat i{font-size:12px;color:var(--accent2)}
+
 @keyframes spin{to{transform:rotate(360deg)}}
 
 @media (max-width:420px){
@@ -222,18 +232,14 @@ input:focus~.ic-lock{color:var(--accent2);animation:wiggle .4s ease}
   <div class="card" id="card">
     <div class="brand">
       <div class="brand-img"><svg viewBox="0 0 100 100" width="100%" height="100%" role="img" aria-label="EMIX logo"><rect width="100" height="100" fill="#030303"/><circle cx="50" cy="48" r="45" fill="#0B0B0B" stroke="#5A160E" stroke-width="2"/><circle cx="50" cy="48" r="42" fill="none" stroke="#FF3B24" stroke-width="1" opacity=".7"/><path d="M72 24H39C29 24 23 30 23 40V61C23 71 29 77 39 77H73M39 50H64C72 50 76 46 80 39" fill="none" stroke="#7A170F" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" opacity=".6"/><path d="M72 24H39C29 24 23 30 23 40V61C23 71 29 77 39 77H73M39 50H64C72 50 76 46 80 39" fill="none" stroke="#FF4028" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/><text x="50" y="91" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" font-weight="800" letter-spacing="3" fill="#FF3B24">EMIX</text></svg></div>
-      <div><div class="brand-name">EMIX</div><div class="brand-sub">Gateway <span class="mono">· v9.2</span></div></div>
+      <div><div class="brand-name">EMIX <span style="background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">PRO</span></div><div class="brand-sub">Multi-Protocol Gateway <span class="mono">· v9.2</span></div></div>
     </div>
-    <h1>ورود به پنل</h1>
-    <p class="sub">رمز عبور را برای دسترسی به داشبورد مدیریت وارد کنید</p>
+    <h1>ورود به مرکز مدیریت</h1>
+    <p class="sub">احراز هویت امن برای دسترسی به داشبورد EMIX PRO — همه‌ی اتصالات TLS رمزنگاری‌شده هستند</p>
 
     <div class="err" id="err" role="alert"><i class="ti ti-alert-circle"></i><span id="err-text"></span></div>
 
-    <div class="hint">
-      <i class="ti ti-info-circle"></i>
-      <span class="hint-label">رمز پیش‌فرض سیستم</span>
-      <span class="hint-val" tabindex="0" role="button" onclick="fillDefault()" onkeydown="if(event.key==='Enter')fillDefault()">123456</span>
-    </div>
+    <div class="caps-warn" id="caps-warn"><i class="ti ti-letter-case-upper"></i> کلید Caps Lock روشن است</div>
 
     <form id="form" novalidate>
       <div class="field">
@@ -244,8 +250,14 @@ input:focus~.ic-lock{color:var(--accent2);animation:wiggle .4s ease}
           <i class="ti ti-eye ic-eye" id="eye-toggle" onclick="togglePw()" role="button" tabindex="0" aria-label="نمایش رمز عبور"></i>
         </div>
       </div>
-      <button class="btn" type="submit" id="btn"><i class="ti ti-login-2"></i> ورود به داشبورد</button>
+      <button class="btn" type="submit" id="btn"><i class="ti ti-shield-check"></i> ورود امن به داشبورد</button>
     </form>
+
+    <div class="features">
+      <span class="feat"><i class="ti ti-lock-square"></i> TLS 1.3</span>
+      <span class="feat"><i class="ti ti-rocket"></i> 0-RTT Turbo</span>
+      <span class="feat"><i class="ti ti-arrows-shuffle"></i> Multi-Protocol</span>
+    </div>
 
     <div class="footer">کانال رسمی<a href="https://t.me/emixpi" target="_blank" rel="noopener"><i class="ti ti-brand-telegram"></i>@emixpi</a></div>
   </div>
@@ -281,6 +293,15 @@ function togglePw(){
   pw.type = show ? 'text' : 'password';
   eye.className = 'ti ' + (show ? 'ti-eye-off' : 'ti-eye') + ' ic-eye';
 }
+
+/* تشخیص Caps Lock — بازخورد حرفه‌ای */
+document.getElementById('pw').addEventListener('keyup', e => {
+  const on = e.getModifierState && e.getModifierState('CapsLock');
+  document.getElementById('caps-warn').classList.toggle('show', !!on);
+});
+document.getElementById('pw').addEventListener('blur', () => {
+  document.getElementById('caps-warn').classList.remove('show');
+});
 
 /* ذرات شناور پس‌زمینه */
 (function(){
@@ -321,16 +342,17 @@ document.getElementById('form').addEventListener('submit', async e => {
   e.preventDefault();
   const btn = document.getElementById('btn'), err = document.getElementById('err'), et = document.getElementById('err-text');
   err.classList.remove('show'); btn.disabled = true;
-  btn.innerHTML = '<i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i> در حال ورود...';
+  btn.innerHTML = '<i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i> در حال احراز هویت...';
   try{
     const r = await fetch('/api/login', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({password: document.getElementById('pw').value})});
     if(!r.ok){ const d = await r.json().catch(()=>({})); throw new Error(d.detail || 'خطا در ورود'); }
+    btn.innerHTML = '<i class="ti ti-circle-check"></i> خوش آمدید';
     location.href = '/dashboard';
   }catch(e){
     et.textContent = e.message;
     err.classList.add('show');
     btn.disabled = false;
-    btn.innerHTML = '<i class="ti ti-login-2"></i> ورود به داشبورد';
+    btn.innerHTML = '<i class="ti ti-shield-check"></i> ورود امن به داشبورد';
   }
 });
 </script>
@@ -340,11 +362,12 @@ DASHBOARD_HTML = r"""<!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EMIX</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<title>EMIX PRO</title>
+<link rel="preload" href="/assets/fonts.css" as="style" onerror="this.remove()">
+<link rel="stylesheet" href="/assets/fonts.css" onerror="this.remove()">
+<link rel="stylesheet" href="/assets/tabler-icons.min.css" onerror="this.href='https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css'">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap" media="print" onload="this.media='all'">
+<script src="/assets/chart.umd.js" onerror="this.remove();var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js';document.head.appendChild(s)"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -1680,10 +1703,52 @@ body.cascade #links-grid .cfg-card:nth-child(5){animation-delay:.14s}
 body.cascade #links-grid .cfg-card:nth-child(6){animation-delay:.17s}
 body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
 @keyframes cardCascade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* ── ۱۲) Command Palette (Ctrl+K) ── */
+#cp-overlay{position:fixed;inset:0;z-index:1200;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);display:none;align-items:flex-start;justify-content:center;padding-top:12vh}
+#cp-overlay.open{display:flex;animation:cpFade .18s ease}
+@keyframes cpFade{from{opacity:0}to{opacity:1}}
+#cp-box{width:100%;max-width:560px;background:var(--bg2);border:1px solid var(--card-b);border-radius:16px;box-shadow:0 30px 80px -20px rgba(0,0,0,.7),0 0 40px -12px rgba(255,61,46,.25);overflow:hidden;animation:cpIn .22s cubic-bezier(.32,.72,0,1)}
+@keyframes cpIn{from{opacity:0;transform:translateY(-14px) scale(.98)}to{opacity:1;transform:none}}
+#cp-input-wrap{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--card-b)}
+#cp-input-wrap i{color:var(--t3);font-size:17px}
+#cp-input{flex:1;background:none;border:none;outline:none;color:var(--t1);font-family:inherit;font-size:14px}
+#cp-input::placeholder{color:var(--t3)}
+#cp-kbd{font-size:9.5px;color:var(--t3);background:var(--bg3);border:1px solid var(--card-b);border-radius:6px;padding:2px 7px;font-family:monospace}
+#cp-list{max-height:340px;overflow-y:auto;padding:8px}
+.cp-group{padding:8px 10px 4px;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);font-weight:700}
+.cp-item{display:flex;align-items:center;gap:11px;padding:9.5px 12px;border-radius:10px;cursor:pointer;transition:background .12s}
+.cp-item:hover,.cp-item.sel{background:var(--accent-d)}
+.cp-item>i{font-size:16px;color:var(--accent2);width:20px;text-align:center;flex-shrink:0}
+.cp-item .cp-txt{flex:1;min-width:0}
+.cp-item .cp-title{font-size:12.5px;color:var(--t1);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cp-item .cp-sub{font-size:9.5px;color:var(--t3);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cp-item .cp-hint{font-size:9px;color:var(--t3);background:var(--bg3);border:1px solid var(--card-b);border-radius:5px;padding:1px 6px;flex-shrink:0}
+#cp-empty{padding:26px;text-align:center;color:var(--t3);font-size:12px}
+#cp-foot{display:flex;gap:14px;padding:9px 16px;border-top:1px solid var(--card-b);font-size:9.5px;color:var(--t3)}
+#cp-foot b{color:var(--t2);font-weight:600}
+@media(max-width:600px){#cp-overlay{padding-top:6vh}}
 </style>
 </head>
 <body>
 <div class="toast" id="toast"></div>
+
+<!-- ══════ Command Palette (Ctrl+K) ══════ -->
+<div id="cp-overlay" onclick="if(event.target===this)cpClose()">
+  <div id="cp-box" role="dialog" aria-label="پالت فرمان">
+    <div id="cp-input-wrap">
+      <i class="ti ti-search"></i>
+      <input id="cp-input" type="text" placeholder="جستجو یا فرمان... (مثلاً: ساخت کانفیگ، تست همه، پل ایران)" autocomplete="off">
+      <span id="cp-kbd">ESC</span>
+    </div>
+    <div id="cp-list"></div>
+    <div id="cp-foot">
+      <span><b>↑↓</b> جابه‌جایی</span>
+      <span><b>Enter</b> اجرا</span>
+      <span><b>Ctrl+K</b> باز/بسته</span>
+    </div>
+  </div>
+</div>
 
 <div class="modal-bg" id="modal-create-link">
   <div class="modal-v2 cm-modal">
@@ -2756,12 +2821,15 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
       </div>
     </div>
     <div class="card">
-      <div class="card-title"><i class="ti ti-list"></i> خلاصه کانفیگ‌ها <span class="ml-auto badge bg-blue" id="lsummary-badge">۰</span></div>
-      <div id="lsummary">—</div>
+      <div class="card-title">
+        <i class="ti ti-trophy" style="color:var(--amber-t)"></i> پیشنهاد هوشمند — سریع‌ترین کانفیگ
+        <span class="ml-auto"><button class="btn btn-g btn-sm" onclick="bestConfigTest(this)"><i class="ti ti-bolt"></i> تست زنده</button></span>
+      </div>
+      <div id="best-list"><div class="sr"><span class="sr-k" style="color:var(--t3)">دکمه‌ی «تست زنده» را بزنید تا همه‌ی کانفیگ‌ها تست شوند و سریع‌ترین‌ها رتبه‌بندی شوند</span></div></div>
     </div>
   </div>
   <div class="dash-footer">
-    <span class="df-text">EMIX v9.2 · Railway · 2025</span>
+    <span class="df-text">EMIX PRO v9.2 · Railway · 2025</span>
     <a class="df-link" href="https://t.me/emixpi" target="_blank"><i class="ti ti-brand-telegram"></i> t.me/emixpi</a>
   </div>
 </section>
@@ -3457,6 +3525,73 @@ function toast(msg,type=''){
   t.textContent=msg;t.className='toast show'+(type?' '+type:'');
   setTimeout(()=>t.classList.remove('show'),2400);
 }
+
+/* ══════ Command Palette (Ctrl+K) ══════ */
+let cpItems=[],cpSel=0,cpOpen=false;
+function cpActions(){
+  return [
+    {t:'ساخت کانفیگ جدید',s:'ایجاد کانفیگ در صفحه کانفیگ‌ها',i:'ti-square-rounded-plus',run:()=>{navTo('links');setTimeout(()=>openModal('modal-create-link'),350)}},
+    {t:'تست پینگ همه کانفیگ‌ها',s:'بررسی سلامت همه به‌صورت هم‌زمان',i:'ti-activity-heartbeat',run:()=>{navTo('links');setTimeout(()=>{const b=document.getElementById('ping-all-btn');if(b)pingAllLinks(b)},350)}},
+    {t:'پیشنهاد هوشمند — سریع‌ترین کانفیگ',s:'تست زنده و رتبه‌بندی همه کانفیگ‌ها',i:'ti-trophy',run:()=>{navTo('overview');setTimeout(()=>bestConfigTest(),400)}},
+    {t:'صفحه کانفیگ‌ها',s:'مدیریت لینک‌ها',i:'ti-link-plus',run:()=>navTo('links')},
+    {t:'پل ایران',s:'مصرف داخلی + شتاب‌دهی',i:'ti-flag',run:()=>navTo('bridge')},
+    {t:'اتصالات زنده',s:'مانیتورینگ لحظه‌ای',i:'ti-plug-connected',run:()=>navTo('connections')},
+    {t:'ترافیک',s:'نمودار مصرف',i:'ti-chart-area',run:()=>navTo('traffic')},
+    {t:'نودها',s:'مدیریت نودهای متصل',i:'ti-topology-star-3',run:()=>navTo('nodes')},
+    {t:'گروه‌های ساب',s:'مدیریت گروه‌ها',i:'ti-folders',run:()=>navTo('subgroups')},
+    {t:'تنظیمات',s:'تنظیمات پنل',i:'ti-settings',run:()=>navTo('settings')},
+    {t:'لاگ فعالیت‌ها',s:'گزارش رویدادها',i:'ti-history',run:()=>navTo('logs')},
+  ];
+}
+function cpBuild(){
+  const q=document.getElementById('cp-input').value.trim().toLowerCase();
+  const acts=cpActions().filter(a=>!q||a.t.toLowerCase().includes(q)||a.s.toLowerCase().includes(q));
+  const links=q?allLinksList.filter(l=>l.label.toLowerCase().includes(q)||l.uuid.toLowerCase().includes(q)).slice(0,8):[];
+  let html='';
+  if(acts.length){html+='<div class="cp-group">فرمان‌ها</div>';html+=acts.map((a,ix)=>`<div class="cp-item" data-k="a${ix}"><i class="ti ${a.i}"></i><div class="cp-txt"><div class="cp-title">${a.t}</div><div class="cp-sub">${a.s}</div></div><span class="cp-hint">اجرا</span></div>`).join('')}
+  if(links.length){html+='<div class="cp-group">کانفیگ‌ها</div>';html+=links.map((l,ix)=>`<div class="cp-item" data-k="l${ix}"><i class="ti ti-link"></i><div class="cp-txt"><div class="cp-title">${esc(l.label)}</div><div class="cp-sub">${l.uuid.slice(0,13)}… · ${l.protocol}</div></div><span class="cp-hint">مشاهده</span></div>`).join('')}
+  if(!acts.length&&!links.length){html='<div id="cp-empty"><i class="ti ti-search-off" style="font-size:22px;display:block;margin-bottom:8px"></i>نتیجه‌ای یافت نشد</div>'}
+  document.getElementById('cp-list').innerHTML=html;
+  cpItems={acts,links};cpSel=0;cpHighlight();
+  document.querySelectorAll('#cp-list .cp-item').forEach(el=>{
+    el.onclick=()=>cpRun(el.dataset.k);
+    el.onmouseenter=()=>{cpSel=[...document.querySelectorAll('#cp-list .cp-item')].indexOf(el);cpHighlight()};
+  });
+}
+function cpHighlight(){
+  document.querySelectorAll('#cp-list .cp-item').forEach((el,ix)=>el.classList.toggle('sel',ix===cpSel));
+  const sel=document.querySelector('#cp-list .cp-item.sel');
+  if(sel)sel.scrollIntoView({block:'nearest'});
+}
+function cpRun(key){
+  if(!key)return;
+  const src=key[0],ix=+key.slice(1);
+  const item=src==='a'?cpItems.acts[ix]:cpItems.links[ix];
+  if(!item)return;
+  cpClose();
+  if(src==='a'){item.run()}
+  else{
+    navTo('links');
+    setTimeout(()=>{
+      const card=document.querySelector(`#links-grid .cfg-card[data-uuid="${item.uuid}"]`);
+      if(card){card.scrollIntoView({behavior:'smooth',block:'center'});card.style.boxShadow='0 0 0 2px var(--accent)';setTimeout(()=>card.style.boxShadow='',2200)}
+    },500);
+  }
+}
+function cpOpenShow(){
+  cpOpen=true;document.getElementById('cp-overlay').classList.add('open');
+  const inp=document.getElementById('cp-input');inp.value='';cpBuild();setTimeout(()=>inp.focus(),50);
+}
+function cpClose(){cpOpen=false;document.getElementById('cp-overlay').classList.remove('open')}
+document.addEventListener('keydown',e=>{
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();cpOpen?cpClose():cpOpenShow();return}
+  if(!cpOpen)return;
+  if(e.key==='Escape'){e.preventDefault();cpClose()}
+  else if(e.key==='ArrowDown'){e.preventDefault();const n=document.querySelectorAll('#cp-list .cp-item').length;if(n){cpSel=(cpSel+1)%n;cpHighlight()}}
+  else if(e.key==='ArrowUp'){e.preventDefault();const n=document.querySelectorAll('#cp-list .cp-item').length;if(n){cpSel=(cpSel-1+n)%n;cpHighlight()}}
+  else if(e.key==='Enter'){e.preventDefault();cpRun(document.querySelector('#cp-list .cp-item.sel')?.dataset.k)}
+});
+document.getElementById('cp-input').addEventListener('input',cpBuild);
 function fmtB(b){if(!b||b===0)return '0 B';if(b<1024)return b+' B';if(b<1024**2)return (b/1024).toFixed(1)+' KB';if(b<1024**3)return (b/1024**2).toFixed(2)+' MB';return (b/1024**3).toFixed(2)+' GB'}
 function toFa(n){return String(n).replace(/\d/g,d=>'۰۱۲۳۴۵۶۷۸۹'[d])}
 function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
@@ -3695,6 +3830,38 @@ async function pingNodeLink(uuid,btn,nodeId){
   }
 }
 /* ══════ توربو 0-RTT — تست A/B خودکار ══════ */
+async function bestConfigTest(btn){
+  const box=document.getElementById('best-list');
+  const ic=btn?btn.querySelector('i'):null;
+  if(ic){ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite'}
+  if(btn)btn.disabled=true;
+  if(box)box.innerHTML='<div class="sr"><span class="sr-k" style="color:var(--t3)"><i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i> در حال تست همه‌ی کانفیگ‌ها از مسیر عمومی...</span></div>';
+  try{
+    const r=await authF('/api/links/best',{method:'POST'});
+    const d=await r.json();
+    if(!box)return;
+    const medals=['🥇','🥈','🥉','۴','۵'];
+    if(!d.ranking||!d.ranking.length){
+      box.innerHTML='<div class="sr"><span class="sr-k" style="color:var(--red-t)">کانفیگ سالمی برای رتبه‌بندی یافت نشد</span></div>';
+      return;
+    }
+    box.innerHTML=d.ranking.map((c,ix)=>{
+      const ms=Math.round(c.total_ms);
+      const color=ms<500?'var(--green-t)':ms<1200?'var(--amber-t)':'var(--red-t)';
+      return `<div class="sr" style="cursor:pointer" onclick="navTo('links');setTimeout(()=>{const el=document.querySelector('#links-grid .cfg-card[data-uuid=&quot;${c.uuid}&quot;]');if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.style.boxShadow='0 0 0 2px var(--accent)';setTimeout(()=>el.style.boxShadow='',2000)}},500)">
+        <span class="sr-k" style="gap:7px"><span style="font-size:13px">${medals[ix]||''}</span> ${esc(c.label)}</span>
+        <span class="sr-v" style="color:${color};font-weight:700">${toFa(ms)}ms</span>
+      </div>`;
+    }).join('')+`<div class="sr"><span class="sr-k" style="color:var(--t3);font-size:10px">${toFa(d.healthy)} از ${toFa(d.total)} کانفیگ سالم · ${new Date(d.checked_at).toLocaleTimeString('fa-IR')}</span></div>`;
+    toast(`سریع‌ترین: ${d.ranking[0].label} — ${Math.round(d.ranking[0].total_ms)}ms`,'ok');
+  }catch(e){
+    if(box)box.innerHTML='<div class="sr"><span class="sr-k" style="color:var(--red-t)">خطا در تست — دوباره تلاش کنید</span></div>';
+    toast('خطا در توصیه‌گر','err');
+  }finally{
+    if(ic){ic.className='ti ti-bolt';ic.style.animation=''}
+    if(btn)btn.disabled=false;
+  }
+}
 async function turboTest(uuid,btn){
   const ic=btn?btn.querySelector('i'):null;
   if(ic){ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite'}

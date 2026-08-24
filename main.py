@@ -2778,6 +2778,12 @@ bridge_boost.register_routes(app)
 import turbo_boost
 turbo_boost.register_routes(app)
 
+# ══════════════════════════════════════════════════════════════════════════════
+# Assets سلف‌هاست (فونت/آیکون/Chart.js محلی) + GZip — static_assets.py
+# ══════════════════════════════════════════════════════════════════════════════
+import static_assets
+static_assets.register(app)
+
 
 if __name__ == "__main__":
     uvicorn.run(

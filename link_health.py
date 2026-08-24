@@ -348,6 +348,45 @@ def register_routes(app) -> None:
         ok_n = sum(1 for r in results if r["result"].get("ok"))
         return {"total": len(results), "ok": ok_n, "failed": len(results) - ok_n, "results": list(results)}
 
+    @app.post("/api/links/best")
+    async def api_best_links(_=Depends(require_auth)):
+        """توصیه‌گر هوشمند: تست همه + رتبه‌بندی بر اساس مجموع زمان (هندشیک + رفت‌وبرگشت)."""
+        async with LINKS_LOCK:
+            targets = [(uid, dict(d)) for uid, d in LINKS.items() if is_link_allowed(d)]
+        sem = asyncio.Semaphore(4)
+
+        async def _one(uid: str, link: dict):
+            async with sem:
+                try:
+                    return {
+                        "uuid": uid,
+                        "label": link.get("label", uid[:8]),
+                        "protocol": link.get("protocol", "vless-ws"),
+                        "result": await _run_link_ping(uid, link),
+                    }
+                except Exception as exc:
+                    return {"uuid": uid, "label": link.get("label", uid[:8]),
+                            "protocol": link.get("protocol", "vless-ws"),
+                            "result": {"ok": False, "detail": f"{type(exc).__name__}: {exc}"}}
+
+        results = await asyncio.gather(*[_one(u, d) for u, d in targets]) if targets else []
+        ranked = sorted(
+            (r for r in results if r["result"].get("ok")),
+            key=lambda r: (r["result"].get("ws_ms") or 0) + (r["result"].get("e2e_ms") or 0),
+        )
+        return {
+            "total": len(results),
+            "healthy": len(ranked),
+            "ranking": [
+                {
+                    "uuid": r["uuid"], "label": r["label"], "protocol": r["protocol"],
+                    "total_ms": round((r["result"].get("ws_ms") or 0) + (r["result"].get("e2e_ms") or 0), 1),
+                }
+                for r in ranked[:5]
+            ],
+            "checked_at": datetime.now().isoformat(),
+        }
+
     @app.post("/api/node/links/{uid}/ping")
     async def node_ping_link(uid: str, key_id: str = Depends(require_node_key)):
         """تست پینگ کانفیگ روی همین نود — فراخوانده از پنل مرکزی با node-key."""
