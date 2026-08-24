@@ -5,6 +5,7 @@
 # ══════════════════════════════════════════════════════════════════════════════
 
 import asyncio
+import base64
 import secrets
 from datetime import datetime, timezone
 
@@ -29,6 +30,18 @@ from protocol.trojan.trojan import (
     _resolve_and_authorize,
 )
 from protocol.vless.vless import check_and_use
+
+
+def _early_data_chunk(ws: WebSocket) -> bytes:
+    """Early-Data (0-RTT): بار اولیه از هندشیک (Sec-WebSocket-Protocol، base64url بدون padding — طبق xray ed=2048).
+    اگر هدر نبود خروجی خالی است و مسیر عادی (اولین فریم) طی می‌شود — سازگار با کلاینت‌های فعلی."""
+    try:
+        val = (ws.headers.get("sec-websocket-protocol") or "").split(",")[0].strip()
+        if not val:
+            return b""
+        return base64.urlsafe_b64decode(val + "=" * (-len(val) % 4))
+    except Exception:
+        return b""
 
 
 async def _relay_ws_to_tcp(ws: WebSocket, writer: asyncio.StreamWriter, conn_id: str, uuid: str):
@@ -96,10 +109,13 @@ async def trojan_ws_tunnel(ws: WebSocket):
     uuid = None
 
     try:
-        first_msg = await asyncio.wait_for(ws.receive(), timeout=15.0)
-        if first_msg["type"] == "websocket.disconnect":
-            return
-        first_chunk = first_msg.get("bytes") or (first_msg.get("text") or "").encode()
+        # Early-Data (0-RTT): بار اولیه از هندشیک، در صورت ارسال توسط کلاینت (ed=2048)
+        first_chunk = _early_data_chunk(ws)
+        if not first_chunk:
+            first_msg = await asyncio.wait_for(ws.receive(), timeout=15.0)
+            if first_msg["type"] == "websocket.disconnect":
+                return
+            first_chunk = first_msg.get("bytes") or (first_msg.get("text") or "").encode()
         if not first_chunk:
             return
 

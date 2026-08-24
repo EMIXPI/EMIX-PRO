@@ -3694,6 +3694,31 @@ async function pingNodeLink(uuid,btn,nodeId){
     if(ic){ic.className='ti ti-activity';ic.style.animation=''}
   }
 }
+/* ══════ توربو 0-RTT — تست A/B خودکار ══════ */
+async function turboTest(uuid,btn){
+  const ic=btn?btn.querySelector('i'):null;
+  if(ic){ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite'}
+  if(btn)btn.disabled=true;
+  try{
+    const r=await authF(`/api/turbo/links/${uuid}/ab`,{method:'POST'});
+    const d=await r.json();
+    if(!r.ok){toast(d.detail||'توربو در دسترس نیست','err');return}
+    if(!d.ok){toast('تست توربو ناموفق بود: '+((d.turbo&&d.turbo.ok===false&&'تونل توربو پاسخ نداد')||'نامشخص'),'err');return}
+    const n=Math.round(d.normal.total_ms||0),t=Math.round(d.turbo.total_ms||0);
+    const imp=d.improvement_ms!=null?Math.round(d.improvement_ms):null;
+    if(d.turbo_url){
+      try{await navigator.clipboard.writeText(d.turbo_url)}catch(e){}
+    }
+    // در شبکه‌ی محلی تفاوت ~۰ است؛ در اینترنت واقعی صرفه‌جویی یک RTT کامل است
+    const impTxt=(imp!=null&&imp>5)?` — ${toFa(imp)}ms بهتر`:' — در اینترنت واقعی ≈ یک RTT سریع‌تر';
+    toast(`🚀 توربو ${toFa(t)}ms · عادی ${toFa(n)}ms${impTxt} · لینک توربو کپی شد`,'ok');
+  }catch(e){
+    toast('خطا در تست توربو','err');
+  }finally{
+    if(ic){ic.className='ti ti-rocket';ic.style.animation=''}
+    if(btn)btn.disabled=false;
+  }
+}
 async function pingAllLinks(btn){
   const targets=allLinksList.filter(l=>!l._nodeId);
   if(!targets.length){toast('کانفیگ محلی برای تست وجود ندارد','err');return}
@@ -3891,6 +3916,11 @@ async function loadLinks(){
       }catch(e){}
     }
     const links=[...localLinks,...nodeLinks];
+    // هشدار یک‌باره: اگر دامنه‌ی عمومی Railway فعال نباشد، لینک‌ها روی localhost می‌مانند
+    if(!window.__domainWarned&&localLinks.some(l=>(l.vless_link||'').includes('@localhost:')||(l.vless_link||'').includes('@127.0.0.1:'))){
+      window.__domainWarned=true;
+      toast('دامنه‌ی عمومی فعال نیست — Railway → Settings → Networking → Generate Domain','warn');
+    }
     allSubsList=subs;allLinksList=links;
     document.getElementById('info-inbounds').textContent = toFa(links.length);
     document.getElementById('info-clients').textContent = toFa(links.filter(l=>l.active).length);
@@ -3962,6 +3992,7 @@ async function loadLinks(){
         <button class="tog${allowed?' on':''}" onclick="toggleActive('${l.uuid}',${!l.active}${isNode?`,'${l._nodeId}'`:''})" title="فعال/غیرفعال"></button>
         ${!isNode?adBtn:''}
         ${!isNode?`<button class="btn btn-sm btn-g btn-icon" onclick="pingLink('${l.uuid}',this)" title="تست پینگ و سلامت تونل"><i class="ti ti-activity"></i></button>`:`<button class="btn btn-sm btn-g btn-icon" onclick="pingNodeLink('${l.uuid}',this,'${l._nodeId}')" title="تست پینگ روی نود"><i class="ti ti-activity"></i></button>`}
+        ${!isNode&&(l.protocol==='vless-ws'||l.protocol==='trojan-ws')?`<button class="btn btn-sm btn-g btn-icon" onclick="turboTest('${l.uuid}',this)" title="تست توربو 0-RTT — یک RTT کمتر در هر اتصال + کپی لینک توربو"><i class="ti ti-rocket"></i></button>`:''}
         <button class="btn btn-sm btn-g btn-icon" onclick="navigator.clipboard.writeText('${esc(l.vless_link)}').then(()=>toast('لینک کپی شد','ok'))" title="کپی لینک"><i class="ti ti-copy"></i></button>
         ${isMt
           ? `<button class="btn btn-sm btn-g btn-icon" onclick="openMtInfoModal('${esc(l.label)}','${esc(l.mtproto_secret||'')}','${esc(l.vless_link)}',${!!l.mtproto_public_host})" title="اطلاعات پروکسی"><i class="ti ti-info-circle"></i></button>`

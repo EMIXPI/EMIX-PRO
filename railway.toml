@@ -1,0 +1,10 @@
+# railway.toml — تنظیمات دیپلوی Railway
+# ▸ پورت: Railway متغیر PORT را خودکار ست می‌کند و main.py همان را می‌خواند (0.0.0.0)
+# ▸ healthcheck روی اندپوینت سبک /api/ping (بدون احراز هویت، فقط ok)
+# ▸ ری‌استارت خودکار در صورت کرش
+[deploy]
+startCommand = "python main.py"
+healthcheckPath = "/api/ping"
+healthcheckTimeout = 180
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 5

@@ -5,6 +5,7 @@
 # ══════════════════════════════════════════════════════════════════════════════
 
 import asyncio
+import base64
 import secrets
 from datetime import datetime, timezone
 
@@ -29,6 +30,20 @@ from protocol.vless.vless import (
     relay_ws_to_tcp,
     relay_tcp_to_ws,
 )
+
+
+def _early_data_chunk(ws: WebSocket) -> bytes:
+    """Early-Data (0-RTT): بار اولیه از هندشیک خوانده می‌شود
+    (هدر Sec-WebSocket-Protocol، base64url بدون padding — طبق xray ed=2048).
+    اگر هدر نبود، خروجی خالی است و مسیر عادی (اولین فریم WS) طی می‌شود —
+    ۱۰۰٪ سازگار با کلاینت‌های فعلی که ed ندارند."""
+    try:
+        val = (ws.headers.get("sec-websocket-protocol") or "").split(",")[0].strip()
+        if not val:
+            return b""
+        return base64.urlsafe_b64decode(val + "=" * (-len(val) % 4))
+    except Exception:
+        return b""
 
 
 async def websocket_tunnel(ws: WebSocket, uuid: str):
@@ -58,10 +73,14 @@ async def websocket_tunnel(ws: WebSocket, uuid: str):
     writer = None
 
     try:
-        first_msg = await asyncio.wait_for(ws.receive(), timeout=15.0)
-        if first_msg["type"] == "websocket.disconnect":
-            return
-        first_chunk = first_msg.get("bytes") or (first_msg.get("text") or "").encode()
+        # Early-Data (0-RTT): اگر کلاینت بار اولیه را در هندشیک فرستاده باشد،
+        # بدون صبر برای اولین فریم ادامه می‌دهیم؛ در غیر این صورت مسیر عادی.
+        first_chunk = _early_data_chunk(ws)
+        if not first_chunk:
+            first_msg = await asyncio.wait_for(ws.receive(), timeout=15.0)
+            if first_msg["type"] == "websocket.disconnect":
+                return
+            first_chunk = first_msg.get("bytes") or (first_msg.get("text") or "").encode()
         if not first_chunk:
             return
 

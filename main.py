@@ -2771,6 +2771,13 @@ link_health.register_routes(app)
 import bridge_boost
 bridge_boost.register_routes(app)
 
+# ══════════════════════════════════════════════════════════════════════════════
+# ماژول توربو — لینک‌های 0-RTT + تست A/B خودکار (کاملاً جدا از هسته — turbo_boost.py)
+# اگر این ماژول حذف شود، پنل و همه‌ی تونل‌ها بدون تغییر کار می‌کنند.
+# ══════════════════════════════════════════════════════════════════════════════
+import turbo_boost
+turbo_boost.register_routes(app)
+
 
 if __name__ == "__main__":
     uvicorn.run(

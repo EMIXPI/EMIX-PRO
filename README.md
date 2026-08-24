@@ -16,6 +16,14 @@
 [![Railway](https://img.shields.io/badge/Deploy-Railway-0B0D0E?style=for-the-badge&logo=railway&logoColor=white)](https://railway.app)
 [![License](https://img.shields.io/badge/License-Custom-red?style=for-the-badge)](./LICENSE)
 
+<br/>
+
+<a href="https://railway.com/new/template?template=https://github.com/EMIXPI/EMIX">
+  <img src="https://railway.com/button.svg" alt="Deploy on Railway" width="180"/>
+</a>
+
+**⬆️ One-Click Deploy** — Railway auto-configures the port (`PORT`), start command, and healthcheck (`/api/ping`) from `railway.toml`. After deploy, just hit **Settings → Networking → Generate Domain** and open `/dashboard`.
+
 ![Stars](https://img.shields.io/github/stars/your-username/EMIX?style=social)
 ![Forks](https://img.shields.io/github/forks/your-username/EMIX?style=social)
 ![Last Commit](https://img.shields.io/github/last-commit/your-username/EMIX?color=2c5364)
@@ -104,6 +112,26 @@ It gives you a beautiful admin dashboard to create, monitor, and manage proxy li
 
 </td>
 </tr>
+<tr>
+<td width="50%">
+
+### 🚀 EMIX Turbo & Health
+- Real end-to-end config testing (edge → TLS → auth → target → HTTP reply)
+- Per-config ping button + live color-coded badges
+- **0-RTT Turbo links** (early-data `ed=2048`) with automatic A/B testing
+- "Test all" with live progress
+
+</td>
+<td width="50%">
+
+### 🌉 Iran Bridge (billing + speed)
+- Domestic traffic routing (1x instead of 2.7x)
+- Free mode: Iranian CDN (ArvanCloud) — no server needed
+- VPS mode: auto-install script (socat + systemd + BBR)
+- Real TLS chain test + savings calculator
+
+</td>
+</tr>
 </table>
 
 <br/>
@@ -158,6 +186,20 @@ EMIX/
 <br/>
 
 ## ⚡ Quick Start (Railway Deploy)
+
+### Option 1 — One-Click (recommended)
+
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/new/template?template=https://github.com/EMIXPI/EMIX)
+
+1. Click the button above — Railway opens with this repo pre-loaded
+2. **Deploy** — everything is auto-configured from `railway.toml`:
+   - ✅ Port: `PORT` env is set by Railway automatically (app binds `0.0.0.0:$PORT`)
+   - ✅ Start command: `python main.py`
+   - ✅ Healthcheck: `GET /api/ping` (auto-restart on crash)
+3. **Generate Domain**: Railway → Settings → Networking → **Generate Domain** (sets `RAILWAY_PUBLIC_DOMAIN` automatically — the panel shows a reminder toast if you forget)
+4. Open `https://your-app.up.railway.app/dashboard` 🎉
+
+### Option 2 — Manual
 
 <table>
 <tr>
@@ -383,6 +425,26 @@ If this project helped you, consider supporting its development:
 
 </td>
 </tr>
+<tr>
+<td width="50%">
+
+### 🚀 توربو و سلامت
+- تست واقعی end-to-end هر کانفیگ (edge → TLS → احراز هویت → مقصد → پاسخ HTTP)
+- دکمه‌ی پینگ برای هر کانفیگ + بج رنگی لحظه‌ای
+- **لینک‌های توربو 0-RTT** (early-data با `ed=2048`) + تست A/B خودکار
+- «تست همه» با پیشرفت زنده
+
+</td>
+<td width="50%">
+
+### 🌉 پل ایران (صورت‌حساب + سرعت)
+- مسیر داخلی برای ترافیک (ضریب ۱ به‌جای ۲.۷)
+- حالت رایگان: CDN ایرانی (ابَر آروان) — بدون خرید سرور
+- حالت VPS: اسکریپت نصب خودکار (socat + systemd + BBR)
+- تست واقعی زنجیره TLS + محاسبه‌گر صرفه‌جویی
+
+</td>
+</tr>
 </table>
 
 <br/>
@@ -437,6 +499,20 @@ EMIX/
 <br/>
 
 ## ⚡ شروع سریع (دیپلوی روی Railway)
+
+### روش ۱ — یک‌کلیکی (پیشنهادی) 🚀
+
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/new/template?template=https://github.com/EMIXPI/EMIX)
+
+1. روی دکمه‌ی بالا کلیک کنید — Railway با همین ریپو باز می‌شود
+2. **Deploy** بزنید — همه‌چیز از `railway.toml` خودکار تنظیم می‌شود:
+   - ✅ پورت: متغیر `PORT` را Railway خودش ست می‌کند (اپ روی `0.0.0.0` گوش می‌دهد)
+   - ✅ دستور اجرا: `python main.py`
+   - ✅ سلامت‌سنجی: `GET /api/ping` (ری‌استارت خودکار در صورت کرش)
+3. **ساخت دامنه**: Railway → Settings → Networking → **Generate Domain** (متغیر `RAILWAY_PUBLIC_DOMAIN` خودکار ست می‌شود — اگر فراموش کنید، خود پنل یادآوری می‌کند)
+4. `https://your-app.up.railway.app/dashboard` را باز کنید 🎉
+
+### روش ۲ — دستی
 
 <table dir="rtl">
 <tr>
