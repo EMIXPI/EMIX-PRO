@@ -235,7 +235,6 @@ input:focus~.ic-lock{color:var(--accent2);animation:wiggle .4s ease}
       <div><div class="brand-name">EMIX <span style="background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">PRO</span></div><div class="brand-sub">Multi-Protocol Gateway <span class="mono">· v9.2</span></div></div>
     </div>
     <h1>ورود به مرکز مدیریت</h1>
-    <p class="sub">احراز هویت امن برای دسترسی به داشبورد EMIX PRO — همه‌ی اتصالات TLS رمزنگاری‌شده هستند</p>
 
     <div class="err" id="err" role="alert"><i class="ti ti-alert-circle"></i><span id="err-text"></span></div>
 
@@ -245,7 +244,7 @@ input:focus~.ic-lock{color:var(--accent2);animation:wiggle .4s ease}
       <div class="field">
         <label for="pw">رمز عبور</label>
         <div class="inp-wrap">
-          <input type="password" id="pw" placeholder="رمز عبور را وارد کنید" autofocus required autocomplete="current-password">
+          <input type="password" id="pw" placeholder="رمز پیشفرض ۱۲۳۴۵۶ هستش" autofocus required autocomplete="current-password">
           <i class="ti ti-lock ic-lock"></i>
           <i class="ti ti-eye ic-eye" id="eye-toggle" onclick="togglePw()" role="button" tabindex="0" aria-label="نمایش رمز عبور"></i>
         </div>
@@ -3016,7 +3015,10 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
       </div>
       <div class="fg" style="width:110px" id="br-port-wrap">
         <label>پورت پل</label>
-        <input id="br-port" type="number" value="443" style="width:100%;direction:ltr;text-align:left">
+        <input id="br-port" type="number" value="443" list="cdn-ports" style="width:100%;direction:ltr;text-align:left">
+        <datalist id="cdn-ports">
+          <option value="443"><option value="8443"><option value="2053"><option value="2083"><option value="2087"><option value="2096">
+        </datalist>
       </div>
       <button class="btn btn-p" onclick="brSaveConfig(this)"><i class="ti ti-device-floppy"></i> ذخیره</button>
       <button class="btn btn-g" onclick="brTestBridge(this)"><i class="ti ti-activity"></i> تست پل</button>
@@ -3113,9 +3115,47 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
   <div class="conn-toolbar" style="margin-bottom:14px">
     <div class="conn-toolbar-title"><i class="ti ti-link"></i> کانفیگ‌های پل‌دار <span class="badge bg-blue" id="bridge-links-cnt">۰</span></div>
   </div>
-  <div class="card">
+  <div class="card" style="margin-bottom:18px">
     <div id="bridge-links-list"><div class="empty"><i class="ti ti-flag-off"></i><p>ابتدا آدرس پل را ذخیره کنید</p></div></div>
-    <div class="cl amber" style="margin-top:10px"><i class="ti ti-alert-triangle"></i><span>لینک‌های پل‌دار دقیقاً همان کانفیگ‌های فعلی شما هستند؛ فقط «آدرس اتصال» (و در حالت CDN، پارامترهای host/sni) بازنویسی می‌شود. کد اصلی پروتکل‌ها دست نمی‌خورد و کانفیگ‌های قبلی هم همچنان کار می‌کنند.</span></div>
+    <div class="cl amber" style="margin-top:10px"><i class="ti ti-alert-triangle"></i><span>دکمه‌ی <b>فعالیت</b> کنار هر کانفیگ، پینگ واقعی «از مسیر پل» می‌گیرد — همان مسیری که کلاینت می‌رود. اگر این تست سبز باشد، کلاینت‌ها هم قطعاً جواب می‌گیرند.</span></div>
+  </div>
+
+  <!-- آی‌پی‌های تمیز -->
+  <div class="conn-toolbar" style="margin-bottom:14px">
+    <div class="conn-toolbar-title"><i class="ti ti-radar-2"></i> آی‌پی‌های تمیز لبه‌ی CDN <span class="badge bg-purple" id="cip-cnt">۰</span></div>
+  </div>
+  <div class="card" style="margin-bottom:18px">
+    <div class="card-title">
+      <i class="ti ti-radar-2" style="color:var(--purple)"></i> اسکن لبه‌های اروان
+      <span class="ml-auto" style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn btn-g btn-sm" onclick="cipScanArvan(this)"><i class="ti ti-radar"></i> اسکن آروان</button>
+        <button class="btn btn-g btn-sm" onclick="cipScanBrowser(this)"><i class="ti ti-speedometer"></i> اسکن از مرورگر من</button>
+      </span>
+    </div>
+    <div id="cip-list"><div class="sr"><span class="sr-k" style="color:var(--t3)">«اسکن آروان» IPهای معتبر را از سمت سرور پیدا می‌کند؛ سپس «اسکن از مرورگر من» تاخیر واقعی هر IP را از اینترنت خودتان می‌سنجد</span></div></div>
+    <div class="cl" style="margin-top:10px"><i class="ti ti-info-circle"></i><span>آی‌پی تمیز = جایگزینی «آدرس اتصال» لینک با IP سریع، در حالی که host/sni همان دامنه‌ی پل می‌ماند. اگر ISP شما بعضی IPهای اروان را کند کرده، با این روش از IP سریع‌تر وصل می‌شوید.</span></div>
+  </div>
+
+  <!-- پورت‌های لبه -->
+  <div class="conn-toolbar" style="margin-bottom:14px">
+    <div class="conn-toolbar-title"><i class="ti ti-plug"></i> پورت‌های آماده‌ی اتصال</div>
+  </div>
+  <div class="card" style="margin-bottom:18px">
+    <div class="card-title">
+      <i class="ti ti-plug"></i> پورت‌های سالم پروتکل
+      <span class="ml-auto"><button class="btn btn-g btn-sm" onclick="portTestAll(this)"><i class="ti ti-speedometer"></i> تست پورت‌ها از مرورگر</button></span>
+    </div>
+    <div style="display:flex;gap:14px;flex-wrap:wrap">
+      <div style="flex:1;min-width:220px">
+        <div style="font-size:10px;font-weight:700;color:var(--green-t);margin-bottom:6px"><i class="ti ti-lock"></i> TLS (رمزنگاری‌شده)</div>
+        <div id="ports-tls" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+      </div>
+      <div style="flex:1;min-width:220px">
+        <div style="font-size:10px;font-weight:700;color:var(--amber-t);margin-bottom:6px"><i class="ti ti-lock-open"></i> غیر TLS</div>
+        <div id="ports-plain" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+      </div>
+    </div>
+    <div class="cl" style="margin-top:10px"><i class="ti ti-info-circle"></i><span>کانفیگ‌های پنل با security=tls ساخته می‌شوند؛ پورت اصلی ۴۴۳ است. پورت‌های دیگر فقط زمانی معتبرند که پل CDN فعال باشد و لبه، آن پورت را سرو کند — با «تست پورت‌ها» از مرورگر خودتان بررسی کنید.</span></div>
   </div>
 </section>
 
@@ -3943,9 +3983,13 @@ function brSetMode(mode){
   document.getElementById('br-mode-label').textContent=mode==='cdn'?'(حالت: CDN ایرانی — رایگان)':'(حالت: سرور شخصی)';
   document.getElementById('br-form-title').textContent=mode==='cdn'?'دامنه‌ی پشت CDN ایرانی':'آدرس سرور داخل ایران';
   document.getElementById('br-host-label').textContent=mode==='cdn'?'دامنه‌ی شما روی ابر آروان (مثلاً sub.yourdomain.ir)':'آدرس سرور ایران (IP یا دامنه)';
-  document.getElementById('br-port-wrap').style.display=mode==='cdn'?'none':'';
+  document.getElementById('br-port-wrap').style.display=mode==='cdn'?'':'none';
   document.getElementById('br-form-note').style.display=mode==='cdn'?'none':'';
-  if(mode==='cdn')document.getElementById('br-port').value=443;
+  if(mode==='cdn'){
+    const pi=document.getElementById('br-port');
+    if(![443,2053,2083,2087,2096,8443].includes(parseInt(pi.value)))pi.value=443;
+    pi.setAttribute('list','cdn-ports');
+  }else{document.getElementById('br-port').removeAttribute('list')}
 }
 function brCalc(){
   const gb=parseInt(document.getElementById('br-calc-gb').value)||10;
@@ -3978,7 +4022,7 @@ async function loadBridgePage(){
 }
 async function brSaveConfig(btn){
   const host=document.getElementById('br-host').value.trim();
-  const port=bridgeMode==='cdn'?443:(parseInt(document.getElementById('br-port').value)||443);
+  const port=parseInt(document.getElementById('br-port').value)||443;
   if(!host){toast('آدرس پل را وارد کنید','err');return}
   if(bridgeMode==='cdn'&&!host.includes('.')){toast('در حالت CDN باید دامنه وارد کنید (نه IP)','err');return}
   const ic=btn.querySelector('i');ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite';btn.disabled=true;
@@ -4007,15 +4051,15 @@ async function brTestBridge(btn){
     const d=await r.json();
     const st=document.getElementById('bridge-metric-status'),sub=document.getElementById('bridge-metric-sub'),ms=document.getElementById('bridge-metric-ms');
     if(d.ok){
-      st.textContent='سالم ✓';st.style.color='var(--green-t)';
+      st.textContent=d.stage==='full-tunnel'?'سالم ✓✓':'TLS ✓';st.style.color='var(--green-t)';
       ms.textContent=d.ms!=null?toFa(Math.round(d.ms))+'ms':'✓';
       sub.textContent=d.detail||'زنجیره کامل کار می‌کند';
       toast('پل سالم است — '+d.detail,'ok');
     }else{
-      st.textContent='قطع';st.style.color='var(--red-t)';
-      ms.textContent='—';
+      st.textContent=d.stage==='ws-rejected'?'تنظیم اروان لازم':d.stage==='tls'?'TLS قطع':'تونل قطع';st.style.color='var(--red-t)';
+      ms.textContent=d.ms!=null?toFa(Math.round(d.ms))+'ms':'—';
       sub.textContent=d.detail||'تست ناموفق';
-      toast('تست پل ناموفق: '+d.detail,'err');
+      toast('تست پل: '+d.detail,'err');
     }
   }catch(e){
     document.getElementById('bridge-metric-status').textContent='خطا';
@@ -4025,36 +4069,206 @@ async function brTestBridge(btn){
 async function brLoadLinks(){
   const list=document.getElementById('bridge-links-list');
   try{
-    const r=await authF('/api/bridge/links');
-    const d=await r.json();
+    const [br,lr]=await Promise.all([authF('/api/bridge/links'),authF('/api/links')]);
+    const d=await br.json();
+    const live={};
+    try{(await lr.json()).links.forEach(x=>live[x.uuid]=x)}catch(e){}
     const links=d.links||[];
     document.getElementById('bridge-links-cnt').textContent=toFa(links.length)+' کانفیگ';
     if(!links.length){
       list.innerHTML='<div class="empty"><i class="ti ti-flag-off"></i><p>کانفیگ فعالی برای پل‌دادن وجود ندارد</p></div>';
       return;
     }
-    list.innerHTML=links.map(l=>`
+    list.innerHTML=links.map(l=>{
+      const bp=(live[l.uuid]||{}).last_bridge_ping;
+      let badge='';
+      if(bp){
+        const ms=bp.e2e_ms!=null?Math.round(bp.e2e_ms):null;
+        badge=bp.ok
+          ?`<span class="cfg-sub-tag" id="bpb-${l.uuid}" style="color:${ms!=null&&ms<500?'var(--green-t)':ms!=null&&ms<1200?'var(--amber-t)':'var(--red-t)'};cursor:pointer" onclick="brPingLink('${l.uuid}',this)" title="${esc(bp.detail||'')}"><i class="ti ti-route"></i> پل ${ms!=null?toFa(ms)+'ms':'✓'}</span>`
+          :`<span class="cfg-sub-tag" id="bpb-${l.uuid}" style="color:var(--red-t);cursor:pointer" onclick="brPingLink('${l.uuid}',this)" title="${esc(bp.detail||'تست ناموفق')}"><i class="ti ti-route-off"></i> پل قطع</span>`;
+      }else{
+        badge=`<span class="cfg-sub-tag" id="bpb-${l.uuid}" style="color:var(--t3);cursor:pointer" onclick="brPingLink('${l.uuid}',this)" title="تست نشده — کلیک برای تست از مسیر پل"><i class="ti ti-route"></i> تست پل</span>`;
+      }
+      return `
       <div style="display:flex;align-items:center;gap:10px;padding:11px 4px;border-bottom:1px solid var(--card-b);flex-wrap:wrap">
         ${protoBadge(l.protocol)}
         ${bridgeMode==='cdn'?'<span class="cfg-sub-tag" style="color:var(--green-t)"><i class="ti ti-cloud"></i> CDN</span>':'<span class="cfg-sub-tag" style="color:var(--accent2)"><i class="ti ti-server-2"></i> VPS</span>'}
+        ${badge}
         <div style="flex:1;min-width:140px">
           <div style="font-weight:600;font-size:12.5px">${esc(l.label)}</div>
           <div style="font-size:9.5px;color:var(--t3);direction:ltr;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:420px">${esc(l.bridged)}</div>
         </div>
         <div style="display:flex;gap:6px">
+          <button class="btn btn-sm btn-g btn-icon" onclick="brPingLink('${l.uuid}',this)" title="تست پینگ واقعی از مسیر پل (مثل کلاینت)"><i class="ti ti-activity"></i></button>
           <button class="btn btn-sm btn-g btn-icon" onclick="navigator.clipboard.writeText('${esc(l.bridged)}').then(()=>toast('لینک پل‌دار کپی شد','ok'))" title="کپی لینک پل‌دار"><i class="ti ti-copy"></i></button>
           <button class="btn btn-sm btn-g btn-icon" onclick="showQR('${esc(l.bridged)}')" title="QR"><i class="ti ti-qrcode"></i></button>
           <button class="btn btn-sm btn-g btn-icon" onclick="navigator.clipboard.writeText('${esc(l.original)}').then(()=>toast('لینک اصلی کپی شد','ok'))" title="لینک اصلی (بدون پل)"><i class="ti ti-external-link"></i></button>
         </div>
-      </div>`).join('');
+      </div>`;
+    }).join('');
   }catch(e){
     list.innerHTML='<div class="empty"><i class="ti ti-alert-triangle"></i><p>خطا در دریافت لینک‌ها</p></div>';
+  }
+}
+async function brPingLink(uuid,btn){
+  const ic=btn?btn.querySelector('i'):null;
+  const badge=document.getElementById('bpb-'+uuid);
+  if(badge){badge.style.color='var(--t3)';badge.innerHTML='<span class="ping-wave"><span></span><span></span><span></span></span> تست'}
+  if(ic){ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite'}
+  try{
+    const r=await authF(`/api/bridge/links/${uuid}/ping`,{method:'POST'});
+    const d=await r.json();
+    const el=document.getElementById('bpb-'+uuid);
+    if(el){
+      if(d.ok){
+        const ms=d.e2e_ms!=null?Math.round(d.e2e_ms):null;
+        el.style.color=ms!=null&&ms<500?'var(--green-t)':ms!=null&&ms<1200?'var(--amber-t)':'var(--red-t)';
+        el.innerHTML=`<i class="ti ti-route"></i> پل ${ms!=null?toFa(ms)+'ms':'✓'}`;
+        el.title=d.detail||'';
+      }else{
+        el.style.color='var(--red-t)';
+        el.innerHTML=`<i class="ti ti-route-off"></i> پل قطع`;
+        el.title=d.detail||'تست ناموفق';
+      }
+      el.classList.remove('ping-pop');void el.offsetWidth;el.classList.add('ping-pop');
+    }
+    if(d.ok) toast(`پل سالم — ${d.e2e_ms!=null?Math.round(d.e2e_ms)+'ms':''}`,'ok');
+    else toast('تست پل ناموفق — '+(d.detail||'').slice(0,150),'err');
+  }catch(e){
+    if(badge){badge.style.color='var(--red-t)';badge.innerHTML='<i class="ti ti-route-off"></i> خطا'}
+    toast('خطا در تست پل','err');
+  }finally{
+    if(ic){ic.className='ti ti-activity';ic.style.animation=''}
   }
 }
 function brCopyScript(){
   if(!bridgeScriptCache)return;
   navigator.clipboard.writeText(bridgeScriptCache).then(()=>toast('اسکریپت نصب کپی شد — روی سرور ایران اجرایش کنید','ok'));
 }
+
+/* ══════ آی‌پی‌های تمیز — اسکن اروان + اسکن مرورگر + لینک IP-دار ══════ */
+let cipValid=[];   // IPهای تاییدشده سمت سرور
+let cipLatency={}; // تاخیر اندازه‌گیری‌شده از مرورگر
+async function cipScanArvan(btn){
+  const ic=btn.querySelector('i');ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite';btn.disabled=true;
+  const list=document.getElementById('cip-list');
+  list.innerHTML='<div class="sr"><span class="sr-k" style="color:var(--t3)"><i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i> در حال نمونه‌گیری از رنج‌های رسمی اروان و اعتبارسنجی SNI...</span></div>';
+  try{
+    const r=await authF('/api/clean-ips/arvan?limit=32',{method:'GET'});
+    const d=await r.json();
+    if(!r.ok){list.innerHTML=`<div class="sr"><span class="sr-k" style="color:var(--red-t)">${esc(d.detail||'خطا در اسکن')}</span></div>`;toast(d.detail||'خطا در اسکن اروان','err');return}
+    cipValid=d.valid||[];
+    document.getElementById('cip-cnt').textContent=toFa(cipValid.length)+' آی‌پی';
+    if(!cipValid.length){
+      list.innerHTML='<div class="sr"><span class="sr-k" style="color:var(--amber-t)">هیچ آی‌پی از رنج‌های اروان دامنه‌ی شما را سرو نکرد — رکورد CDN در اروان را بررسی کنید</span></div>';
+      return;
+    }
+    cipRender();
+    toast(`${toFa(cipValid.length)} آی‌پی معتبر پیدا شد — حالا «اسکن از مرورگر من» را بزنید`,'ok');
+  }catch(e){toast('خطا در اسکن اروان','err');list.innerHTML='<div class="sr"><span class="sr-k" style="color:var(--red-t)">خطا در اسکن</span></div>'}
+  finally{ic.className='ti ti-radar';ic.style.animation='';btn.disabled=false}
+}
+function cipRender(){
+  const list=document.getElementById('cip-list');
+  const items=cipValid.map(v=>{
+    const lat=cipLatency[v.ip];
+    let latHtml='<span class="cfg-sub-tag" style="color:var(--t3)">تست نشده</span>';
+    if(lat==='fail')latHtml='<span class="cfg-sub-tag" style="color:var(--red-t)">قطع</span>';
+    else if(lat!=null)latHtml=`<span class="cfg-sub-tag" style="color:${lat<400?'var(--green-t)':lat<900?'var(--amber-t)':'var(--red-t)'};font-weight:700">${toFa(Math.round(lat))}ms</span>`;
+    return `<div class="sr">
+      <span class="sr-k mono" style="direction:ltr;gap:8px"><i class="ti ti-world"></i> ${v.ip} ${lat!=null&&lat!=='fail'&&lat===cipBest()? '<span style="font-size:11px">🥇</span>':''}</span>
+      <span style="display:flex;gap:6px;align-items:center">
+        ${latHtml}
+        <button class="btn btn-sm btn-g btn-icon" onclick="cipCopyLinks('${v.ip}')" title="لینک‌های همه‌ی کانفیگ‌ها با این آی‌پی"><i class="ti ti-copy"></i></button>
+      </span>
+    </div>`;
+  }).join('');
+  list.innerHTML=items||'<div class="sr"><span class="sr-k" style="color:var(--t3)">ابتدا «اسکن آروان» را بزنید</span></div>';
+}
+function cipBest(){
+  const valid=Object.entries(cipLatency).filter(([k,v])=>typeof v==='number').sort((a,b)=>a[1]-b[1]);
+  return valid.length?+valid[0][0]:null;
+}
+async function cipScanBrowser(btn){
+  if(!cipValid.length){toast('ابتدا «اسکن آروان» را بزنید','err');return}
+  const ic=btn.querySelector('i');ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite';btn.disabled=true;
+  toast(`در حال سنجش تاخیر ${toFa(cipValid.length)} آی‌پی از اینترنت شما...`,'ok');
+  // سنجش موازی (محدود) با fetch no-cors — زمان کامل TCP+TLS+HTTP
+  const CONC=6;
+  const queue=[...cipValid];
+  async function worker(){
+    while(queue.length){
+      const v=queue.shift();
+      const t0=performance.now();
+      try{
+        await Promise.race([
+          fetch(`https://${v.ip}/`,{mode:'no-cors',cache:'no-store'}),
+          new Promise((_,rej)=>setTimeout(()=>rej(),5000))
+        ]);
+        cipLatency[v.ip]=performance.now()-t0;
+      }catch(e){
+        cipLatency[v.ip]='fail';
+      }
+      cipRender();
+    }
+  }
+  try{await Promise.all(Array.from({length:Math.min(CONC,cipValid.length)},worker))}
+  finally{ic.className='ti ti-speedometer';ic.style.animation='';btn.disabled=false}
+  const ok=Object.values(cipLatency).filter(v=>typeof v==='number');
+  if(ok.length){
+    const best=Object.entries(cipLatency).filter(([k,v])=>typeof v==='number').sort((a,b)=>a[1]-b[1])[0];
+    toast(`🥇 سریع‌ترین برای شما: ${best[0]} — ${Math.round(best[1])}ms (دکمه‌ی کپی کنارش = لینک‌ها با این IP)`,'ok');
+  }else{
+    toast('هیچ آی‌پی از مرورگر شما پاسخ نداد','err');
+  }
+}
+async function cipCopyLinks(ip){
+  try{
+    const r=await authF(`/api/clean-ips/links?ip=${ip}`);
+    const d=await r.json();
+    if(!d.links||!d.links.length){toast('لینکی برای این آی‌پی ساخته نشد','err');return}
+    const all=d.links.map(l=>l.link).join('\n');
+    await navigator.clipboard.writeText(all);
+    toast(`${toFa(d.links.length)} لینک با آی‌پی ${ip} کپی شد`,'ok');
+  }catch(e){toast('خطا در ساخت لینک‌های IP','err')}
+}
+
+/* ══════ تست پورت‌ها از مرورگر ══════ */
+const PORTS_TLS=[443,2053,2083,2087,2096,8443];
+const PORTS_PLAIN=[80,8080,8880,2052,2086,2095];
+function portChip(p,cls){
+  return `<span class="cfg-sub-tag port-chip" data-port="${p}" style="cursor:pointer;font-weight:700;${cls}">${p} <b style="font-weight:400;font-size:8.5px;color:var(--t3)">ms?</b></span>`;
+}
+function portRender(){
+  document.getElementById('ports-tls').innerHTML=PORTS_TLS.map(p=>portChip(p,'color:var(--green-t)')).join('');
+  document.getElementById('ports-plain').innerHTML=PORTS_PLAIN.map(p=>portChip(p,'color:var(--amber-t)')).join('');
+}
+async function portTestAll(btn){
+  const host=document.getElementById('br-host').value.trim();
+  if(!host){toast('ابتدا آدرس پل را وارد کنید','err');return}
+  const ic=btn.querySelector('i');ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite';btn.disabled=true;
+  const all=[...PORTS_TLS,...PORTS_PLAIN];
+  async function testPort(p){
+    const chip=document.querySelector(`.port-chip[data-port="${p}"]`);
+    if(chip){chip.style.opacity='.5';chip.querySelector('b').textContent='...'}
+    const t0=performance.now();
+    try{
+      await Promise.race([
+        fetch(`https://${host}:${p}/`,{mode:'no-cors',cache:'no-store'}),
+        new Promise((_,rej)=>setTimeout(()=>rej(),4000))
+      ]);
+      const ms=Math.round(performance.now()-t0);
+      if(chip){chip.style.opacity='1';chip.querySelector('b').textContent=toFa(ms)+'ms';chip.style.borderColor='var(--green)'}
+    }catch(e){
+      if(chip){chip.style.opacity='.35';chip.querySelector('b').textContent='✗';chip.style.textDecoration='line-through'}
+    }
+  }
+  try{await Promise.all(all.map(testPort))}
+  finally{ic.className='ti ti-speedometer';ic.style.animation='';btn.disabled=false}
+  toast('تست پورت‌ها از اینترنت شما کامل شد','ok');
+}
+setTimeout(portRender,0);
 // لیسنر محاسبه‌گر صرفه‌جویی
 setTimeout(()=>{const s=document.getElementById('br-calc-gb');if(s)s.addEventListener('input',brCalc)},0);
 async function brShowNginx(){

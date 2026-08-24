@@ -50,6 +50,7 @@ from main import (
     is_link_allowed,
     logger,
 )
+import link_health
 
 BRIDGE_FILE = DATA_DIR / "bridge_config.json"
 
@@ -188,6 +189,8 @@ async def _test_bridge(cfg: dict) -> dict:
         return {"ok": False, "detail": "ابتدا آدرس پل را ذخیره کنید"}
     target = _target_domain(cfg)
     mode = cfg.get("mode", "vps")
+
+    # ── مرحله ۱: TLS (مثل قبل) ──
     if mode == "cdn":
         server_name = bridge_host
         chain = f"پنل → {bridge_host} (لبه‌ی CDN ایران) → {target}"
@@ -197,14 +200,14 @@ async def _test_bridge(cfg: dict) -> dict:
     t0 = time.perf_counter()
     ctx = ssl.create_default_context()
     try:
-        reader, writer = await asyncio.wait_for(
+        _, writer = await asyncio.wait_for(
             asyncio.open_connection(
                 bridge_host, int(cfg.get("bridge_port", 443)),
                 ssl=ctx, server_hostname=server_name,
             ),
             timeout=10.0,
         )
-        ms = round((time.perf_counter() - t0) * 1000, 1)
+        tls_ms = round((time.perf_counter() - t0) * 1000, 1)
         cert = writer.get_extra_info("ssl_object").getpeercert()
         issuer = ""
         for rdn in (cert or {}).get("issuer", ()):
@@ -217,20 +220,108 @@ async def _test_bridge(cfg: dict) -> dict:
             await writer.wait_closed()
         except Exception:
             pass
+    except asyncio.TimeoutError:
+        return {"ok": False, "detail": "پاسخی از پل دریافت نشد (timeout) — آیا سرویس روشن است؟", "stage": "tls"}
+    except ssl.SSLCertVerificationError as exc:
+        return {"ok": False, "detail": f"گواهی نامعتبر: {str(exc)[:100]} — در حالت CDN گواهی SSL اروان را فعال کنید", "stage": "tls"}
+    except ConnectionRefusedError:
+        return {"ok": False, "detail": "اتصال رد شد — پورت پل باز نیست", "stage": "tls"}
+    except Exception as exc:
+        return {"ok": False, "detail": f"{type(exc).__name__}: {str(exc)[:110]}", "stage": "tls"}
+
+    # ── مرحله ۲: تونل کامل WebSocket از مسیر پل (دقیقاً مثل کلاینت) ──
+    # این مرحله همان چیزی است که کلاینت واقعی انجام می‌دهد؛ اگر پاسخ داد،
+    # کلاینت‌ها هم جواب می‌گیرند. اگر نه، علت دقیق برگردانده می‌شود.
+    probe_link = await _first_probe_link()
+    if probe_link is None:
         return {
             "ok": True,
-            "ms": ms,
-            "detail": f"TLS از مسیر پل برقرار شد — گواهی «{issuer or target}» دریافت شد",
-            "chain": f"پنل → {bridge_host}:{cfg.get('bridge_port', 443)} → {target}:443",
+            "ms": tls_ms,
+            "stage": "tls-only",
+            "detail": f"TLS سالم ({tls_ms}ms) — گواهی «{issuer or target}». برای تست کامل تونل، یک کانفیگ VLESS/Trojan-WS بسازید",
+            "chain": chain,
         }
-    except asyncio.TimeoutError:
-        return {"ok": False, "detail": "پاسخی از سرور ایران دریافت نشد (timeout) — آیا socat روشن است؟"}
-    except ssl.SSLCertVerificationError as exc:
-        return {"ok": False, "detail": f"گواهی نامعتبر از مسیر پل: {str(exc)[:120]}"}
-    except ConnectionRefusedError:
-        return {"ok": False, "detail": "اتصال رد شد — پورت پل روی سرور ایران باز نیست"}
+    uid, link, kind, is_xhttp = probe_link
+    if mode == "cdn":
+        ws_base, http_base = f"wss://{bridge_host}:{cfg.get('bridge_port', 443)}", f"https://{bridge_host}:{cfg.get('bridge_port', 443)}"
+        no_verify = False
+    else:
+        ws_base, http_base = f"wss://{bridge_host}:{cfg.get('bridge_port', 443)}", f"https://{bridge_host}:{cfg.get('bridge_port', 443)}"
+        no_verify = True  # سرتیفیکیت Railway با hostname پل — اتصال TCP واقعی همان است
+    try:
+        if is_xhttp:
+            r = await link_health._probe_xhttp_tunnel(kind, uid, link, http_base=http_base, no_verify=no_verify)
+        else:
+            r = await link_health._probe_ws_tunnel(kind, uid, link, ws_base=ws_base, no_verify=no_verify)
     except Exception as exc:
-        return {"ok": False, "detail": f"{type(exc).__name__}: {str(exc)[:120]}"}
+        r = {"ok": False, "detail": f"{type(exc).__name__}: {str(exc)[:110]}"}
+
+    total_ms = round(tls_ms + (r.get("e2e_ms") or 0), 1)
+    if r.get("ok"):
+        return {
+            "ok": True,
+            "ms": tls_ms,
+            "e2e_ms": r.get("e2e_ms"),
+            "total_ms": total_ms,
+            "stage": "full-tunnel",
+            "detail": f"✅ کل زنجیره کار می‌کند — TLS {tls_ms}ms + تونل {r.get('e2e_ms')}ms (تست واقعی مثل کلاینت: پاسخ {str(r.get('reply', ''))[:30]})",
+            "chain": chain,
+        }
+
+    # ── تشخیص علت دقیق شکست تونل ──
+    d = str(r.get("detail", ""))
+    if "InvalidStatus" in d or "HTTP 200" in d or "rejected" in d:
+        if mode == "cdn":
+            return {
+                "ok": False,
+                "ms": tls_ms,
+                "stage": "ws-rejected",
+                "detail": ("⚠️ TLS سالم است ولی CDN درخواست WebSocket را عبور نمی‌دهد (HTTP 200 به‌جای 101). "
+                           "دو ایراد رایج اروان: ۱) رکورد CNAME به مبدأ ثبت نشده (صفحه‌ی «Hello, World!» اروان برمی‌گردد) — "
+                           "در پنل اروان → DNS → رکورد جدید: CNAME این ساب‌دامنه ← دامنه‌ی Railway خودتان با پروکسی روشن. "
+                           "۲) WebSocket فعال نیست — پنل اروان → تنظیمات CDN → گزینه‌ی WebSocket را فعال کنید."),
+                "chain": chain,
+            }
+        return {
+            "ok": False, "ms": tls_ms, "stage": "ws-rejected",
+            "detail": "TLS سالم است ولی WebSocket از مسیر سرور رد نمی‌شود — socat باید TCP خام را عبور دهد (اسکریپت نصب، خودش این کار را می‌کند)",
+            "chain": chain,
+        }
+    if "1008" in d or "not authorized" in d:
+        return {"ok": False, "ms": tls_ms, "stage": "auth",
+                "detail": "تونل باز شد ولی UUID رد شد — کانفیگ غیرفعال است یا کوتایش تمام شده", "chain": chain}
+    if "timeout" in d.lower() or "Timeout" in d:
+        return {"ok": False, "ms": tls_ms, "stage": "tunnel-timeout",
+                "detail": "هندشیک انجام شد ولی پاسخ تونل نیامد — اگر CDN: WebSocket و بازنویسی Host را در اروان فعال کنید", "chain": chain}
+    return {"ok": False, "ms": tls_ms, "stage": "tunnel",
+            "detail": f"TLS سالم ({tls_ms}ms) ولی تونل شکست خورد: {d[:140]}", "chain": chain}
+
+
+async def _first_probe_link():
+    """اولین کانفیگ مجاز مناسبِ تست تونل کامل → (uid, link, kind, is_xhttp)"""
+    async with LINKS_LOCK:
+        snap = [(uid, dict(d)) for uid, d in LINKS.items()]
+    prio = {"vless-ws": 0, "trojan-ws": 1, "shadowsocks": 2}
+    best = None
+    for uid, d in snap:
+        proto = d.get("protocol", "vless-ws")
+        if not is_link_allowed(d):
+            continue
+        if proto in prio:
+            cand = (prio[proto], uid, d, {"vless-ws": "vless", "trojan-ws": "trojan", "shadowsocks": "ss"}[proto], False)
+            if best is None or cand[0] < best[0]:
+                best = cand
+        elif proto.startswith("xhttp-") or proto.startswith("vless-xhttp"):
+            cand = (5, uid, d, "vless", True)
+            if best is None:
+                best = cand
+        elif proto.startswith("trojan-xhttp-"):
+            cand = (6, uid, d, "trojan", True)
+            if best is None:
+                best = cand
+    if best is None:
+        return None
+    return best[1], best[2], best[3], best[4]
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -330,6 +421,9 @@ fi
     )
 
 
+CDN_TLS_PORTS = (443, 2053, 2083, 2087, 2096, 8443)  # پورت‌های TLS استاندارد لبه (مثل آروان)
+
+
 def register_routes(app) -> None:
 
     @app.get("/api/bridge/config")
@@ -355,7 +449,8 @@ def register_routes(app) -> None:
         if mode == "cdn":
             if host and not host.startswith("api.") and "." not in host:
                 raise HTTPException(status_code=400, detail="در حالت CDN باید دامنه (نه IP) وارد کنید")
-            port = 443  # لبه‌ی CDN فقط روی پورت استاندارد سرو می‌دهد
+            if port not in CDN_TLS_PORTS:
+                raise HTTPException(status_code=400, detail=f"پورت CDN باید یکی از پورت‌های TLS استاندارد باشد: {', '.join(map(str, CDN_TLS_PORTS))}")
         cfg["mode"] = mode
         cfg["bridge_host"] = host
         cfg["bridge_port"] = port
@@ -373,6 +468,47 @@ def register_routes(app) -> None:
         result = await _test_bridge(cfg)
         result["checked_at"] = datetime.now().isoformat()
         return result
+
+    @app.post("/api/bridge/links/{uid}/ping")
+    async def bridge_ping_link(uid: str, _=Depends(require_auth)):
+        """پینگ واقعی کانفیگ «از مسیر پل» — دقیقاً همان مسیری که کلاینتِ لینک پل‌دار می‌رود."""
+        cfg = _load_cfg()
+        if not cfg.get("bridge_host"):
+            raise HTTPException(status_code=400, detail="ابتدا پل را ذخیره و فعال کنید")
+        async with LINKS_LOCK:
+            link = LINKS.get(uid)
+        if not link:
+            raise HTTPException(status_code=404, detail="کانفیگ یافت نشد")
+        if not is_link_allowed(link):
+            return {"ok": False, "protocol": link.get("protocol"), "detail": "کانفیگ غیرفعال است یا کوتای آن تمام شده",
+                    "checked_at": datetime.now().isoformat()}
+        proto = link.get("protocol", "vless-ws")
+        mode = cfg.get("mode", "vps")
+        bh, bp = cfg["bridge_host"], int(cfg.get("bridge_port", 443))
+        if mode == "cdn":
+            ws_base, http_base, no_verify = f"wss://{bh}:{bp}", f"https://{bh}:{bp}", False
+        else:
+            ws_base, http_base, no_verify = f"wss://{bh}:{bp}", f"https://{bh}:{bp}", True
+        if proto == "vless-ws":
+            r = {"test": "ws-tunnel-via-bridge", **await link_health._probe_ws_tunnel("vless", uid, link, ws_base=ws_base, no_verify=no_verify)}
+        elif proto == "trojan-ws":
+            r = {"test": "ws-tunnel-via-bridge", **await link_health._probe_ws_tunnel("trojan", uid, link, ws_base=ws_base, no_verify=no_verify)}
+        elif proto == "shadowsocks":
+            r = {"test": "ws-tunnel-via-bridge", **await link_health._probe_ws_tunnel("ss", uid, link, ws_base=ws_base, no_verify=no_verify)}
+        elif proto.startswith("trojan-xhttp-"):
+            r = {"test": "xhttp-tunnel-via-bridge", **await link_health._probe_xhttp_tunnel("trojan", uid, link, http_base=http_base, no_verify=no_verify)}
+        elif proto.startswith("xhttp-") or proto.startswith("vless-xhttp"):
+            r = {"test": "xhttp-tunnel-via-bridge", **await link_health._probe_xhttp_tunnel("vless", uid, link, http_base=http_base, no_verify=no_verify)}
+        else:
+            raise HTTPException(status_code=400, detail="این پروتکل تست پل ندارد")
+        r.setdefault("ok", False)
+        r["protocol"] = proto
+        r["via"] = f"{bh}:{bp}"
+        r["checked_at"] = datetime.now().isoformat()
+        async with LINKS_LOCK:
+            if uid in LINKS:
+                LINKS[uid]["last_bridge_ping"] = r
+        return r
 
     @app.get("/api/bridge/links")
     async def bridge_links(_=Depends(require_auth)):

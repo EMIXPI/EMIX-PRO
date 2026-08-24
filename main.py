@@ -2816,6 +2816,12 @@ turbo_boost.register_routes(app)
 import static_assets
 static_assets.register(app)
 
+# ══════════════════════════════════════════════════════════════════════════════
+# ماژول آی‌پی‌های تمیز — اسکن لبه‌های اروان + لینک‌های IP-دار (clean_ip_boost.py)
+# ══════════════════════════════════════════════════════════════════════════════
+import clean_ip_boost
+clean_ip_boost.register_routes(app)
+
 
 if __name__ == "__main__":
     uvicorn.run(

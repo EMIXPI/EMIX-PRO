@@ -85,7 +85,7 @@ def _ping_public_bases() -> tuple[str, str]:
     return f"ws://127.0.0.1:{CONFIG['port']}", f"http://127.0.0.1:{CONFIG['port']}"
 
 
-def _ws_connect(uri: str, timeout: float, early_data: bytes | None = None):
+def _ws_connect(uri: str, timeout: float, early_data: bytes | None = None, no_verify: bool = False):
     """websockets.connect سازگار با همه‌ی نسخه‌ها.
 
     API هدر بین نسخه‌ها عوض شده (extra_headers در ≤13، additional_headers در ≥14)
@@ -93,10 +93,17 @@ def _ws_connect(uri: str, timeout: float, early_data: bytes | None = None):
     پس try/except موقع call بی‌اثر است. راه درست: خواندن امضای واقعی connect
     با inspect و انتخاب نام پارامتر درست. اگر هیچ‌کدام نبود، بدون هدر وصل
     می‌شویم (فقط چند خط لاگ اکتیویتی اضافه می‌شود — شکست نمی‌خورد).
+    no_verify=True فقط برای تست پل VPS (سرتیفیکیت Railway با hostname پل).
     """
     import inspect
+    import ssl
 
     kwargs: dict = {"open_timeout": timeout, "close_timeout": 2}
+    if no_verify:
+        ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE
+        kwargs["ssl"] = ctx
     if early_data:
         kwargs["subprotocols"] = [base64.urlsafe_b64encode(early_data).rstrip(b"=").decode()]
     try:
@@ -148,10 +155,13 @@ def _ping_ms(t0: float) -> float:
 # ══════════════════════════════════════════════════════════════════════════════
 # پروب‌های تونل — هر کدوم کلاینت واقعی همان پروتکل را بازی می‌کنند
 # ══════════════════════════════════════════════════════════════════════════════
-async def _probe_ws_tunnel(kind: str, uid: str, link: dict, use_ed: bool = False) -> dict:
-    """تست کامل تونل WebSocket (vless / trojan / shadowsocks) از مسیر عمومی.
+async def _probe_ws_tunnel(kind: str, uid: str, link: dict, use_ed: bool = False,
+                           ws_base: str | None = None, no_verify: bool = False) -> dict:
+    """تست کامل تونل WebSocket (vless / trojan / shadowsocks).
+    ws_base=None → مسیر عمومی خود پنل؛ ws_base=wss://host → تست از مسیر پل (مثل کلاینتِ لینک پل‌دار).
     use_ed=True → بار اولیه در هندشیک (0-RTT) ارسال می‌شود — برای تست A/B توربو."""
-    ws_base, _ = _ping_public_bases()
+    if ws_base is None:
+        ws_base, _ = _ping_public_bases()
     uri = {"vless": f"{ws_base}/ws/{uid}", "trojan": f"{ws_base}/trojan-ws", "ss": f"{ws_base}/ss-ws"}[kind]
     t0 = time.perf_counter()
     ws_ms = None
@@ -160,7 +170,7 @@ async def _probe_ws_tunnel(kind: str, uid: str, link: dict, use_ed: bool = False
     if use_ed and kind in ("vless", "trojan"):
         ed_payload = _vless_probe_bytes(uid) if kind == "vless" else _trojan_probe_bytes(uid)
     try:
-        async with _ws_connect(uri, PING_TIMEOUT_WS, early_data=ed_payload) as ws:
+        async with _ws_connect(uri, PING_TIMEOUT_WS, early_data=ed_payload, no_verify=no_verify) as ws:
             ws_ms = _ping_ms(t0)
             t1 = time.perf_counter()
 
@@ -206,9 +216,12 @@ async def _probe_ws_tunnel(kind: str, uid: str, link: dict, use_ed: bool = False
         return {"ok": False, "ws_ms": ws_ms, "e2e_ms": e2e_ms, "detail": f"{type(exc).__name__}: {str(exc)[:120]}"}
 
 
-async def _probe_xhttp_tunnel(kind: str, uid: str, link: dict) -> dict:
-    """تست تونل XHTTP (packet-up / stream-up) — GET دانلینک + POST آپلینک با هدر واقعی پروتکل."""
-    _, http_base = _ping_public_bases()
+async def _probe_xhttp_tunnel(kind: str, uid: str, link: dict,
+                              http_base: str | None = None, no_verify: bool = False) -> dict:
+    """تست تونل XHTTP (packet-up / stream-up) — GET دانلینک + POST آپلینک با هدر واقعی پروتکل.
+    http_base=None → مسیر عمومی خود پنل؛ در غیر این صورت تست از مسیر پل."""
+    if http_base is None:
+        _, http_base = _ping_public_bases()
     prefix = "xhttp-siz10" if kind == "vless" else "txhttp-siz10"
     mode = "packet-up" if link.get("protocol", "").endswith("packet-up") else "stream-up"
     sid = secrets.token_hex(8)
@@ -222,7 +235,7 @@ async def _probe_xhttp_tunnel(kind: str, uid: str, link: dict) -> dict:
     t0 = time.perf_counter()
     headers = dict(PING_WS_HEADERS)
     headers["content-type"] = "application/octet-stream"
-    async with httpx.AsyncClient(timeout=httpx.Timeout(PING_TIMEOUT_HTTP, connect=8.0), verify=True) as client:
+    async with httpx.AsyncClient(timeout=httpx.Timeout(PING_TIMEOUT_HTTP, connect=8.0), verify=not no_verify) as client:
         try:
             async with client.stream("GET", down_url, headers=headers) as down:
                 if down.status_code != 200:
