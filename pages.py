@@ -2753,6 +2753,7 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
     <div class="nav-it" data-pg="links"><i class="ti ti-link-plus"></i> کانفیگ‌ها <span class="nav-badge" id="links-nb">0</span></div>
     <div class="nav-it" data-pg="bridge"><i class="ti ti-flag"></i> پل ایران <span class="nav-badge" id="bridge-nb" style="display:none">فعال</span></div>
     <div class="nav-it" data-pg="zeus"><i class="ti ti-bolt" style="color:var(--amber-t)"></i> ⚡ ZEUS Pro <span class="nav-badge" id="zeus-nb" style="background:var(--amber-t);color:#fff">جدید</span></div>
+    <div class="nav-it" data-pg="gaming"><i class="ti ti-device-gamepad-2" style="color:#4cc9f0"></i> 🎮 گیمینگ <span class="nav-badge" id="gaming-nb" style="background:#4cc9f0;color:#08131f">پینگ</span></div>
     <div class="nav-it" data-pg="subgroups"><i class="ti ti-folders"></i> گروه‌های ساب <span class="nav-badge" id="subs-nb">0</span></div>
     <div class="nav-it" data-pg="subscriptions"><i class="ti ti-rss"></i> سابسکریپشن</div>
     <div class="nav-it" data-pg="traffic"><i class="ti ti-chart-area"></i> ترافیک</div>
@@ -3350,6 +3351,161 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
   </div>
 </section>
 
+<!-- ══════════════════════ مرکز گیمینگ EMIX ══════════════════════ -->
+<section class="pg" id="pg-gaming">
+  <div class="node-hero" style="margin-bottom:18px">
+    <div class="node-hero-top">
+      <div class="node-hero-title">
+        <div class="node-hero-icon" style="background:rgba(76,201,240,.15);color:#4cc9f0"><i class="ti ti-device-gamepad-2"></i></div>
+        <div>
+          <div class="tb-title">مرکز گیمینگ — بهترین پینگ و پایداری</div>
+          <div class="tb-sub">اسکنر IP کلادفلر + مسیر PoP + کانفیگ‌های tuned برای بازی + مولتی‌لوکیشن</div>
+        </div>
+      </div>
+      <div class="tb-right">
+        <span class="badge" id="gaming-status-badge">بارگذاری...</span>
+      </div>
+    </div>
+    <div class="node-hero-metrics">
+      <div class="node-metric">
+        <div class="node-metric-top"><i class="ti ti-bolt"></i><span class="node-metric-label">بهترین IP</span></div>
+        <div class="node-metric-val" id="gaming-best-ip" style="font-size:15px;direction:ltr">—</div>
+        <div class="node-metric-sub" id="gaming-best-ms">تأخیر: —</div>
+      </div>
+      <div class="node-metric">
+        <div class="node-metric-top"><i class="ti ti-building-broadcast-tower"></i><span class="node-metric-label">PoP کلادفلر شما</span></div>
+        <div class="node-metric-val" id="gaming-colo" style="font-size:15px">—</div>
+        <div class="node-metric-sub" id="gaming-colo-city">شهر: —</div>
+      </div>
+      <div class="node-metric">
+        <div class="node-metric-top"><i class="ti ti-flag"></i><span class="node-metric-label">لوکیشن خروج</span></div>
+        <div class="node-metric-val" id="gaming-loc-count" style="font-size:15px">—</div>
+        <div class="node-metric-sub" id="gaming-loc-list">—</div>
+      </div>
+      <div class="node-metric">
+        <div class="node-metric-top"><i class="ti ti-server-2"></i><span class="node-metric-label">گیت‌وی کلادفلر</span></div>
+        <div class="node-metric-val" id="gaming-worker-status" style="font-size:15px">—</div>
+        <div class="node-metric-sub" id="gaming-worker-domain-label" style="direction:ltr;text-align:left;overflow:hidden;text-overflow:ellipsis">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ۱) راه‌اندازی گیت‌وی -->
+  <div class="conn-toolbar" style="margin-bottom:14px">
+    <div class="conn-toolbar-title"><i class="ti ti-cloud-cog"></i> گیت‌وی کلادفلر و ورودی‌ها</div>
+  </div>
+  <div class="card" style="margin-bottom:18px">
+    <div class="card-title"><i class="ti ti-cloud"></i> Worker کلادفلر (Gateway)</div>
+    <div style="font-size:11.5px;color:var(--t3);margin-bottom:14px;line-height:1.9">
+      معماری: <b style="direction:ltr;display:inline-block">کاربر → بهترین IP کلادفلر (یا VPS ایران) → Worker → لوکیشن → اینترنت</b><br>
+      کد Worker در فایل <code style="direction:ltr;display:inline-block">cf_gateway_worker.js</code> مخزن است — در <b>dash.cloudflare.com → Workers & Pages → Create Worker</b> پیست و Deploy کن، بعد دامنه‌ی workers.dev را اینجا ذخیره کن. توکن اختیاری است و فقط برای افزودن لوکیشن لازم است (در Cloudflare → Settings → Variables → EMIX_TOKEN).
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px">
+      <div><label style="font-size:11px;color:var(--t3)">دامنه‌ی Worker (workers.dev)</label>
+        <input id="gaming-worker-domain" placeholder="emix-gateway.username.workers.dev" style="width:100%;direction:ltr;text-align:left;font-family:monospace"></div>
+      <div><label style="font-size:11px;color:var(--t3)">توکن EMIX_TOKEN (اختیاری — برای لوکیشن)</label>
+        <input id="gaming-worker-token" type="password" placeholder="••••••••" style="width:100%;direction:ltr;text-align:left;font-family:monospace"></div>
+      <div><label style="font-size:11px;color:var(--t3)">IP سرور ایران VPS (ورودی پایدار — اختیاری)</label>
+        <input id="gaming-vps-ip" placeholder="185.164.73.192" style="width:100%;direction:ltr;text-align:left;font-family:monospace"></div>
+      <div><label style="font-size:11px;color:var(--t3)">پورت VPS</label>
+        <input id="gaming-vps-port" type="number" value="443" style="width:100%;direction:ltr;text-align:left;font-family:monospace"></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+      <button class="btn btn-g" onclick="gamingSaveConfig()"><i class="ti ti-check"></i> ذخیره تنظیمات</button>
+      <button class="btn btn-blue" onclick="gamingCheckWorker()"><i class="ti ti-radar-2"></i> تست سلامت گیت‌وی + تشخیص PoP</button>
+    </div>
+    <div id="gaming-worker-result" style="margin-top:14px;padding:14px;background:var(--bg);border-radius:10px;border:1px solid var(--card-b);display:none;font-size:12px;line-height:1.9"></div>
+  </div>
+
+  <!-- ۲) اسکنر IP -->
+  <div class="conn-toolbar" style="margin-bottom:14px">
+    <div class="conn-toolbar-title"><i class="ti ti-radar"></i> اسکنر IP کلادفلر (سمت مرورگر شما)</div>
+  </div>
+  <div class="card" style="margin-bottom:18px">
+    <div class="card-title"><i class="ti ti-signal-4g"></i> پیدا کردن سریع‌ترین IP آنیکست</div>
+    <div style="font-size:11.5px;color:var(--t3);margin-bottom:14px;line-height:1.8">
+      این اسکنر <b>از مرورگر خودتان</b> IPهای کلادفلر را تست می‌کند — چون فقط تأخیرِ مسیر «شما → لبه‌ی کلادفلر» مهم است، نه مسیر سرور پنل. هر IP سه بار پروب می‌شود؛ کمینه = پینگ واقعی، پراکندگی = jitter. نتایج بر اساس کمترین تأخیر رتبه‌بندی می‌شوند و بهترین IP برای ساخت کانفیگ گیمینگ ذخیره می‌شود.
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <button class="btn btn-g" id="gaming-scan-btn" onclick="gamingStartScan()"><i class="ti ti-radar-2"></i> شروع اسکن (~۱ دقیقه)</button>
+      <span id="gaming-scan-progress" style="font-size:11.5px;color:var(--t3)">آماده</span>
+    </div>
+    <div id="gaming-scan-table" style="margin-top:14px;max-height:320px;overflow:auto;display:none">
+      <table style="width:100%;border-collapse:collapse;font-size:11.5px">
+        <thead><tr style="text-align:right;color:var(--t3)">
+          <th style="padding:6px 8px">#</th><th style="padding:6px 8px">IP</th><th style="padding:6px 8px">کمینه (ms)</th>
+          <th style="padding:6px 8px">میانگین (ms)</th><th style="padding:6px 8px">Jitter (ms)</th><th style="padding:6px 8px">وضعیت</th>
+        </tr></thead>
+        <tbody id="gaming-scan-tbody"></tbody>
+      </table>
+    </div>
+    <div id="gaming-scan-summary" style="margin-top:12px;font-size:12px;display:none"></div>
+  </div>
+
+  <!-- ۳) مولتی‌لوکیشن -->
+  <div class="conn-toolbar" style="margin-bottom:14px">
+    <div class="conn-toolbar-title"><i class="ti ti-world"></i> مولتی‌لوکیشن — خروجی ترکیه / روسیه / ...</div>
+  </div>
+  <div class="card" style="margin-bottom:18px">
+    <div class="card-title"><i class="ti ti-flag"></i> لوکیشن‌های گیت‌وی</div>
+    <div style="font-size:11.5px;color:var(--t3);margin-bottom:14px;line-height:1.8">
+      هر لوکیشن = یک بک‌اند با دامنه‌ی معتبر که پروتکل WS را سرو می‌کند (مثل یه سرور ترکیه/روسیه با Xray). مسیر کانفیگ <code style="direction:ltr;display:inline-block">/loc/tr/...</code> روی Worker به همان بک‌اند می‌رود. برای گیمینگ، لوکیشن خروج تعیین‌کننده‌ی پینگ به سرور بازی است — <b>auto (آمریکا) برای گیمینگ ایده‌آل نیست؛ ترکیه بهترین گزینه برای سرورهای MENA/اروپاست.</b>
+    </div>
+    <div id="gaming-loc-list-box" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px"></div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px">
+      <div><label style="font-size:11px;color:var(--t3)">کد لوکیشن (انگلیسی)</label>
+        <input id="gaming-loc-name" placeholder="tr" style="width:100%;direction:ltr;text-align:left;font-family:monospace"></div>
+      <div><label style="font-size:11px;color:var(--t3)">نام نمایشی</label>
+        <input id="gaming-loc-label" placeholder="ترکیه استانبول" style="width:100%"></div>
+      <div><label style="font-size:11px;color:var(--t3)">پرچم (ایموجی)</label>
+        <input id="gaming-loc-flag" placeholder="🇹🇷" style="width:100%"></div>
+      <div style="grid-column:span 2"><label style="font-size:11px;color:var(--t3)">دامنه‌ی بک‌اند (با TLS معتبر)</label>
+        <input id="gaming-loc-upstream" placeholder="tr.example.com" style="width:100%;direction:ltr;text-align:left;font-family:monospace"></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button class="btn btn-g" onclick="gamingAddLocation()"><i class="ti ti-plus"></i> افزودن لوکیشن</button>
+      <button class="btn btn-d" onclick="gamingRefreshLocations()"><i class="ti ti-refresh"></i> دریافت از Worker</button>
+    </div>
+  </div>
+
+  <!-- ۴) تولید کانفیگ گیمینگ -->
+  <div class="conn-toolbar" style="margin-bottom:14px">
+    <div class="conn-toolbar-title"><i class="ti ti-trophy"></i> کانفیگ گیمینگ</div>
+  </div>
+  <div class="card" style="margin-bottom:18px">
+    <div class="card-title"><i class="ti ti-bolt"></i> ساخت کانفیگ tuned برای بازی</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:12px">
+      <div><label style="font-size:11px;color:var(--t3)">ورودی (Entry)</label>
+        <select id="gaming-entry" style="width:100%">
+          <option value="direct">مستقیم کلادفلر — کمترین تأخیر</option>
+          <option value="vps">VPS ایران — پایدارترین (ضد قطعی)</option>
+        </select></div>
+      <div><label style="font-size:11px;color:var(--t3)">لوکیشن خروج</label>
+        <select id="gaming-location" style="width:100%"><option value="auto">auto — Railway</option></select></div>
+      <div><label style="font-size:11px;color:var(--t3)">IP سفارشی (اختیاری)</label>
+        <input id="gaming-override-ip" placeholder="از نتیجه‌ی اسکن" style="width:100%;direction:ltr;text-align:left;font-family:monospace"></div>
+    </div>
+    <div style="font-size:11px;color:var(--t3);margin-bottom:10px">کانفیگ گیمینگ = بدون mux + fragment ضد DPI + tcpNoDelay + TCP Fast Open + اولویت IPv4 — همه در لینک یا JSON اعمال می‌شوند.</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-g" onclick="gamingGenLinks()"><i class="ti ti-link"></i> تولید لینک‌ها</button>
+      <button class="btn btn-blue" onclick="gamingGenJson()"><i class="ti ti-code"></i> JSON کامل Xray (بهترین برای گیمینگ)</button>
+    </div>
+    <div id="gaming-links-result" style="margin-top:14px;display:none"></div>
+    <div id="gaming-json-result" style="margin-top:14px;display:none"></div>
+  </div>
+
+  <!-- ۵) پریست بازی‌ها -->
+  <div class="conn-toolbar" style="margin-bottom:14px">
+    <div class="conn-toolbar-title"><i class="ti ti-trophy"></i> راهنمای بازی‌ها — سرور کجاست و چه مسیری بزنم؟</div>
+  </div>
+  <div class="card" style="margin-bottom:18px">
+    <div class="card-title"><i class="ti ti-gamepad"></i> پریست‌های بازی</div>
+    <div id="gaming-presets-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px">
+      <!-- توسط JS پر می‌شود -->
+    </div>
+  </div>
+</section>
+
 <section class="pg" id="pg-subgroups">
   <div class="topbar">
     <div><div class="tb-title"><i class="ti ti-folders"></i> گروه‌های ساب</div><div class="tb-sub">هر گروه یک صفحه پابلیک مجزا با کانفیگ‌های خودش دارد</div></div>
@@ -3885,7 +4041,7 @@ function navTo(name){
   document.querySelectorAll('.pg').forEach(p=>p.classList.toggle('on',p.id==='pg-'+name));
   // ورود پلکانی کارت‌ها فقط هنگام سوییچ صفحه
   if(name==='links'){document.body.classList.add('cascade');setTimeout(()=>document.body.classList.remove('cascade'),650)}
-  const loaders={links:loadLinks,bridge:loadBridgePage,connections:loadConns,errors:loadErrs,subscriptions:loadSubsPage,subgroups:loadSubs,logs:loadActivity,updates:loadVersion,support:loadSupportMsgs,nodes:loadNodesPage,zeus:loadZeusPage};  if(loaders[name])loaders[name]();
+  const loaders={links:loadLinks,bridge:loadBridgePage,connections:loadConns,errors:loadErrs,subscriptions:loadSubsPage,subgroups:loadSubs,logs:loadActivity,updates:loadVersion,support:loadSupportMsgs,nodes:loadNodesPage,zeus:loadZeusPage,gaming:loadGamingPage};  if(loaders[name])loaders[name]();
   closeSb();window.scrollTo({top:0,behavior:'smooth'});
 }
 document.querySelectorAll('.nav-it').forEach(el=>el.addEventListener('click',()=>navTo(el.dataset.pg)));
@@ -4600,6 +4756,274 @@ async function zeusSecurityCheck(){
       '<div><div style="color:var(--t3);margin-bottom:4px">حداقل طول پسورد</div><div style="font-weight:700">'+toFa(j.rules.min_password_length)+'</div></div>'+
     '</div>';
     toast('وضعیت میان‌افزار بررسی شد','ok');
+  }catch(e){toast('خطا','err')}
+}
+
+/* ═════════════════ مرکز گیمینگ — اسکنر IP + لوکیشن + کانفیگ گیمینگ ═════════════════ */
+let gamingCfg={},gamingScanBusy=false;
+const COLO_NAMES={IST:'استانبول 🇹🇷',FRA:'فرانکفورت 🇩🇪',MRS:'مارسی 🇫🇷',BAH:'بحرین 🇧🇭',DXB:'دبی 🇦🇪',AMS:'آمستردام 🇳🇱',LHR:'لندن 🇬🇧',CDG:'پاریس 🇫🇷',MIL:'میلان 🇮🇹',VIE:'وین 🇦🇹',WAW:'ورشو 🇵🇱',KIV:'کیشیناو 🇲🇩',DME:'مسکو 🇷🇺',TAS:'تاشکند 🇺🇿',ALA:'آلماتی 🇰🇿',SIN:'سنگاپور 🇸🇬',DXB2:'دبی۲',TLV:'تل‌آویو',DOH:'دوحه 🇶🇦',KWI:'کویت 🇰🇼'};
+
+async function loadGamingPage(){
+  try{
+    const r=await authF('/api/gaming/config');
+    if(!r.ok){toast('خطا در بارگذاری مرکز گیمینگ','err');return}
+    gamingCfg=await r.json();
+    const sb=document.getElementById('gaming-status-badge');
+    sb.textContent=gamingCfg.ready?'آماده':'نیاز به تنظیم';
+    sb.className='badge '+(gamingCfg.ready?'bg-green':'bg-amber');
+    document.getElementById('gaming-worker-domain').value=gamingCfg.worker_domain||'';
+    document.getElementById('gaming-vps-ip').value=gamingCfg.vps_ip||'';
+    document.getElementById('gaming-vps-port').value=gamingCfg.vps_port||443;
+    document.getElementById('gaming-worker-status').textContent=gamingCfg.ready?'فعال':'تنظیم نشده';
+    document.getElementById('gaming-worker-domain-label').textContent=gamingCfg.worker_domain||'—';
+    document.getElementById('gaming-best-ip').textContent=gamingCfg.best_ip||'—';
+    document.getElementById('gaming-best-ms').textContent=gamingCfg.best_ip_ms?('تأخیر: '+toFa(Math.round(gamingCfg.best_ip_ms))+' ms'):(gamingCfg.last_scan_ts?('اسکن قدیمی — دوباره اسکن کن'):'هنوز اسکن نشده');
+    gamingRenderPresets();
+    if(gamingCfg.ready){gamingRefreshLocations(true)}
+    if(gamingCfg.best_ip){document.getElementById('gaming-override-ip').value=gamingCfg.best_ip}
+  }catch(e){console.error('loadGamingPage',e);toast('خطا در بارگذاری مرکز گیمینگ','err')}
+}
+function gamingRenderPresets(){
+  const grid=document.getElementById('gaming-presets-grid');
+  if(!grid)return;
+  const p=gamingCfg.presets||{};
+  grid.innerHTML=Object.entries(p).map(([k,g])=>`
+    <div style="padding:14px;background:var(--bg);border-radius:12px;border:1px solid var(--card-b)">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <span style="font-size:20px">${g.icon}</span>
+        <div><div style="font-weight:700;font-size:12.5px">${g.label}</div>
+        <div style="font-size:10.5px;color:var(--t3)">${(g.server_regions||[]).join(' · ')}</div></div>
+      </div>
+      <div style="font-size:11px;color:var(--t2);line-height:1.7;margin-bottom:8px">${g.why}</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+        <span class="badge bg-blue" style="font-size:10px">${g.est_ping_direct}</span>
+        <span class="badge bg-purple" style="font-size:10px">پیشنهاد: ${g.best_location==='tr'?'ترکیه 🇹🇷':'auto 🌍'}</span>
+      </div>
+      <ul style="margin:0;padding-right:16px;font-size:10.5px;color:var(--t3);list-style:disc;line-height:1.8">${(g.tips||[]).map(t=>`<li>${t}</li>`).join('')}</ul>
+    </div>`).join('');
+}
+async function gamingSaveConfig(){
+  try{
+    const body={worker_domain:document.getElementById('gaming-worker-domain').value.trim(),
+      vps_ip:document.getElementById('gaming-vps-ip').value.trim(),
+      vps_port:parseInt(document.getElementById('gaming-vps-port').value)||443};
+    const tok=document.getElementById('gaming-worker-token').value.trim();
+    if(tok)body.worker_token=tok;
+    const r=await authF('/api/gaming/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    if(!r.ok){toast('ذخیره ناموفق','err');return}
+    const j=await r.json();
+    if(j.ok){toast('تنظیمات گیمینگ ذخیره شد','ok');loadGamingPage()}else{toast(j.error||'خطا','err')}
+  }catch(e){toast('خطا','err')}
+}
+async function gamingCheckWorker(){
+  try{
+    const r=await authF('/api/gaming/status');
+    if(!r.ok){toast('خطا در تست گیت‌وی','err');return}
+    const j=await r.json();
+    const box=document.getElementById('gaming-worker-result');
+    box.style.display='';
+    if(!j.ok){
+      document.getElementById('gaming-colo').textContent='—';
+      box.innerHTML='<span style="color:var(--red-t)">✗</span> '+(j.error||'گیت‌وی در دسترس نیست');
+      document.getElementById('gaming-worker-status').textContent='خطا';
+      return;
+    }
+    document.getElementById('gaming-worker-status').textContent='سالم ✓';
+    const locs=j.locations||[];
+    document.getElementById('gaming-loc-count').textContent=toFa(locs.length)+' لوکیشن';
+    document.getElementById('gaming-loc-list').textContent=locs.map(l=>(l.flag||'')+' '+l.name).join('، ')||'—';
+    gamingFillLocSelect(locs);
+    // PoP از دید خود مرورگر کاربر (کال مستقیم به worker — CORS باز است)
+    let browserPop='—',browserCity='';
+    try{
+      const wd=(document.getElementById('gaming-worker-domain').value||'').trim();
+      if(wd){
+        const br=await fetch('https://'+wd+'/gateway-status',{cache:'no-store'});
+        if(br.ok){const bj=await br.json();
+          browserPop=COLO_NAMES[bj.colo]||bj.colo||'—';browserCity=bj.city||'';}
+      }
+    }catch(e){browserPop='نامشخص'}
+    document.getElementById('gaming-colo').textContent=browserPop;
+    document.getElementById('gaming-colo-city').textContent='شهر: '+(browserCity||'—');
+    box.innerHTML='<span style="color:var(--green-t)">✓ گیت‌وی سالم</span> — نسخه <b dir="ltr">'+(j.version||'?')+'</b><br>'+
+      'PoP مرورگر شما: <b>'+browserPop+'</b>'+(browserCity?' ('+browserCity+')':'')+'<br>'+
+      'KV متصل: '+(j.kv_bound?'<span style="color:var(--green-t)">بله</span>':'<span style="color:var(--amber-t)">خیر — لوکیشن داینامیک غیرفعال</span>')+
+      ' · توکن: '+(j.token_set?'<span style="color:var(--green-t)">ست شده</span>':'<span style="color:var(--amber-t)">ست نشده</span>')+'<br>'+
+      'لوکیشن‌ها: '+locs.map(l=>`<span class="badge bg-blue" style="font-size:10px;margin:2px">${l.flag||''} ${l.name}</span>`).join(' ');
+    toast('گیت‌وی تست شد','ok');
+  }catch(e){toast('خطا','err')}
+}
+function gamingFillLocSelect(locs){
+  const sel=document.getElementById('gaming-location');
+  if(!sel)return;
+  const cur=sel.value;
+  sel.innerHTML='<option value="auto">🌍 auto — Railway</option>'+locs.filter(l=>l.name!=='auto')
+    .map(l=>`<option value="${l.name}">${l.flag||''} ${l.label||l.name}</option>`).join('');
+  if(cur)sel.value=cur;
+}
+async function gamingRefreshLocations(silent){
+  try{
+    const r=await authF('/api/gaming/locations');
+    if(!r.ok)return;
+    const j=await r.json();
+    if(!j.ok){if(!silent)toast(j.error||'خطا در دریافت لوکیشن‌ها','err');return}
+    const locs=j.locations||[];
+    const box=document.getElementById('gaming-loc-list-box');
+    if(box){
+      box.innerHTML=locs.map(l=>`<div style="display:flex;align-items:center;gap:6px;padding:8px 12px;background:var(--bg);border-radius:10px;border:1px solid var(--card-b);font-size:11.5px">
+        <span style="font-size:16px">${l.flag||''}</span><div><div style="font-weight:700">${l.label||l.name}</div>
+        <div dir="ltr" style="font-size:10px;color:var(--t3);font-family:monospace">${l.upstream}</div></div>
+        ${l.name!=='auto'?`<button class="btn btn-sm btn-d" style="margin-right:auto" onclick="gamingDelLocation('${l.name}')"><i class="ti ti-trash"></i></button>`:'<span class="badge bg-green" style="margin-right:auto;font-size:9.5px">پیش‌فرض</span>'}
+      </div>`).join('');
+    }
+    document.getElementById('gaming-loc-count').textContent=toFa(locs.length)+' لوکیشن';
+    document.getElementById('gaming-loc-list').textContent=locs.map(l=>(l.flag||'')+' '+l.name).join('، ')||'—';
+    gamingFillLocSelect(locs);
+    if(!silent)toast('لوکیشن‌ها دریافت شد','ok');
+  }catch(e){}
+}
+async function gamingAddLocation(){
+  const name=document.getElementById('gaming-loc-name').value.trim().toLowerCase();
+  const label=document.getElementById('gaming-loc-label').value.trim();
+  const flag=document.getElementById('gaming-loc-flag').value.trim()||'📍';
+  const upstream=document.getElementById('gaming-loc-upstream').value.trim().toLowerCase();
+  if(!name||!upstream){toast('کد لوکیشن و دامنه‌ی بک‌اند لازم است','err');return}
+  try{
+    const r=await authF('/api/gaming/locations',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,label,flag,upstream})});
+    const j=await r.json().catch(()=>({ok:false,error:'پاسخ نامعتبر'}));
+    if(j.ok){toast('لوکیشن «'+name+'» اضافه شد','ok');gamingRefreshLocations(true)}else{toast(j.error||'خطا','err')}
+  }catch(e){toast('خطا','err')}
+}
+async function gamingDelLocation(name){
+  try{
+    const r=await authF('/api/gaming/locations/'+encodeURIComponent(name),{method:'DELETE'});
+    const j=await r.json().catch(()=>({ok:false}));
+    if(j.ok){toast('لوکیشن حذف شد','ok');gamingRefreshLocations(true)}else{toast(j.error||'خطا','err')}
+  }catch(e){toast('خطا','err')}
+}
+/* ─── اسکنر IP سمت مرورگر ─── */
+function gamingProbe(ip,timeout){
+  return new Promise(res=>{
+    const t0=performance.now();
+    const img=new Image();
+    let settled=false;
+    const done=()=>{if(settled)return;settled=true;img.onload=img.onerror=null;res(performance.now()-t0)};
+    const timer=setTimeout(()=>{if(!settled){settled=true;img.onload=img.onerror=null;res(null)}},timeout);
+    img.onload=()=>{clearTimeout(timer);done()};
+    img.onerror=()=>{clearTimeout(timer);done()};  // خطای گواهی هم یعنی اتصال TCP/TLS برقرار شد
+    img.src='https://'+ip+'/favicon.ico?_='+Date.now()+Math.random().toString(36).slice(2,7);
+  });
+}
+async function gamingStartScan(){
+  if(gamingScanBusy){toast('اسکن در حال اجراست','err');return}
+  gamingScanBusy=true;
+  const btn=document.getElementById('gaming-scan-btn');
+  const prog=document.getElementById('gaming-scan-progress');
+  const tbody=document.getElementById('gaming-scan-tbody');
+  const table=document.getElementById('gaming-scan-table');
+  const sum=document.getElementById('gaming-scan-summary');
+  btn.disabled=true;
+  try{
+    const r=await authF('/api/gaming/candidates');
+    if(!r.ok){toast('خطا در دریافت IPهای کاندید','err');return}
+    const ips=(await r.json()).ips||[];
+    table.style.display='';
+    tbody.innerHTML='';
+    prog.textContent='در حال اسکن '+toFa(ips.length)+' IP...';
+    const results={};
+    let doneCount=0;
+    // دسته‌های ۱۰تایی — موازی
+    for(let i=0;i<ips.length;i+=10){
+      const batch=ips.slice(i,i+10);
+      await Promise.all(batch.map(async ip=>{
+        const samples=[];
+        for(let round=0;round<3;round++){
+          const ms=await gamingProbe(ip,2600);
+          if(ms!==null)samples.push(ms);
+          await new Promise(s=>setTimeout(s,60));
+        }
+        doneCount++;
+        if(samples.length>=2){
+          const min=Math.min(...samples),avg=samples.reduce((a,b)=>a+b,0)/samples.length;
+          const jitter=Math.max(...samples)-Math.min(...samples);
+          results[ip]={ip,min,avg,jitter,n:samples.length};
+        }
+        prog.textContent='پیشرفت: '+toFa(doneCount)+' از '+toFa(ips.length);
+        gamingRenderScanTable(results);
+      }));
+    }
+    const ranked=Object.values(results).sort((a,b)=>a.min-b.min);
+    if(!ranked.length){
+      sum.style.display='';sum.innerHTML='<span style="color:var(--red-t)">هیچ IP پاسخ نداد — احتمالاً ISP رنج کلادفلر را محدود کرده؛ از ورودی VPS ایران استفاده کنید</span>';
+    }else{
+      // ثبت نتیجه در پنل
+      const sr=await authF('/api/gaming/scan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({results:ranked.slice(0,25)})});
+      if(sr.ok){const sj=await sr.json();
+        document.getElementById('gaming-best-ip').textContent=sj.best||'—';
+        document.getElementById('gaming-best-ms').textContent=sj.best_ms?('تأخیر: '+toFa(Math.round(sj.best_ms))+' ms'):'—';
+        if(sj.best){document.getElementById('gaming-override-ip').value=sj.best}
+      }
+      sum.style.display='';
+      sum.innerHTML='🏆 بهترین IP: <b dir="ltr" style="font-family:monospace">'+ranked[0].ip+'</b> با تأخیر <b>'+toFa(Math.round(ranked[0].min))+' ms</b> — برای ساخت کانفیگ گیمینگ آماده است.';
+    }
+    toast('اسکن تمام شد','ok');
+  }catch(e){console.error(e);toast('خطا در اسکن','err')}
+  finally{gamingScanBusy=false;btn.disabled=false;prog.textContent='آماده'}
+}
+function gamingRenderScanTable(results){
+  const tbody=document.getElementById('gaming-scan-tbody');
+  const ranked=Object.values(results).sort((a,b)=>a.min-b.min).slice(0,20);
+  tbody.innerHTML=ranked.map((r,i)=>{
+    const color=r.min<120?'var(--green-t)':r.min<250?'var(--amber-t)':'var(--red-t)';
+    return `<tr style="border-top:1px solid var(--card-b)">
+      <td style="padding:6px 8px;color:var(--t3)">${toFa(i+1)}</td>
+      <td style="padding:6px 8px;direction:ltr;text-align:left;font-family:monospace">${r.ip}</td>
+      <td style="padding:6px 8px;font-weight:700;color:${color}">${toFa(Math.round(r.min))}</td>
+      <td style="padding:6px 8px">${toFa(Math.round(r.avg))}</td>
+      <td style="padding:6px 8px;color:${r.jitter<80?'var(--green-t)':'var(--amber-t)'}">${toFa(Math.round(r.jitter))}</td>
+      <td style="padding:6px 8px">${r.n>=3?'<span class="badge bg-green" style="font-size:9.5px">پایدار</span>':'<span class="badge bg-amber" style="font-size:9.5px">'+toFa(r.n)+'/۳</span>'}</td>
+    </tr>`}).join('');
+}
+/* ─── تولید کانفیگ گیمینگ ─── */
+async function gamingGenLinks(){
+  try{
+    const body={entry:document.getElementById('gaming-entry').value,
+      location:document.getElementById('gaming-location').value,
+      ip:document.getElementById('gaming-override-ip').value.trim()};
+    const r=await authF('/api/gaming/links',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const j=await r.json().catch(()=>({ok:false}));
+    const box=document.getElementById('gaming-links-result');
+    box.style.display='';
+    if(!j.ok){box.innerHTML='<div style="padding:12px;background:var(--bg);border-radius:10px;border:1px solid var(--card-b);font-size:12px;color:var(--red-t)">✗ '+(j.error||'خطا')+'</div>';return}
+    box.innerHTML='<div style="padding:14px;background:var(--bg);border-radius:10px;border:1px solid var(--card-b);font-size:12px">'+
+      '<div style="margin-bottom:10px;color:var(--t3)">'+j.entry+' · لوکیشن: <b>'+j.location+'</b> · گیت‌وی: <b dir="ltr" style="font-family:monospace">'+j.worker_domain+'</b></div>'+
+      (j.links||[]).map(l=>`<div style="margin-bottom:10px;padding:10px;background:var(--card-in);border-radius:8px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <span class="badge bg-blue" style="font-size:10px">${l.protocol}</span><b>${l.label}</b>
+          <button class="btn btn-sm btn-g" style="margin-right:auto" onclick="navigator.clipboard.writeText(${JSON.stringify(l.gaming)}).then(()=>toast('لینک گیمینگ کپی شد','ok'))"><i class="ti ti-copy"></i> کپی لینک گیمینگ</button>
+        </div>
+        <div dir="ltr" style="font-size:10px;font-family:monospace;color:var(--t3);word-break:break-all;direction:ltr;text-align:left">${l.gaming}</div>
+      </div>`).join('')+'</div>';
+    toast('لینک‌های گیمینگ ساخته شد','ok');
+  }catch(e){toast('خطا','err')}
+}
+async function gamingGenJson(){
+  try{
+    const body={entry:document.getElementById('gaming-entry').value,
+      location:document.getElementById('gaming-location').value,
+      ip:document.getElementById('gaming-override-ip').value.trim()};
+    const r=await authF('/api/gaming/xray-json',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const j=await r.json().catch(()=>({ok:false}));
+    const box=document.getElementById('gaming-json-result');
+    box.style.display='';
+    if(!j.ok){box.innerHTML='<div style="padding:12px;background:var(--bg);border-radius:10px;border:1px solid var(--card-b);font-size:12px;color:var(--red-t)">✗ '+(j.error||'خطا')+'</div>';return}
+    const txt=JSON.stringify(j.xray,null,2);
+    box.innerHTML='<div style="padding:14px;background:var(--bg);border-radius:10px;border:1px solid var(--card-b);font-size:12px">'+
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><b>JSON گیمینگ — '+j.label+'</b>'+
+      '<button class="btn btn-sm btn-g" style="margin-right:auto" onclick="navigator.clipboard.writeText('+JSON.stringify(txt)+').then(()=>toast(\'JSON کپی شد\',\'ok\'))"><i class="ti ti-copy"></i> کپی JSON</button></div>'+
+      '<div style="font-size:10.5px;color:var(--t3);margin-bottom:8px">در v2rayNG: تنظیمات ← از کلیپ‌بورد import · شامل fragment ضد DPI + بدون mux + tcpNoDelay</div>'+
+      '<pre dir="ltr" style="font-size:10px;font-family:monospace;max-height:300px;overflow:auto;background:var(--card-in);padding:10px;border-radius:8px;white-space:pre-wrap">'+txt.replace(/</g,'&lt;')+'</pre></div>';
+    toast('JSON گیمینگ ساخته شد','ok');
   }catch(e){toast('خطا','err')}
 }
 function openModalGeneric(title,bodyHtml){

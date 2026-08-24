@@ -2900,6 +2900,18 @@ except Exception as _exc:
     logger.error(f"[bootstrap] zeus_features بارگذاری نشد (نادیده گرفته شد): {_exc}")
 
 
+# ═════════════════════════════════════════════════════════════════════════════
+# ماژول مرکز گیمینگ — اسکنر IP کلادفلر + پریست بازی + کانفیگ tuned +
+# مولتی‌لوکیشن از طریق Cloudflare Worker (gaming_boost.py)
+# اگر این ماژول حذف شود یا خطا بدهد، پنل و همه‌ی تونل‌ها بدون تغییر کار می‌کنند.
+# ═════════════════════════════════════════════════════════════════════════════
+try:
+    import gaming_boost
+    gaming_boost.register_routes(app)
+except Exception as _exc:
+    logger.error(f"[bootstrap] gaming_boost بارگذاری نشد (نادیده گرفته شد): {_exc}")
+
+
 # ══════════════════════════════════════════════════════════════════════════════
 # /api/deployment-version — برای تأیید نسخه‌ی دیپلوی‌شده روی Railway
 # کاربر می‌تواند با مقایسه‌ی نسخه، تأیید کند که آیا Railway کد جدید را دیپلوی
@@ -2907,7 +2919,7 @@ except Exception as _exc:
 # تا قبل از لاگین هم قابل بررسی باشد. (از /api/version استفاده نمی‌کنیم چون
 # آن مسیر قبلاً برای بررسی به‌روزرسانی در نظر گرفته شده است.)
 # ══════════════════════════════════════════════════════════════════════════════
-EMIX_VERSION = "9.3.0-zeus"
+EMIX_VERSION = "9.4.0-gaming"
 EMIX_BUILD_DATE = "2026-08-24"
 
 @app.get("/api/deployment-version")
@@ -2923,7 +2935,8 @@ async def api_deployment_version():
         "has_clean_ip": True,
         "has_bridge": True,
         "has_turbo": True,
-        "features_summary": "ISP selector + TLS Mask + Smart Mode + Security + Clean IPs + Bridge CDN/VPS + Turbo 0-RTT",
+        "has_gaming": True,
+        "features_summary": "ISP selector + TLS Mask + Smart Mode + Security + Clean IPs + Bridge CDN/VPS + Turbo 0-RTT + Gaming Center (IP scanner + multi-location + game presets + CF Gateway)",
     }
 
 
