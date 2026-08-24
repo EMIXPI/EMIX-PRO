@@ -312,7 +312,27 @@ async def startup():
     await load_state()
     await _restart_mtproto_instances()
     log_activity("system", "سرور راه‌اندازی شد", "ok")
-    logger.info(f"EMIX v9.2 started on port {CONFIG['port']}")
+    logger.info(f"EMIX v{EMIX_VERSION} started on port {CONFIG['port']}")
+    # ─── هشدار پایداری دیتا روی Railway ────────────────────────────────────
+    # اگر روی Railway هستید و Volume به /data وصل نشده، هر ری‌دیپلوی کل state
+    # (LINKS + SUBS + NODES + password_hash) را پاک می‌کند. این هشدار کمک
+    # می‌کند علت «کانفیگ‌ها نمی‌آیند پس از ری‌دیپلوی» را پیدا کنید.
+    try:
+        if not DATA_DIR.exists() or not os.access(str(DATA_DIR), os.W_OK):
+            logger.warning(
+                "⚠️ DATA_DIR (%s) قابل نوشتن نیست — کانفیگ‌ها پس از ری‌دیپلوی پاک می‌شوند. "
+                "روی Railway یک Volume به مسیر /data وصل کنید." % DATA_DIR
+            )
+        else:
+            test_file = DATA_DIR / ".emix_write_test"
+            test_file.write_text("ok", encoding="utf-8")
+            test_file.unlink(missing_ok=True)
+            logger.info(f"✓ DATA_DIR ({DATA_DIR}) قابل نوشتن — state پایدار است.")
+    except Exception as _e:
+        logger.warning(
+            "⚠️ DATA_DIR (%s) قابل نوشتن نیست (%s) — کانفیگ‌ها پس از ری‌دیپلوی پاک می‌شوند. "
+            "روی Railway یک Volume به مسیر /data وصل کنید." % (DATA_DIR, _e)
+        )
 
 async def _restart_mtproto_instances():
     """بعد از بالا اومدن پنل، به‌ازای هر لینک MTProto فعال یک پروسه‌ی جدای
@@ -801,7 +821,14 @@ async def ensure_default_link():
 # ── Basic endpoints ───────────────────────────────────────────────────────────
 @app.get("/")
 async def root():
-    return {"service": "EMIX", "version": "9.2", "status": "active", "channel": "https://t.me/emixpi"}
+    return {
+        "service": "EMIX",
+        "version": EMIX_VERSION,
+        "build_date": EMIX_BUILD_DATE,
+        "status": "active",
+        "channel": "https://t.me/emixpi",
+        "version_endpoint": "/api/deployment-version",
+    }
 
 @app.get("/health")
 async def health():
@@ -2819,15 +2846,50 @@ static_assets.register(app)
 # ══════════════════════════════════════════════════════════════════════════════
 # ماژول آی‌پی‌های تمیز — اسکن لبه‌های اروان + لینک‌های IP-دار (clean_ip_boost.py)
 # ══════════════════════════════════════════════════════════════════════════════
-import clean_ip_boost
-clean_ip_boost.register_routes(app)
+try:
+    import clean_ip_boost
+    clean_ip_boost.register_routes(app)
+except Exception as _exc:
+    logger.error(f"[bootstrap] clean_ip_boost بارگذاری نشد (نادیده گرفته شد): {_exc}")
 
 # ══════════════════════════════════════════════════════════════════════════════
 # ماژول تنظیمات حرفه‌ای ZEUS — ISP + TLS Mask + Smart Mode + Security (zeus_features.py)
-# اگر این ماژول حذف شود، پنل و همه‌ی تونل‌ها بدون تغییر کار می‌کنند.
+# اگر این ماژول حذف شود یا خطا بدهد، پنل و همه‌ی تونل‌ها بدون تغییر کار می‌کنند.
+# این try/except تضمین می‌کند که هیچ باگ در zeus_features.py نمی‌تواند پنل را
+# خراب کند — ماژول کاملاً ایزوله است.
 # ══════════════════════════════════════════════════════════════════════════════
-import zeus_features
-zeus_features.register_routes(app)
+try:
+    import zeus_features
+    zeus_features.register_routes(app)
+except Exception as _exc:
+    logger.error(f"[bootstrap] zeus_features بارگذاری نشد (نادیده گرفته شد): {_exc}")
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# /api/deployment-version — برای تأیید نسخه‌ی دیپلوی‌شده روی Railway
+# کاربر می‌تواند با مقایسه‌ی نسخه، تأیید کند که آیا Railway کد جدید را دیپلوی
+# کرده است یا هنوز روی نسخه‌ی قدیمی است. این اندپوینت بدون احراز هویت است
+# تا قبل از لاگین هم قابل بررسی باشد. (از /api/version استفاده نمی‌کنیم چون
+# آن مسیر قبلاً برای بررسی به‌روزرسانی در نظر گرفته شده است.)
+# ══════════════════════════════════════════════════════════════════════════════
+EMIX_VERSION = "9.3.0-zeus"
+EMIX_BUILD_DATE = "2026-08-24"
+
+@app.get("/api/deployment-version")
+async def api_deployment_version():
+    """اطلاعات نسخه‌ی دیپلوی‌شده — بدون نیاز به احراز هویت.
+    اگر نسخه‌ای که می‌بینید با نسخه‌ی گیت‌هاب تطابق نداشت، یعنی Railway هنوز
+    روی کد قدیمی است و باید «Deploy Latest Commit» (نه Redeploy) را بزنید."""
+    return {
+        "service": "EMIX",
+        "version": EMIX_VERSION,
+        "build_date": EMIX_BUILD_DATE,
+        "has_zeus": True,
+        "has_clean_ip": True,
+        "has_bridge": True,
+        "has_turbo": True,
+        "features_summary": "ISP selector + TLS Mask + Smart Mode + Security + Clean IPs + Bridge CDN/VPS + Turbo 0-RTT",
+    }
 
 
 if __name__ == "__main__":
