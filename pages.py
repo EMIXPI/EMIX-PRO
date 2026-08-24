@@ -2752,6 +2752,7 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
     <div class="nav-it on" data-pg="overview"><i class="ti ti-layout-dashboard"></i> داشبورد</div>
     <div class="nav-it" data-pg="links"><i class="ti ti-link-plus"></i> کانفیگ‌ها <span class="nav-badge" id="links-nb">0</span></div>
     <div class="nav-it" data-pg="bridge"><i class="ti ti-flag"></i> پل ایران <span class="nav-badge" id="bridge-nb" style="display:none">فعال</span></div>
+    <div class="nav-it" data-pg="zeus"><i class="ti ti-bolt"></i> تنظیمات حرفه‌ای</div>
     <div class="nav-it" data-pg="subgroups"><i class="ti ti-folders"></i> گروه‌های ساب <span class="nav-badge" id="subs-nb">0</span></div>
     <div class="nav-it" data-pg="subscriptions"><i class="ti ti-rss"></i> سابسکریپشن</div>
     <div class="nav-it" data-pg="traffic"><i class="ti ti-chart-area"></i> ترافیک</div>
@@ -3156,6 +3157,173 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
       </div>
     </div>
     <div class="cl" style="margin-top:10px"><i class="ti ti-info-circle"></i><span>کانفیگ‌های پنل با security=tls ساخته می‌شوند؛ پورت اصلی ۴۴۳ است. پورت‌های دیگر فقط زمانی معتبرند که پل CDN فعال باشد و لبه، آن پورت را سرو کند — با «تست پورت‌ها» از مرورگر خودتان بررسی کنید.</span></div>
+  </div>
+</section>
+
+<!-- ════════════════════════ تنظیمات حرفه‌ای ZEUS ════════════════════════ -->
+<section class="pg" id="pg-zeus">
+  <div class="node-hero" style="margin-bottom:18px">
+    <div class="node-hero-top">
+      <div class="node-hero-title">
+        <div class="node-hero-icon"><i class="ti ti-bolt"></i></div>
+        <div>
+          <div class="tb-title">تنظیمات حرفه‌ای — ISP + TLS Mask + Smart + Security</div>
+          <div class="tb-sub">پیاده‌سازی ویژگی‌های پنل ZEUS به‌صورت ماژول کاملاً جدا از هسته‌ی EMIX</div>
+        </div>
+      </div>
+      <div class="tb-right">
+        <span class="badge bg-amber" id="zeus-status-badge">بارگذاری...</span>
+      </div>
+    </div>
+    <div class="node-hero-metrics">
+      <div class="node-metric">
+        <div class="node-metric-top"><i class="ti ti-device-mobile"></i><span class="node-metric-label">ISP انتخابی</span></div>
+        <div class="node-metric-val" id="zeus-isp-name" style="font-size:15px">—</div>
+        <div class="node-metric-sub" id="zeus-isp-best-proto">پروتکل پیشنهادی: —</div>
+      </div>
+      <div class="node-metric">
+        <div class="node-metric-top"><i class="ti ti-shield-lock"></i><span class="node-metric-label">TLS Mask</span></div>
+        <div class="node-metric-val" id="zeus-tls-status">—</div>
+        <div class="node-metric-sub" id="zeus-tls-sni">SNI: —</div>
+      </div>
+      <div class="node-metric">
+        <div class="node-metric-top"><i class="ti ti-brain"></i><span class="node-metric-label">حالت هوشمند</span></div>
+        <div class="node-metric-val" id="zeus-smart-status">—</div>
+        <div class="node-metric-sub" id="zeus-smart-best">بهترین کانفیگ: —</div>
+      </div>
+      <div class="node-metric">
+        <div class="node-metric-top"><i class="ti ti-lock"></i><span class="node-metric-label">قفل‌سازی لاگین</span></div>
+        <div class="node-metric-val" id="zeus-security-status">—</div>
+        <div class="node-metric-sub" id="zeus-security-rule">حداکثر تلاش: —</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ۱) انتخاب ISP -->
+  <div class="conn-toolbar" style="margin-bottom:14px">
+    <div class="conn-toolbar-title"><i class="ti ti-device-mobile"></i> انتخاب سرویس‌دهنده اینترنت (ISP)</div>
+  </div>
+  <div class="card" style="margin-bottom:18px">
+    <div class="card-title"><i class="ti ti-wifi"></i> ISP شما کدام است؟</div>
+    <div style="font-size:11.5px;color:var(--t3);margin-bottom:14px">با انتخاب ISP، توصیه‌گر پروتکل متناسب با شبکه‌ی شما نمایش داده می‌شود. این فقط توصیه‌ست و لینک‌ها را تغییر نمی‌دهد.</div>
+    <div id="zeus-isp-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px">
+      <!-- توسط JS پر می‌شود -->
+    </div>
+    <div id="zeus-isp-detail" style="margin-top:14px;padding:14px;background:var(--bg);border-radius:10px;border:1px solid var(--card-b);display:none">
+      <div style="font-weight:700;font-size:13px;margin-bottom:8px" id="zeus-isp-detail-title">—</div>
+      <div style="font-size:12px;color:var(--t2);margin-bottom:8px" id="zeus-isp-detail-rationale">—</div>
+      <ul id="zeus-isp-detail-tips" style="margin:0;padding-right:18px;font-size:11.5px;color:var(--t3);list-style:disc"></ul>
+    </div>
+  </div>
+
+  <!-- ۲) تنظیمات TLS Mask -->
+  <div class="conn-toolbar" style="margin-bottom:14px">
+    <div class="conn-toolbar-title"><i class="ti ti-shield-lock"></i> تنظیمات پیشرفته TLS Mask <span class="badge bg-purple" id="zeus-tls-badge" style="display:none">فعال</span></div>
+  </div>
+  <div class="card" style="margin-bottom:18px">
+    <div class="card-title">
+      <i class="ti ti-settings"></i> SNI سفارشی + Fragment + Cipher Suites
+      <span class="ml-auto" style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:11px;color:var(--t3)">فعال‌سازی:</span>
+        <label class="toggle" style="position:relative;display:inline-block;width:36px;height:20px;cursor:pointer">
+          <input type="checkbox" id="zeus-tls-toggle" style="opacity:0;width:0;height:0">
+          <span class="toggle-slider" style="position:absolute;inset:0;background:var(--t3);border-radius:20px;transition:.3s"></span>
+        </label>
+      </span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px">
+      <div>
+        <label style="font-size:11.5px;color:var(--t2);display:block;margin-bottom:6px">SNI سفارشی (دامنه جعلی به جای دامنه اصلی)</label>
+        <input type="text" id="zeus-tls-sni" placeholder="www.speedtest.net" style="width:100%;direction:ltr;text-align:left;font-family:monospace">
+      </div>
+      <div>
+        <label style="font-size:11.5px;color:var(--t2);display:block;margin-bottom:6px">Cipher Suites (TLS 1.3)</label>
+        <input type="text" id="zeus-tls-cipher" placeholder="TLS_AES_256_GCM_SHA384:..." style="width:100%;direction:ltr;text-align:left;font-family:monospace;font-size:10.5px">
+      </div>
+      <div>
+        <label style="font-size:11.5px;color:var(--t2);display:block;margin-bottom:6px">Fragment Length (تعداد بایت‌های هر پکت)</label>
+        <input type="text" id="zeus-tls-frag-len" placeholder="5-94" style="width:100%;direction:ltr;text-align:left;font-family:monospace">
+      </div>
+      <div>
+        <label style="font-size:11.5px;color:var(--t2);display:block;margin-bottom:6px">Fragment Delay (ms)</label>
+        <input type="text" id="zeus-tls-frag-dly" placeholder="0" style="width:100%;direction:ltr;text-align:left;font-family:monospace">
+      </div>
+    </div>
+    <div class="cl amber" style="margin-top:12px"><i class="ti ti-alert-triangle"></i><span><b>هشدار:</b> Fragment و SNI spoofing فقط DPI را گول می‌زنند، نه صورت‌حساب اپراتور را. برای صورت‌حساب داخلی از پل CDN اروان استفاده کنید. این تنظیمات در سمت کلاینت Xray اعمال می‌شوند (خروجی JSON Fragment در پایین صفحه).</span></div>
+    <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+      <button class="btn btn-g" onclick="zeusSaveTlsMask()"><i class="ti ti-check"></i> ذخیره تنظیمات</button>
+      <button class="btn btn-pur" onclick="zeusShowMaskedLinks()"><i class="ti ti-link"></i> لینک‌های Mask-شده</button>
+      <button class="btn btn-blue" onclick="zeusShowFragmentJson()"><i class="ti ti-code"></i> خروجی JSON Fragment</button>
+    </div>
+  </div>
+
+  <!-- ۳) حالت هوشمند -->
+  <div class="conn-toolbar" style="margin-bottom:14px">
+    <div class="conn-toolbar-title"><i class="ti ti-brain"></i> حالت هوشمند (Smart Mode)</div>
+  </div>
+  <div class="card" style="margin-bottom:18px">
+    <div class="card-title">
+      <i class="ti ti-robot"></i> انتخاب خودکار بهترین کانفیگ لحظه‌ای
+      <span class="ml-auto" style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:11px;color:var(--t3)">فعال‌سازی:</span>
+        <label class="toggle" style="position:relative;display:inline-block;width:36px;height:20px;cursor:pointer">
+          <input type="checkbox" id="zeus-smart-toggle" style="opacity:0;width:0;height:0">
+          <span class="toggle-slider" style="position:absolute;inset:0;background:var(--t3);border-radius:20px;transition:.3s"></span>
+        </label>
+      </span>
+    </div>
+    <div style="font-size:11.5px;color:var(--t3);margin-top:8px">وقتی روشن باشد، پنل همه‌ی کانفیگ‌ها را تست می‌کند و کم‌تاخیرترین را به‌عنوان پیشنهاد لحظه‌ای نشان می‌دهد.</div>
+    <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+      <button class="btn btn-g" onclick="zeusSmartRecommend()"><i class="ti ti-trophy"></i> تست اکنون و معرفی بهترین</button>
+    </div>
+    <div id="zeus-smart-result" style="margin-top:14px;padding:14px;background:var(--bg);border-radius:10px;border:1px solid var(--card-b);display:none">
+      <div style="font-weight:700;font-size:13px;margin-bottom:8px">بهترین کانفیگ لحظه‌ای</div>
+      <div id="zeus-smart-result-content">—</div>
+    </div>
+  </div>
+
+  <!-- ۴) قفل‌سازی لاگین -->
+  <div class="conn-toolbar" style="margin-bottom:14px">
+    <div class="conn-toolbar-title"><i class="ti ti-lock"></i> قفل‌سازی لاگین (Security Rate-Limit)</div>
+  </div>
+  <div class="card" style="margin-bottom:18px">
+    <div class="card-title">
+      <i class="ti ti-shield-check"></i> محدودسازی تلاش‌های ورود
+      <span class="ml-auto" style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:11px;color:var(--t3)">فعال‌سازی:</span>
+        <label class="toggle" style="position:relative;display:inline-block;width:36px;height:20px;cursor:pointer">
+          <input type="checkbox" id="zeus-security-toggle" style="opacity:0;width:0;height:0">
+          <span class="toggle-slider" style="position:absolute;inset:0;background:var(--t3);border-radius:20px;transition:.3s"></span>
+        </label>
+      </span>
+    </div>
+    <div style="font-size:11.5px;color:var(--t3);margin-top:8px">میان‌افزار روی /api/login اعمال می‌شود؛ IPهایی که بیش از حد مجاز تلاش کنند به‌طور موقت بلاک می‌شوند.</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:14px">
+      <div>
+        <label style="font-size:11.5px;color:var(--t2);display:block;margin-bottom:6px">حداقل طول پسورد</label>
+        <input type="number" id="zeus-sec-min-len" placeholder="8" min="4" max="64" style="width:100%;direction:ltr;text-align:left;font-family:monospace">
+      </div>
+      <div>
+        <label style="font-size:11.5px;color:var(--t2);display:block;margin-bottom:6px">فاصله‌ی تلاش‌ها (ms)</label>
+        <input type="number" id="zeus-sec-interval" placeholder="1000" min="100" style="width:100%;direction:ltr;text-align:left;font-family:monospace">
+      </div>
+      <div>
+        <label style="font-size:11.5px;color:var(--t2);display:block;margin-bottom:6px">حداکثر تعداد تلاش</label>
+        <input type="number" id="zeus-sec-max" placeholder="5" min="1" max="100" style="width:100%;direction:ltr;text-align:left;font-family:monospace">
+      </div>
+    </div>
+    <div style="margin-top:12px">
+      <label style="font-size:11.5px;color:var(--t2);display:block;margin-bottom:6px">مدت بلاک پس از تجاوز (ms)</label>
+      <input type="number" id="zeus-sec-lockout" placeholder="60000" min="1000" step="1000" style="width:100%;direction:ltr;text-align:left;font-family:monospace">
+    </div>
+    <div class="cl" style="margin-top:12px"><i class="ti ti-info-circle"></i><span>این قفل‌سازی فقط روی اندپوینت /api/login اعمال می‌شود و جریان احراز هویت اصلی EMIX را تغییر نمی‌دهد. اگر ماژول غیرفعال شود، همه‌ی IPهای بلاک‌شده آزاد می‌شوند.</span></div>
+    <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+      <button class="btn btn-g" onclick="zeusSaveSecurity()"><i class="ti ti-check"></i> ذخیره تنظیمات</button>
+      <button class="btn btn-blue" onclick="zeusSecurityCheck()"><i class="ti ti-activity"></i> بررسی وضعیت میان‌افزار</button>
+    </div>
+    <div id="zeus-security-result" style="margin-top:14px;padding:14px;background:var(--bg);border-radius:10px;border:1px solid var(--card-b);display:none">
+      <div id="zeus-security-result-content">—</div>
+    </div>
   </div>
 </section>
 
@@ -3575,6 +3743,7 @@ function cpActions(){
     {t:'پیشنهاد هوشمند — سریع‌ترین کانفیگ',s:'تست زنده و رتبه‌بندی همه کانفیگ‌ها',i:'ti-trophy',run:()=>{navTo('overview');setTimeout(()=>bestConfigTest(),400)}},
     {t:'صفحه کانفیگ‌ها',s:'مدیریت لینک‌ها',i:'ti-link-plus',run:()=>navTo('links')},
     {t:'پل ایران',s:'مصرف داخلی + شتاب‌دهی',i:'ti-flag',run:()=>navTo('bridge')},
+    {t:'تنظیمات حرفه‌ای',s:'ISP + TLS Mask + Smart + Security',i:'ti-bolt',run:()=>navTo('zeus')},
     {t:'اتصالات زنده',s:'مانیتورینگ لحظه‌ای',i:'ti-plug-connected',run:()=>navTo('connections')},
     {t:'ترافیک',s:'نمودار مصرف',i:'ti-chart-area',run:()=>navTo('traffic')},
     {t:'نودها',s:'مدیریت نودهای متصل',i:'ti-topology-star-3',run:()=>navTo('nodes')},
@@ -3693,7 +3862,7 @@ function navTo(name){
   document.querySelectorAll('.pg').forEach(p=>p.classList.toggle('on',p.id==='pg-'+name));
   // ورود پلکانی کارت‌ها فقط هنگام سوییچ صفحه
   if(name==='links'){document.body.classList.add('cascade');setTimeout(()=>document.body.classList.remove('cascade'),650)}
-  const loaders={links:loadLinks,bridge:loadBridgePage,connections:loadConns,errors:loadErrs,subscriptions:loadSubsPage,subgroups:loadSubs,logs:loadActivity,updates:loadVersion,support:loadSupportMsgs,nodes:loadNodesPage};  if(loaders[name])loaders[name]();
+  const loaders={links:loadLinks,bridge:loadBridgePage,connections:loadConns,errors:loadErrs,subscriptions:loadSubsPage,subgroups:loadSubs,logs:loadActivity,updates:loadVersion,support:loadSupportMsgs,nodes:loadNodesPage,zeus:loadZeusPage};  if(loaders[name])loaders[name]();
   closeSb();window.scrollTo({top:0,behavior:'smooth'});
 }
 document.querySelectorAll('.nav-it').forEach(el=>el.addEventListener('click',()=>navTo(el.dataset.pg)));
@@ -4146,6 +4315,258 @@ function brCopyScript(){
   if(!bridgeScriptCache)return;
   navigator.clipboard.writeText(bridgeScriptCache).then(()=>toast('اسکریپت نصب کپی شد — روی سرور ایران اجرایش کنید','ok'));
 }
+
+/* ══════ تنظیمات حرفه‌ای ZEUS — ISP + TLS Mask + Smart + Security ══════ */
+let zeusIspList=[];
+let zeusCurrentIsp='smart';
+function zeusToggleSet(toggleId,enabled){
+  const el=document.getElementById(toggleId);
+  if(!el)return;
+  el.checked=!!enabled;
+  const slider=el.nextElementSibling;
+  if(slider){
+    slider.style.background=enabled?'var(--accent)':'var(--t3)';
+  }
+}
+async function loadZeusPage(){
+  try{
+    const r=await authF('/api/zeus/config');
+    if(!r.ok){toast('خطا در بارگذاری تنظیمات حرفه‌ای','err');return}
+    const cfg=await r.json();
+    zeusIspList=cfg.available_isps||[];
+    zeusCurrentIsp=cfg.isp||'smart';
+    // status badge
+    const sb=document.getElementById('zeus-status-badge');
+    sb.textContent='بارگذاری شد';sb.className='badge bg-green';
+    // ۱) ISP رندر
+    zeusRenderIspGrid();
+    zeusShowIspDetail(zeusCurrentIsp);
+    document.getElementById('zeus-isp-name').textContent=(cfg.isp_meta&&cfg.isp_meta.label)||zeusCurrentIsp;
+    document.getElementById('zeus-isp-best-proto').textContent='پروتکل پیشنهادی: '+(cfg.isp_meta&&cfg.isp_meta.best_protocol||'—');
+    // ۲) TLS Mask
+    const tm=cfg.tls_mask||{};
+    zeusToggleSet('zeus-tls-toggle',tm.enabled);
+    document.getElementById('zeus-tls-sni').value=tm.custom_sni||'';
+    document.getElementById('zeus-tls-cipher').value=tm.cipher_suites||'';
+    document.getElementById('zeus-tls-frag-len').value=tm.fragment_length||'';
+    document.getElementById('zeus-tls-frag-dly').value=tm.fragment_delay||'';
+    document.getElementById('zeus-tls-status').textContent=tm.enabled?'فعال':'غیرفعال';
+    document.getElementById('zeus-tls-sni').textContent='SNI: '+(tm.custom_sni||'—');
+    document.getElementById('zeus-tls-badge').style.display=tm.enabled?'inline-block':'none';
+    // ۳) Smart Mode
+    const sm=cfg.smart_mode||{};
+    zeusToggleSet('zeus-smart-toggle',sm.enabled);
+    document.getElementById('zeus-smart-status').textContent=sm.enabled?'فعال':'غیرفعال';
+    // ۴) Security
+    const sc=cfg.security||{};
+    zeusToggleSet('zeus-security-toggle',sc.enabled);
+    document.getElementById('zeus-sec-min-len').value=sc.min_password_length||8;
+    document.getElementById('zeus-sec-interval').value=sc.attempt_interval_ms||1000;
+    document.getElementById('zeus-sec-max').value=sc.max_attempts||5;
+    document.getElementById('zeus-sec-lockout').value=sc.lockout_ms||60000;
+    document.getElementById('zeus-security-status').textContent=sc.enabled?'فعال':'غیرفعال';
+    document.getElementById('zeus-security-rule').textContent='حداکثر تلاش: '+(sc.max_attempts||5);
+  }catch(e){console.error('loadZeusPage',e);toast('خطا در بارگذاری صفحه‌ی تنظیمات حرفه‌ای','err')}
+}
+function zeusRenderIspGrid(){
+  const grid=document.getElementById('zeus-isp-grid');
+  if(!grid||!zeusIspList.length)return;
+  grid.innerHTML=zeusIspList.map(isp=>`
+    <div class="card br-mode-card" id="zeus-isp-${isp.id}" onclick="zeusSelectIsp('${isp.id}')" style="cursor:pointer;padding:12px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:36px;height:36px;border-radius:10px;background:var(--accent-d);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <i class="ti ${isp.icon||'ti-device-mobile'}" style="font-size:18px;color:${isp.color||'var(--accent2)'}"></i>
+        </div>
+        <div style="flex:1">
+          <div style="font-weight:700;font-size:12px">${isp.label}</div>
+          <div style="font-size:9.5px;color:var(--t3);margin-top:2px">پینگ: ${isp.expected_ping_ms||'—'}</div>
+        </div>
+        <div class="br-mode-check" style="width:18px;height:18px;border-radius:50%;border:2px solid var(--t3);display:flex;align-items:center;justify-content:center">
+          <i class="ti ti-check" style="font-size:10px;opacity:0"></i>
+        </div>
+      </div>
+    </div>
+  `).join('');
+  zeusUpdateIspSelection();
+}
+function zeusUpdateIspSelection(){
+  zeusIspList.forEach(isp=>{
+    const el=document.getElementById('zeus-isp-'+isp.id);
+    if(!el)return;
+    const selected=isp.id===zeusCurrentIsp;
+    el.style.borderColor=selected?'var(--accent)':'var(--card-b)';
+    const chk=el.querySelector('.br-mode-check');
+    if(chk){
+      chk.style.borderColor=selected?'var(--accent)':'var(--t3)';
+      chk.style.background=selected?'var(--accent)':'transparent';
+      const icon=chk.querySelector('i');if(icon){icon.style.opacity=selected?1:0;icon.style.color='#fff'}
+    }
+  });
+}
+function zeusShowIspDetail(ispId){
+  const isp=zeusIspList.find(x=>x.id===ispId);
+  const box=document.getElementById('zeus-isp-detail');
+  if(!isp||!box){return}
+  box.style.display='';
+  document.getElementById('zeus-isp-detail-title').textContent=isp.label+' — پروتکل پیشنهادی: '+(isp.best_protocol||'—');
+  document.getElementById('zeus-isp-detail-rationale').textContent=isp.rationale||'';
+  const ul=document.getElementById('zeus-isp-detail-tips');
+  ul.innerHTML=(isp.tips||[]).map(t=>`<li style="margin-bottom:4px">${t}</li>`).join('');
+}
+async function zeusSelectIsp(ispId){
+  try{
+    const r=await authF('/api/zeus/isp',{method:'POST',body:JSON.stringify({isp:ispId})});
+    if(!r.ok){toast('خطا در ذخیره‌ی ISP','err');return}
+    const j=await r.json();
+    zeusCurrentIsp=ispId;
+    zeusUpdateIspSelection();
+    zeusShowIspDetail(ispId);
+    document.getElementById('zeus-isp-name').textContent=j.meta.label;
+    document.getElementById('zeus-isp-best-proto').textContent='پروتکل پیشنهادی: '+(j.meta.best_protocol||'—');
+    toast('ISP روی '+j.meta.label+' تنظیم شد','ok');
+  }catch(e){console.error('zeusSelectIsp',e);toast('خطا در ارتباط با سرور','err')}
+}
+async function zeusSaveTlsMask(){
+  const enabled=document.getElementById('zeus-tls-toggle').checked;
+  const custom_sni=document.getElementById('zeus-tls-sni').value.trim();
+  const cipher_suites=document.getElementById('zeus-tls-cipher').value.trim();
+  const fragment_length=document.getElementById('zeus-tls-frag-len').value.trim();
+  const fragment_delay=document.getElementById('zeus-tls-frag-dly').value.trim();
+  try{
+    const r=await authF('/api/zeus/tls-mask',{method:'POST',body:JSON.stringify({enabled,custom_sni,cipher_suites,fragment_length,fragment_delay})});
+    if(!r.ok){toast('خطا در ذخیره','err');return}
+    const j=await r.json();
+    zeusToggleSet('zeus-tls-toggle',j.tls_mask.enabled);
+    document.getElementById('zeus-tls-status').textContent=j.tls_mask.enabled?'فعال':'غیرفعال';
+    document.getElementById('zeus-tls-sni').textContent='SNI: '+(j.tls_mask.custom_sni||'—');
+    document.getElementById('zeus-tls-badge').style.display=j.tls_mask.enabled?'inline-block':'none';
+    toast('تنظیمات TLS Mask ذخیره شد','ok');
+  }catch(e){toast('خطا در ارتباط','err')}
+}
+async function zeusShowMaskedLinks(){
+  try{
+    const r=await authF('/api/zeus/tls-mask/links');
+    if(!r.ok){toast('خطا','err');return}
+    const j=await r.json();
+    if(!j.enabled){toast('ابتدا TLS Mask را فعال کنید','err');return}
+    if(!j.links||!j.links.length){toast('هیچ کانفیگی برای ساخت لینک Mask-شده وجود ندارد','err');return}
+    const links=j.links.map(l=>`<div style="margin-bottom:10px;padding:8px;background:var(--bg);border-radius:8px;border:1px solid var(--card-b)">
+      <div style="font-weight:700;font-size:11.5px;margin-bottom:4px">${esc(l.label)} <span class="badge bg-blue" style="font-size:9px">${l.protocol}</span></div>
+      <div style="font-family:monospace;font-size:9.5px;direction:ltr;text-align:left;word-break:break-all;background:var(--card);padding:6px;border-radius:6px;color:var(--green-t)">${esc(l.masked)}</div>
+      <button class="btn btn-sm btn-g" style="margin-top:6px" onclick="navigator.clipboard.writeText('${l.masked.replace(/'/g,"\\'")}').then(()=>toast('لینک کپی شد','ok'))"><i class="ti ti-copy"></i> کپی</button>
+    </div>`).join('');
+    openModalGeneric('لینک‌های Mask-شده (SNI: '+esc(j.sni)+')',links);
+  }catch(e){toast('خطا در ارتباط','err')}
+}
+async function zeusShowFragmentJson(){
+  try{
+    const r=await authF('/api/zeus/tls-mask/fragment-json');
+    if(!r.ok){toast('خطا','err');return}
+    const j=await r.json();
+    const pretty=JSON.stringify(j,null,2);
+    openModalGeneric('JSON Fragment + TLS Settings (برای کپی در Xray کلاینت)',
+      '<div style="font-size:11px;color:var(--t3);margin-bottom:8px">این JSON را در فایل config.json کلاینت Xray (در بخش streamSettings.outbound) قرار دهید</div>'+
+      '<pre style="background:var(--bg);padding:14px;border-radius:8px;font-size:10px;direction:ltr;text-align:left;overflow-x:auto;max-height:400px;font-family:monospace;border:1px solid var(--card-b)">'+esc(pretty)+'</pre>'+
+      '<button class="btn btn-g" style="margin-top:10px" onclick="navigator.clipboard.writeText('+JSON.stringify(JSON.stringify(pretty))+').then(()=>toast(\'کپی شد\',\'ok\'))"><i class="ti ti-copy"></i> کپی JSON</button>'
+    );
+  }catch(e){toast('خطا در ارتباط','err')}
+}
+async function zeusSmartRecommend(){
+  const btn=event?.target?.closest('button');
+  if(btn){btn.disabled=true;btn.innerHTML='<i class="ti ti-loader ti-spin"></i> در حال تست...'}
+  try{
+    const r=await authF('/api/zeus/smart/recommend');
+    if(!r.ok){toast('خطا در تست','err');return}
+    const j=await r.json();
+    const box=document.getElementById('zeus-smart-result');
+    const content=document.getElementById('zeus-smart-result-content');
+    box.style.display='';
+    if(j.best){
+      const b=j.best;
+      content.innerHTML='<div style="display:flex;align-items:center;gap:10px">'+
+        '<div style="width:40px;height:40px;border-radius:50%;background:var(--green-bg);display:flex;align-items:center;justify-content:center"><i class="ti ti-trophy" style="color:var(--green-t);font-size:20px"></i></div>'+
+        '<div style="flex:1"><div style="font-weight:700;font-size:13px">'+esc(b.label)+'</div>'+
+        '<div style="font-size:11px;color:var(--t3)">پروتکل: '+b.protocol+' · تاخیر کل: '+toFa(b.total_ms)+' ms</div></div>'+
+        '<button class="btn btn-sm btn-g" onclick="navigator.clipboard.writeText(\\\'\\\').then(()=>toast(\'لینک در صفحه کانفیگ‌ها قابل کپی است\',\'ok\'))"><i class="ti ti-link"></i> کانفیگ</button></div>';
+      document.getElementById('zeus-smart-best').textContent='بهترین: '+b.label+' ('+b.total_ms+'ms)';
+      toast('بهترین کانفیگ: '+b.label+' با '+b.total_ms+'ms','ok');
+    }else{
+      content.innerHTML='<div style="color:var(--t3);font-size:12px;text-align:center;padding:10px">هیچ کانفیگ سالمی یافت نشد — '+toFa(j.checked)+' کانفیگ تست شد</div>';
+      document.getElementById('zeus-smart-best').textContent='بهترین: پیدا نشد';
+      toast('هیچ کانفیگ سالمی یافت نشد','err');
+    }
+  }catch(e){toast('خطا در ارتباط','err')}
+  finally{if(btn){btn.disabled=false;btn.innerHTML='<i class="ti ti-trophy"></i> تست اکنون و معرفی بهترین'}}
+}
+async function zeusSaveSmart(){
+  const enabled=document.getElementById('zeus-smart-toggle').checked;
+  const interval_ms=parseInt(document.getElementById('zeus-smart-interval')?.value||'1000');
+  const accuracy=parseInt(document.getElementById('zeus-smart-accuracy')?.value||'4');
+  try{
+    const r=await authF('/api/zeus/smart',{method:'POST',body:JSON.stringify({enabled,interval_ms,accuracy})});
+    if(!r.ok)return;
+    const j=await r.json();
+    zeusToggleSet('zeus-smart-toggle',j.smart_mode.enabled);
+    document.getElementById('zeus-smart-status').textContent=j.smart_mode.enabled?'فعال':'غیرفعال';
+    toast('حالت هوشمند '+(j.smart_mode.enabled?'فعال':'خاموش')+' شد','ok');
+  }catch(e){toast('خطا','err')}
+}
+async function zeusSaveSecurity(){
+  const enabled=document.getElementById('zeus-security-toggle').checked;
+  const min_password_length=parseInt(document.getElementById('zeus-sec-min-len').value)||8;
+  const attempt_interval_ms=parseInt(document.getElementById('zeus-sec-interval').value)||1000;
+  const max_attempts=parseInt(document.getElementById('zeus-sec-max').value)||5;
+  const lockout_ms=parseInt(document.getElementById('zeus-sec-lockout').value)||60000;
+  try{
+    const r=await authF('/api/zeus/security',{method:'POST',body:JSON.stringify({enabled,min_password_length,attempt_interval_ms,max_attempts,lockout_ms})});
+    if(!r.ok){toast('خطا در ذخیره','err');return}
+    const j=await r.json();
+    zeusToggleSet('zeus-security-toggle',j.security.enabled);
+    document.getElementById('zeus-security-status').textContent=j.security.enabled?'فعال':'غیرفعال';
+    document.getElementById('zeus-security-rule').textContent='حداکثر تلاش: '+j.security.max_attempts;
+    toast('تنظیمات امنیت ذخیره شد','ok');
+  }catch(e){toast('خطا در ارتباط','err')}
+}
+async function zeusSecurityCheck(){
+  try{
+    const r=await authF('/api/zeus/security/check',{method:'POST'});
+    if(!r.ok)return;
+    const j=await r.json();
+    const box=document.getElementById('zeus-security-result');
+    const content=document.getElementById('zeus-security-result-content');
+    box.style.display='';
+    content.innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:11.5px">'+
+      '<div><div style="color:var(--t3);margin-bottom:4px">میان‌افزار</div><div style="font-weight:700">'+(j.middleware_active?'<span style="color:var(--green-t)">فعال</span>':'<span style="color:var(--red-t)">غیرفعال</span>')+'</div></div>'+
+      '<div><div style="color:var(--t3);margin-bottom:4px">IPهای بلاک‌شده</div><div style="font-weight:700">'+toFa(j.currently_blocked_count)+'</div></div>'+
+      '<div><div style="color:var(--t3);margin-bottom:4px">حداکثر تلاش</div><div style="font-weight:700">'+toFa(j.rules.max_attempts)+'</div></div>'+
+      '<div><div style="color:var(--t3);margin-bottom:4px">فاصله‌ی تلاش‌ها</div><div style="font-weight:700">'+toFa(j.rules.attempt_interval_ms)+' ms</div></div>'+
+      '<div><div style="color:var(--t3);margin-bottom:4px">مدت بلاک</div><div style="font-weight:700">'+toFa(j.rules.lockout_ms)+' ms</div></div>'+
+      '<div><div style="color:var(--t3);margin-bottom:4px">حداقل طول پسورد</div><div style="font-weight:700">'+toFa(j.rules.min_password_length)+'</div></div>'+
+    '</div>';
+    toast('وضعیت میان‌افزار بررسی شد','ok');
+  }catch(e){toast('خطا','err')}
+}
+function openModalGeneric(title,bodyHtml){
+  // استفاده از modal موجود (modal-create-link قبلاً تعریف شده) اگر نبود، یک div ساده
+  let m=document.getElementById('modal-generic');
+  if(!m){
+    m=document.createElement('div');
+    m.id='modal-generic';
+    m.className='modal';
+    m.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:9999;padding:20px';
+    m.innerHTML='<div class="modal-card" style="background:var(--card);border-radius:14px;padding:20px;max-width:560px;width:100%;max-height:80vh;overflow-y:auto"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><div style="font-weight:700;font-size:13.5px" id="modal-generic-title"></div><button class="btn btn-sm" onclick="document.getElementById(\'modal-generic\').style.display=\'none\'"><i class="ti ti-x"></i></button></div><div id="modal-generic-body" style="font-size:11.5px"></div></div>';
+    document.body.appendChild(m);
+  }
+  document.getElementById('modal-generic-title').textContent=title;
+  document.getElementById('modal-generic-body').innerHTML=bodyHtml;
+  m.style.display='flex';
+}
+// اتصال سوییچ‌ها به ذخیره‌ی خودکار
+document.addEventListener('change',e=>{
+  if(e.target.id==='zeus-tls-toggle'){zeusSaveTlsMask()}
+  else if(e.target.id==='zeus-smart-toggle'){zeusSaveSmart()}
+  else if(e.target.id==='zeus-security-toggle'){zeusSaveSecurity()}
+});
 
 /* ══════ آی‌پی‌های تمیز — اسکن اروان + اسکن مرورگر + لینک IP-دار ══════ */
 let cipValid=[];   // IPهای تاییدشده سمت سرور

@@ -2822,6 +2822,13 @@ static_assets.register(app)
 import clean_ip_boost
 clean_ip_boost.register_routes(app)
 
+# ══════════════════════════════════════════════════════════════════════════════
+# ماژول تنظیمات حرفه‌ای ZEUS — ISP + TLS Mask + Smart Mode + Security (zeus_features.py)
+# اگر این ماژول حذف شود، پنل و همه‌ی تونل‌ها بدون تغییر کار می‌کنند.
+# ══════════════════════════════════════════════════════════════════════════════
+import zeus_features
+zeus_features.register_routes(app)
+
 
 if __name__ == "__main__":
     uvicorn.run(
