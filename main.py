@@ -310,6 +310,13 @@ async def startup():
         limits=limits, timeout=timeout, follow_redirects=True,
     )
     await load_state()
+    # اگر دیتای پایدار روی Railway Volume وصل نباشد، LINKS خالی خواهد بود.
+    # سه کانفیگ پیش‌فرض (vless-ws / trojan-ws / shadowsocks) می‌سازیم تا کاربر
+    # بلافاصله پس از دیپلوی بتواند پینگ بگیرد و پنل را تست کند.
+    try:
+        await ensure_default_link()
+    except Exception as _e:
+        logger.warning(f"[startup] ensure_default_link ناموفق بود: {_e}")
     await _restart_mtproto_instances()
     log_activity("system", "سرور راه‌اندازی شد", "ok")
     logger.info(f"EMIX v{EMIX_VERSION} started on port {CONFIG['port']}")
@@ -795,27 +802,55 @@ async def require_node_key(request: Request) -> str:
 _default_link_created = False
 
 async def ensure_default_link():
+    """اگر هیچ کانفیگی وجود نداشته باشد، چندین کانفیگ پیش‌فرض سالم می‌سازد تا
+    کاربر بلافاصله پس از دیپلوی (حتی بدون Volume پایدار) بتواند پینگ بگیرد.
+    کانفیگ‌ها: vless-ws، trojan-ws، shadowsocks — هر سه روی پورت 443 با TLS."""
     global _default_link_created
     if _default_link_created:
         return
     async with LINKS_LOCK:
-        if not any(l.get("is_default") for l in LINKS.values()):
-            uid = hashlib.sha256(f"default{CONFIG['secret']}".encode()).hexdigest()
-            uid = f"{uid[:8]}-{uid[8:12]}-{uid[12:16]}-{uid[16:20]}-{uid[20:32]}"
-            if uid not in LINKS:
-                LINKS[uid] = {
-                    "label": "لینک پیش‌فرض",
-                    "limit_bytes": 0,
-                    "used_bytes": 0,
-                    "created_at": datetime.now().isoformat(),
-                    "active": True,
-                    "expires_at": None,
-                    "note": "",
-                    "is_default": True,
-                    "sub_id": None,
-                    "protocol": DEFAULT_PROTOCOL,
-                }
-                asyncio.create_task(save_state())
+        # اگر از قبل کانفیگ وجود دارد، چیزی نساز
+        if LINKS:
+            _default_link_created = True
+            return
+        # سه کانفیگ پیش‌فرض با UUID پایدار (مشتق از SECRET_KEY) می‌سازد
+        # تا بین ری‌استارت‌ها ثابت بمانند (مهم برای کلاینت‌های متصل)
+        base = hashlib.sha256(f"emix-default-{CONFIG['secret']}".encode()).hexdigest()
+        # سه UUID مجزا از هم بساز
+        uids = []
+        for i, prefix in enumerate(["vless", "trojan", "ss"]):
+            h = hashlib.sha256(f"{prefix}-{base}".encode()).hexdigest()
+            uid = f"{h[:8]}-{h[8:12]}-{h[12:16]}-{h[16:20]}-{h[20:32]}"
+            uids.append((prefix, uid))
+        protocols_map = {
+            "vless": ("vless-ws", "VLESS · WS+TLS", "کانونفیگ سبک و پایدار — بهترین گزینه برای موبایل و دسکتاپ"),
+            "trojan": ("trojan-ws", "Trojan · WS+TLS", "کانونفیگ Trojan با TLS — پایدار روی اکثر شبکه‌ها"),
+            "ss": ("shadowsocks", "Shadowsocks · WS+TLS", "کانفیگ Shadowsocks با WebSocket — سبک و سریع"),
+        }
+        now_iso = datetime.now().isoformat()
+        for prefix, uid in uids:
+            if uid in LINKS:
+                continue
+            proto, label, note = protocols_map[prefix]
+            LINKS[uid] = {
+                "label": label,
+                "limit_bytes": 0,           # نامحدود
+                "used_bytes": 0,
+                "created_at": now_iso,
+                "active": True,
+                "expires_at": None,         # بدون انقضا
+                "note": note,
+                "is_default": True,
+                "sub_id": None,
+                "protocol": proto,
+                "alpn": "h2,http/1.1",
+                "fingerprint": "chrome",
+            }
+        logger.info(
+            f"[bootstrap] {len(uids)} کانفیگ پیش‌فرض ساخته شد (vless-ws / trojan-ws / shadowsocks) — "
+            f"با UUID پایدار. این کانفیگ‌ها پس از هر ری‌دیپلوی به‌صورت خودکار بازسازی می‌شوند."
+        )
+        asyncio.create_task(save_state())
         _default_link_created = True
 
 # ── Basic endpoints ───────────────────────────────────────────────────────────

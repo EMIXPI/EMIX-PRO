@@ -2752,7 +2752,7 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
     <div class="nav-it on" data-pg="overview"><i class="ti ti-layout-dashboard"></i> داشبورد</div>
     <div class="nav-it" data-pg="links"><i class="ti ti-link-plus"></i> کانفیگ‌ها <span class="nav-badge" id="links-nb">0</span></div>
     <div class="nav-it" data-pg="bridge"><i class="ti ti-flag"></i> پل ایران <span class="nav-badge" id="bridge-nb" style="display:none">فعال</span></div>
-    <div class="nav-it" data-pg="zeus"><i class="ti ti-bolt"></i> تنظیمات حرفه‌ای</div>
+    <div class="nav-it" data-pg="zeus"><i class="ti ti-bolt" style="color:var(--amber-t)"></i> ⚡ ZEUS Pro <span class="nav-badge" id="zeus-nb" style="background:var(--amber-t);color:#fff">جدید</span></div>
     <div class="nav-it" data-pg="subgroups"><i class="ti ti-folders"></i> گروه‌های ساب <span class="nav-badge" id="subs-nb">0</span></div>
     <div class="nav-it" data-pg="subscriptions"><i class="ti ti-rss"></i> سابسکریپشن</div>
     <div class="nav-it" data-pg="traffic"><i class="ti ti-chart-area"></i> ترافیک</div>
@@ -2802,6 +2802,27 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
       <button class="btn btn-pur" onclick="navTo('subgroups')"><i class="ti ti-folders"></i> گروه‌های ساب</button>
     </div>
   </div>
+
+  <!-- ═══ کارت دسترسی سریع به ZEUS Pro ═══ -->
+  <div class="zeus-quick" style="margin-top:18px;background:linear-gradient(135deg,rgba(245,158,11,.10),rgba(255,77,46,.06));border:1px solid var(--amber-t);border-radius:14px;padding:18px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;animation:fadeup .5s cubic-bezier(.16,1,.3,1) .15s backwards">
+    <div style="display:flex;align-items:center;gap:14px;flex:1;min-width:240px">
+      <div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,#f59e0b,#ef4444);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <i class="ti ti-bolt" style="font-size:26px;color:#fff"></i>
+      </div>
+      <div>
+        <div style="font-size:15px;font-weight:800;color:var(--t1);display:flex;align-items:center;gap:8px">
+          ⚡ ZEUS Pro — تنظیمات حرفه‌ای
+          <span class="badge bg-amber" style="font-size:9px">جدید</span>
+        </div>
+        <div style="font-size:12px;color:var(--t3);margin-top:3px;line-height:1.6">
+          انتخاب ISP همراه اول/ایرانسل/مخابرات + TLS Mask پیشرفته + حالت هوشمند + قفل لاگین
+        </div>
+      </div>
+    </div>
+    <button class="btn btn-p" style="background:linear-gradient(135deg,#f59e0b,#ef4444);font-weight:700;padding:11px 18px" onclick="navTo('zeus')">
+      <i class="ti ti-arrow-left"></i> ورود به ZEUS Pro
+    </button>
+  </div>
   <div class="g3">
     <div class="card"><div class="card-title"><i class="ti ti-chart-area"></i> ترافیک ساعتی (MB)</div><div class="ch"><canvas id="ch1"></canvas></div></div>
     <div class="card"><div class="card-title"><i class="ti ti-chart-donut"></i> توزیع</div><div class="ch-sm"><canvas id="ch2"></canvas></div></div>
@@ -2814,6 +2835,7 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
       <div class="sr"><span class="sr-k"><i class="ti ti-bolt"></i> Siz10a XHTTP Ultra</span><span class="sr-v" style="color:var(--green-t)">● فعال · 3 mode</span></div>
       <div class="sr"><span class="sr-k"><i class="ti ti-folders"></i> Sub Groups</span><span class="sr-v" style="color:var(--green-t)">● فعال v9</span></div>
       <div class="sr"><span class="sr-k"><i class="ti ti-rss"></i> Subscription API</span><span class="sr-v" style="color:var(--green-t)">● فعال</span></div>
+      <div class="sr"><span class="sr-k"><i class="ti ti-bolt" style="color:var(--amber-t)"></i> ⚡ ZEUS Pro</span><span class="sr-v" style="color:var(--amber-t)">● فعال · ISP+TLS+Smart+Sec</span></div>
       <div class="sr"><span class="sr-k"><i class="ti ti-clock"></i> آپتایم</span><span class="sr-v" id="uptime-inline">—</span></div>
       <div class="sr" style="flex-direction:column;align-items:flex-start;gap:4px">
         <div style="width:100%;display:flex;justify-content:space-between"><span class="sr-k"><i class="ti ti-gauge"></i> بار نسبی</span><span class="sr-v" id="bw-pct">—%</span></div>
@@ -2829,7 +2851,7 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
     </div>
   </div>
   <div class="dash-footer">
-    <span class="df-text">EMIX PRO v9.2 · Railway · 2025</span>
+    <span class="df-text">EMIX PRO v9.3.0-zeus · Railway · 2026 · با ISP + TLS Mask + Smart + Security</span>
     <a class="df-link" href="https://t.me/emixpi" target="_blank"><i class="ti ti-brand-telegram"></i> t.me/emixpi</a>
   </div>
 </section>
