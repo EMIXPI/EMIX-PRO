@@ -86,15 +86,28 @@ def _ping_public_bases() -> tuple[str, str]:
 
 
 def _ws_connect(uri: str, timeout: float, early_data: bytes | None = None):
-    """websockets.connect سازگار با نسخه‌های مختلف (additional_headers / extra_headers).
-    early_data: بار اولیه‌ی 0-RTT در هدر Sec-WebSocket-Protocol (طبق xray ed=2048)."""
+    """websockets.connect سازگار با همه‌ی نسخه‌ها.
+
+    API هدر بین نسخه‌ها عوض شده (extra_headers در ≤13، additional_headers در ≥14)
+    و در نسخه‌های 12/13 آرگومان نامعتبر فقط موقع await خطا می‌دهد (نه موقع call) —
+    پس try/except موقع call بی‌اثر است. راه درست: خواندن امضای واقعی connect
+    با inspect و انتخاب نام پارامتر درست. اگر هیچ‌کدام نبود، بدون هدر وصل
+    می‌شویم (فقط چند خط لاگ اکتیویتی اضافه می‌شود — شکست نمی‌خورد).
+    """
+    import inspect
+
     kwargs: dict = {"open_timeout": timeout, "close_timeout": 2}
     if early_data:
         kwargs["subprotocols"] = [base64.urlsafe_b64encode(early_data).rstrip(b"=").decode()]
     try:
-        return websockets.connect(uri, additional_headers=PING_WS_HEADERS, **kwargs)
-    except TypeError:
-        return websockets.connect(uri, extra_headers=PING_WS_HEADERS, **kwargs)
+        params = inspect.signature(websockets.connect).parameters
+    except (TypeError, ValueError):
+        params = {}
+    for key in ("additional_headers", "extra_headers"):
+        if key in params:
+            kwargs[key] = PING_WS_HEADERS
+            break
+    return websockets.connect(uri, **kwargs)
 
 
 def _vless_probe_bytes(uid: str) -> bytes:

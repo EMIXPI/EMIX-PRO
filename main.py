@@ -486,8 +486,40 @@ async def shutdown():
         await http_client.aclose()
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
+# دامنه‌ی عمومی خودآموخته: در دیپلوی‌های جدید Railway متغیر RAILWAY_PUBLIC_DOMAIN
+# همیشه ست نمی‌شود و لینک‌ها روی localhost می‌مانند. این مکانیزم دامنه را از
+# هدر Host درخواست‌های ورودی یاد می‌گیرد (پشت edge ریلوی، Host همیشه دامنه‌ی
+# واقعی سرویس است) و get_host به‌صورت خودشفابا به آن ارتقا می‌یابد.
+_LEARNED_PUBLIC_HOST: str | None = None
+
+@app.middleware("http")
+async def _learn_public_host_middleware(request: Request, call_next):
+    global _LEARNED_PUBLIC_HOST
+    try:
+        if not os.environ.get("RAILWAY_PUBLIC_DOMAIN"):
+            host = (request.headers.get("host") or "").split(":")[0].strip().lower()
+            if (
+                host
+                and "." in host
+                and host not in ("localhost", "127.0.0.1", "0.0.0.0")
+                and not host.startswith("10.")
+                and not host.startswith("192.168.")
+                and not host.startswith("172.")
+            ):
+                if _LEARNED_PUBLIC_HOST != host:
+                    _LEARNED_PUBLIC_HOST = host
+                    logger.info(f"[host] دامنه‌ی عمومی از درخواست یاد گرفته شد: {host}")
+    except Exception:
+        pass
+    return await call_next(request)
+
 def get_host() -> str:
-    return os.environ.get("RAILWAY_PUBLIC_DOMAIN", CONFIG["host"])
+    env_host = os.environ.get("RAILWAY_PUBLIC_DOMAIN")
+    if env_host:
+        return env_host
+    if _LEARNED_PUBLIC_HOST:
+        return _LEARNED_PUBLIC_HOST
+    return CONFIG["host"]
 
 def generate_uuid() -> str:
     h = secrets.token_hex(16)

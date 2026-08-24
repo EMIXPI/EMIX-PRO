@@ -4101,13 +4101,13 @@ async function loadLinks(){
     }
     document.getElementById('links-nb').textContent=links.length;
     document.getElementById('links-pg-cnt').textContent=toFa(links.length)+' کانفیگ';
-    document.getElementById('lsummary-badge').textContent=toFa(links.length);
+    const lsumBadge=document.getElementById('lsummary-badge'); if(lsumBadge)lsumBadge.textContent=toFa(links.length);
     const liveUuids=new Set(links.map(l=>l.uuid));
     [...selectedLinkUuids].forEach(u=>{if(!liveUuids.has(u))selectedLinkUuids.delete(u)});
     document.getElementById('links-selectall-wrap').style.display=links.length?'flex':'none';
     const zeusExists = !!(zeusStatus && zeusStatus.phase==='done' && zeusStatus.result);
     const grid=document.getElementById('links-grid'),empty=document.getElementById('links-empty');
-    if(!links.length && !zeusExists){grid.innerHTML='';empty.style.display='block';document.getElementById('lsummary').innerHTML='<div class="empty"><i class="ti ti-link-off"></i><p>کانفیگی وجود ندارد</p></div>';updateBulkBar();return}
+    if(!links.length && !zeusExists){grid.innerHTML='';empty.style.display='block';const ls1=document.getElementById('lsummary');if(ls1)ls1.innerHTML='<div class="empty"><i class="ti ti-link-off"></i><p>کانفیگی وجود ندارد</p></div>';updateBulkBar();return}
     empty.style.display='none';
     const subMap=Object.fromEntries(subs.map(s=>[s.sub_id,s.name]));
     grid.innerHTML=(zeusExists?zeusCardHtml(zeusStatus):'')+links.map(l=>{
@@ -4174,7 +4174,7 @@ async function loadLinks(){
     </div>
   </div>`;
 }).join('');
-    document.getElementById('lsummary').innerHTML=links.slice(0,6).map(l=>`<div class="sr"><span class="sr-k" style="gap:5px"><i class="ti ${l.expired?'ti-calendar-x':l.active?'ti-circle-check':'ti-circle-x'}" style="color:${l.expired?'var(--amber)':l.active?'var(--green)':'var(--red)'}"></i>${esc(l.label)}</span><span class="sr-v" style="font-size:10px">${fmtB(l.used_bytes)} / ${l.limit_bytes===0?'∞':fmtB(l.limit_bytes)}</span></div>`).join('');
+    const ls2=document.getElementById('lsummary'); if(ls2)ls2.innerHTML=links.slice(0,6).map(l=>`<div class="sr"><span class="sr-k" style="gap:5px"><i class="ti ${l.expired?'ti-calendar-x':l.active?'ti-circle-check':'ti-circle-x'}" style="color:${l.expired?'var(--amber)':l.active?'var(--green)':'var(--red)'}"></i>${esc(l.label)}</span><span class="sr-v" style="font-size:10px">${fmtB(l.used_bytes)} / ${l.limit_bytes===0?'∞':fmtB(l.limit_bytes)}</span></div>`).join('');
     updateBulkBar();
   }catch(e){console.error(e)}
 }
