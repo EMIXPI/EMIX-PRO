@@ -54,8 +54,9 @@ from main import (
 BRIDGE_FILE = DATA_DIR / "bridge_config.json"
 
 DEFAULTS = {
-    "bridge_host": "",        # آدرس سرور داخل ایران (IP یا دامنه)
-    "bridge_port": 443,       # پورت گوش‌دادن پل روی سرور ایران
+    "mode": "vps",            # "vps" = سرور شخصی ایران | "cdn" = CDN ایرانی (رایگان، بدون سرور)
+    "bridge_host": "",        # VPS: IP سرور ایران | CDN: دامنه‌ی پشت ابر آروان
+    "bridge_port": 443,       # VPS: پورت دلخواه | CDN: 443
     "target_host": "",        # مقصد فوروارد (پیش‌فرض: دامنه‌ی خود پنل)
     "target_port": 443,
     "tuned": False,           # آیا تنظیمات sysctl پیشنهاد شده؟ (فقط نمایش)
@@ -94,17 +95,30 @@ def _target_domain(cfg: dict) -> str:
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# بازنویسی لینک‌ها — آدرسِ اتصال عوض می‌شود، host/SNI همان دامنه‌ی Railway می‌ماند
+# بازنویسی لینک‌ها
+#   VPS:  فقط آدرس اتصال عوض می‌شود؛ host/SNI همان دامنه‌ی Railway می‌ماند
+#          (TLS مستقیم از داخل سرور به Railway — گواهی Railway دیده می‌شود)
+#   CDN:  آدرس + پارامترهای host/sni هم به دامنه‌ی CDN تغییر می‌کنند
+#          (TLS در لبه‌ی اروان خاتمه می‌یابد — گواهی خود دامنه کاربر)
 # ══════════════════════════════════════════════════════════════════════════════
-def _rewrite_link(url: str, bridge_host: str, bridge_port: int) -> str | None:
-    """آدرس اتصال را به سرور پل تغییر می‌دهد؛ بقیه‌ی پارامترها دست‌نخورده."""
+def _replace_query_param(url: str, key: str, value: str) -> str:
+    """جایگزینی پارامتر query بدون خراب‌کردن fragment (#remark) — پارامتر نباید داخل متن remark عوض شود."""
+    return re.sub(rf"([?&]{key}=)[^&#]*", rf"\g<1>{value}", url)
+
+
+def _rewrite_link(url: str, bridge_host: str, bridge_port: int, mode: str = "vps") -> str | None:
+    """آدرس اتصال را به سرور پل تغییر می‌دهد؛ در حالت CDN پارامترهای host/sni هم بازنویسی می‌شوند."""
     try:
         if url.startswith(("vless://", "trojan://")):
             p = urlparse(url)
             # netloc = uuid@host:port → فقط host عوض شود
             userinfo = p.username or ""
             new_netloc = f"{userinfo}@{bridge_host}:{bridge_port}"
-            return url.replace(f"{p.scheme}://{p.netloc}", f"{p.scheme}://{new_netloc}", 1)
+            out = url.replace(f"{p.scheme}://{p.netloc}", f"{p.scheme}://{new_netloc}", 1)
+            if mode == "cdn":
+                out = _replace_query_param(out, "host", bridge_host)
+                out = _replace_query_param(out, "sni", bridge_host)
+            return out
 
         if url.startswith("ss://"):
             # ss://base64@host:port/?plugin=...#remark
@@ -114,7 +128,13 @@ def _rewrite_link(url: str, bridge_host: str, bridge_port: int) -> str | None:
                 return None
             userinfo = m.group(1) or ""
             new_netloc = f"{userinfo}{bridge_host}:{bridge_port}"
-            return url.replace(f"ss://{p.netloc}", f"ss://{new_netloc}", 1)
+            out = url.replace(f"ss://{p.netloc}", f"ss://{new_netloc}", 1)
+            if mode == "cdn":
+                # host داخل پارامتر plugin هم به دامنه‌ی CDN تغییر کند
+                # نکته: داخل plugin، «=» و «;» به‌صورت %3D و %3B کدگذاری شده‌اند
+                out = re.sub(r"(host%3D)[^&#]*", rf"\g<1>{bridge_host}", out)
+                out = re.sub(r"(host=)[^;&#]*", rf"\g<1>{bridge_host}", out)
+            return out
 
         if url.startswith("tg://"):
             # tg://proxy?server=HOST&port=...&secret=...  (MTProto از سیستم TCP-Proxy خودش می‌گذرد؛ بازنویسی نمی‌شود)
@@ -140,7 +160,7 @@ async def _bridged_links() -> list[dict]:
         if not is_link_allowed(d):
             continue
         original = generate_share_link(uid, host, remark=f"EMIX-{d['label']}", protocol=proto)
-        bridged = _rewrite_link(original, cfg["bridge_host"], int(cfg["bridge_port"]))
+        bridged = _rewrite_link(original, cfg["bridge_host"], int(cfg["bridge_port"]), cfg.get("mode", "vps"))
         if bridged:
             out.append({
                 "uuid": uid,
@@ -158,18 +178,29 @@ async def _bridged_links() -> list[dict]:
 # اگر هندشیک TLS با گواهی Railway از مسیر پل موفق شود، کل زنجیره سالم است.
 # ══════════════════════════════════════════════════════════════════════════════
 async def _test_bridge(cfg: dict) -> dict:
+    """
+    تست واقعی زنجیره‌ی پل — اتصال TLS از مسیر پنل → پل → مقصد.
+    حالت VPS:  SNI = دامنه‌ی Railway (گواهی Railway باید از مسیر سرور برگردد)
+    حالت CDN:  SNI = دامنه‌ی خود کاربر (روی لبه‌ی اروان TLS خاتمه می‌یابد)
+    """
     bridge_host = cfg.get("bridge_host")
     if not bridge_host:
-        return {"ok": False, "detail": "ابتدا آدرس سرور ایران را ذخیره کنید"}
+        return {"ok": False, "detail": "ابتدا آدرس پل را ذخیره کنید"}
     target = _target_domain(cfg)
+    mode = cfg.get("mode", "vps")
+    if mode == "cdn":
+        server_name = bridge_host
+        chain = f"پنل → {bridge_host} (لبه‌ی CDN ایران) → {target}"
+    else:
+        server_name = target
+        chain = f"پنل → {bridge_host}:{cfg.get('bridge_port', 443)} → {target}:443"
     t0 = time.perf_counter()
     ctx = ssl.create_default_context()
     try:
-        # اگر پورت پل ≠ ۴۴۳ باشد باز هم SNI باید دامنه‌ی Railway باشد
         reader, writer = await asyncio.wait_for(
             asyncio.open_connection(
                 bridge_host, int(cfg.get("bridge_port", 443)),
-                ssl=ctx, server_hostname=target,
+                ssl=ctx, server_hostname=server_name,
             ),
             timeout=10.0,
         )
@@ -314,10 +345,18 @@ def register_routes(app) -> None:
         cfg = _load_cfg()
         host = str(body.get("bridge_host", "")).strip()
         port = int(body.get("bridge_port", 443) or 443)
+        mode = str(body.get("mode", cfg.get("mode", "vps")))
+        if mode not in ("vps", "cdn"):
+            mode = "vps"
         if host and not re.match(r"^[a-zA-Z0-9._-]+$", host):
             raise HTTPException(status_code=400, detail="آدرس سرور نامعتبر است")
         if not (1 <= port <= 65535):
             raise HTTPException(status_code=400, detail="پورت نامعتبر است")
+        if mode == "cdn":
+            if host and not host.startswith("api.") and "." not in host:
+                raise HTTPException(status_code=400, detail="در حالت CDN باید دامنه (نه IP) وارد کنید")
+            port = 443  # لبه‌ی CDN فقط روی پورت استاندارد سرو می‌دهد
+        cfg["mode"] = mode
         cfg["bridge_host"] = host
         cfg["bridge_port"] = port
         if body.get("target_host"):

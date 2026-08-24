@@ -2864,42 +2864,181 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
     </div>
   </div>
 
+  <!-- انتخاب روش پل -->
   <div class="conn-toolbar" style="margin-bottom:14px">
-    <div class="conn-toolbar-title"><i class="ti ti-server-2"></i> تنظیم پل</div>
+    <div class="conn-toolbar-title"><i class="ti ti-routes"></i> انتخاب روش پل</div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px" id="br-mode-cards">
+    <div class="card br-mode-card" id="br-mode-vps" onclick="brSetMode('vps')" style="cursor:pointer">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="width:44px;height:44px;border-radius:12px;background:var(--accent-d);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ti-server-2" style="font-size:22px;color:var(--accent2)"></i></div>
+        <div style="flex:1">
+          <div style="font-weight:700;font-size:13.5px">🖥 سرور شخصی ایران (VPS)</div>
+          <div style="font-size:10.5px;color:var(--t3);margin-top:3px">کنترل کامل · پورت دلخواه · مناسب مصرف سنگین</div>
+        </div>
+        <div class="br-mode-check" style="width:20px;height:20px;border-radius:50%;border:2px solid var(--t3);display:flex;align-items:center;justify-content:center"><i class="ti ti-check" style="font-size:12px;opacity:0"></i></div>
+      </div>
+      <div style="font-size:10px;color:var(--t3);margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+        <span class="cfg-sub-tag">هزینه: VPS ماهانه</span>
+        <span class="cfg-sub-tag">پهنای باند: نامحدود VPS</span>
+        <span class="cfg-sub-tag">راه‌اندازی: ۳ دقیقه</span>
+      </div>
+    </div>
+    <div class="card br-mode-card" id="br-mode-cdn" onclick="brSetMode('cdn')" style="cursor:pointer">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="width:44px;height:44px;border-radius:12px;background:var(--green-bg);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ti-cloud" style="font-size:22px;color:var(--green-t)"></i></div>
+        <div style="flex:1">
+          <div style="font-weight:700;font-size:13.5px">🌐 CDN ایرانی (رایگان!) <span style="font-size:9px;background:var(--green-bg);color:var(--green-t);padding:2px 7px;border-radius:10px;margin-right:4px">بدون خرید سرور</span></div>
+          <div style="font-size:10.5px;color:var(--t3);margin-top:3px">ترافیک از لبه‌ی اروان داخل ایران رد می‌شود · استتار کامل</div>
+        </div>
+        <div class="br-mode-check" style="width:20px;height:20px;border-radius:50%;border:2px solid var(--t3);display:flex;align-items:center;justify-content:center"><i class="ti ti-check" style="font-size:12px;opacity:0"></i></div>
+      </div>
+      <div style="font-size:10px;color:var(--t3);margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+        <span class="cfg-sub-tag">هزینه: رایگان</span>
+        <span class="cfg-sub-tag">مصرف سبک/متوسط</span>
+        <span class="cfg-sub-tag">استتار: عالی</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- راهنمای حالت CDN (اروان) -->
+  <div class="card" id="br-cdn-guide" style="margin-bottom:18px;display:none">
+    <div class="card-title"><i class="ti ti-cloud" style="color:var(--green-t)"></i> راه‌اندازی رایگان با ابر آروان (بدون خرید سرور)</div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div class="cl"><i class="ti ti-circle-number-1" style="color:var(--green-t)"></i><span>در <b>arvancloud.ir</b> ثبت‌نام کنید (رایگان) و در بخش CDN دامنه‌ی خود را ثبت کنید — دامنه‌ی .ir ارزان یا هر دامنه‌ای که دارید</span></div>
+      <div class="cl"><i class="ti ti-circle-number-2" style="color:var(--green-t)"></i><span>نیم‌سرورهای دامنه را به نیم‌سرورهای اروان تغییر دهید، سپس رکورد زیر بسازید: <b style="direction:ltr;display:inline-block">CNAME: sub → your-panel.up.railway.app</b> با پروکسی (ابر) <b>روشن</b></span></div>
+      <div class="cl"><i class="ti ti-circle-number-3" style="color:var(--green-t)"></i><span>در تنظیمات CDN اروان: <b>WebSocket را فعال</b> کنید و گزینه‌ی <b>بازنویسی هدر Host به مبدأ</b> را روشن کنید + گواهی SSL رایگان را فعال کنید</span></div>
+      <div class="cl"><i class="ti ti-circle-number-4" style="color:var(--green-t)"></i><span>همان دامنه (مثلاً <b style="direction:ltr;display:inline-block">sub.yourdomain.ir</b>) را در فرم زیر وارد و ذخیره کنید — تمام! ترافیک شما از این‌پس داخلی محاسبه می‌شود و دقیقاً مثل مرور یک سایت ایرانی معمولی به نظر می‌رسد</span></div>
+      <div class="cl amber"><i class="ti ti-alert-triangle"></i><span>پلن رایگان اروان محدودیت ترافیک دارد (حدود ۲۰GB در ماه — برای مصرف شخصی سبک کافی است). برای مصرف بیشتر، همین مسیر با پل VPS یا پلن پولی اروان را بگیرید.</span></div>
+    </div>
+  </div>
+
+  <!-- راهنمای حالت VPS -->
+  <div id="br-vps-guide" style="display:none">
+    <div class="conn-toolbar" style="margin-bottom:14px">
+      <div class="conn-toolbar-title"><i class="ti ti-terminal-2"></i> راه‌اندازی سرور ایران (۳ دقیقه)</div>
+    </div>
+    <div class="card" style="margin-bottom:18px">
+      <div class="card-title">
+        <i class="ti ti-script"></i> اسکریپت نصب خودکار
+        <span class="ml-auto" style="display:flex;gap:6px">
+          <button class="btn btn-g btn-sm" onclick="brCopyScript()"><i class="ti ti-copy"></i> کپی اسکریپت</button>
+          <button class="btn btn-g btn-sm" onclick="brShowNginx()"><i class="ti ti-brand-nginx"></i> نسخه nginx</button>
+        </span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div class="cl"><i class="ti ti-circle-number-1"></i><span>یک سرور مجازی داخل ایران بگیرید (هر VPS ارزان ایرانی با ترافیک نامحدود کافی است)</span></div>
+        <div class="cl"><i class="ti ti-circle-number-2"></i><span>اسکریپت زیر را با دسترسی root روی آن اجرا کنید — socat و سرویس systemd خودکار نصب می‌شود</span></div>
+        <div class="cl"><i class="ti ti-circle-number-3"></i><span>آدرس سرور را در فرم زیر ذخیره کنید و دکمه «تست پل» را بزنید</span></div>
+        <pre id="br-script" style="background:var(--bg);border:1px solid var(--card-b);border-radius:10px;padding:14px;font-size:11px;direction:ltr;text-align:left;overflow-x:auto;max-height:260px;overflow-y:auto;font-family:monospace"></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- فرم تنظیم پل -->
+  <div class="conn-toolbar" style="margin-bottom:14px">
+    <div class="conn-toolbar-title"><i class="ti ti-server-2"></i> تنظیم پل <span id="br-mode-label" style="font-size:10px;color:var(--t3)">(حالت: سرور شخصی)</span></div>
   </div>
   <div class="card" style="margin-bottom:18px">
-    <div class="card-title"><i class="ti ti-settings"></i> سرور داخل ایران</div>
+    <div class="card-title"><i class="ti ti-settings"></i> <span id="br-form-title">آدرس سرور داخل ایران</span></div>
     <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
       <div class="fg" style="flex:1;min-width:220px">
-        <label>آدرس سرور ایران (IP یا دامنه)</label>
-        <input id="br-host" placeholder="مثلاً 185.51.x.x یا ir.example.com" style="width:100%;direction:ltr;text-align:left">
+        <label id="br-host-label">آدرس سرور ایران (IP یا دامنه)</label>
+        <input id="br-host" placeholder="VPS: 185.51.x.x · CDN: sub.yourdomain.ir" style="width:100%;direction:ltr;text-align:left">
       </div>
-      <div class="fg" style="width:110px">
+      <div class="fg" style="width:110px" id="br-port-wrap">
         <label>پورت پل</label>
         <input id="br-port" type="number" value="443" style="width:100%;direction:ltr;text-align:left">
       </div>
       <button class="btn btn-p" onclick="brSaveConfig(this)"><i class="ti ti-device-floppy"></i> ذخیره</button>
       <button class="btn btn-g" onclick="brTestBridge(this)"><i class="ti ti-activity"></i> تست پل</button>
     </div>
-    <div class="cl" style="margin-top:10px"><i class="ti ti-info-circle"></i><span>پورت پیش‌فرض ۴۴۳ است. اگر ISP پورت ۴۴۳ سرور شما را نمی‌بندد همان ۴۴۳ بهتر است؛ در غیر این صورت هر پورت دلخواه را روی سرور باز کنید و همین‌جا وارد کنید.</span></div>
+    <div class="cl" style="margin-top:10px" id="br-form-note"><i class="ti ti-info-circle"></i><span>پورت پیش‌فرض ۴۴۳ است. اگر ISP پورت ۴۴۳ سرور شما را نمی‌بندد همان ۴۴۳ بهتر است؛ در غیر این صورت هر پورت دلخواه را روی سرور باز کنید و همین‌جا وارد کنید.</span></div>
   </div>
 
+  <!-- واقعیت‌های فنی: چرا جعل/کلوک تنها کافی نیست -->
   <div class="conn-toolbar" style="margin-bottom:14px">
-    <div class="conn-toolbar-title"><i class="ti ti-terminal-2"></i> راه‌اندازی سرور ایران (۳ دقیقه)</div>
+    <div class="conn-toolbar-title"><i class="ti ti-flask"></i> چرا «جعل داده» و «کلوک» به‌تنهایی ضریب را حذف نمی‌کنند؟</div>
   </div>
   <div class="card" style="margin-bottom:18px">
-    <div class="card-title">
-      <i class="ti ti-script"></i> اسکریپت نصب خودکار
-      <span class="ml-auto" style="display:flex;gap:6px">
-        <button class="btn btn-g btn-sm" onclick="brCopyScript()"><i class="ti ti-copy"></i> کپی اسکریپت</button>
-        <button class="btn btn-g btn-sm" onclick="brShowNginx()"><i class="ti ti-brand-nginx"></i> نسخه nginx</button>
-      </span>
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:11.5px">
+        <thead>
+          <tr style="border-bottom:1px solid var(--card-b)">
+            <th style="text-align:right;padding:9px 8px;color:var(--t3);font-size:10px">روش</th>
+            <th style="text-align:center;padding:9px 8px;color:var(--t3);font-size:10px">ضریب صورت‌حساب</th>
+            <th style="text-align:center;padding:9px 8px;color:var(--t3);font-size:10px">استتار از DPI</th>
+            <th style="text-align:center;padding:9px 8px;color:var(--t3);font-size:10px">نیاز به سرور</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom:1px solid var(--card-b)">
+            <td style="padding:9px 8px">اتصال مستقیم به Railway</td>
+            <td style="padding:9px 8px;text-align:center;color:var(--red-t)">۲.۷ ❌</td>
+            <td style="padding:9px 8px;text-align:center;color:var(--amber-t)">متوسط</td>
+            <td style="padding:9px 8px;text-align:center">—</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--card-b)">
+            <td style="padding:9px 8px">جعل هدر / SNI spoofing</td>
+            <td style="padding:9px 8px;text-align:center;color:var(--red-t)">۲.۷ ❌</td>
+            <td style="padding:9px 8px;text-align:center;color:var(--red-t)">کم</td>
+            <td style="padding:9px 8px;text-align:center">—</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--card-b)">
+            <td style="padding:9px 8px">Cloak / Reality خالی</td>
+            <td style="padding:9px 8px;text-align:center;color:var(--red-t)">۲.۷ ❌</td>
+            <td style="padding:9px 8px;text-align:center;color:var(--green-t)">عالی</td>
+            <td style="padding:9px 8px;text-align:center;color:var(--amber-t)">✅ سرور</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--card-b)">
+            <td style="padding:9px 8px">پل VPS ایران</td>
+            <td style="padding:9px 8px;text-align:center;color:var(--green-t)">۱ ✅</td>
+            <td style="padding:9px 8px;text-align:center;color:var(--amber-t)">خوب</td>
+            <td style="padding:9px 8px;text-align:center;color:var(--amber-t)">✅ سرور</td>
+          </tr>
+          <tr style="background:var(--green-bg)">
+            <td style="padding:9px 8px;font-weight:700">⭐ CDN ایرانی (ابَر آروان)</td>
+            <td style="padding:9px 8px;text-align:center;color:var(--green-t);font-weight:700">۱ ✅</td>
+            <td style="padding:9px 8px;text-align:center;color:var(--green-t);font-weight:700">عالی</td>
+            <td style="padding:9px 8px;text-align:center;color:var(--green-t);font-weight:700">❌ رایگان!</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
-    <div style="display:flex;flex-direction:column;gap:10px">
-      <div class="cl"><i class="ti ti-circle-number-1"></i><span>یک سرور مجازی داخل ایران بگیرید (هر VPS ارزان ایرانی با ترافیک نامحدود کافی است)</span></div>
-      <div class="cl"><i class="ti ti-circle-number-2"></i><span>اسکریپت زیر را با دسترسی root روی آن اجرا کنید — socat و سرویس systemd خودکار نصب می‌شود</span></div>
-      <div class="cl"><i class="ti ti-circle-number-3"></i><span>آدرس سرور را در فرم بالا ذخیره کنید و دکمه «تست پل» را بزنید</span></div>
-      <pre id="br-script" style="background:var(--bg);border:1px solid var(--card-b);border-radius:10px;padding:14px;font-size:11px;direction:ltr;text-align:left;overflow-x:auto;max-height:260px;overflow-y:auto;font-family:monospace"></pre>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">
+      <div class="cl"><i class="ti ti-shield-off" style="color:var(--red-t)"></i><span><b>چرا جعل کار نمی‌کند؟</b> ضریب ۲.۷ بر اساس <b>آی‌پی مقصد</b> محاسبه می‌شود، نه محتوای پکت‌ها. اپراتور فقط می‌بیند که به یک آی‌پی خارجی TCP زدی — هر چیزی که داخل پکت‌ها نوشته شده باشد. پس جعل هدر، SNI spoofing و padding فقط DPI را گول می‌زنند، نه سیستم صورت‌حساب.</span></div>
+      <div class="cl"><i class="ti ti-shield-check" style="color:var(--green-t)"></i><span><b>پس «مسیر ایرانی» چطور ممکن است؟</b> باید مقصدِ واقعیِ TCP یک آی‌پی <b>داخلی</b> باشد. CDN ایرانی دقیقاً همین کار را می‌کند: واقعاً به یک سایت/سرویس ایرانی وصل می‌شوی (هزاران سایت واقعی روی همان آی‌پی‌های اروان هستند) — پس هم صورت‌حساب داخلی می‌شود، هم ترافیک شما از نظر DPI کاملاً عادی و شبیه مرور یک سایت ایرانی معمولی است. این همان استتاری است که می‌خواستی، بدون هیچ جعلی!</span></div>
+    </div>
+  </div>
+
+  <!-- محاسبه‌گر صرفه‌جویی -->
+  <div class="conn-toolbar" style="margin-bottom:14px">
+    <div class="conn-toolbar-title"><i class="ti ti-calculator"></i> محاسبه‌گر صرفه‌جویی</div>
+  </div>
+  <div class="card" style="margin-bottom:18px">
+    <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center">
+      <div class="fg" style="flex:1;min-width:180px">
+        <label>مصرف ماهانه تونل شما (گیگابایت)</label>
+        <input id="br-calc-gb" type="range" min="1" max="100" value="10" style="width:100%;accent-color:var(--accent)">
+        <div style="text-align:center;font-weight:700;font-size:15px;margin-top:4px"><span id="br-calc-gb-val">۱۰</span> GB</div>
+      </div>
+      <div style="flex:2;min-width:260px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+        <div style="background:var(--red-bg);border:1px solid rgba(239,68,68,.2);border-radius:12px;padding:12px;text-align:center">
+          <div style="font-size:9.5px;color:var(--t3)">بدون پل (×۲.۷)</div>
+          <div style="font-size:17px;font-weight:800;color:var(--red-t);margin-top:4px" id="br-calc-without">۲۷ GB</div>
+          <div style="font-size:9px;color:var(--t3)">صورت‌حساب اپراتور</div>
+        </div>
+        <div style="background:var(--green-bg);border:1px solid rgba(16,185,129,.2);border-radius:12px;padding:12px;text-align:center">
+          <div style="font-size:9.5px;color:var(--t3)">با پل (×۱)</div>
+          <div style="font-size:17px;font-weight:800;color:var(--green-t);margin-top:4px" id="br-calc-with">۱۰ GB</div>
+          <div style="font-size:9px;color:var(--t3)">صورت‌حساب اپراتور</div>
+        </div>
+        <div style="background:var(--accent-d);border:1px solid var(--card-b);border-radius:12px;padding:12px;text-align:center">
+          <div style="font-size:9.5px;color:var(--t3)">صرفه‌جویی</div>
+          <div style="font-size:17px;font-weight:800;color:var(--accent2);margin-top:4px" id="br-calc-save">۱۷ GB</div>
+          <div style="font-size:9px;color:var(--t3)">در ماه (۶۳٪)</div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -2907,8 +3046,8 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
     <div class="conn-toolbar-title"><i class="ti ti-link"></i> کانفیگ‌های پل‌دار <span class="badge bg-blue" id="bridge-links-cnt">۰</span></div>
   </div>
   <div class="card">
-    <div id="bridge-links-list"><div class="empty"><i class="ti ti-flag-off"></i><p>ابتدا آدرس سرور ایران را ذخیره کنید</p></div></div>
-    <div class="cl amber" style="margin-top:10px"><i class="ti ti-alert-triangle"></i><span>لینک‌های پل‌دار دقیقاً همان کانفیگ‌های فعلی شما هستند؛ فقط «آدرس اتصال» به سرور ایران تغییر کرده و SNI/Host همان دامنه‌ی پنل می‌ماند. کد اصلی پروتکل‌ها دست نمی‌خورد و کانفیگ‌های قبلی هم همچنان کار می‌کنند.</span></div>
+    <div id="bridge-links-list"><div class="empty"><i class="ti ti-flag-off"></i><p>ابتدا آدرس پل را ذخیره کنید</p></div></div>
+    <div class="cl amber" style="margin-top:10px"><i class="ti ti-alert-triangle"></i><span>لینک‌های پل‌دار دقیقاً همان کانفیگ‌های فعلی شما هستند؛ فقط «آدرس اتصال» (و در حالت CDN، پارامترهای host/sni) بازنویسی می‌شود. کد اصلی پروتکل‌ها دست نمی‌خورد و کانفیگ‌های قبلی هم همچنان کار می‌کنند.</span></div>
   </div>
 </section>
 
@@ -3597,10 +3736,43 @@ async function pingAllLinks(btn){
 }
 /* ══════ پل ایران — مصرف داخلی + شتاب‌دهی ══════ */
 let bridgeScriptCache='';
+let bridgeMode='vps';
+function brSetMode(mode){
+  bridgeMode=mode;
+  const vps=document.getElementById('br-mode-vps'),cdn=document.getElementById('br-mode-cdn');
+  // ظاهر انتخاب
+  [vps,cdn].forEach(c=>{c.style.borderColor='var(--card-b)';const chk=c.querySelector('.br-mode-check');chk.style.borderColor='var(--t3)';chk.querySelector('i').style.opacity=0;chk.style.background='transparent'});
+  const sel=mode==='vps'?vps:cdn;
+  sel.style.borderColor='var(--accent)';const chk=sel.querySelector('.br-mode-check');chk.style.borderColor='var(--accent)';chk.style.background='var(--accent)';chk.querySelector('i').style.opacity=1;chk.querySelector('i').style.color='#fff';
+  // نمایش/پنهان‌سازی راهنماها
+  document.getElementById('br-cdn-guide').style.display=mode==='cdn'?'':'none';
+  document.getElementById('br-vps-guide').style.display=mode==='vps'?'':'none';
+  // متن‌های فرم
+  document.getElementById('br-mode-label').textContent=mode==='cdn'?'(حالت: CDN ایرانی — رایگان)':'(حالت: سرور شخصی)';
+  document.getElementById('br-form-title').textContent=mode==='cdn'?'دامنه‌ی پشت CDN ایرانی':'آدرس سرور داخل ایران';
+  document.getElementById('br-host-label').textContent=mode==='cdn'?'دامنه‌ی شما روی ابر آروان (مثلاً sub.yourdomain.ir)':'آدرس سرور ایران (IP یا دامنه)';
+  document.getElementById('br-port-wrap').style.display=mode==='cdn'?'none':'';
+  document.getElementById('br-form-note').style.display=mode==='cdn'?'none':'';
+  if(mode==='cdn')document.getElementById('br-port').value=443;
+}
+function brCalc(){
+  const gb=parseInt(document.getElementById('br-calc-gb').value)||10;
+  const without=Math.round(gb*2.7*10)/10;
+  const save=Math.round((without-gb)*10)/10;
+  const pct=Math.round((save/without)*100);
+  document.getElementById('br-calc-gb-val').textContent=toFa(gb);
+  document.getElementById('br-calc-without').textContent=toFa(without)+' GB';
+  document.getElementById('br-calc-with').textContent=toFa(gb)+' GB';
+  document.getElementById('br-calc-save').textContent=toFa(save)+' GB';
+  const saveBox=document.getElementById('br-calc-save').closest('div[style*="accent-d"]');
+  if(saveBox)saveBox.lastElementChild.textContent='در ماه ('+toFa(pct)+'٪)';
+}
 async function loadBridgePage(){
   try{
     const [cr,sr]=await Promise.all([authF('/api/bridge/config'),authF('/api/bridge/script').catch(()=>null)]);
     const cfg=await cr.json();
+    bridgeMode=cfg.mode||'vps';
+    brSetMode(bridgeMode);
     document.getElementById('br-host').value=cfg.bridge_host||'';
     document.getElementById('br-port').value=cfg.bridge_port||443;
     if(sr&&sr.ok){bridgeScriptCache=await sr.text();document.getElementById('br-script').textContent=bridgeScriptCache}
@@ -3608,32 +3780,36 @@ async function loadBridgePage(){
     const nb=document.getElementById('bridge-nb');
     if(cfg.bridge_host){badge.textContent='فعال';badge.className='badge bg-green';nb.style.display=''}
     else{badge.textContent='غیرفعال';badge.className='badge bg-blue';nb.style.display='none'}
+    brCalc();
     if(cfg.bridge_host) await brLoadLinks();
   }catch(e){console.error(e)}
 }
 async function brSaveConfig(btn){
   const host=document.getElementById('br-host').value.trim();
-  const port=parseInt(document.getElementById('br-port').value)||443;
-  if(!host){toast('آدرس سرور ایران را وارد کنید','err');return}
+  const port=bridgeMode==='cdn'?443:(parseInt(document.getElementById('br-port').value)||443);
+  if(!host){toast('آدرس پل را وارد کنید','err');return}
+  if(bridgeMode==='cdn'&&!host.includes('.')){toast('در حالت CDN باید دامنه وارد کنید (نه IP)','err');return}
   const ic=btn.querySelector('i');ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite';btn.disabled=true;
   try{
-    const r=await authF('/api/bridge/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({bridge_host:host,bridge_port:port})});
+    const r=await authF('/api/bridge/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:bridgeMode,bridge_host:host,bridge_port:port})});
     const d=await r.json();
     if(!r.ok){toast(d.detail||'خطا در ذخیره','err');return}
     toast('تنظیمات پل ذخیره شد','ok');
-    // رفرش اسکریپت با پورت جدید
-    const sr=await authF('/api/bridge/script');
-    if(sr.ok){bridgeScriptCache=await sr.text();document.getElementById('br-script').textContent=bridgeScriptCache}
+    // رفرش اسکریپت با پورت جدید (فقط حالت VPS)
+    if(bridgeMode==='vps'){
+      const sr=await authF('/api/bridge/script');
+      if(sr.ok){bridgeScriptCache=await sr.text();document.getElementById('br-script').textContent=bridgeScriptCache}
+    }
     await loadBridgePage();
   }catch(e){toast('خطا در ذخیره','err')}
   finally{ic.className='ti ti-device-floppy';ic.style.animation='';btn.disabled=false}
 }
 async function brTestBridge(btn){
   const host=document.getElementById('br-host').value.trim();
-  if(!host){toast('ابتدا آدرس سرور ایران را ذخیره کنید','err');return}
+  if(!host){toast('ابتدا آدرس پل را ذخیره کنید','err');return}
   const ic=btn.querySelector('i');ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite';btn.disabled=true;
   document.getElementById('bridge-metric-status').textContent='در حال تست...';
-  document.getElementById('bridge-metric-sub').textContent='اتصال TLS از مسیر پنل → سرور ایران → پنل';
+  document.getElementById('bridge-metric-sub').textContent=bridgeMode==='cdn'?'اتصال TLS به لبه‌ی CDN ایران':'اتصال TLS از مسیر پنل → سرور ایران → پنل';
   try{
     const r=await authF('/api/bridge/test',{method:'POST'});
     const d=await r.json();
@@ -3668,6 +3844,7 @@ async function brLoadLinks(){
     list.innerHTML=links.map(l=>`
       <div style="display:flex;align-items:center;gap:10px;padding:11px 4px;border-bottom:1px solid var(--card-b);flex-wrap:wrap">
         ${protoBadge(l.protocol)}
+        ${bridgeMode==='cdn'?'<span class="cfg-sub-tag" style="color:var(--green-t)"><i class="ti ti-cloud"></i> CDN</span>':'<span class="cfg-sub-tag" style="color:var(--accent2)"><i class="ti ti-server-2"></i> VPS</span>'}
         <div style="flex:1;min-width:140px">
           <div style="font-weight:600;font-size:12.5px">${esc(l.label)}</div>
           <div style="font-size:9.5px;color:var(--t3);direction:ltr;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:420px">${esc(l.bridged)}</div>
@@ -3686,6 +3863,8 @@ function brCopyScript(){
   if(!bridgeScriptCache)return;
   navigator.clipboard.writeText(bridgeScriptCache).then(()=>toast('اسکریپت نصب کپی شد — روی سرور ایران اجرایش کنید','ok'));
 }
+// لیسنر محاسبه‌گر صرفه‌جویی
+setTimeout(()=>{const s=document.getElementById('br-calc-gb');if(s)s.addEventListener('input',brCalc)},0);
 async function brShowNginx(){
   try{
     const r=await authF('/api/bridge/script?fmt=nginx');
