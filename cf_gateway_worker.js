@@ -27,7 +27,7 @@
 //   بعد لینک کاربر این‌طور می‌شود: /loc/tr/ws/{uuid}
 // ══════════════════════════════════════════════════════════════════════════════
 
-const GATEWAY_VERSION = '1.3.0';
+const GATEWAY_VERSION = '1.4.0';
 
 // ─── لوکیشن‌های پیش‌فرض (وقتی KV وصل نیست یا خالی است) ───
 // برای افزودن لوکیشن جدید همین‌جا اضافه کنید یا از پنل (KV) استفاده کنید
@@ -77,6 +77,27 @@ async function saveLocations(env, locs) {
   return { ok: true };
 }
 
+// ─── کش سلامت لوکیشن‌ها (۵ دقیقه اعتبار) — پنل بدون تست فعال هم سلامت را می‌بیند ───
+async function getHealthCache(env) {
+  if (!env || !env.LOCATIONS) return {};
+  try {
+    const raw = await env.LOCATIONS.get('health_cache');
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    if (!parsed || !parsed.ts || Date.now() - parsed.ts > 5 * 60 * 1000) return {};
+    return parsed.data || {};
+  } catch (e) { return {}; }
+}
+
+async function saveHealthCache(env, checks) {
+  if (!env || !env.LOCATIONS) return;
+  try {
+    const data = {};
+    for (const c of checks) data[c.name] = { ok: c.ok, latency_ms: c.latency_ms, ts: Date.now() };
+    await env.LOCATIONS.put('health_cache', JSON.stringify({ ts: Date.now(), data }));
+  } catch (e) { /* کش اختیاری است */ }
+}
+
 function checkToken(request, env) {
   const expected = (env && env.EMIX_TOKEN) || '';
   if (!expected) return false;
@@ -115,6 +136,7 @@ export default {
         })),
       };
       // ?check=1 → سلامت هر لوکیشن به‌صورت فعال تست می‌شود (تأخیر واقعی تا آپ‌استریم)
+      // نتیجه در KV کش می‌شود تا پنل بدون تست فعال هم بتواند نشان بدهد
       if (url.searchParams.get('check') === '1') {
         const checks = await Promise.all(Object.entries(locs).map(async ([name, v]) => {
           const t0 = Date.now();
@@ -131,11 +153,29 @@ export default {
               latency_ms: Date.now() - t0,
             };
           } catch (e) {
-            return { name, ok: false, status: 0, latency_ms: Date.now() - t0, error: String(e && e.message || e).slice(0, 120) };
+            // exit node ها /api/ping و /health و / همه را ۲۰۰ می‌دهند؛ fallback بزن
+            try {
+              const r2 = await fetch(`https://${v.upstream}/health`, {
+                method: 'GET',
+                signal: AbortSignal.timeout(6000),
+              });
+              return { name, ok: r2.ok, status: r2.status, latency_ms: Date.now() - t0, error: r2.ok ? undefined : 'upstream /api/ping ناموفق' };
+            } catch (e2) {
+              return { name, ok: false, status: 0, latency_ms: Date.now() - t0, error: String(e2 && e2.message || e2).slice(0, 120) };
+            }
           }
         }));
         payload.location_health = checks;
         payload.all_healthy = checks.every(c => c.ok);
+        await saveHealthCache(env, checks);
+      } else {
+        // کش سلامت تازه (اگر بود) — بدون هزینه‌ی تست فعال
+        const cached = await getHealthCache(env);
+        if (Object.keys(cached).length) {
+          payload.location_health = Object.entries(cached).map(([name, h]) => ({
+            name, ok: h.ok, latency_ms: h.latency_ms, cached: true,
+          }));
+        }
       }
       return json(payload);
     }
