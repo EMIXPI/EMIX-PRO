@@ -274,6 +274,10 @@ def _load_cfg() -> dict:
         if GAMING_FILE.exists():
             data = json.loads(GAMING_FILE.read_text(encoding="utf-8"))
             merged = {**DEFAULTS, **data}
+            # مهاجرت: مقادیر خالی ذخیره‌شده نباید پیش‌فرض (وورکر دیپلوی‌شده) را خنثی کنند
+            for k in ("worker_domain", "worker_token"):
+                if not merged.get(k):
+                    merged[k] = DEFAULTS.get(k, "")
             return merged
     except Exception as e:
         logger.warning(f"[gaming] خواندن تنظیمات ناموفق ({e}) — از پیش‌فرض شروع می‌شود")
@@ -355,15 +359,19 @@ def _gaming_link(url: str, entry_host: str, entry_port: int, worker_domain: str,
 
 
 async def _gaming_links(entry: str, location: str, override_ip: str = "") -> dict:
-    """همه‌ی لینک‌های مجاز + نسخه‌ی گیمینگ‌شان"""
+    """همه‌ی لینک‌های مجاز + نسخه‌ی گیمینگ‌شان.
+    entry: direct=مستقیم کلادفلر | vps=سرور ایران | panel=خود پنل (بدون وورکر — سریع‌ترین اگر ریلوی برای شما فیلتر نباشد)"""
     cfg = _load_cfg()
     worker_domain = _norm_domain(cfg.get("worker_domain", ""))
-    if not worker_domain:
-        return {"ok": False, "error": "اول دامنه‌ی Worker کلادفلر را در تنظیمات گیمینگ ذخیره کنید"}
 
     location = (location or "auto").strip().lower()
 
-    if entry == "vps":
+    if entry == "panel":
+        # ورودی خود پنل: بدون گیت‌وی وورکر — کوتاه‌ترین مسیر اگر ریلوی مستقیم در دسترس باشد
+        entry_host = get_host()
+        entry_port = 443
+        entry_label = f"ورودی مستقیم پنل ({entry_host}) — بدون وورکر"
+    elif entry == "vps":
         if not cfg.get("vps_ip"):
             return {"ok": False, "error": "IP سرور ایران (VPS) تنظیم نشده"}
         entry_host, entry_port = cfg["vps_ip"], int(cfg.get("vps_port") or 443)
@@ -385,10 +393,15 @@ async def _gaming_links(entry: str, location: str, override_ip: str = "") -> dic
         if not is_link_allowed(d):
             continue
         original = generate_share_link(uid, host, remark=f"EMIX-{d['label']}", protocol=proto)
-        gaming = _gaming_link(original, entry_host, entry_port, worker_domain, location)
+        if entry == "panel":
+            # حالت پنل: لینک اصلی بدون عبور از وورکر — بهینه‌سازی فقط در JSON گیمینگ اعمال می‌شود
+            gaming = original
+        else:
+            gaming = _gaming_link(original, entry_host, entry_port, worker_domain, location)
         if gaming:
             # آپدیت remark برای تفکیک سریع در کلاینت
-            gaming = gaming.split("#")[0] + "#" + quote(f"🎮 {d['label']} · {location}")
+            suffix = f"🎮 {d['label']}" if entry == "panel" else f"🎮 {d['label']} · {location}"
+            gaming = gaming.split("#")[0] + "#" + quote(suffix)
             out.append({
                 "uuid": uid,
                 "label": d.get("label", uid[:8]),
@@ -651,12 +664,65 @@ def register_routes(app) -> None:
         entry = (body.get("entry") or "direct").strip().lower()
         location = (body.get("location") or "auto").strip().lower()
         override_ip = (body.get("ip") or "").strip()
-        if entry not in ("direct", "vps"):
+        if entry not in ("direct", "vps", "panel"):
             entry = "direct"
         res = await _gaming_links(entry, location, override_ip)
         if not res.get("ok") and override_ip and entry == "direct":
             res = await _gaming_links(entry, location, "")
         return res
+
+    @app.post("/api/gaming/compare")
+    async def gaming_compare(request: Request, _=Depends(require_auth)):
+        """مقایسه‌ی واقعی A/B: پینگ یک کانفیگ از سه مسیر (پنل مستقیم / گیت‌وی کلادفلر)
+        تا کاربر ببیند کدام برای خودش سریع‌تر است — انتخاب بر اساس داده، نه حدس."""
+        import link_health as _lh
+        async with LINKS_LOCK:
+            snap = [(uid, dict(d)) for uid, d in LINKS.items() if is_link_allowed(d)]
+        # اولین vless-ws
+        pick = next(((u, d) for u, d in snap if d.get("protocol", "vless-ws") == "vless-ws"), None)
+        if not pick:
+            return {"ok": False, "error": "کانفیگ VLESS فعالی برای مقایسه وجود ندارد"}
+        uid, d = pick
+        results = {}
+        # مسیر ۱: مستقیم پنل
+        try:
+            r1 = await _lh._run_link_ping(uid, dict(d), via="direct")
+            results["panel_direct"] = {
+                "ok": r1.get("ok"),
+                "total_ms": round((r1.get("ws_ms") or 0) + (r1.get("e2e_ms") or 0), 1),
+                "detail": r1.get("detail"),
+            }
+        except Exception as exc:
+            results["panel_direct"] = {"ok": False, "detail": str(exc)[:100]}
+        # مسیر ۲: گیت‌وی کلادفلر
+        try:
+            r2 = await _lh._run_link_ping(uid, dict(d), via="worker")
+            results["cf_gateway"] = {
+                "ok": r2.get("ok"),
+                "total_ms": round((r2.get("ws_ms") or 0) + (r2.get("e2e_ms") or 0), 1),
+                "detail": r2.get("detail"),
+            }
+        except Exception as exc:
+            results["cf_gateway"] = {"ok": False, "detail": str(exc)[:100]}
+        # توصیه
+        p_ok = results["panel_direct"].get("ok") and results["panel_direct"].get("total_ms")
+        g_ok = results["cf_gateway"].get("ok") and results["cf_gateway"].get("total_ms")
+        if p_ok and g_ok:
+            winner = "panel" if results["panel_direct"]["total_ms"] <= results["cf_gateway"]["total_ms"] else "gateway"
+            advice = ("مسیر مستقیم پنل برای شما سریع‌تر است — از ورودی «مستقیم پنل» در ساخت کانفیگ استفاده کنید"
+                      if winner == "panel" else
+                      "گیت‌وی کلادفلر برای شما سریع‌تر یا پایدارتر است — از ورودی «مستقیم کلادفلر» استفاده کنید")
+        elif g_ok:
+            winner = "gateway"
+            advice = "مسیر مستقیم پنل در دسترس نیست — گیت‌وی کلادفلر (ضد فیلتر) گزینه‌ی شماست"
+        elif p_ok:
+            winner = "panel"
+            advice = "گیت‌وی در دسترس نیست — مسیر مستقیم پنل را استفاده کنید"
+        else:
+            winner = None
+            advice = "هیچ‌کدام از مسیرها پاسخ نداد — اتصال سرور را بررسی کنید"
+        return {"ok": True, "uuid": uid, "label": d.get("label"), "results": results,
+                "winner": winner, "advice": advice}
 
     @app.post("/api/gaming/xray-json")
     async def gaming_xray_json(request: Request, _=Depends(require_auth)):
@@ -664,6 +730,8 @@ def register_routes(app) -> None:
         entry = (body.get("entry") or "direct").strip().lower()
         location = (body.get("location") or "auto").strip().lower()
         override_ip = (body.get("ip") or "").strip()
+        if entry not in ("direct", "vps", "panel"):
+            entry = "direct"
         res = await _gaming_links(entry, location, override_ip)
         if not res.get("ok"):
             return res

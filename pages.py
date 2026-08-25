@@ -3530,19 +3530,22 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:12px">
       <div><label style="font-size:11px;color:var(--t3)">ورودی (Entry)</label>
         <select id="gaming-entry" style="width:100%">
-          <option value="direct">مستقیم کلادفلر — کمترین تأخیر</option>
-          <option value="vps">VPS ایران — پایدارترین (ضد قطعی)</option>
+          <option value="panel">🖥 مستقیم پنل — بدون وورکر (سریع‌ترین اگر مستقیم در دسترس است)</option>
+          <option value="direct">☁ مستقیم کلادفلر — ضد فیلتر</option>
+          <option value="vps">🇮🇷 VPS ایران — پایدارترین (ضد قطعی)</option>
         </select></div>
       <div><label style="font-size:11px;color:var(--t3)">لوکیشن خروج</label>
         <select id="gaming-location" style="width:100%"><option value="auto">auto — Railway</option></select></div>
       <div><label style="font-size:11px;color:var(--t3)">IP سفارشی (اختیاری)</label>
         <input id="gaming-override-ip" placeholder="از نتیجه‌ی اسکن" style="width:100%;direction:ltr;text-align:left;font-family:monospace"></div>
     </div>
-    <div style="font-size:11px;color:var(--t3);margin-bottom:10px">کانفیگ گیمینگ = بدون mux + fragment ضد DPI + tcpNoDelay + TCP Fast Open + اولویت IPv4 — همه در لینک یا JSON اعمال می‌شوند.</div>
+    <div style="font-size:11px;color:var(--t3);margin-bottom:10px">کانفیگ گیمینگ = بدون mux + fragment ضد DPI + tcpNoDelay + TCP Fast Open + اولویت IPv4 — همه در لینک یا JSON اعمال می‌شوند. <b>نمی‌دانید کدام مسیر برایتان سریع‌تر است؟ اول «مقایسه‌ی مسیرها» را بزنید.</b></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-blue" onclick="gamingCompare(this)"><i class="ti ti-scale"></i> مقایسه‌ی مسیرها (پنل vs گیت‌وی)</button>
       <button class="btn btn-g" onclick="gamingGenLinks()"><i class="ti ti-link"></i> تولید لینک‌ها</button>
-      <button class="btn btn-blue" onclick="gamingGenJson()"><i class="ti ti-code"></i> JSON کامل Xray (بهترین برای گیمینگ)</button>
+      <button class="btn btn-g" onclick="gamingGenJson()"><i class="ti ti-code"></i> JSON کامل Xray (بهترین برای گیمینگ)</button>
     </div>
+    <div id="gaming-compare-result" style="margin-top:14px;display:none"></div>
     <div id="gaming-links-result" style="margin-top:14px;display:none"></div>
     <div id="gaming-json-result" style="margin-top:14px;display:none"></div>
   </div>
@@ -5029,11 +5032,17 @@ async function gamingLoadInbounds(btn){
 }
 function gamingUseInbound(entry){
   if(!entry)return;
-  document.getElementById('gaming-override-ip').value=entry;
+  const isIp=/^\d+\.\d+\.\d+\.\d+$/.test(entry);
+  document.getElementById('gaming-override-ip').value=isIp?entry:'';
   const sel=document.getElementById('gaming-entry');
-  if(sel&&entry.match(/^\d+\.\d+\.\d+\.\d+$/)){sel.value='direct'}
-  toast('ورودی «'+entry+'» در فیلد ساخت کانفیگ قرار گرفت — حالا «تولید لینک‌ها» را بزن','ok');
-  document.getElementById('gaming-override-ip').scrollIntoView({behavior:'smooth',block:'center'});
+  if(sel){
+    if(isIp){sel.value='direct'}
+    else if(entry.includes('.workers.dev')){sel.value='direct'}
+    // دامنه‌ی پنل یا VPS؟ گزینه‌ی متناظر
+    else if(document.getElementById('gaming-vps-ip')&&entry===document.getElementById('gaming-vps-ip').value.trim()){sel.value='vps'}
+  }
+  toast(isIp?('IP «'+entry+'» در فیلد ساخت کانفیگ قرار گرفت'):'ورودی خودکار (دامنه‌ی گیت‌وی) انتخاب شد — حالا «تولید لینک‌ها» را بزن','ok');
+  document.getElementById('gaming-entry').scrollIntoView({behavior:'smooth',block:'center'});
 }
 async function gamingRefreshLocations(silent){
   try{
@@ -5159,6 +5168,36 @@ function gamingRenderScanTable(results){
     </tr>`}).join('');
 }
 /* ─── تولید کانفیگ گیمینگ ─── */
+async function gamingCompare(btn){
+  const ic=btn.querySelector('i');ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite';btn.disabled=true;
+  const box=document.getElementById('gaming-compare-result');
+  box.style.display='';box.innerHTML='<div style="font-size:12px;color:var(--t3);padding:8px"><i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i> در حال تست هر دو مسیر (تا ۳۰ ثانیه)...</div>';
+  try{
+    const r=await authF('/api/gaming/compare',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});
+    if(!r.ok){box.innerHTML='<span style="color:var(--red-t);font-size:12px">خطا در مقایسه</span>';return}
+    const j=await r.json();
+    if(!j.ok){box.innerHTML='<div style="padding:10px;font-size:12px;color:var(--red-t)">✗ '+(j.error||'خطا')+'</div>';return}
+    const p=j.results.panel_direct||{},g=j.results.cf_gateway||{};
+    const row=(title,rr,recommended)=>{
+      const ok=rr.ok;
+      const ms=ok&&rr.total_ms?toFa(Math.round(rr.total_ms))+' ms':'—';
+      return `<div style="flex:1;min-width:200px;padding:12px;background:var(--bg);border-radius:10px;border:1.5px solid ${recommended?'var(--green-t)':'var(--card-b)'}">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+          <span style="font-weight:700;font-size:12px">${title}</span>
+          ${recommended?'<span class="badge bg-green" style="font-size:9px;margin-right:auto">✓ پیشنهاد</span>':''}
+        </div>
+        <div style="font-size:19px;font-weight:800;color:${ok?'var(--green-t)':'var(--red-t)'}">${ms}</div>
+        <div style="font-size:10px;color:var(--t3);margin-top:4px">${ok?'هندشیک + رفت‌وبرگشت کامل ✓':(rr.detail||'در دسترس نیست').slice(0,80)}</div>
+      </div>`};
+    box.innerHTML='<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px">'+
+      row('🖥 مسیر مستقیم پنل',p,j.winner==='panel')+
+      row('☁ گیت‌وی کلادفلر',g,j.winner==='gateway')+
+      '</div>'+
+      '<div style="padding:10px 12px;background:var(--card-in);border-radius:10px;font-size:12px;line-height:1.8"><i class="ti ti-info-circle" style="color:var(--accent2)"></i> '+j.advice+'</div>';
+    toast('مقایسه انجام شد','ok');
+  }catch(e){box.innerHTML='<span style="color:var(--red-t);font-size:12px">خطا</span>';toast('خطا','err')}
+  finally{ic.className='ti ti-scale';ic.style.animation='';btn.disabled=false}
+}
 function gamingCopyLink(btn){
   const u=decodeURIComponent(btn.dataset.gl||'');
   if(!u){toast('لینک خالی است','err');return}
