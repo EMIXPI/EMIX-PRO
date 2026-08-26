@@ -147,6 +147,21 @@ async def trojan_ws_tunnel(ws: WebSocket):
         connections[conn_id]["bytes"] += hlen
         logger.info(f"➡️  [{conn_id}] Trojan → {address}:{port}")
 
+        # ── FAST PING PATH ───────────────────────────────────────────────
+        # وقتی کلاینت هدر X-EMIX-Ping: 1 می‌فرستد (تست سلامت خود پنل)،
+        # فقط تأیید می‌کنیم که: ۱) WS وصل شد  ۲) هش تروجان معتبر است  ۳) لینک فعال است.
+        # بدون باز کردن TCP واقعی به مقصد — سریع و قابل‌اتکا.
+        if is_ping_test:
+            try:
+                # پاسخ Synthetic HTTP — probe با دیدن "HTTP" در خط اول، موفق می‌شمارد
+                await ws.send_bytes(b"HTTP/1.1 200 OK\r\nContent-Length: 0\r\nX-EMIX-Ping: ok\r\n\r\n")
+            except Exception:
+                pass
+            await ws.close()
+            connections.pop(conn_id, None)
+            return
+        # ──────────────────────────────────────────────────────────────────
+
         reader, writer = await asyncio.wait_for(
             asyncio.open_connection(address, port), timeout=10.0
         )

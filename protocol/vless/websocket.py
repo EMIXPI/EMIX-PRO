@@ -94,6 +94,19 @@ async def websocket_tunnel(ws: WebSocket, uuid: str):
         connections[conn_id]["bytes"] += len(first_chunk)
         logger.info(f"➡️  [{conn_id}] → {address}:{port}")
 
+        # ── FAST PING PATH ───────────────────────────────────────────────
+        # اگر اینجا هدر X-EMIX-Ping فرستاده شده، فقط هدر VLESS پارس شده،
+        # یعنی UUID معتبر و لینک فعال است. بدون TCP واقعی، پاسخ synthetic می‌فرستیم.
+        if is_ping_test:
+            try:
+                await ws.send_bytes(b"HTTP/1.1 200 OK\r\nContent-Length: 0\r\nX-EMIX-Ping: ok\r\n\r\n")
+            except Exception:
+                pass
+            await ws.close()
+            connections.pop(conn_id, None)
+            return
+        # ──────────────────────────────────────────────────────────────────
+
         reader, writer = await asyncio.wait_for(
             asyncio.open_connection(address, port),
             timeout=10.0
