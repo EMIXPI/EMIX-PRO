@@ -118,21 +118,38 @@ function json(data, status = 200) {
 }
 
 async function getLocations(env) {
+  let kvLocs = null;
   if (env && env.LOCATIONS) {
     try {
       const raw = await env.LOCATIONS.get('locations');
       if (raw) {
         const parsed = JSON.parse(raw);
         if (parsed && typeof parsed === 'object' && Object.keys(parsed).length) {
-          // auto را از پیش‌فرض تضمینی کن (همیشه باشد)
-          if (!parsed.auto) parsed.auto = DEFAULT_LOCATIONS.auto;
-          return parsed;
+          kvLocs = parsed;
         }
       }
     } catch (e) { /* KV خطا خورد → پیش‌فرض */ }
   }
-  // وقتی KV وصل نیست یا خالی است — همه‌ی پیش‌فرض‌ها برمی‌گردند (section خالی نمی‌ماند)
-  return { ...DEFAULT_LOCATIONS };
+  // merge: شروع از DEFAULT_LOCATIONS، سپس override با KV (تا پیش‌فرض‌های جدید همیشه موجود باشند)
+  // اگر کاربر یک لوکیشن را در KV حذف کرده بود و آن هم پیش‌فرض است، حذفش حفظ می‌شود
+  const merged = { ...DEFAULT_LOCATIONS };
+  if (kvLocs) {
+    for (const [k, v] of Object.entries(kvLocs)) {
+      // اگر کاربر صریحاً upstream تنظیم کرده، اولویت با کاربر است
+      // اگر upstream خالی/null بود، از پیش‌فرض استفاده کن
+      if (v && v.upstream) {
+        merged[k] = v;
+      } else if (merged[k]) {
+        // کاربر یک placeholder برای لوکیشن پیش‌فرض گذاشته — نگه دار ولی upstream پیش‌فرض بگذار
+        merged[k] = { ...merged[k], ...v, upstream: merged[k].upstream };
+      } else {
+        merged[k] = v;
+      }
+    }
+  }
+  // auto را از پیش‌فرض تضمینی کن (همیشه باشد)
+  if (!merged.auto) merged.auto = DEFAULT_LOCATIONS.auto;
+  return merged;
 }
 
 async function saveLocations(env, locs) {
