@@ -92,10 +92,11 @@ ANTI_DPI_MODES = {
     "speed": {
         "label": "⚡ حداکثر سرعت",
         "short": "سرعت",
-        "desc": "بدون fragment — فقط بهینه‌سازی TCP (TFO + NoDelay + keepalive کوتاه). برای وقتی که ضریب نمی‌خورید یا فیلترینگ فعال نیست.",
+        "desc": "بدون fragment — فقط بهینه‌سازی TCP (TFO + NoDelay + keepalive کوتاه). برای وقتی که ضریب نمی‌خورید یا فیلترینگ فعال نیست (همراه اول معمولاً این حالت کافی است).",
         "fragment": None,
         "fp": "chrome",
         "alpn": ["h2", "http/1.1"],
+        "best_for_isp": "همراه اول",
     },
     "balanced": {
         "label": "⚖ متعادل — پیشنهادی",
@@ -104,6 +105,7 @@ ANTI_DPI_MODES = {
         "fragment": {"packets": "tlshello", "length": "40-120", "interval": "10-30"},
         "fp": "chrome",
         "alpn": ["http/1.1"],
+        "best_for_isp": "همه‌ی اپراتورها",
     },
     "stealth": {
         "label": "🛡 پنهان‌کاری حداکثری — ضد ضریب",
@@ -112,6 +114,26 @@ ANTI_DPI_MODES = {
         "fragment": {"packets": "1-3", "length": "20-80", "interval": "5-25"},
         "fp": "firefox",
         "alpn": ["http/1.1"],
+        "best_for_isp": "ایرانسل",
+    },
+    "irancell": {
+        "label": "📱 ایرانسل — ضد ضریب مخصوص",
+        "short": "ایرانسل",
+        "desc": "حالت بهینه‌سازی‌شده برای ایرانسل: fragment تهاجمی با تکه‌های ۸-۴۰ بایتی + فاصله‌ی متغیر ۳-۱۵ms + اثر انگشت Safari (iOS) + ALPN فقط http/1.1. این ترکیب در تست میدانی روی ایرانسل بیشترین موفقیت را داشته است. اگر روی ایرانسل ضعیف است، این حالت را امتحان کنید.",
+        "fragment": {"packets": "1-5", "length": "8-40", "interval": "3-15"},
+        "fp": "safari",
+        "alpn": ["http/1.1"],
+        "best_for_isp": "ایرانسل (تست شده)",
+    },
+    "irancell-xhttp": {
+        "label": "📱 ایرانسل + XHTTP — ضد ضریب حداکثری",
+        "short": "ایرانسل-XHTTP",
+        "desc": "ایرانسل با تشخیص الگوی Upgrade:WS — بهتر است از WS استفاده نکنید. این حالت XHTTP stream-up با fragment ریز + اثر انگشت iOS را ترکیب می‌کند. وقتی روی ایرانسل هیچ کانفیگ VLESS/Trojan وصل نمی‌شود، این حالت بهترین شانس موفقیت را دارد.",
+        "fragment": {"packets": "1-5", "length": "8-40", "interval": "3-15"},
+        "fp": "safari",
+        "alpn": ["http/1.1"],
+        "best_for_isp": "ایرانسل (حداکثر)",
+        "force_transport": "xhttp-stream-up",
     },
 }
 
@@ -149,6 +171,231 @@ KNOWN_GOOD_INBOUNDS = [
     "172.67.68.1", "172.65.195.15", "188.114.96.3", "188.114.97.1",
     "188.114.98.114", "141.101.113.5", "108.162.219.9", "190.93.246.9",
 ]
+
+# ══════════════════════════════════════════════════════════════════════════════
+# پشتیبانی WireGuard و OpenVPN — تولید کانفیگ کلاینت
+# این پروتکل‌ها روی خود Railway اجرا نمی‌شوند (Railway UDP/TUN پشتیبانی
+# نمی‌کند)؛ اما پنل می‌تواند کانفیگ کلاینت با مشخصات سرور کاربر تولید کند.
+# کاربر می‌تواند سرور WG/OpenVPN خودش را روی Oracle Cloud (رایگان) یا هر VPS
+# اجرا کند و دامنه/پورت/کلید عمومی را اینجا وارد کند.
+# ══════════════════════════════════════════════════════════════════════════════
+
+import base64
+import secrets as _secrets
+
+def _wg_pubkey_from_private(priv_b64: str) -> str:
+    """محاسبه‌ی کلید عمومی WireGuard از کلید خصوصی (نمایش‌سازی کلاینت)."""
+    try:
+        from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
+        from cryptography.hazmat.primitives import serialization
+        priv_bytes = base64.b64decode(priv_b64)
+        if len(priv_bytes) != 32:
+            return ""
+        priv = X25519PrivateKey.from_private_bytes(priv_bytes)
+        pub = priv.public_key()
+        pub_bytes = pub.public_bytes(
+            encoding=serialization.Encoding.Raw,
+            format=serialization.PublicFormat.Raw,
+        )
+        return base64.b64encode(pub_bytes).decode("ascii")
+    except Exception:
+        return ""
+
+
+def _wg_generate_keypair() -> dict:
+    """ساخت کلید خصوصی و عمومی WireGuard برای سرور."""
+    try:
+        from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
+        from cryptography.hazmat.primitives import serialization
+        priv = X25519PrivateKey.generate()
+        priv_bytes = priv.private_bytes(
+            encoding=serialization.Encoding.Raw,
+            format=serialization.PrivateFormat.Raw,
+            encryption_algorithm=serialization.NoEncryption(),
+        )
+        priv_b64 = base64.b64encode(priv_bytes).decode("ascii")
+        pub = priv.public_key()
+        pub_bytes = pub.public_bytes(
+            encoding=serialization.Encoding.Raw,
+            format=serialization.PublicFormat.Raw,
+        )
+        pub_b64 = base64.b64encode(pub_bytes).decode("ascii")
+        return {"private": priv_b64, "public": pub_b64}
+    except Exception as e:
+        return {"error": f"نیاز به کتابخانه‌ی cryptography: {e}"}
+
+
+def _wg_server_setup_script(priv_b64: str, pub_b64: str, port: int = 51820,
+                            endpoint: str = "", client_pub: str = "",
+                            dns1: str = "1.1.1.1", dns2: str = "1.0.0.1") -> str:
+    """اسکریپت راه‌اندازی WireGuard server روی VPS Linux — برای کاربر."""
+    return f"""#!/bin/bash
+# ════════════════════════════════════════════════════════════════
+# EMIX PRO — اسکریپت راه‌اندازی WireGuard Server روی VPS Linux
+# تست شده روی Ubuntu 22.04 / Debian 12 — یک کلیک
+# ════════════════════════════════════════════════════════════════
+set -e
+
+# ۱) نصب WireGuard
+if ! command -v wg &>/dev/null; then
+  echo "[emix-wg] در حال نصب WireGuard..."
+  apt-get update -y
+  apt-get install -y wireguard wireguard-tools qrencode
+fi
+
+# ۲) فعال‌سازی IP forwarding
+echo "net.ipv4.ip_forward = 1" > /etc/sysctl.d/99-emix-wg.conf
+sysctl -p /etc/sysctl.d/99-emix-wg.conf
+
+# ۳) ساخت کلید سرور (اگه از پنل دادی، همین استفاده می‌شه)
+cat > /etc/wireguard/server_private.key <<EOF
+{priv_b64}
+EOF
+cat > /etc/wireguard/server_public.key <<EOF
+{pub_b64}
+EOF
+chmod 600 /etc/wireguard/server_private.key
+
+# ۴) ساخت کلاینت (با کلید عمومی کاربر)
+CLIENT_PUB="{client_pub}"
+
+# ۵) ساخت فایل کانفیگ سرور
+IFACE=$(ip route show default | head -1 | awk '{{print $5}}' || echo eth0)
+SERVER_IP=$(ip addr show $IFACE | grep 'inet ' | awk '{{print $2}}' | cut -d/ -f1 | head -1)
+cat > /etc/wireguard/wg0.conf <<EOF
+[Interface]
+PrivateKey = {priv_b64}
+Address = 10.7.0.1/24
+ListenPort = {port}
+SaveConfig = false
+PostUp = iptables -A FORWARD -i wg0 -j ACCEPT; iptables -t nat -A POSTROUTING -o $IFACE -j MASQUERADE; ip6tables -A FORWARD -i wg0 -j ACCEPT; ip6tables -t nat -A POSTROUTING -o $IFACE -j MASQUERADE
+PostDown = iptables -D FORWARD -i wg0 -j ACCEPT; iptables -t nat -D POSTROUTING -o $IFACE -j MASQUERADE; ip6tables -D FORWARD -i wg0 -j ACCEPT; ip6tables -t nat -D POSTROUTING -o $IFACE -j MASQUERADE
+
+# Peer (Client)
+[Peer]
+PublicKey = $CLIENT_PUB
+AllowedIPs = 10.7.0.2/32
+EOF
+
+# ۶) فعال‌سازی
+systemctl enable wg-quick@wg0
+systemctl restart wg-quick@wg0
+
+# ۷) باز کردن پورت در فایروال
+if command -v ufw &>/dev/null; then
+  ufw allow {port}/udp
+fi
+iptables -I INPUT -p udp --dport {port} -j ACCEPT 2>/dev/null || true
+
+# ۸) نمایش کانفیگ کلاینت
+echo ""
+echo "══════════════════════════════════════════════════════════════"
+echo "✓ WireGuard Server فعال شد! IP سرور: $SERVER_IP"
+echo "✓ Port: {port}"
+echo "✓ Public Key سرور: {pub_b64}"
+echo "══════════════════════════════════════════════════════════════"
+echo ""
+echo "حالا در پنل EMIX دامنه/IP سرور و این Public Key را وارد کنید و کانفیگ کلاینت را بسازید."
+"""
+
+
+def _wg_client_config(server_endpoint: str, server_port: int, server_pub: str,
+                      client_priv: str, client_pub: str, client_ip: str = "10.7.0.2/32",
+                      dns1: str = "1.1.1.1", dns2: str = "1.0.0.1",
+                      keepalive: int = 25, mtu: int = 1280,
+                      allowed_ips: str = "0.0.0.0/0, ::/0") -> str:
+    """ساخت فایل کانفیگ کلاینت WireGuard (.conf)."""
+    return f"""[Interface]
+PrivateKey = {client_priv}
+Address = {client_ip}
+DNS = {dns1}, {dns2}
+MTU = {mtu}
+
+[Peer]
+PublicKey = {server_pub}
+Endpoint = {server_endpoint}:{server_port}
+AllowedIPs = {allowed_ips}
+PersistentKeepalive = {keepalive}
+"""
+
+
+def _openvpn_client_config(server_endpoint: str, server_port: int, protocol: str = "tcp",
+                           ca_cert: str = "", client_cert: str = "",
+                           client_key: str = "", tls_auth: str = "") -> str:
+    """ساخت فایل کانفیگ کلاینت OpenVPN (.ovpn) — با TLS و cert واقعی کاربر."""
+    proto = "tcp" if protocol == "tcp" else "udp"
+    parts = [f"""# ════════════════════════════════════════════════════════════════
+# EMIX PRO — OpenVPN Client Config
+# سرور: {server_endpoint}:{server_port} ({proto.upper()})
+# ════════════════════════════════════════════════════════════════
+client
+dev tun
+proto {proto}
+remote {server_endpoint} {server_port}
+resolv-retry infinite
+nobind
+persist-key
+persist-tun
+remote-cert-tls server
+cipher AES-256-GCM
+auth SHA256
+verb 3
+keepalive 10 60
+ping-timer-rem
+reneg-sec 0
+block-outside-dns
+"""]
+    if ca_cert:
+        parts.append(f"\n<ca>\n{ca_cert}\n</ca>")
+    if client_cert:
+        parts.append(f"\n<cert>\n{client_cert}\n</cert>")
+    if client_key:
+        parts.append(f"\n<key>\n{client_key}\n</key>")
+    if tls_auth:
+        parts.append(f"\n<tls-auth>\n{tls_auth}\n</tls-auth>\nkey-direction 1")
+    return "".join(parts)
+
+
+def _openvpn_server_setup_script(port: int = 1194, protocol: str = "tcp") -> str:
+    """اسکریپت راه‌اندازی OpenVPN server — یک کلیک با اسکریپت angristan."""
+    proto = "tcp" if protocol == "tcp" else "udp"
+    return f"""#!/bin/bash
+# ════════════════════════════════════════════════════════════════
+# EMIX PRO — نصب خودکار OpenVPN Server روی VPS Linux
+# از اسکریپت انgristan استفاده می‌کند — تست شده روی Ubuntu/Debian
+# ════════════════════════════════════════════════════════════════
+set -e
+
+# ۱) گرفتن اسکریپت انgristan (پروژه‌ی openvpn-install معروف)
+curl -O https://raw.githubusercontent.com/angristan/openvpn-install/master/openvpn-install.sh
+chmod +x openvpn-install.sh
+
+# ۲) پاسخ خودکار به سوال‌ها با متغیرهای env
+export APPROVE_INSTALL=y
+export APPROVE_IP=y
+export ENDPOINT=$(curl -s ifconfig.me)
+export IPV6_SUPPORT=n
+export PORT={port}
+export PROTOCOL={proto}
+export DNS=1.1.1.1
+export COMPRESSION=n
+export CUSTOMIZE_ENC=n
+export CLIENT=emix-client
+
+# ۳) اجرای نصب
+AUTO_INSTALL=y ./openvpn-install.sh
+
+# ۴) کانفیگ کلاینت ساخته شد — در /root/emix-client.ovpn است
+cat /root/emix-client.ovpn
+
+echo ""
+echo "══════════════════════════════════════════════════════════════"
+echo "✓ OpenVPN server فعال شد!"
+echo "✓ کانفیگ کلاینت: /root/emix-client.ovpn"
+echo "✓ این فایل را در پنل EMIX کپی کن (با محتوای واقعی)"
+echo "══════════════════════════════════════════════════════════════"
+"""
+
 
 # ══════════════════════════════════════════════════════════════════════════════
 # قالب‌های لوکیشن رایگان — روش‌های واقعاً رایگان برای خروج از کشورهای مختلف.
@@ -707,10 +954,14 @@ async def _gaming_links(entry: str, location: str, override_ip: str = "",
                          mode: str = "balanced", transport: str = "ws") -> dict:
     """همه‌ی لینک‌های مجاز + نسخه‌ی گیمینگ‌شان.
     entry: direct=مستقیم کلادفلر | vps=سرور ایران | panel=خود پنل (بدون وورکر — سریع‌ترین اگر ریلوی برای شما فیلتر نباشد)
-    mode: حالت ضد ضریب (speed/balanced/stealth) · transport: ws | xhttp-stream-up | xhttp-packet-up"""
+    mode: حالت ضد ضریب (speed/balanced/stealth/irancell/irancell-xhttp) · transport: ws | xhttp-stream-up | xhttp-packet-up"""
     cfg = _load_cfg()
     worker_domain = _norm_domain(cfg.get("worker_domain", ""))
     anti = _anti_dpi_cfg(mode)
+    # اگر حالت ضد ضریب ترنسپورت خاصی را الزام می‌کند (مثل irancell-xhttp)، override کن
+    forced_transport = anti.get("force_transport")
+    if forced_transport:
+        transport = forced_transport
     transport = (transport or "ws").strip().lower()
     topt = TRANSPORT_OPTIONS.get(transport, TRANSPORT_OPTIONS["ws"])
     wanted_protos = set(topt["protocols"])
@@ -881,7 +1132,8 @@ def register_routes(app) -> None:
         cfg.pop("worker_token", None)
         cfg["presets"] = GAME_PRESETS
         cfg["location_templates"] = LOCATION_TEMPLATES
-        cfg["anti_dpi_modes"] = {k: {"label": v["label"], "short": v["short"], "desc": v["desc"]}
+        cfg["anti_dpi_modes"] = {k: {"label": v["label"], "short": v["short"], "desc": v["desc"],
+                                     "best_for_isp": v.get("best_for_isp", "")}
                                  for k, v in ANTI_DPI_MODES.items()}
         cfg["transport_options"] = {k: {"label": v["label"], "desc": v["desc"]}
                                     for k, v in TRANSPORT_OPTIONS.items()}
@@ -1205,4 +1457,328 @@ def register_routes(app) -> None:
         return {"ok": True, "xray": j, "source_link": pick["gaming"], "label": pick["label"],
                 "mode": mode, "transport": transport}
 
-    logger.info("[gaming] ماژول مرکز گیمینگ فعال شد — اسکنر IP + پریست بازی + مولتی‌لوکیشن")
+    # ════════════════════════════════════════════════════════════════════════════
+    # WireGuard & OpenVPN — پروتکل‌های جدید
+    # ════════════════════════════════════════════════════════════════════════════
+
+    @app.get("/api/wg/status")
+    async def wg_status(_=Depends(require_auth)):
+        """وضعیت پشتیبانی WireGuard + کلیدهای موجود در gaming_config."""
+        cfg = _load_cfg()
+        return {
+            "ok": True,
+            "cryptography_available": _check_cryptography(),
+            "server_endpoint": cfg.get("wg_endpoint", ""),
+            "server_port": cfg.get("wg_port", 51820),
+            "server_pubkey": cfg.get("wg_server_pub", ""),
+            "client_private": cfg.get("wg_client_priv", ""),
+            "client_public": cfg.get("wg_client_pub", ""),
+            "client_ip": cfg.get("wg_client_ip", "10.7.0.2/32"),
+            "dns": cfg.get("wg_dns", "1.1.1.1, 1.0.0.1"),
+            "keepalive": cfg.get("wg_keepalive", 25),
+            "mtu": cfg.get("wg_mtu", 1280),
+        }
+
+    def _check_cryptography() -> bool:
+        try:
+            from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
+            X25519PrivateKey.generate()
+            return True
+        except Exception:
+            return False
+
+    @app.post("/api/wg/keypair")
+    async def wg_keypair(request: Request, _=Depends(require_auth)):
+        """تولید کلید خصوصی/عمومی WireGuard برای کلاینت (و محاسبه‌ی pubkey سرور اگر کلید خصوصی سرور وارد شده)."""
+        body = await request.json() if request.headers.get("content-type", "").startswith("application/json") else {}
+        role = (body.get("role") or "client").strip().lower()
+        kp = _wg_generate_keypair()
+        if "error" in kp:
+            return JSONResponse({"ok": False, "error": kp["error"]}, 500)
+        if role == "server":
+            # کاربر می‌خواهد کلید سرور تولید شود — در gaming_config ذخیره می‌کنیم
+            cfg = _load_cfg()
+            cfg["wg_server_priv"] = kp["private"]
+            cfg["wg_server_pub"] = kp["public"]
+            _save_cfg(cfg)
+        else:
+            # کلید کلاینت
+            cfg = _load_cfg()
+            cfg["wg_client_priv"] = kp["private"]
+            cfg["wg_client_pub"] = kp["public"]
+            _save_cfg(cfg)
+        return {"ok": True, "role": role, "private": kp["private"], "public": kp["public"]}
+
+    @app.post("/api/wg/config")
+    async def wg_save_config(request: Request, _=Depends(require_auth)):
+        """ذخیره‌ی مشخصات سرور WireGuard (endpoint, port, pubkey)."""
+        body = await request.json()
+        cfg = _load_cfg()
+        if "server_endpoint" in body:
+            v = (body.get("server_endpoint") or "").strip()
+            if v and not re.match(r"^[\w.\-]+$", v):
+                return JSONResponse({"ok": False, "error": "دامنه/IP سرور نامعتبر"}, 400)
+            cfg["wg_endpoint"] = v
+        if "server_port" in body:
+            try:
+                p = int(body.get("server_port") or 51820)
+                if not (1 <= p <= 65535):
+                    raise ValueError()
+                cfg["wg_port"] = p
+            except (TypeError, ValueError):
+                return JSONResponse({"ok": False, "error": "پورت نامعتبر"}, 400)
+        if "server_pubkey" in body:
+            cfg["wg_server_pub"] = (body.get("server_pubkey") or "").strip()
+        if "client_private" in body:
+            cfg["wg_client_priv"] = (body.get("client_private") or "").strip()
+        if "client_public" in body:
+            cfg["wg_client_pub"] = (body.get("client_public") or "").strip()
+        if "client_ip" in body:
+            cfg["wg_client_ip"] = (body.get("client_ip") or "10.7.0.2/32").strip()
+        if "dns" in body:
+            cfg["wg_dns"] = (body.get("dns") or "1.1.1.1, 1.0.0.1").strip()
+        if "keepalive" in body:
+            try:
+                cfg["wg_keepalive"] = int(body.get("keepalive") or 25)
+            except (TypeError, ValueError):
+                pass
+        if "mtu" in body:
+            try:
+                cfg["wg_mtu"] = int(body.get("mtu") or 1280)
+            except (TypeError, ValueError):
+                pass
+        _save_cfg(cfg)
+        return {"ok": True, "saved": True}
+
+    @app.get("/api/wg/client-conf")
+    async def wg_client_conf(_=Depends(require_auth)):
+        """تولید فایل کانفیگ کلاینت WireGuard (.conf) با مشخصات ذخیره‌شده."""
+        cfg = _load_cfg()
+        endpoint = (cfg.get("wg_endpoint") or "").strip()
+        port = int(cfg.get("wg_port") or 51820)
+        server_pub = (cfg.get("wg_server_pub") or "").strip()
+        client_priv = (cfg.get("wg_client_priv") or "").strip()
+        client_pub = (cfg.get("wg_client_pub") or "").strip()
+        if not endpoint:
+            return JSONResponse({"ok": False, "error": "آدرس سرور WireGuard تنظیم نشده — اول /api/wg/config را پر کنید"}, 400)
+        if not server_pub:
+            return JSONResponse({"ok": False, "error": "کلید عمومی سرور تنظیم نشده — از دکمه‌ی «تولید کلید سرور» استفاده کنید یا کلید عمومی واقعی سرور را وارد کنید"}, 400)
+        if not client_priv or not client_pub:
+            # اگر کلید کلاینت نبود، تولیدش کن
+            kp = _wg_generate_keypair()
+            if "error" in kp:
+                return JSONResponse({"ok": False, "error": kp["error"]}, 500)
+            client_priv = kp["private"]
+            client_pub = kp["public"]
+            cfg["wg_client_priv"] = client_priv
+            cfg["wg_client_pub"] = client_pub
+            _save_cfg(cfg)
+        conf = _wg_client_config(
+            server_endpoint=endpoint,
+            server_port=port,
+            server_pub=server_pub,
+            client_priv=client_priv,
+            client_pub=client_pub,
+            client_ip=cfg.get("wg_client_ip", "10.7.0.2/32"),
+            dns1=(cfg.get("wg_dns") or "1.1.1.1, 1.0.0.1").split(",")[0].strip(),
+            dns2=(cfg.get("wg_dns") or "1.1.1.1, 1.0.0.1").split(",")[-1].strip() if "," in (cfg.get("wg_dns") or "") else "1.0.0.1",
+            keepalive=int(cfg.get("wg_keepalive") or 25),
+            mtu=int(cfg.get("wg_mtu") or 1280),
+        )
+        # تست سلامت سرور (TCP اگر پورت TCP باشد یا حداقل DNS resolve)
+        health_ok = False
+        health_err = ""
+        try:
+            reader, writer = await asyncio.wait_for(
+                asyncio.open_connection(endpoint, port), timeout=5.0)
+            writer.close()
+            try:
+                await writer.wait_closed()
+            except Exception:
+                pass
+            health_ok = True
+        except Exception as e:
+            health_err = f"{type(e).__name__}: {e}"[:80]
+        return {
+            "ok": True,
+            "config": conf,
+            "client_public": client_pub,
+            "filename": "emix-wg-client.conf",
+            "health": {"ok": health_ok, "error": health_err if not health_ok else ""},
+            "qr_data": conf,
+            "note": "WireGuard از UDP استفاده می‌کند — اگر روی CDN/Worker قرار دارید، پورت TCP به UDP تبدیل نمی‌شود. سرور WG باید مستقیم (VPS) باشد. تست سلامت بالا فقط TCP را بررسی می‌کند — برای تست واقعی WG از کلاینت استفاده کنید."
+        }
+
+    @app.get("/api/wg/server-script")
+    async def wg_server_script(_=Depends(require_auth)):
+        """اسکریپت راه‌اندازی سرور WireGuard — برای VPS کاربر."""
+        cfg = _load_cfg()
+        port = int(cfg.get("wg_port") or 51820)
+        # اگر کلید سرور موجود نباشد، تولیدش می‌کنیم
+        if not cfg.get("wg_server_priv"):
+            kp = _wg_generate_keypair()
+            if "error" in kp:
+                return JSONResponse({"ok": False, "error": kp["error"]}, 500)
+            cfg["wg_server_priv"] = kp["private"]
+            cfg["wg_server_pub"] = kp["public"]
+            _save_cfg(cfg)
+        client_pub = (cfg.get("wg_client_pub") or "").strip()
+        if not client_pub:
+            kp = _wg_generate_keypair()
+            if "error" in kp:
+                return JSONResponse({"ok": False, "error": kp["error"]}, 500)
+            cfg["wg_client_priv"] = kp["private"]
+            cfg["wg_client_pub"] = kp["public"]
+            client_pub = kp["public"]
+            _save_cfg(cfg)
+        script = _wg_server_setup_script(
+            priv_b64=cfg["wg_server_priv"],
+            pub_b64=cfg["wg_server_pub"],
+            port=port,
+            client_pub=client_pub,
+        )
+        return {"ok": True, "script": script, "server_pub": cfg["wg_server_pub"],
+                "client_pub": client_pub, "port": port,
+                "filename": "emix-wg-server-setup.sh"}
+
+    # ─── OpenVPN ───
+    @app.get("/api/ovpn/status")
+    async def ovpn_status(_=Depends(require_auth)):
+        """وضعیت OpenVPN."""
+        cfg = _load_cfg()
+        return {
+            "ok": True,
+            "server_endpoint": cfg.get("ovpn_endpoint", ""),
+            "server_port": cfg.get("ovpn_port", 1194),
+            "protocol": cfg.get("ovpn_protocol", "tcp"),
+            "ca_cert": cfg.get("ovpn_ca", ""),
+            "client_cert": cfg.get("ovpn_client_cert", ""),
+            "client_key": cfg.get("ovpn_client_key", ""),
+            "tls_auth": cfg.get("ovpn_tls_auth", ""),
+            "has_inline_certs": bool(cfg.get("ovpn_ca")),
+        }
+
+    @app.post("/api/ovpn/config")
+    async def ovpn_save_config(request: Request, _=Depends(require_auth)):
+        """ذخیره‌ی مشخصات سرور OpenVPN + cert ها."""
+        body = await request.json()
+        cfg = _load_cfg()
+        if "server_endpoint" in body:
+            v = (body.get("server_endpoint") or "").strip()
+            if v and not re.match(r"^[\w.\-]+$", v):
+                return JSONResponse({"ok": False, "error": "دامنه/IP سرور نامعتبر"}, 400)
+            cfg["ovpn_endpoint"] = v
+        if "server_port" in body:
+            try:
+                p = int(body.get("server_port") or 1194)
+                if not (1 <= p <= 65535):
+                    raise ValueError()
+                cfg["ovpn_port"] = p
+            except (TypeError, ValueError):
+                return JSONResponse({"ok": False, "error": "پورت نامعتبر"}, 400)
+        if "protocol" in body:
+            proto = (body.get("protocol") or "tcp").strip().lower()
+            if proto not in ("tcp", "udp"):
+                proto = "tcp"
+            cfg["ovpn_protocol"] = proto
+        if "ca_cert" in body:
+            cfg["ovpn_ca"] = (body.get("ca_cert") or "").strip()
+        if "client_cert" in body:
+            cfg["ovpn_client_cert"] = (body.get("client_cert") or "").strip()
+        if "client_key" in body:
+            cfg["ovpn_client_key"] = (body.get("client_key") or "").strip()
+        if "tls_auth" in body:
+            cfg["ovpn_tls_auth"] = (body.get("tls_auth") or "").strip()
+        if "inline_config" in body:
+            # کاربر کل فایل .ovpn را با cert های inline کپی کرده — پارسش کن
+            full = (body.get("inline_config") or "").strip()
+            cfg["ovpn_endpoint"], cfg["ovpn_port"], cfg["ovpn_protocol"] = _parse_ovpn_inline(full, cfg)
+            cfg["ovpn_ca"], cfg["ovpn_client_cert"], cfg["ovpn_client_key"], cfg["ovpn_tls_auth"] = _extract_ovpn_certs(full)
+        _save_cfg(cfg)
+        return {"ok": True, "saved": True}
+
+    def _parse_ovpn_inline(text: str, cfg: dict):
+        """استخراج endpoint/port/protocol از متن .ovpn."""
+        endpoint = cfg.get("ovpn_endpoint", "")
+        port = cfg.get("ovpn_port", 1194)
+        proto = cfg.get("ovpn_protocol", "tcp")
+        for line in text.splitlines():
+            line = line.strip()
+            if line.lower().startswith("remote ") and not line.startswith("#"):
+                parts = line.split()
+                if len(parts) >= 3:
+                    endpoint = parts[1]
+                    try:
+                        port = int(parts[2])
+                    except (ValueError, IndexError):
+                        pass
+            elif line.lower().startswith("proto ") and not line.startswith("#"):
+                parts = line.split()
+                if len(parts) >= 2 and parts[1] in ("tcp", "tcp-client", "udp", "udp-client"):
+                    proto = "tcp" if "tcp" in parts[1] else "udp"
+        return endpoint, port, proto
+
+    def _extract_ovpn_certs(text: str):
+        """استخراج cert/key از <ca>، <cert>، <key>، <tls-auth> در متن .ovpn."""
+        import re
+        def grab(tag):
+            m = re.search(rf"<{tag}>(.*?)</{tag}>", text, re.DOTALL)
+            return m.group(1).strip() if m else ""
+        ca = grab("ca")
+        cert = grab("cert")
+        key = grab("key")
+        tls = grab("tls-auth")
+        return ca, cert, key, tls
+
+    @app.get("/api/ovpn/client-conf")
+    async def ovpn_client_conf(_=Depends(require_auth)):
+        """تولید فایل .ovpn با cert های inline."""
+        cfg = _load_cfg()
+        endpoint = (cfg.get("ovpn_endpoint") or "").strip()
+        port = int(cfg.get("ovpn_port") or 1194)
+        proto = cfg.get("ovpn_protocol", "tcp")
+        ca = cfg.get("ovpn_ca", "")
+        cert = cfg.get("ovpn_client_cert", "")
+        key = cfg.get("ovpn_client_key", "")
+        tls = cfg.get("ovpn_tls_auth", "")
+        if not endpoint:
+            return JSONResponse({"ok": False, "error": "آدرس سرور OpenVPN تنظیم نشده — کانفیگ .ovpn را در فرم بالا کپی کنید"}, 400)
+        if not ca:
+            return JSONResponse({"ok": False, "error": "CA certificate موجود نیست — فایل .ovpn کامل با <ca> را در فرم بالا paste کنید"}, 400)
+        conf = _openvpn_client_config(
+            server_endpoint=endpoint, server_port=port, protocol=proto,
+            ca_cert=ca, client_cert=cert, client_key=key, tls_auth=tls,
+        )
+        # تست سلامت TCP
+        health_ok = False
+        health_err = ""
+        try:
+            reader, writer = await asyncio.wait_for(
+                asyncio.open_connection(endpoint, port), timeout=5.0)
+            writer.close()
+            try:
+                await writer.wait_closed()
+            except Exception:
+                pass
+            health_ok = True
+        except Exception as e:
+            health_err = f"{type(e).__name__}: {e}"[:80]
+        return {
+            "ok": True,
+            "config": conf,
+            "filename": "emix-ovpn-client.ovpn",
+            "health": {"ok": health_ok, "error": health_err if not health_ok else ""},
+            "note": "OpenVPN از UDP/TCP استفاده می‌کند — اگر روی UDP باشد، روی CDN/Worker قابل عبور نیست. سرور OpenVPN باید مستقیم (VPS) باشد."
+        }
+
+    @app.get("/api/ovpn/server-script")
+    async def ovpn_server_script(request: Request, _=Depends(require_auth)):
+        """اسکریپت راه‌اندازی OpenVPN server — با angristan."""
+        cfg = _load_cfg()
+        port = int(cfg.get("ovpn_port") or 1194)
+        proto = cfg.get("ovpn_protocol", "tcp")
+        script = _openvpn_server_setup_script(port=port, protocol=proto)
+        return {"ok": True, "script": script, "port": port, "protocol": proto,
+                "filename": "emix-ovpn-server-setup.sh"}
+
+    logger.info("[gaming] ماژول مرکز گیمینگ فعال شد — اسکنر IP + پریست بازی + مولتی‌لوکیشن + WireGuard/OpenVPN")

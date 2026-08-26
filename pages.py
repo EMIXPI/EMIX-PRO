@@ -364,87 +364,132 @@ DASHBOARD_HTML = r"""<!DOCTYPE html>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
-  --bg:#07070D;--bg2:#0D0C15;--bg3:#14121E;
-  --card:rgba(20,17,26,0.72);--card-b:rgba(255,77,46,0.13);--card-bh:rgba(255,77,46,0.3);
-  --accent:#FF4D2E;--accent2:#FF8A3D;--accent-d:rgba(255,77,46,0.11);
-  --green:#10B981;--green-bg:rgba(16,185,129,0.1);--green-t:#34D399;
-  --red:#EF4444;--red-bg:rgba(239,68,68,0.1);--red-t:#F87171;
-  --amber:#F59E0B;--amber-bg:rgba(245,158,11,0.1);--amber-t:#FCD34D;
-  --purple:#FF7A3D;--purple-bg:rgba(255,122,61,0.12);
-  --t1:#FFF0EA;--t2:#CBB0A6;--t3:#8A6A60;
-  --sidebar-w:248px;--radius:16px;
-  --shadow:0 4px 24px rgba(0,0,0,0.35);
+  /* ═══════════════════════════════════════════════════════════════════════════
+     EMIX PRO v9.8 — WoodNest Glassmorphism Design System
+     مرجع طراحی: WoodNest با پالت آبی-سنگی عمیق + اکسنت کهربایی
+     ═══════════════════════════════════════════════════════════════════════════ */
+  --bg:#1a2634;          /* پس‌زمینه‌ی آبی-سنگی عمیق */
+  --bg2:#0f1820;        /* سایدبار/هدر تیره‌تر */
+  --bg3:#243447;        /* کارت‌های پس‌زمینه‌ای */
+  /* شیشه‌ی مات — محبوب‌ترین عنصر ظاهری WoodNest */
+  --card:rgba(255,255,255,0.05);
+  --card-b:rgba(255,255,255,0.10);
+  --card-bh:rgba(255,255,255,0.18);
+  --glass-blur:18px;
+  --glass-shadow:0 8px 32px 0 rgba(0,0,0,0.30);
+  --glass-shadow-lg:0 20px 50px rgba(0,0,0,0.40);
+  /* اکسنت کهربایی — رنگ برند WoodNest */
+  --accent:#f59e0b;
+  --accent2:#fbbf24;
+  --accent-d:rgba(245,158,11,0.10);
+  --accent-glow:rgba(245,158,11,0.25);
+  /* رنگ‌های وضعیت */
+  --green:#10b981;--green-bg:rgba(16,185,129,0.10);--green-t:#34d399;
+  --red:#ef4444;--red-bg:rgba(239,68,68,0.10);--red-t:#f87171;
+  --amber:#f59e0b;--amber-bg:rgba(245,158,11,0.10);--amber-t:#fcd34d;
+  --purple:#a78bfa;--purple-bg:rgba(167,139,250,0.12);
+  --blue:#60a5fa;--blue-bg:rgba(96,165,250,0.12);
+  /* متن */
+  --t1:#f0f4f8;       /* اصلی — سفید مایل به آبی */
+  --t2:#94a3b8;       /* ثانویه */
+  --t3:#64748b;       /* کم‌رنگ */
+  /* متریک‌ها */
+  --sidebar-w:260px;--radius:16px;
+  --radius-sm:10px;--radius-lg:24px;
+  --shadow:0 4px 24px rgba(0,0,0,0.25);
+  --shadow-sm:0 2px 8px rgba(0,0,0,0.18);
 }
 [data-theme="light"]{
-  --bg:#F7EFEC;--bg2:#F0E3DF;--bg3:#E7D4CE;
-  --card:#FFFFFF;--card-b:rgba(226,62,30,0.16);--card-bh:rgba(226,62,30,0.32);
-  --accent:#E23E1E;--accent2:#C73A1B;--accent-d:rgba(226,62,30,0.08);
-  --green:#059669;--green-bg:rgba(5,150,105,0.08);--green-t:#065F46;
-  --red:#DC2626;--red-bg:rgba(220,38,38,0.08);--red-t:#991B1B;
-  --amber:#D97706;--amber-bg:rgba(217,119,6,0.08);--amber-t:#92400E;
-  --purple:#E8590C;--purple-bg:rgba(232,89,12,0.08);
-  --t1:#2A1410;--t2:#5C3A32;--t3:#8A6A60;
-  --shadow:0 4px 20px rgba(0,0,0,0.1);
+  --bg:#f5f7fa;--bg2:#ffffff;--bg3:#e8eef5;
+  --card:rgba(255,255,255,0.75);
+  --card-b:rgba(15,23,42,0.10);
+  --card-bh:rgba(15,23,42,0.20);
+  --accent:#d97706;--accent2:#f59e0b;--accent-d:rgba(217,119,6,0.08);
+  --accent-glow:rgba(217,119,6,0.20);
+  --green:#059669;--green-bg:rgba(5,150,105,0.08);--green-t:#047857;
+  --red:#dc2626;--red-bg:rgba(220,38,38,0.08);--red-t:#b91c1c;
+  --amber:#d97706;--amber-bg:rgba(217,119,6,0.08);--amber-t:#92400e;
+  --purple:#7c3aed;--purple-bg:rgba(124,58,237,0.08);
+  --blue:#2563eb;--blue-bg:rgba(37,99,235,0.08);
+  --t1:#0f1820;--t2:#475569;--t3:#94a3b8;
+  --shadow:0 4px 20px rgba(0,0,0,0.08);
+  --shadow-sm:0 1px 4px rgba(0,0,0,0.04);
 }
 html,body{height:100%}
-body{font-family:'Vazirmatn',sans-serif;background:var(--bg);color:var(--t1);min-height:100vh;display:flex;font-size:14px;transition:background .3s,color .3s}
-::-webkit-scrollbar{width:5px;height:5px}
-::-webkit-scrollbar-track{background:var(--bg)}
-::-webkit-scrollbar-thumb{background:var(--bg3);border-radius:3px}
+body{font-family:'Vazirmatn','Inter',sans-serif;background:var(--bg);color:var(--t1);min-height:100vh;display:flex;font-size:14px;transition:background .3s,color .3s;position:relative;overflow-x:hidden}
+/* نویز و افکت جلوه‌ی شیشه‌ای روی پس‌زمینه */
+body::before{content:'';position:fixed;inset:0;z-index:-1;background:
+  radial-gradient(circle at 20% 30%,rgba(245,158,11,0.10) 0%,transparent 50%),
+  radial-gradient(circle at 80% 70%,rgba(96,165,250,0.08) 0%,transparent 50%),
+  radial-gradient(circle at 50% 100%,rgba(167,139,250,0.05) 0%,transparent 60%);
+  pointer-events:none;
+}
+[data-theme="light"] body::before{opacity:.5}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--card-b);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--accent)}
 a{color:inherit;text-decoration:none}
-.sidebar{width:var(--sidebar-w);min-height:100vh;background:var(--bg2);border-left:1px solid var(--card-b);display:flex;flex-direction:column;flex-shrink:0;position:fixed;right:0;top:0;bottom:0;z-index:200;transition:transform .25s cubic-bezier(.4,0,.2,1),background .3s,border-color .3s}
-.logo{display:flex;align-items:center;gap:12px;padding:20px 16px 16px;border-bottom:1px solid var(--card-b)}
-.logo-img{width:38px;height:38px;border-radius:10px;overflow:hidden;border:1px solid var(--card-b);box-shadow:0 0 14px var(--accent-d);flex-shrink:0}
+/* سایدبار — شیشه‌ای تیره با border ظریف */
+.sidebar{width:var(--sidebar-w);min-height:100vh;background:rgba(15,24,32,0.85);backdrop-filter:blur(var(--glass-blur)) saturate(140%);-webkit-backdrop-filter:blur(var(--glass-blur)) saturate(140%);border-left:1px solid var(--card-b);display:flex;flex-direction:column;flex-shrink:0;position:fixed;right:0;top:0;bottom:0;z-index:200;transition:transform .25s cubic-bezier(.4,0,.2,1),background .3s,border-color .3s;box-shadow:-4px 0 24px rgba(0,0,0,0.20)}
+[data-theme="light"] .sidebar{background:rgba(255,255,255,0.80)}
+.logo{display:flex;align-items:center;gap:12px;padding:22px 18px 18px;border-bottom:1px solid var(--card-b);position:relative}
+.logo::after{content:'';position:absolute;bottom:-1px;right:18px;width:36px;height:2px;background:var(--accent);border-radius:2px;box-shadow:0 0 12px var(--accent-glow)}
+.logo-img{width:42px;height:42px;border-radius:12px;overflow:hidden;border:1px solid var(--card-b);box-shadow:0 0 18px var(--accent-glow),inset 0 1px 0 rgba(255,255,255,0.10);flex-shrink:0;background:linear-gradient(135deg,#1a2634 0%,#243447 100%)}
 .logo-img img{width:100%;height:100%;object-fit:cover}
-.logo-name{font-size:13.5px;font-weight:700;color:var(--t1)}
-.logo-sub{font-size:10px;color:var(--t3);margin-top:1px}
-.sb-close{display:none;position:absolute;left:12px;top:20px;background:var(--accent-d);border:1px solid var(--card-b);color:var(--t2);width:30px;height:30px;border-radius:8px;font-size:16px;align-items:center;justify-content:center;cursor:pointer}
-.nav-wrap{flex:1;overflow-y:auto;padding:6px 0 8px}
-.nav-sec{padding:14px 14px 4px;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--t3);font-weight:700}
-.nav-it{display:flex;align-items:center;gap:9px;padding:9px 14px;color:var(--t3);font-size:12.5px;cursor:pointer;border-right:2px solid transparent;transition:all .15s;margin:1px 6px}
-.nav-it i{font-size:16px;width:18px;text-align:center;flex-shrink:0}
-.nav-it:hover{background:var(--accent-d);color:var(--t2)}
-.nav-it.on{background:var(--accent-d);color:var(--t1);border-right-color:var(--accent);font-weight:600}
-.nav-badge{margin-right:auto;background:rgba(255,77,46,0.15);color:var(--accent2);font-size:9px;padding:1px 6px;border-radius:20px;font-weight:700}
-.sb-foot{padding:12px 14px;border-top:1px solid var(--card-b)}
-.tg-btn{display:flex;align-items:center;justify-content:center;gap:8px;background:linear-gradient(135deg,#0098e6,#0077bb);color:#fff;border-radius:9px;padding:10px;font-size:12.5px;font-weight:600;font-family:inherit;border:none;cursor:pointer;width:100%;transition:.15s}
-.tg-btn:hover{filter:brightness(1.1)}
-.theme-btn{display:flex;align-items:center;justify-content:center;gap:7px;background:var(--accent-d);color:var(--t2);border-radius:9px;padding:8px;font-size:12px;font-weight:500;font-family:inherit;border:1px solid var(--card-b);cursor:pointer;width:100%;transition:.15s;margin-bottom:7px}
+.logo-name{font-size:15px;font-weight:800;color:var(--t1);letter-spacing:-.01em}
+.logo-sub{font-size:10px;color:var(--accent);margin-top:2px;font-weight:600;letter-spacing:.05em}
+.sb-close{display:none;position:absolute;left:12px;top:22px;background:var(--accent-d);border:1px solid var(--card-b);color:var(--t2);width:30px;height:30px;border-radius:8px;font-size:16px;align-items:center;justify-content:center;cursor:pointer}
+.nav-wrap{flex:1;overflow-y:auto;padding:10px 0 12px}
+.nav-sec{padding:16px 18px 6px;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--t3);font-weight:700}
+.nav-it{display:flex;align-items:center;gap:10px;padding:10px 14px;color:var(--t2);font-size:13px;cursor:pointer;border-right:2px solid transparent;transition:all .18s ease;margin:2px 8px;border-radius:10px;position:relative}
+.nav-it i{font-size:17px;width:20px;text-align:center;flex-shrink:0;color:var(--t3);transition:color .18s}
+.nav-it:hover{background:var(--accent-d);color:var(--t1)}
+.nav-it:hover i{color:var(--accent)}
+.nav-it.on{background:linear-gradient(90deg,var(--accent-d) 0%,transparent 100%);color:var(--t1);border-right-color:var(--accent);font-weight:600;box-shadow:inset 0 1px 0 rgba(255,255,255,0.04)}
+.nav-it.on i{color:var(--accent);text-shadow:0 0 8px var(--accent-glow)}
+.nav-badge{margin-right:auto;background:var(--accent-d);color:var(--accent);font-size:9px;padding:2px 7px;border-radius:20px;font-weight:700;border:1px solid var(--card-b)}
+.sb-foot{padding:14px 16px;border-top:1px solid var(--card-b);display:flex;flex-direction:column;gap:8px}
+.tg-btn{display:flex;align-items:center;justify-content:center;gap:8px;background:linear-gradient(135deg,#2daee6,#1976d2);color:#fff;border-radius:10px;padding:11px;font-size:12.5px;font-weight:700;font-family:inherit;border:none;cursor:pointer;width:100%;transition:.18s;box-shadow:0 4px 14px rgba(25,118,210,0.30)}
+.tg-btn:hover{filter:brightness(1.12);transform:translateY(-1px)}
+.theme-btn{display:flex;align-items:center;justify-content:center;gap:7px;background:var(--accent-d);color:var(--t2);border-radius:10px;padding:9px;font-size:12px;font-weight:600;font-family:inherit;border:1px solid var(--card-b);cursor:pointer;width:100%;transition:.18s}
 .theme-btn:hover{background:var(--card-b);color:var(--t1)}
-.logout-btn{display:flex;align-items:center;justify-content:center;gap:7px;background:var(--red-bg);color:var(--red-t);border-radius:9px;padding:8px;font-size:12px;font-weight:500;font-family:inherit;border:1px solid rgba(239,68,68,0.2);cursor:pointer;width:100%;transition:.15s;margin-top:6px}
-.logout-btn:hover{background:rgba(239,68,68,0.2)}
-.mob-top{display:none;position:fixed;top:0;right:0;left:0;height:52px;background:var(--bg2);border-bottom:1px solid var(--card-b);z-index:150;align-items:center;justify-content:space-between;padding:0 14px;transition:background .3s}
+.logout-btn{display:flex;align-items:center;justify-content:center;gap:7px;background:var(--red-bg);color:var(--red-t);border-radius:10px;padding:9px;font-size:12px;font-weight:600;font-family:inherit;border:1px solid rgba(239,68,68,0.20);cursor:pointer;width:100%;transition:.18s}
+.logout-btn:hover{background:rgba(239,68,68,0.18);transform:translateY(-1px)}
+.mob-top{display:none;position:fixed;top:0;right:0;left:0;height:56px;background:rgba(15,24,32,0.85);backdrop-filter:blur(var(--glass-blur));-webkit-backdrop-filter:blur(var(--glass-blur));border-bottom:1px solid var(--card-b);z-index:150;align-items:center;justify-content:space-between;padding:0 16px;transition:background .3s}
+[data-theme="light"] .mob-top{background:rgba(255,255,255,0.80)}
 .mob-top .ml{display:flex;align-items:center;gap:9px}
-.mob-logo{width:28px;height:28px;border-radius:7px;overflow:hidden}
+.mob-logo{width:30px;height:30px;border-radius:8px;overflow:hidden;border:1px solid var(--card-b)}
 .mob-logo img{width:100%;height:100%;object-fit:cover}
-.mob-title{color:var(--t1);font-size:13px;font-weight:700}
+.mob-title{color:var(--t1);font-size:14px;font-weight:800}
 .mob-right{display:flex;gap:6px}
-.menu-btn,.theme-mob{background:var(--accent-d);border:1px solid var(--card-b);color:var(--t2);width:34px;height:34px;border-radius:8px;font-size:17px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.15s}
-.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:190;backdrop-filter:blur(3px)}
-.overlay.show{display:block}
-.main{margin-right:var(--sidebar-w);flex:1;padding:28px 28px 60px;min-width:0;transition:margin .25s}
+.menu-btn,.theme-mob{background:var(--accent-d);border:1px solid var(--card-b);color:var(--t2);width:36px;height:36px;border-radius:9px;font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.18s}
+.menu-btn:hover,.theme-mob:hover{color:var(--accent);border-color:var(--accent)}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:190;backdrop-filter:blur(4px)}
+.overlay.show{display:block;animation:fi .2s}
+.main{margin-right:var(--sidebar-w);flex:1;padding:30px 32px 80px;min-width:0;transition:margin .25s;position:relative}
 .pg{display:none}
-.pg.on{display:block;animation:fi .2s ease}
-@keyframes fi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-.topbar{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:22px;flex-wrap:wrap;gap:12px}
-.tb-title{font-size:18px;font-weight:700;color:var(--t1);display:flex;align-items:center;gap:8px;letter-spacing:-.02em}
-.tb-title i{color:var(--accent);font-size:20px}
-.tb-sub{font-size:11px;color:var(--t3);margin-top:4px}
+.pg.on{display:block;animation:fi .25s ease}
+@keyframes fi{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.topbar{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:26px;flex-wrap:wrap;gap:14px}
+.tb-title{font-size:22px;font-weight:800;color:var(--t1);display:flex;align-items:center;gap:10px;letter-spacing:-.02em}
+.tb-title i{color:var(--accent);font-size:22px;text-shadow:0 0 12px var(--accent-glow)}
+.tb-sub{font-size:11.5px;color:var(--t3);margin-top:5px}
 .tb-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .badge{font-size:10px;padding:3px 10px;border-radius:20px;font-weight:700;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
-.bg-green{background:var(--green-bg);color:var(--green-t)}
-.bg-blue{background:var(--accent-d);color:var(--accent2)}
-.bg-amber{background:var(--amber-bg);color:var(--amber-t)}
-.bg-red{background:var(--red-bg);color:var(--red-t)}
-.bg-purple{background:var(--purple-bg);color:#FFB199}
+.bg-green{background:var(--green-bg);color:var(--green-t);border:1px solid rgba(16,185,129,0.18)}
+.bg-blue{background:var(--blue-bg);color:#7dd3fc;border:1px solid rgba(96,165,250,0.18)}
+.bg-amber{background:var(--amber-bg);color:var(--amber-t);border:1px solid rgba(245,158,11,0.18)}
+.bg-red{background:var(--red-bg);color:var(--red-t);border:1px solid rgba(239,68,68,0.18)}
+.bg-purple{background:var(--purple-bg);color:#c4b5fd;border:1px solid rgba(167,139,250,0.18)}
 .dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;display:inline-block}
 .dg{background:var(--green)}.dr{background:var(--red)}.da{background:var(--amber)}.db{background:var(--accent)}
 .pulse{animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
 .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:13px;margin-bottom:18px}
-.metric{background:var(--card);border:1px solid var(--card-b);border-radius:var(--radius);padding:17px 17px 14px;transition:all .2s;position:relative;overflow:hidden;cursor:default}
-.metric::after{content:'';position:absolute;top:0;right:0;width:3px;height:100%;background:var(--accent);opacity:0;transition:.2s}
-.metric:hover{border-color:var(--card-bh);transform:translateY(-2px);box-shadow:var(--shadow)}
+.metric{background:var(--card);border:1px solid var(--card-b);border-radius:var(--radius);padding:18px 18px 15px;transition:all .25s;position:relative;overflow:hidden;cursor:default;backdrop-filter:blur(var(--glass-blur));-webkit-backdrop-filter:blur(var(--glass-blur));box-shadow:var(--shadow-sm)}
+.metric::after{content:'';position:absolute;top:0;right:0;width:3px;height:100%;background:var(--accent);opacity:0;transition:.25s}
+.metric:hover{border-color:var(--card-bh);transform:translateY(-2px);box-shadow:var(--shadow),0 0 24px var(--accent-d)}
 .metric:hover::after{opacity:1}
 .metric.suc::after{background:var(--green)}
 .metric.dan::after{background:var(--red)}
@@ -532,25 +577,41 @@ a{color:inherit;text-decoration:none}
 .vl-code{background:rgba(0,0,0,.18);border:1px solid var(--card-b);border-radius:9px;padding:13px 15px;font-size:11px;font-family:ui-monospace,monospace;color:var(--accent2);word-break:break-all;line-height:1.8;letter-spacing:.01em}
 [data-theme="light"] .vl-code{background:rgba(0,0,0,.04)}
 .vl-actions{display:flex;gap:8px;margin-top:13px;flex-wrap:wrap}
-.btn{font-family:inherit;font-size:12px;font-weight:500;border-radius:9px;padding:8px 14px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;border:none;transition:all .15s;white-space:nowrap}
+.btn{font-family:inherit;font-size:12.5px;font-weight:600;border-radius:10px;padding:9px 14px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;border:none;transition:all .18s;white-space:nowrap;position:relative;overflow:hidden}
 .btn i{font-size:13px}
 .btn:disabled{opacity:.4;cursor:not-allowed}
-.btn-p{background:var(--accent);color:#fff;box-shadow:0 2px 12px rgba(255,77,46,.3)}
-.btn-p:hover{background:#E23E1E;box-shadow:0 4px 18px rgba(255,77,46,.4)}
+.btn-p{background:linear-gradient(135deg,var(--accent) 0%,var(--accent2) 100%);color:#0f1820;box-shadow:0 4px 14px var(--accent-glow)}
+.btn-p:hover{filter:brightness(1.08);box-shadow:0 6px 18px var(--accent-glow)}
 .btn-o{background:transparent;border:1px solid var(--card-b);color:var(--t2)}
-.btn-o:hover{background:var(--accent-d);border-color:rgba(255,77,46,.3)}
-.btn-g{background:var(--accent-d);color:var(--accent2);border:1px solid rgba(255,77,46,.15)}
-.btn-g:hover{background:rgba(255,77,46,.22)}
-.btn-d{background:var(--red-bg);color:var(--red-t);border:1px solid rgba(239,68,68,.2)}
-.btn-d:hover{background:rgba(239,68,68,.2)}
-.btn-pur{background:var(--purple-bg);color:#FFB199;border:1px solid rgba(255,122,61,.2)}
-.btn-pur:hover{background:rgba(255,122,61,.22)}
-.btn-amber{background:var(--amber-bg);color:var(--amber-t);border:1px solid rgba(245,158,11,.2)}
-.btn-amber:hover{background:rgba(245,158,11,.22)}
-.btn-sm{padding:5px 9px;font-size:10.5px;border-radius:7px}
-.btn-icon{width:30px;height:30px;padding:0;justify-content:center;border-radius:5px}
-.card{background:var(--card);border:1px solid var(--card-b);border-radius:var(--radius);padding:18px 20px;transition:border-color .2s,background .3s}
+.btn-o:hover{background:var(--accent-d);border-color:var(--accent);color:var(--t1)}
+.btn-g{background:linear-gradient(135deg,var(--accent) 0%,var(--accent2) 100%);color:#0f1820;border:1px solid var(--accent);box-shadow:0 4px 14px var(--accent-glow)}
+.btn-g:hover{filter:brightness(1.08);box-shadow:0 6px 18px var(--accent-glow)}
+.btn-d{background:var(--red-bg);color:var(--red-t);border:1px solid rgba(239,68,68,.20)}
+.btn-d:hover{background:rgba(239,68,68,.18)}
+.btn-pur{background:var(--purple-bg);color:#c4b5fd;border:1px solid rgba(167,139,250,.20)}
+.btn-pur:hover{background:rgba(167,139,250,.18)}
+.btn-amber{background:var(--amber-bg);color:var(--amber-t);border:1px solid rgba(245,158,11,.20)}
+.btn-amber:hover{background:rgba(245,158,11,.18)}
+.btn-sm{padding:6px 10px;font-size:10.5px;border-radius:8px}
+.btn-icon{width:30px;height:30px;padding:0;justify-content:center;border-radius:6px}
+.card{background:var(--card);border:1px solid var(--card-b);border-radius:var(--radius);padding:18px 20px;transition:border-color .25s,background .3s,transform .25s,box-shadow .25s;backdrop-filter:blur(var(--glass-blur));-webkit-backdrop-filter:blur(var(--glass-blur));box-shadow:var(--shadow-sm)}
 .card:hover{border-color:var(--card-bh)}
+/* ─── ورودی‌های شیشه‌ای یکپارچه — همه‌ی input/select/textarea همین استایل را می‌گیرند ─── */
+input[type=text],input[type=password],input[type=number],input[type=email],input[type=url],
+input[type=tel],input[type=search],input:not([type]),select,textarea{
+  width:100%;padding:10px 14px;border-radius:10px;border:1px solid var(--card-b);
+  background:rgba(0,0,0,.15);color:var(--t1);font-family:inherit;font-size:12.5px;outline:none;transition:.18s;
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+}
+[data-theme="light"] input[type=text],[data-theme="light"] input[type=password],[data-theme="light"] input[type=number],
+[data-theme="light"] select,[data-theme="light"] textarea{background:rgba(255,255,255,0.80)}
+input::placeholder,textarea::placeholder{color:var(--t3)}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);background:rgba(0,0,0,.25);box-shadow:0 0 0 3px var(--accent-d)}
+[data-theme="light"] input:focus,[data-theme="light"] select:focus,[data-theme="light"] textarea:focus{background:#fff}
+select{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>");background-repeat:no-repeat;background-position:left 12px center;padding-left:32px;cursor:pointer}
+[data-theme="light"] select{background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>")}
+select option{background:#1a2634;color:var(--t1)}
+[data-theme="light"] select option{background:#fff;color:#0f1820}
 .card-title{font-size:12.5px;font-weight:700;color:var(--t1);margin-bottom:15px;display:flex;align-items:center;gap:7px}
 .card-title i{font-size:16px;color:var(--accent)}
 .ml-auto{margin-right:auto}
@@ -2759,6 +2820,7 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
     <div class="nav-it" data-pg="bridge"><i class="ti ti-flag"></i> پل ایران <span class="nav-badge" id="bridge-nb" style="display:none">فعال</span></div>
     <div class="nav-it" data-pg="zeus"><i class="ti ti-bolt" style="color:var(--amber-t)"></i> ⚡ ZEUS Pro <span class="nav-badge" id="zeus-nb" style="background:var(--amber-t);color:#fff">جدید</span></div>
     <div class="nav-it" data-pg="gaming"><i class="ti ti-device-gamepad-2" style="color:#4cc9f0"></i> 🎮 گیمینگ <span class="nav-badge" id="gaming-nb" style="background:#4cc9f0;color:#08131f">پینگ</span></div>
+    <div class="nav-it" data-pg="vpn"><i class="ti ti-shield-lock" style="color:#34d399"></i> 🛡 VPN Pro <span class="nav-badge" id="vpn-nb" style="background:#34d399;color:#0f1820">WG+OVPN</span></div>
     <div class="nav-it" data-pg="subgroups"><i class="ti ti-folders"></i> گروه‌های ساب <span class="nav-badge" id="subs-nb">0</span></div>
     <div class="nav-it" data-pg="subscriptions"><i class="ti ti-rss"></i> سابسکریپشن</div>
     <div class="nav-it" data-pg="traffic"><i class="ti ti-chart-area"></i> ترافیک</div>
@@ -3529,21 +3591,21 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
     <div style="font-size:12px;font-weight:700;margin-bottom:8px"><i class="ti ti-layout-grid"></i> قالب‌های آماده — کلیک کن تا فرم پایین خودکار پر شود</div>
     <div id="gaming-loc-templates" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;margin-bottom:16px"></div>
 
-    <!-- فرم افزودن (پیش‌پر) -->
-    <div style="font-size:12px;font-weight:700;margin-bottom:8px"><i class="ti ti-plus"></i> افزودن لوکیشن جدید (کاستوم هم مجاز است)</div>
+    <!-- فرم افزودن (پیش‌پر با لوکیشن‌های سالم) -->
+    <div style="font-size:12px;font-weight:700;margin-bottom:8px"><i class="ti ti-plus"></i> افزودن لوکیشن جدید (پیش‌فرض سالم — قابل ویرایش)</div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px">
       <div><label style="font-size:11px;color:var(--t3)">کد لوکیشن (انگلیسی)</label>
-        <input id="gaming-loc-name" value="eu" placeholder="eu" style="width:100%;direction:ltr;text-align:left;font-family:monospace"></div>
+        <input id="gaming-loc-name" value="de" placeholder="de" style="width:100%;direction:ltr;text-align:left;font-family:monospace"></div>
       <div><label style="font-size:11px;color:var(--t3)">نام نمایشی</label>
-        <input id="gaming-loc-label" value="اروپا — فرانکفورت" placeholder="اروپا — فرانکفورت" style="width:100%"></div>
+        <input id="gaming-loc-label" value="آلمان — فرانکفورت" placeholder="آلمان — فرانکفورت" style="width:100%"></div>
       <div><label style="font-size:11px;color:var(--t3)">پرچم (ایموجی)</label>
         <input id="gaming-loc-flag" value="🇩🇪" placeholder="🇩🇪" style="width:100%"></div>
       <div style="grid-column:span 2"><label style="font-size:11px;color:var(--t3)">دامنه‌ی بک‌اند (با TLS معتبر)</label>
-        <input id="gaming-loc-upstream" placeholder="emix-exit-fra.up.railway.app" style="width:100%;direction:ltr;text-align:left;font-family:monospace"></div>
+        <input id="gaming-loc-upstream" value="emix-pro-production.up.railway.app" placeholder="emix-pro-production.up.railway.app" style="width:100%;direction:ltr;text-align:left;font-family:monospace"></div>
     </div>
     <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
       <button class="btn btn-g" onclick="gamingAddLocation()"><i class="ti ti-plus"></i> افزودن لوکیشن</button>
-      <span style="font-size:10.5px;color:var(--t3);align-self:center">کد چند حرفی انگلیسی مثل tr / ru / eu / ae — بعداً در ساخت کانفیگ انتخاب می‌شود</span>
+      <span style="font-size:10.5px;color:var(--t3);align-self:center">کد چند حرفی انگلیسی مثل tr / ru / de / ae — بعداً در ساخت کانفیگ انتخاب می‌شود. مقادیر پیش‌فرض سالم‌اند — برای خروج واقعی، یک exit node deploy کنید.</span>
     </div>
     <!-- ویزارد بسته‌ی خروج -->
     <div id="gaming-exit-wizard" style="margin-top:16px;display:none"></div>
@@ -3556,17 +3618,22 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
   <div class="card" style="margin-bottom:18px">
     <div class="card-title"><i class="ti ti-shield-lock"></i> ضد ضریب (Anti-DPI) — جعل دیتا برای دور زدن مهار سرعت</div>
     <div style="font-size:11.5px;color:var(--t3);margin-bottom:12px;line-height:1.9">
-      <b>«ضریب» یعنی چه؟</b> فیلترینگ DPI با دیدن امضای handshake تونل، آن جریان را با QoS مهار می‌کند و سرعت چند برابر کم می‌شود. EMIX سه لایه جعل دارد:
+      <b>«ضریب» یعنی چه؟</b> فیلترینگ DPI با دیدن امضای handshake تونل، آن جریان را با QoS مهار می‌کند و سرعت چند برابر کم می‌شود. EMIX پنج لایه جعل دارد:
       <b>۱) fragment تصادفی</b> (ClientHello به تکه‌های کوچک متغیر می‌شکند و امضای DPI بازسازی نمی‌شود) ·
       <b>۲) uTLS</b> (اثر انگشت TLS دقیقاً مثل مرورگر واقعی) ·
-      <b>۳) ترنسپورت XHTTP</b> (الگوی ترافیک مثل HTTP عادی، بدون امضای Upgrade وب‌سوکت — جدیدترین سلاح ضد DPI).
+      <b>۳) ترنسپورت XHTTP</b> (الگوی ترافیک مثل HTTP عادی، بدون امضای Upgrade وب‌سوکت) ·
+      <b>۴) حالت ایرانسل مخصوص</b> (fragment تهاجمی 8-40 بایت + اثر انگشت Safari) ·
+      <b>۵) XHTTP+ایرانسل</b> (وقتی WS روی ایرانسل وصل نمی‌شود).
+      <br><b style="color:var(--amber-t)">📱 اگر روی همراه‌اول عالی ولی روی ایرانسل کار نمی‌کند:</b> حالت «ایرانسل» یا «ایرانسل-XHTTP» را انتخاب کنید — برای ایرانسل بهینه‌سازی شده است.
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:12px">
       <div><label style="font-size:11px;color:var(--t3)">حالت ضد ضریب</label>
         <select id="gaming-anti-mode" style="width:100%">
           <option value="balanced">⚖ متعادل — پیشنهادی (fragment 40-120 + کروم)</option>
           <option value="stealth">🛡 حداکثری — ضد ضریب (fragment ریز 20-80 + فایرفاکس)</option>
-          <option value="speed">⚡ حداکثر سرعت (بدون fragment)</option>
+          <option value="speed">⚡ حداکثر سرعت (بدون fragment — همراه‌اول)</option>
+          <option value="irancell">📱 ایرانسل — ضد ضریب مخصوص (fragment 8-40 + Safari)</option>
+          <option value="irancell-xhttp">📱 ایرانسل + XHTTP — حداکثری (وقتی WS وصل نمی‌شود)</option>
         </select></div>
       <div><label style="font-size:11px;color:var(--t3)">ترنسپورت (نوع ترافیک)</label>
         <select id="gaming-transport" style="width:100%">
@@ -3589,7 +3656,7 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
       <div><label style="font-size:11px;color:var(--t3)">IP سفارشی (اختیاری)</label>
         <input id="gaming-override-ip" placeholder="از نتیجه‌ی اسکن" style="width:100%;direction:ltr;text-align:left;font-family:monospace"></div>
     </div>
-    <div style="font-size:11px;color:var(--t3);margin-bottom:10px">کانفیگ گیمینگ = بدون mux + fragment ضد DPI + tcpNoDelay + TCP Fast Open + اولویت IPv4 — همه در لینک یا JSON اعمال می‌شوند. <b>نمی‌دانید کدام مسیر برایتان سریع‌تر است؟ اول «مقایسه‌ی مسیرها» را بزنید.</b> اگر سرعت‌تان بعد از مدتی افت کرد، حالت را روی «حداکثری» و ترنسپورت را XHTTP بگذارید.</div>
+    <div style="font-size:11px;color:var(--t3);margin-bottom:10px">کانفیگ گیمینگ = بدون mux + fragment ضد DPI + tcpNoDelay + TCP Fast Open + اولویت IPv4 — همه در لینک یا JSON اعمال می‌شوند. <b>نمی‌دانید کدام مسیر برایتان سریع‌تر است؟ اول «مقایسه‌ی مسیرها» را بزنید.</b> اگر سرعت‌تان بعد از مدتی افت کرد، حالت را روی «حداکثری» و ترنسپورت را XHTTP بگذارید. <b style="color:var(--amber-t)">روی ایرانسل، حالت «ایرانسل» را امتحان کنید.</b></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       <button class="btn btn-blue" onclick="gamingCompare(this)"><i class="ti ti-scale"></i> مقایسه‌ی مسیرها (پنل vs گیت‌وی)</button>
       <button class="btn btn-g" onclick="gamingGenLinks()"><i class="ti ti-link"></i> تولید لینک‌ها</button>
@@ -3608,6 +3675,141 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
     <div class="card-title"><i class="ti ti-gamepad"></i> پریست‌های بازی</div>
     <div id="gaming-presets-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px">
       <!-- توسط JS پر می‌شود -->
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════════════════
+     VPN PRO — WireGuard و OpenVPN
+     پروتکل‌های مستقل از VLESS/Trojan — کاربر سرور خودش را deploy می‌کند
+     ════════════════════════════════════════════════════════════════════════════ -->
+<section class="pg" id="pg-vpn">
+  <div class="topbar">
+    <div><div class="tb-title"><i class="ti ti-shield-lock"></i> VPN Pro — WireGuard &amp; OpenVPN</div><div class="tb-sub">پروتکل‌های کلاسیک — روی سرور VPS خودتان deploy کنید، کانفیگ کلاینت را پنل تولید می‌کند</div></div>
+    <div class="tb-right">
+      <span class="badge bg-green" id="vpn-status-badge">بارگذاری...</span>
+    </div>
+  </div>
+
+  <!-- ۱) کارت معرفی و مزایا -->
+  <div class="card" style="margin-bottom:18px;background:linear-gradient(155deg,rgba(245,158,11,0.06) 0%,var(--card) 60%);border:1px solid var(--card-b)">
+    <div class="card-title"><i class="ti ti-info-circle" style="color:var(--accent)"></i> درباره‌ی WireGuard و OpenVPN</div>
+    <div style="font-size:12px;color:var(--t2);line-height:1.9">
+      <b>WireGuard</b> مدرن‌ترین پروتکل VPN است — رمزنگاری ChaCha20، سرعت بالا، تأخیر کم. مناسب برای گیمینگ و یوتیوب. <b>OpenVPN</b> قدیمی‌تر ولی به‌شدت سازگار و امن است — برای شبکه‌های شرکت و شرایطی که WireGuard بلاک شده.
+      <br><b style="color:var(--amber-t)">تفاوت با VLESS/Trojan:</b> این پروتکل‌ها روی UDP/TCP با TLS واقعی کار می‌کنند (نه WebSocket). روی CDN/Worker قابل عبور نیستند — سرور باید مستقیم (VPS) باشد.
+      <br><b>پیشنهاد:</b> یک VPS رایگان Oracle Cloud (Always Free، ۴ هسته ARM) در دبی/آمستردام بگیرید و اسکریپت آماده‌ی پنل را اجرا کنید.
+    </div>
+  </div>
+
+  <!-- ۲) کارت WireGuard -->
+  <div class="card" style="margin-bottom:18px">
+    <div class="card-title"><i class="ti ti-key" style="color:var(--accent)"></i> WireGuard — تولید و مدیریت کانفیگ</div>
+
+    <div style="font-size:12px;font-weight:700;margin-bottom:10px;color:var(--t1)">۱) مشخصات سرور</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:12px">
+      <div><label style="font-size:11px;color:var(--t3)">آدرس سرور (IP / دامنه)</label>
+        <input id="wg-endpoint" placeholder="vpn.example.com" style="width:100%;direction:ltr;text-align:left;font-family:monospace"></div>
+      <div><label style="font-size:11px;color:var(--t3)">پورت UDP</label>
+        <input id="wg-port" type="number" value="51820" style="width:100%;direction:ltr;text-align:left;font-family:monospace"></div>
+      <div style="grid-column:span 2"><label style="font-size:11px;color:var(--t3)">کلید عمومی سرور (Public Key)</label>
+        <input id="wg-server-pub" placeholder="ServerPublicKeyBase64=" style="width:100%;direction:ltr;text-align:left;font-family:monospace"></div>
+    </div>
+
+    <div style="font-size:12px;font-weight:700;margin:14px 0 10px;color:var(--t1)">۲) تنظیمات کلاینت (پیش‌فرض سالم — قابل ویرایش)</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:14px">
+      <div><label style="font-size:11px;color:var(--t3)">IP کلاینت (CIDR)</label>
+        <input id="wg-client-ip" value="10.7.0.2/32" style="width:100%;direction:ltr;text-align:left;font-family:monospace"></div>
+      <div><label style="font-size:11px;color:var(--t3)">DNS</label>
+        <input id="wg-dns" value="1.1.1.1, 1.0.0.1" style="width:100%;direction:ltr;text-align:left;font-family:monospace"></div>
+      <div><label style="font-size:11px;color:var(--t3)">Keepalive (ثانیه)</label>
+        <input id="wg-keepalive" type="number" value="25" style="width:100%;direction:ltr;text-align:left;font-family:monospace"></div>
+      <div><label style="font-size:11px;color:var(--t3)">MTU</label>
+        <input id="wg-mtu" type="number" value="1280" style="width:100%;direction:ltr;text-align:left;font-family:monospace"></div>
+    </div>
+
+    <div style="font-size:12px;font-weight:700;margin:14px 0 10px;color:var(--t1)">۳) کلید کلاینت (اگر نداری، تولید کن)</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+      <button class="btn btn-blue" onclick="vpnGenerateClientKeys(this)"><i class="ti ti-key"></i> تولید کلید کلاینت جدید</button>
+      <button class="btn btn-o" onclick="vpnShowServerScript(this)"><i class="ti ti-server"></i> اسکریپت راه‌اندازی سرور</button>
+      <button class="btn btn-o" onclick="vpnShowServerKey(this)"><i class="ti ti-key"></i> تولید کلید سرور</button>
+    </div>
+    <div id="wg-keypair-result" style="margin-bottom:14px;display:none"></div>
+
+    <div style="font-size:12px;font-weight:700;margin:14px 0 10px;color:var(--t1)">۴) تولید کانفیگ کلاینت</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+      <button class="btn btn-g" onclick="vpnGenerateWGConfig(this)"><i class="ti ti-file-export"></i> تولید فایل .conf</button>
+      <button class="btn btn-amber" onclick="vpnGenerateWGQR(this)"><i class="ti ti-qrcode"></i> QR کد</button>
+      <button class="btn btn-o" onclick="vpnTestWG(this)"><i class="ti ti-plug"></i> تست سلامت سرور</button>
+    </div>
+    <div id="wg-config-result" style="display:none"></div>
+    <div id="wg-qr-result" style="display:none;margin-top:12px"></div>
+    <div id="wg-health-result" style="display:none;margin-top:12px"></div>
+  </div>
+
+  <!-- ۳) کارت OpenVPN -->
+  <div class="card" style="margin-bottom:18px">
+    <div class="card-title"><i class="ti ti-lock-access" style="color:var(--accent)"></i> OpenVPN — مدیریت کانفیگ با Cert واقعی</div>
+
+    <div style="font-size:12px;font-weight:700;margin-bottom:10px;color:var(--t1)">روش ۱ — paste کردن فایل .ovpn کامل از سرور</div>
+    <div style="font-size:11px;color:var(--t3);margin-bottom:8px;line-height:1.7">
+      اگر از angristan یا یک نصب‌کننده‌ی OpenVPN استفاده کردید، فایل <code dir="ltr">emix-client.ovpn</code> حاوی <code dir="ltr">&lt;ca&gt;</code> و <code dir="ltr">&lt;cert&gt;</code> و <code dir="ltr">&lt;key&gt;</code> است. آن را اینجا paste کن — پنل آن را پارس می‌کند و از اول می‌سازد.
+    </div>
+    <textarea id="ovpn-inline-config" placeholder="client
+dev tun
+proto tcp
+remote vpn.example.com 1194
+...
+&lt;ca&gt;
+-----BEGIN CERTIFICATE-----
+...
+-----END CERTIFICATE-----
+&lt;/ca&gt;
+&lt;cert&gt;
+...
+&lt;/cert&gt;
+&lt;key&gt;
+...
+&lt;/key&gt;" style="width:100%;min-height:140px;direction:ltr;text-align:left;font-family:monospace;font-size:11px"></textarea>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;margin-bottom:18px">
+      <button class="btn btn-g" onclick="vpnParseOVPNInline(this)"><i class="ti ti-file-import"></i> پارس و ذخیره</button>
+      <button class="btn btn-o" onclick="vpnShowOVPNServerScript(this)"><i class="ti ti-server"></i> اسکریپت راه‌اندازی سرور</button>
+    </div>
+
+    <div style="font-size:12px;font-weight:700;margin:18px 0 10px;color:var(--t1)">روش ۲ — وارد کردن دستی مشخصات</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:12px">
+      <div><label style="font-size:11px;color:var(--t3)">آدرس سرور</label>
+        <input id="ovpn-endpoint" placeholder="vpn.example.com" style="width:100%;direction:ltr;text-align:left;font-family:monospace"></div>
+      <div><label style="font-size:11px;color:var(--t3)">پورت</label>
+        <input id="ovpn-port" type="number" value="1194" style="width:100%;direction:ltr;text-align:left;font-family:monospace"></div>
+      <div><label style="font-size:11px;color:var(--t3)">پروتکل</label>
+        <select id="ovpn-protocol" style="width:100%">
+          <option value="tcp" selected>TCP (سازگارتر — از CDN هم عبور می‌کند)</option>
+          <option value="udp">UDP (سریع‌تر — مناسب گیمینگ)</option>
+        </select></div>
+    </div>
+    <div style="font-size:11px;color:var(--t3);margin-bottom:10px;line-height:1.7">
+      برای OpenVPN نیازی به ساخت کلید در پنل نیست — از فایل .ovpn که سرور تولید کرده استفاده کن. بالا رو روش ۱ استفاده کن.
+    </div>
+
+    <div style="font-size:12px;font-weight:700;margin:14px 0 10px;color:var(--t1)">تولید فایل کانفیگ کلاینت</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+      <button class="btn btn-g" onclick="vpnGenerateOVPNConfig(this)"><i class="ti ti-file-export"></i> تولید فایل .ovpn</button>
+      <button class="btn btn-o" onclick="vpnTestOVPN(this)"><i class="ti ti-plug"></i> تست سلامت سرور</button>
+    </div>
+    <div id="ovpn-config-result" style="display:none"></div>
+    <div id="ovpn-health-result" style="display:none;margin-top:12px"></div>
+  </div>
+
+  <!-- ۴) راهنمای راه‌اندازی سریع -->
+  <div class="card" style="margin-bottom:18px;background:linear-gradient(155deg,rgba(52,211,153,0.06) 0%,var(--card) 60%)">
+    <div class="card-title"><i class="ti ti-bulb" style="color:#34d399"></i> راهنمای سریع — از کجا شروع کنم؟</div>
+    <div style="font-size:12px;color:var(--t2);line-height:2.1">
+      <b>۱)</b> یک VPS رایگان Oracle Cloud (Dubai یا Amsterdam، Always Free) بگیرید — <a href="https://cloud.oracle.com" target="_blank" style="color:var(--accent);text-decoration:underline">cloud.oracle.com</a>
+      <br><b>۲)</b> Ubuntu 22.04 نصب کنید و با SSH وارد شوید
+      <br><b>۳ — برای WireGuard:</b> در پنل بالا، روی «اسکریپت راه‌اندازی سرور» بزنید — اسکریپت آماده را کپی کنید، در VPS اجرا کنید (<code dir="ltr">bash emix-wg-server-setup.sh</code>). کلید عمومی سرور را برگردانید و در فیلد بالا وارد کنید.
+      <br><b>۳ — برای OpenVPN:</b> روی «اسکریپت راه‌اندازی سرور» در بخش OpenVPN بزنید، در VPS اجرا کنید. فایل <code dir="ltr">/root/emix-client.ovpn</code> را کپی کنید و در textarea بالا paste کنید.
+      <br><b>۴)</b> پورت UDP 51820 (WG) یا TCP 1194 (OVPN) را در فایروال سرور و Oracle Security List باز کنید.
+      <br><b>۵)</b> دکمه «تولید فایل .conf/.ovpn» را بزنید — فایل را در کلاینت WireGuard یا OpenVPN وارد کنید.
     </div>
   </div>
 </section>
@@ -4147,7 +4349,7 @@ function navTo(name){
   document.querySelectorAll('.pg').forEach(p=>p.classList.toggle('on',p.id==='pg-'+name));
   // ورود پلکانی کارت‌ها فقط هنگام سوییچ صفحه
   if(name==='links'){document.body.classList.add('cascade');setTimeout(()=>document.body.classList.remove('cascade'),650)}
-  const loaders={links:loadLinks,bridge:loadBridgePage,connections:loadConns,errors:loadErrs,subscriptions:loadSubsPage,subgroups:loadSubs,logs:loadActivity,updates:loadVersion,support:loadSupportMsgs,nodes:loadNodesPage,zeus:loadZeusPage,gaming:loadGamingPage};  if(loaders[name])loaders[name]();
+  const loaders={links:loadLinks,bridge:loadBridgePage,connections:loadConns,errors:loadErrs,subscriptions:loadSubsPage,subgroups:loadSubs,logs:loadActivity,updates:loadVersion,support:loadSupportMsgs,nodes:loadNodesPage,zeus:loadZeusPage,gaming:loadGamingPage,vpn:loadVPNPage};  if(loaders[name])loaders[name]();
   closeSb();window.scrollTo({top:0,behavior:'smooth'});
 }
 document.querySelectorAll('.nav-it').forEach(el=>el.addEventListener('click',()=>navTo(el.dataset.pg)));
@@ -5259,26 +5461,60 @@ function gamingCopyFile(btn){
   if(!c){toast('فایل خالی است','err');return}
   navigator.clipboard.writeText(c).then(()=>toast('فایل کپی شد','ok')).catch(()=>toast('کپی ناموفق','err'));
 }
-/* ─── اسکنر IP سمت مرورگر — fetch سبک با abort فوری (ضد کرش) ─── */
+/* ─── اسکنر IP سمت مرورگر — چند روش پروب + abort فوری (ضد کرش، ضد فیلتر) ───
+   روش‌ها به ترتیب تلاش:
+     ۱) fetch no-cors به /cdn-cgi/trace (سبک و سریع)
+     ۲) Image ping (fallback کلاسیک — روی همه‌ی مرورگرها کار می‌کند)
+     ۳) WebSocket upgrade (به‌عنوان آخرین تلاش)
+   اگر همه‌ی روش‌ها ناموفق بودند، IP فیلتر در نظر گرفته می‌شود. */
 function gamingProbe(ip,timeout){
-  // پروب با fetch no-cors + AbortController: بسیار سبک‌تر از Image،
-  // بلافاصله بعد از پاسخ قطع می‌شود (بدون دانلود body) و حافظه آزاد می‌ماند
   return new Promise(res=>{
     let settled=false;
     const ctrl=(typeof AbortController!=='undefined')?new AbortController():null;
-    const done=(v)=>{if(settled)return;settled=true;clearTimeout(timer);try{ctrl&&ctrl.abort()}catch(e){};res(v)};
     const t0=performance.now();
+    let imgs=[];
+    const cleanup=()=>{imgs.forEach(im=>{try{im.src='';im.onload=null;im.onerror=null}catch(e){}});imgs=[]};
+    const done=(v)=>{if(settled)return;settled=true;clearTimeout(timer);try{ctrl&&ctrl.abort()}catch(e){};cleanup();res(v)};
     const timer=setTimeout(()=>done(null),timeout);
+    const success=()=>done(performance.now()-t0);
+    const fail=()=>{if(settled)return;const dt=performance.now()-t0;done(dt>40&&dt<timeout?dt:null)};
+
+    // ۱) روش fetch no-cors به یک مسیر سبک کلادفلر
     try{
-      fetch('https://'+ip+'/favicon.ico?_='+Math.random().toString(36).slice(2,8),
+      fetch('https://'+ip+'/cdn-cgi/trace?_='+Math.random().toString(36).slice(2,8),
         {mode:'no-cors',cache:'no-store',redirect:'manual',signal:ctrl?ctrl.signal:undefined})
-        .then(()=>done(performance.now()-t0))   // هر پاسخی (حتی opaque) یعنی TCP/TLS برقرار شد
-        .catch(()=>{ if(settled)return;
-          // خطای سریع = مسیر/اتصال رد شد (نه تایم‌اوت) → احتمالاً IP فیلتر است؛ فقط اگر زمان معقول بود قبول کن
-          const dt=performance.now()-t0;
-          done(dt>40&&dt<timeout?dt:null);
-        });
-    }catch(e){done(null)}
+        .then(success)
+        .catch(()=>{});
+    }catch(e){}
+
+    // ۲) Image fallback — رویداد onload روی یک image cross-origin یعنی TCP+TLS بالا آمده
+    try{
+      const im=new Image();
+      im.onload=success;
+      im.onerror=()=>{if(settled)return;/* سرور پاسخ داد (حتی 404) یعنی TCP بالا است */success()};
+      im.src='https://'+ip+'/favicon.ico?_='+Math.random().toString(36).slice(2,10);
+      imgs.push(im);
+      // image اضافی برای fallback
+      const im2=new Image();
+      im2.onload=success;
+      im2.onerror=success;
+      im2.src='https://'+ip+'/__emix_probe?_='+Date.now();
+      imgs.push(im2);
+    }catch(e){}
+
+    // ۳) WebSocket fallback (آخرین تلاش) — فقط اگر دو روش اول در 200ms اول پاسخ ندادند
+    setTimeout(()=>{
+      if(settled)return;
+      try{
+        const ws=new WebSocket('wss://'+ip+'/?_='+Math.random().toString(36).slice(2,6));
+        ws.onopen=success;
+        ws.onerror=()=>{if(settled)return;const dt=performance.now()-t0;done(dt>200&&dt<timeout?dt:null)};
+        // قطع زودهنگام
+        setTimeout(()=>{try{ws.close()}catch(e){}},Math.min(timeout,800));
+      }catch(e){/* WebSocket ساخته نشد */}
+    },200);
+
+    // اگر هیچ‌کدام پاسخ نداد، در timeout انجام می‌شود
   });
 }
 let gamingScanAbort=false;
@@ -5291,38 +5527,38 @@ async function gamingStartScan(){
   const table=document.getElementById('gaming-scan-table');
   const sum=document.getElementById('gaming-scan-summary');
   btn.disabled=false;btn.innerHTML='<i class="ti ti-player-stop"></i> توقف اسکن';btn.onclick=()=>{gamingScanAbort=true;toast('اسکن متوقف می‌شود...','ok')};
-  const results={};let doneCount=0,total=0;
+  const results={};let doneCount=0,total=0,failedCount=0;
   try{
     const r=await authF('/api/gaming/candidates');
     if(!r.ok){toast('خطا در دریافت IPهای کاندید','err');return}
     const ips=(await r.json()).ips||[];total=ips.length;
     table.style.display='';tbody.innerHTML='';
-    prog.textContent='در حال اسکن '+toFa(total)+' IP...';
-    // دسته‌های ۶تایی + مکث بین دسته‌ها — سبک برای مرورگر/موبایل (ضد کرش وسط کار)
-    for(let i=0;i<ips.length&&!gamingScanAbort;i+=6){
-      const batch=ips.slice(i,i+6);
+    prog.textContent='در حال اسکن '+toFa(total)+' IP با روش چندگانه (fetch+image+ws)...';
+    // دسته‌های ۸تایی + مکث کوتاه — سبک برای مرورگر/موبایل
+    for(let i=0;i<ips.length&&!gamingScanAbort;i+=8){
+      const batch=ips.slice(i,i+8);
       await Promise.all(batch.map(async ip=>{
         try{
           const samples=[];
-          for(let round=0;round<3&&!gamingScanAbort;round++){
-            const ms=await gamingProbe(ip,2000);
-            if(ms!==null&&ms<1900)samples.push(ms);
-            await new Promise(s=>setTimeout(s,60));
+          for(let round=0;round<2&&!gamingScanAbort;round++){
+            const ms=await gamingProbe(ip,2500);
+            if(ms!==null&&ms<2400)samples.push(ms);
+            else if(ms===null)failedCount++;
+            await new Promise(s=>setTimeout(s,40));
           }
-          if(samples.length>=2){
+          if(samples.length>=1){
             const min=Math.min(...samples),avg=samples.reduce((a,b)=>a+b,0)/samples.length;
-            const jitter=Math.max(...samples)-Math.min(...samples);
+            const jitter=samples.length>1?(Math.max(...samples)-Math.min(...samples)):0;
             results[ip]={ip,min,avg,jitter,n:samples.length};
           }
         }catch(e){/* این IP رد شد — بقیه ادامه */}
         doneCount++;
       }));
-      // رندر فقط یک‌بار در انتهای هر دسته (نه هر IP) — رفع کندی/کرش
       try{gamingRenderScanTable(results)}catch(e){}
       const pct=total?Math.round(doneCount/total*100):0;
-      prog.textContent=(gamingScanAbort?'متوقف‌شده در ':'پیشرفت: ')+toFa(doneCount)+' از '+toFa(total)+' ('+toFa(pct)+'٪)';
-      // مکث کوتاه بین دسته‌ها — اجازه‌ی GC و نفس‌کشیدن مرورگر (مخصوصاً موبایل)
-      if(!gamingScanAbort&&i+6<ips.length){await new Promise(s=>setTimeout(s,150))}
+      const failPct=doneCount?Math.round(failedCount/doneCount*100):0;
+      prog.textContent=(gamingScanAbort?'متوقف‌شده در ':'پیشرفت: ')+toFa(doneCount)+' از '+toFa(total)+' ('+toFa(pct)+'٪) · '+toFa(failPct)+'٪ رد شده';
+      if(!gamingScanAbort&&i+8<ips.length){await new Promise(s=>setTimeout(s,100))}
     }
     const ranked=Object.values(results).sort((a,b)=>a.min-b.min);
     if(!ranked.length){
@@ -5354,6 +5590,10 @@ function gamingRenderScanTable(results){
   if(!tbody)return;
   const ranked=Object.values(results||{}).filter(r=>r&&typeof r.min==='number'&&r.ip)
     .sort((a,b)=>a.min-b.min).slice(0,20);
+  if(!ranked.length){
+    tbody.innerHTML='<tr><td colspan="6" style="padding:18px;text-align:center;color:var(--t3);font-size:11.5px">هنوز نتیجه‌ای دریافت نشده — اسکن در حال اجراست. اگر همه‌ی IPها رد شدند، ISP شما رنج کلادفلر را محدود کرده. از ورودی VPS ایران یا «مستقیم پنل» استفاده کنید.</td></tr>';
+    return;
+  }
   tbody.innerHTML=ranked.map((r,i)=>{
     const color=r.min<120?'var(--green-t)':r.min<250?'var(--amber-t)':'var(--red-t)';
     return `<tr style="border-top:1px solid var(--card-b)">
@@ -5362,8 +5602,317 @@ function gamingRenderScanTable(results){
       <td style="padding:6px 8px;font-weight:700;color:${color}">${toFa(Math.round(r.min))}</td>
       <td style="padding:6px 8px">${toFa(Math.round(r.avg||r.min))}</td>
       <td style="padding:6px 8px;color:${(r.jitter||0)<80?'var(--green-t)':'var(--amber-t)'}">${toFa(Math.round(r.jitter||0))}</td>
-      <td style="padding:6px 8px">${r.n>=3?'<span class="badge bg-green" style="font-size:9.5px">پایدار</span>':'<span class="badge bg-amber" style="font-size:9.5px">'+toFa(r.n)+'/۳</span>'}</td>
+      <td style="padding:6px 8px">${r.n>=2?'<span class="badge bg-green" style="font-size:9.5px">پایدار</span>':'<span class="badge bg-amber" style="font-size:9.5px">'+toFa(r.n)+'/۲</span>'}</td>
     </tr>`}).join('');
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   VPN Pro — WireGuard & OpenVPN JavaScript Functions
+   ════════════════════════════════════════════════════════════════════════════ */
+let vpnCfg={};
+async function loadVPNPage(){
+  try{
+    const [wgR,ovpnR]=await Promise.all([
+      authF('/api/wg/status'),
+      authF('/api/ovpn/status')
+    ]);
+    if(wgR.ok){
+      const wg=await wgR.json();
+      vpnCfg.wg=wg;
+      const sb=document.getElementById('vpn-status-badge');
+      if(sb){sb.textContent=wg.cryptography_available?'آماده':'نیاز به کتابخانه';sb.className='badge '+(wg.cryptography_available?'bg-green':'bg-amber')}
+      if(wg.server_endpoint)document.getElementById('wg-endpoint').value=wg.server_endpoint;
+      if(wg.server_port)document.getElementById('wg-port').value=wg.server_port;
+      if(wg.server_pubkey)document.getElementById('wg-server-pub').value=wg.server_pubkey;
+      if(wg.client_ip)document.getElementById('wg-client-ip').value=wg.client_ip;
+      if(wg.dns)document.getElementById('wg-dns').value=wg.dns;
+      if(wg.keepalive)document.getElementById('wg-keepalive').value=wg.keepalive;
+      if(wg.mtu)document.getElementById('wg-mtu').value=wg.mtu;
+    }
+    if(ovpnR.ok){
+      const ovpn=await ovpnR.json();
+      vpnCfg.ovpn=ovpn;
+      if(ovpn.server_endpoint)document.getElementById('ovpn-endpoint').value=ovpn.server_endpoint;
+      if(ovpn.server_port)document.getElementById('ovpn-port').value=ovpn.server_port;
+      if(ovpn.protocol)document.getElementById('ovpn-protocol').value=ovpn.protocol;
+    }
+  }catch(e){console.error('loadVPNPage',e);toast('خطا در بارگذاری VPN Pro','err')}
+}
+async function vpnSaveWGConfig(){
+  try{
+    const body={
+      server_endpoint:document.getElementById('wg-endpoint').value.trim(),
+      server_port:parseInt(document.getElementById('wg-port').value)||51820,
+      server_pubkey:document.getElementById('wg-server-pub').value.trim(),
+      client_ip:document.getElementById('wg-client-ip').value.trim(),
+      dns:document.getElementById('wg-dns').value.trim(),
+      keepalive:parseInt(document.getElementById('wg-keepalive').value)||25,
+      mtu:parseInt(document.getElementById('wg-mtu').value)||1280,
+    };
+    const r=await authF('/api/wg/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    return r.ok;
+  }catch(e){return false}
+}
+async function vpnGenerateClientKeys(btn){
+  const ic=btn?btn.querySelector('i'):null;
+  if(ic){ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite';if(btn)btn.disabled=true}
+  const box=document.getElementById('wg-keypair-result');
+  try{
+    const r=await authF('/api/wg/keypair',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({role:'client'})});
+    const j=await r.json();
+    if(j.ok){
+      box.style.display='';
+      box.innerHTML=`<div style="padding:14px;background:var(--bg);border-radius:10px;border:1px solid var(--green-t);font-size:12px;line-height:2">
+        <div style="font-weight:700;margin-bottom:8px;color:var(--green-t)">✓ کلید کلاینت تولید شد</div>
+        <div><b>Private (خصوصی):</b> <code dir="ltr" style="font-family:monospace;word-break:break-all">${j.private}</code></div>
+        <div><b>Public (عمومی):</b> <code dir="ltr" style="font-family:monospace;word-break:break-all">${j.public}</code></div>
+        <div style="margin-top:8px;font-size:11px;color:var(--t3)">این کلیدها در پنل ذخیره شدند. کلید عمومی را در فایل کانفیگ سرور (Peer section) قرار دهید.</div>
+      </div>`;
+      toast('کلید کلاینت تولید شد','ok');
+    }else{
+      toast(j.error||'خطا در تولید کلید','err');
+    }
+  }catch(e){toast('خطا','err')}
+  finally{if(ic){ic.className='ti ti-key';ic.style.animation='';if(btn)btn.disabled=false}}
+}
+async function vpnShowServerKey(btn){
+  // نمایش کلید سرور از طریق generate keypair with role=server
+  const ic=btn?btn.querySelector('i'):null;
+  if(ic){ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite';if(btn)btn.disabled=true}
+  const box=document.getElementById('wg-keypair-result');
+  try{
+    const r=await authF('/api/wg/keypair',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({role:'server'})});
+    const j=await r.json();
+    if(j.ok){
+      box.style.display='';
+      box.innerHTML=`<div style="padding:14px;background:var(--bg);border-radius:10px;border:1px solid var(--accent);font-size:12px;line-height:2">
+        <div style="font-weight:700;margin-bottom:8px;color:var(--accent)">🔑 کلید سرور تولید شد</div>
+        <div><b>Private (خصوصی — فقط در سرور):</b> <code dir="ltr" style="font-family:monospace;word-break:break-all">${j.private}</code></div>
+        <div><b>Public (عمومی — در پنل وارد کن):</b> <code dir="ltr" style="font-family:monospace;word-break:break-all">${j.public}</code></div>
+        <button class="btn btn-sm btn-g" style="margin-top:8px" onclick="document.getElementById('wg-server-pub').value='${j.public}';toast('کلید عمومی سرور در فیلد بالا قرار گرفت','ok')"><i class="ti ti-arrow-up"></i> قرار دادن در فیلد</button>
+      </div>`;
+      toast('کلید سرور تولید شد','ok');
+    }else{
+      toast(j.error||'خطا','err');
+    }
+  }catch(e){toast('خطا','err')}
+  finally{if(ic){ic.className='ti ti-key';ic.style.animation='';if(btn)btn.disabled=false}}
+}
+async function vpnShowServerScript(btn){
+  const ic=btn?btn.querySelector('i'):null;
+  if(ic){ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite';if(btn)btn.disabled=true}
+  const box=document.getElementById('wg-keypair-result');
+  try{
+    const r=await authF('/api/wg/server-script');
+    const j=await r.json();
+    if(j.ok){
+      box.style.display='';
+      box.innerHTML=`<div style="padding:14px;background:var(--bg);border-radius:10px;border:1px solid var(--card-b);font-size:12px">
+        <div style="font-weight:700;margin-bottom:8px"><i class="ti ti-server" style="color:var(--accent)"></i> اسکریپت راه‌اندازی WireGuard Server</div>
+        <div style="font-size:11px;color:var(--t3);margin-bottom:8px;line-height:1.7">این اسکریپت را در VPS Linux اجرا کن — WireGuard server با UUID شما پخت شده. بعد از اجرا، IP سرور و کلید عمومی سرور را در فیلدهای بالا وارد کن.</div>
+        <button class="btn btn-sm btn-g" onclick="vpnCopyText(this,${JSON.stringify(j.script)})"><i class="ti ti-copy"></i> کپی اسکریپت</button>
+        <pre dir="ltr" style="font-size:9.5px;font-family:monospace;max-height:200px;overflow:auto;background:var(--bg3);padding:10px;border-radius:8px;white-space:pre-wrap;margin-top:10px;text-align:left">${j.script.replace(/</g,'&lt;').slice(0,3000)}</pre>
+      </div>`;
+      toast('اسکریپت ساخته شد','ok');
+    }else{
+      toast(j.error||'خطا','err');
+    }
+  }catch(e){toast('خطا','err')}
+  finally{if(ic){ic.className='ti ti-server';ic.style.animation='';if(btn)btn.disabled=false}}
+}
+async function vpnGenerateWGConfig(btn){
+  const ic=btn?btn.querySelector('i'):null;
+  if(ic){ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite';if(btn)btn.disabled=true}
+  const ok=await vpnSaveWGConfig();
+  const box=document.getElementById('wg-config-result');
+  try{
+    if(!ok){box.style.display='';box.innerHTML='<div style="padding:12px;color:var(--red-t);font-size:12px">ذخیره تنظیمات ناموفق</div>';return}
+    const r=await authF('/api/wg/client-conf');
+    const j=await r.json();
+    if(j.ok){
+      box.style.display='';
+      const h=j.health||{};
+      const healthBadge=h.ok?'<span class="badge bg-green" style="font-size:10px">سالم</span>':'<span class="badge bg-red" style="font-size:10px">قطع</span>';
+      box.innerHTML=`<div style="padding:14px;background:var(--bg);border-radius:10px;border:1px solid var(--green-t);font-size:12px">
+        <div style="font-weight:700;margin-bottom:8px;color:var(--green-t)">✓ کانفیگ کلاینت WireGuard ساخته شد</div>
+        <div style="margin-bottom:8px">تست سلامت سرور (TCP): ${healthBadge}${h.ok?'':' — '+(h.error||'')}</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+          <button class="btn btn-sm btn-g" onclick="vpnCopyText(this,${JSON.stringify(j.config)})"><i class="ti ti-copy"></i> کپی فایل .conf</button>
+          <a class="btn btn-sm btn-blue" href="data:text/plain;charset=utf-8,${encodeURIComponent(j.config)}" download="${j.filename}" style="text-decoration:none"><i class="ti ti-download"></i> دانلود فایل</a>
+        </div>
+        <div style="font-size:10.5px;color:var(--t3);margin-bottom:8px">${j.note||''}</div>
+        <pre dir="ltr" style="font-size:10.5px;font-family:monospace;background:var(--bg3);padding:10px;border-radius:8px;white-space:pre-wrap;text-align:left">${j.config.replace(/</g,'&lt;')}</pre>
+      </div>`;
+      toast('کانفیگ WG ساخته شد','ok');
+    }else{
+      box.style.display='';box.innerHTML='<div style="padding:12px;color:var(--red-t);font-size:12px">✗ '+(j.error||'خطا')+'</div>';
+      toast(j.error||'خطا','err');
+    }
+  }catch(e){box.style.display='';box.innerHTML='<div style="padding:12px;color:var(--red-t);font-size:12px">خطا</div>';toast('خطا','err')}
+  finally{if(ic){ic.className='ti ti-file-export';ic.style.animation='';if(btn)btn.disabled=false}}
+}
+async function vpnGenerateWGQR(btn){
+  // تولید QR از کانفیگ WG با استفاده از API کتابخانه‌ی qrcode.js
+  const ic=btn?btn.querySelector('i'):null;
+  if(ic){ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite';if(btn)btn.disabled=true}
+  const box=document.getElementById('wg-qr-result');
+  try{
+    const ok=await vpnSaveWGConfig();
+    if(!ok){box.style.display='';box.innerHTML='<div style="padding:12px;color:var(--red-t);font-size:12px">ذخیره ناموفق</div>';return}
+    const r=await authF('/api/wg/client-conf');
+    const j=await r.json();
+    if(j.ok&&j.config){
+      box.style.display='';
+      // استفاده از سرویس QR API (مرورگر سمت کلاینت)
+      const qrUrl='https://api.qrserver.com/v1/create-qr-code/?size=300x300&data='+encodeURIComponent(j.config);
+      box.innerHTML=`<div style="padding:14px;background:var(--bg);border-radius:10px;border:1px solid var(--card-b);text-align:center">
+        <div style="font-weight:700;margin-bottom:10px">📷 QR کد کانفیگ WireGuard</div>
+        <img src="${qrUrl}" alt="QR Code" style="border-radius:8px;border:1px solid var(--card-b);max-width:300px">
+        <div style="font-size:10.5px;color:var(--t3);margin-top:8px">در اپ WireGuard موبایل: «Scan QR Code» را بزن</div>
+      </div>`;
+      toast('QR ساخته شد','ok');
+    }else{
+      toast(j.error||'خطا در تولید QR','err');
+    }
+  }catch(e){toast('خطا','err')}
+  finally{if(ic){ic.className='ti ti-qrcode';ic.style.animation='';if(btn)btn.disabled=false}}
+}
+async function vpnTestWG(btn){
+  const ic=btn?btn.querySelector('i'):null;
+  if(ic){ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite';if(btn)btn.disabled=true}
+  const box=document.getElementById('wg-health-result');
+  try{
+    const ok=await vpnSaveWGConfig();
+    if(!ok){box.style.display='';box.innerHTML='<div style="padding:12px;color:var(--red-t);font-size:12px">ذخیره ناموفق</div>';return}
+    const r=await authF('/api/wg/client-conf');
+    const j=await r.json();
+    if(j.ok){
+      const h=j.health||{};
+      box.style.display='';
+      if(h.ok){
+        box.innerHTML=`<div style="padding:12px;background:var(--green-bg);border:1px solid var(--green-t);border-radius:10px;font-size:12px;color:var(--green-t)"><i class="ti ti-circle-check"></i> سرور پاسخ داد — اتصال TCP به ${document.getElementById('wg-endpoint').value}:${document.getElementById('wg-port').value} برقرار شد. برای تست واقعی WG، از کلاینت استفاده کنید.</div>`;
+      }else{
+        box.innerHTML=`<div style="padding:12px;background:var(--red-bg);border:1px solid var(--red-t);border-radius:10px;font-size:12px;color:var(--red-t)"><i class="ti ti-circle-x"></i> سرور در دسترس نیست — ${h.error||'اتصال برقرار نشد'}. مطمئن شو پورت ${document.getElementById('wg-port').value} UDP در فایروال باز است و سرور اجرا شده.</div>`;
+      }
+    }else{
+      box.style.display='';box.innerHTML='<div style="padding:12px;color:var(--red-t);font-size:12px">✗ '+(j.error||'خطا')+'</div>';
+    }
+  }catch(e){toast('خطا','err')}
+  finally{if(ic){ic.className='ti ti-plug';ic.style.animation='';if(btn)btn.disabled=false}}
+}
+async function vpnParseOVPNInline(btn){
+  const ic=btn?btn.querySelector('i'):null;
+  if(ic){ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite';if(btn)btn.disabled=true}
+  const ta=document.getElementById('ovpn-inline-config');
+  const cfg=ta?ta.value.trim():'';
+  if(!cfg){toast('فایل .ovpn را paste کنید','err');if(ic){ic.className='ti ti-file-import';ic.style.animation=''};if(btn)btn.disabled=false;return}
+  const box=document.getElementById('ovpn-config-result');
+  try{
+    const r=await authF('/api/ovpn/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({inline_config:cfg})});
+    const j=await r.json();
+    if(j.ok){
+      // فرم‌ها را با اطلاعات پارس‌شده پر کن
+      const ovpn=vpnCfg.ovpn||{};
+      if(ovpn.server_endpoint)document.getElementById('ovpn-endpoint').value=ovpn.server_endpoint;
+      if(ovpn.server_port)document.getElementById('ovpn-port').value=ovpn.server_port;
+      if(ovpn.protocol)document.getElementById('ovpn-protocol').value=ovpn.protocol;
+      box.style.display='';
+      box.innerHTML=`<div style="padding:12px;background:var(--green-bg);border:1px solid var(--green-t);border-radius:10px;font-size:12px;color:var(--green-t)"><i class="ti ti-circle-check"></i> فایل .ovpn پارس شد. سرور: ${ovpn.server_endpoint||'—'}:${ovpn.server_port||'—'} (${(ovpn.protocol||'tcp').toUpperCase()}). CA/Cert/Key استخراج شد.</div>`;
+      toast('فایل .ovpn پارس شد','ok');
+    }else{
+      box.style.display='';box.innerHTML='<div style="padding:12px;color:var(--red-t);font-size:12px">✗ '+(j.error||'خطا')+'</div>';
+      toast(j.error||'خطا','err');
+    }
+  }catch(e){toast('خطا','err')}
+  finally{if(ic){ic.className='ti ti-file-import';ic.style.animation='';if(btn)btn.disabled=false}}
+}
+async function vpnShowOVPNServerScript(btn){
+  const ic=btn?btn.querySelector('i'):null;
+  if(ic){ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite';if(btn)btn.disabled=true}
+  const box=document.getElementById('ovpn-config-result');
+  try{
+    const r=await authF('/api/ovpn/server-script');
+    const j=await r.json();
+    if(j.ok){
+      box.style.display='';
+      box.innerHTML=`<div style="padding:14px;background:var(--bg);border-radius:10px;border:1px solid var(--card-b);font-size:12px">
+        <div style="font-weight:700;margin-bottom:8px"><i class="ti ti-server" style="color:var(--accent)"></i> اسکریپت راه‌اندازی OpenVPN Server</div>
+        <div style="font-size:11px;color:var(--t3);margin-bottom:8px;line-height:1.7">این اسکریپت در VPS Linux اجرا کن — OpenVPN server با angristan نصب می‌شود و فایل کانفیگ کلاینت در <code dir="ltr">/root/emix-client.ovpn</code> ساخته می‌شود.</div>
+        <button class="btn btn-sm btn-g" onclick="vpnCopyText(this,${JSON.stringify(j.script)})"><i class="ti ti-copy"></i> کپی اسکریپت</button>
+        <pre dir="ltr" style="font-size:9.5px;font-family:monospace;max-height:200px;overflow:auto;background:var(--bg3);padding:10px;border-radius:8px;white-space:pre-wrap;margin-top:10px;text-align:left">${j.script.replace(/</g,'&lt;')}</pre>
+      </div>`;
+      toast('اسکریپت ساخته شد','ok');
+    }else{
+      toast(j.error||'خطا','err');
+    }
+  }catch(e){toast('خطا','err')}
+  finally{if(ic){ic.className='ti ti-server';ic.style.animation='';if(btn)btn.disabled=false}}
+}
+async function vpnGenerateOVPNConfig(btn){
+  const ic=btn?btn.querySelector('i'):null;
+  if(ic){ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite';if(btn)btn.disabled=true}
+  const box=document.getElementById('ovpn-config-result');
+  try{
+    // ذخیره مشخصات
+    const body={
+      server_endpoint:document.getElementById('ovpn-endpoint').value.trim(),
+      server_port:parseInt(document.getElementById('ovpn-port').value)||1194,
+      protocol:document.getElementById('ovpn-protocol').value,
+    };
+    await authF('/api/ovpn/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const r=await authF('/api/ovpn/client-conf');
+    const j=await r.json();
+    if(j.ok){
+      const h=j.health||{};
+      const healthBadge=h.ok?'<span class="badge bg-green" style="font-size:10px">سالم</span>':'<span class="badge bg-red" style="font-size:10px">قطع</span>';
+      box.style.display='';
+      box.innerHTML=`<div style="padding:14px;background:var(--bg);border-radius:10px;border:1px solid var(--green-t);font-size:12px">
+        <div style="font-weight:700;margin-bottom:8px;color:var(--green-t)">✓ کانفیگ OpenVPN ساخته شد</div>
+        <div style="margin-bottom:8px">تست سلامت سرور (TCP): ${healthBadge}${h.ok?'':' — '+(h.error||'')}</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+          <button class="btn btn-sm btn-g" onclick="vpnCopyText(this,${JSON.stringify(j.config)})"><i class="ti ti-copy"></i> کپی فایل .ovpn</button>
+          <a class="btn btn-sm btn-blue" href="data:text/plain;charset=utf-8,${encodeURIComponent(j.config)}" download="${j.filename}" style="text-decoration:none"><i class="ti ti-download"></i> دانلود فایل</a>
+        </div>
+        <pre dir="ltr" style="font-size:10.5px;font-family:monospace;background:var(--bg3);padding:10px;border-radius:8px;white-space:pre-wrap;text-align:left;max-height:300px;overflow:auto">${j.config.replace(/</g,'&lt;')}</pre>
+      </div>`;
+      toast('کانفیگ OpenVPN ساخته شد','ok');
+    }else{
+      box.style.display='';box.innerHTML='<div style="padding:12px;color:var(--red-t);font-size:12px">✗ '+(j.error||'خطا')+'</div>';
+      toast(j.error||'خطا','err');
+    }
+  }catch(e){toast('خطا','err')}
+  finally{if(ic){ic.className='ti ti-file-export';ic.style.animation='';if(btn)btn.disabled=false}}
+}
+async function vpnTestOVPN(btn){
+  const ic=btn?btn.querySelector('i'):null;
+  if(ic){ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite';if(btn)btn.disabled=true}
+  const box=document.getElementById('ovpn-health-result');
+  try{
+    const body={
+      server_endpoint:document.getElementById('ovpn-endpoint').value.trim(),
+      server_port:parseInt(document.getElementById('ovpn-port').value)||1194,
+      protocol:document.getElementById('ovpn-protocol').value,
+    };
+    await authF('/api/ovpn/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const r=await authF('/api/ovpn/client-conf');
+    const j=await r.json();
+    if(j.ok){
+      const h=j.health||{};
+      box.style.display='';
+      if(h.ok){
+        box.innerHTML=`<div style="padding:12px;background:var(--green-bg);border:1px solid var(--green-t);border-radius:10px;font-size:12px;color:var(--green-t)"><i class="ti ti-circle-check"></i> سرور پاسخ داد — اتصال TCP به ${document.getElementById('ovpn-endpoint').value}:${document.getElementById('ovpn-port').value} برقرار شد.</div>`;
+      }else{
+        box.innerHTML=`<div style="padding:12px;background:var(--red-bg);border:1px solid var(--red-t);border-radius:10px;font-size:12px;color:var(--red-t)"><i class="ti ti-circle-x"></i> سرور در دسترس نیست — ${h.error||'اتصال برقرار نشد'}</div>`;
+      }
+    }else{
+      box.style.display='';box.innerHTML='<div style="padding:12px;color:var(--red-t);font-size:12px">✗ '+(j.error||'خطا')+'</div>';
+    }
+  }catch(e){toast('خطا','err')}
+  finally{if(ic){ic.className='ti ti-plug';ic.style.animation='';if(btn)btn.disabled=false}}
+}
+function vpnCopyText(btn,text){
+  if(!text){toast('متن خالی است','err');return}
+  navigator.clipboard.writeText(text).then(()=>toast('متن کپی شد','ok')).catch(()=>toast('کپی ناموفق','err'));
 }
 /* ─── تولید کانفیگ گیمینگ ─── */
 async function gamingCompare(btn){

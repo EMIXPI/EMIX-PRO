@@ -1,42 +1,106 @@
 // ══════════════════════════════════════════════════════════════════════════════
-// EMIX Gateway — Cloudflare Worker (مولتی‌لوکیشن + گیمینگ)
+// EMIX Gateway — Cloudflare Worker v1.5.0 (مولتی‌لوکیشن + گیمینگ + UI کامل)
 // ──────────────────────────────────────────────────────────────────────────────
 // این Worker پل بین کاربران ایرانی و بک‌اند EMIX (Railway) است:
 //
 //   کاربر ──► بهترین IP کلادفلر ──► این Worker ──► لوکیشن انتخابی ──► اینترنت
 //
-// ✅ امکانات:
+// ✅ امکانات v1.5:
 //   ۱) مولتی‌لوکیشن: مسیر /loc/{name}/... به بک‌اند آن لوکیشن فوروارد می‌شود
 //      - لوکیشن‌ها یا همین‌جا در DEFAULT_LOCATIONS تعریف می‌شوند (ادیت کد)
 //      - یا در KV (اگر bind شده باشد) به‌صورت داینامیک — بدون ری‌دیپلوی
-//   ۲) /gateway-status → وضعیت گیت‌وی + اینکه این درخواست از کدام PoP کلادفلر
-//      سرویس شده (colo) — برای بخش گیمینگ پنل (تشخیص استانبول/فرانکفورت/...)
+//   ۲) /gateway-status → وضعیت گیت‌وی + PoP + سلامت لوکیشن‌ها (با کش ۵ دقیقه)
 //   ۳) /admin/locations (توکن‌دار) → افزودن/حذف لوکیشن از پنل EMIX
-//   ۴) WebSocket passthrough — لازم برای VLESS-over-WS
-//   ۵) TLS کامل بین کاربر و کلادفلر — کلادفلر فقط TCP/TLS رله می‌کند
-//
-// ⚙️ راه‌اندازی سریع:
-//   1) dash.cloudflare.com → Workers & Pages → Create Worker → این کد → Deploy
-//   2) (اختیاری) KV بسازید و با نام LOCATIONS بایند کنید (Settings → Bindings)
-//   3) (اختیاری) Secret با نام EMIX_TOKEN بگذارید (wrangler secret put EMIX_TOKEN)
-//      تا پنل بتواند لوکیشن اضافه کند؛ در غیر این صورت فقط /loc/auto فعال است
-//
-// 📝 افزودن لوکیشن (مثال ترکیه):
-//   KV یا POST /admin/locations با body:
-//     {"name":"tr","label":"ترکیه استانبول","flag":"🇹🇷","upstream":"tr.example.com"}
-//   بعد لینک کاربر این‌طور می‌شود: /loc/tr/ws/{uuid}
+//   ۴) WebSocket passthrough — لازم برای VLESS-over-WS / Trojan-over-WS
+//   ۵) TLS کامل بین کاربر و کلادفلر
+//   ۶) لوکیشن‌های پیش‌فرض متعدد — section خروجی دیگر خالی نمی‌ماند
 // ══════════════════════════════════════════════════════════════════════════════
 
-const GATEWAY_VERSION = '1.4.0';
+const GATEWAY_VERSION = '1.5.0';
 
-// ─── لوکیشن‌های پیش‌فرض (وقتی KV وصل نیست یا خالی است) ───
-// برای افزودن لوکیشن جدید همین‌جا اضافه کنید یا از پنل (KV) استفاده کنید
+// ─── لوکیشن‌های پیش‌فرض ───
+// این‌ها بلافاصله بعد از دیپلوی worker فعال‌اند. کاربر می‌تواند از پنل اضافه/حذف کند.
+// auto = همان Railway production (پیش‌فرض، همیشه سالم)
+// بقیه = قالب‌های آماده — فقط upstream را بعد از deploy سرور خروج عوض کنید
 const DEFAULT_LOCATIONS = {
   auto: {
-    label: 'Auto — Railway',
+    label: 'Auto — Railway EMIX',
     flag: '🌍',
     upstream: 'emix-pro-production.up.railway.app',
     note: 'مسیر پیش‌فرض — مستقیم به بک‌اند EMIX روی Railway',
+    healthy: true,
+  },
+  de: {
+    label: 'آلمان — فرانکفورت',
+    flag: '🇩🇪',
+    upstream: 'emix-pro-production.up.railway.app',
+    note: 'سرور خروج آلمان هنوز تنظیم نشده — از پنل EMIX یک exit node روی Railway Frankfurt دیپلوی کنید و upstream اینجا را به‌روز کنید',
+    healthy: false,
+    pending: true,
+  },
+  nl: {
+    label: 'هلند — آمستردام',
+    flag: '🇳🇱',
+    upstream: 'emix-pro-production.up.railway.app',
+    note: 'سرور خروج هلند هنوز تنظیم نشده — یک exit node روی Koyeb Amsterdam دیپلوی کنید',
+    healthy: false,
+    pending: true,
+  },
+  fr: {
+    label: 'فرانسه — پاریس',
+    flag: '🇫🇷',
+    upstream: 'emix-pro-production.up.railway.app',
+    note: 'سرور خروج فرانسه هنوز تنظیم نشده — یک exit node روی Render Paris دیپلوی کنید',
+    healthy: false,
+    pending: true,
+  },
+  tr: {
+    label: 'ترکیه — استانبول',
+    flag: '🇹🇷',
+    upstream: 'emix-pro-production.up.railway.app',
+    note: 'سرور خروج ترکیه هنوز تنظیم نشده — بهترین تعادل پینگ برای بازی‌های MENA. یک VPS ترک بگیر و exit node را رویش اجرا کن',
+    healthy: false,
+    pending: true,
+  },
+  ae: {
+    label: 'امارات — دبی',
+    flag: '🇦🇪',
+    upstream: 'emix-pro-production.up.railway.app',
+    note: 'سرور خروج امارات — نزدیک‌ترین به ایران. Oracle Cloud Dubai (Always Free)',
+    healthy: false,
+    pending: true,
+  },
+  ru: {
+    label: 'روسیه — مسکو',
+    flag: '🇷🇺',
+    upstream: 'emix-pro-production.up.railway.app',
+    note: 'سرور خروج روسیه — برای بازی‌های آسیای میانه و دانلود',
+    healthy: false,
+    pending: true,
+  },
+  us: {
+    label: 'آمریکا — واشنگتن',
+    flag: '🇺🇸',
+    upstream: 'emix-pro-production.up.railway.app',
+    note: 'سرور خروج آمریکا — برای دسترسی به سرویس‌های آمریکایی',
+    healthy: false,
+    pending: true,
+  },
+  uk: {
+    label: 'انگلیس — لندن',
+    flag: '🇬🇧',
+    upstream: 'emix-pro-production.up.railway.app',
+    note: 'سرور خروج انگلیس',
+    healthy: false,
+    pending: true,
+  },
+  sg: {
+    label: 'سنگاپور',
+    flag: '🇸🇬',
+    upstream: 'emix-pro-production.up.railway.app',
+    note: 'سرور خروج آسیای شرقی — برای بازی‌های آسیایی',
+    healthy: false,
+    pending: true,
   },
 };
 
@@ -60,12 +124,14 @@ async function getLocations(env) {
       if (raw) {
         const parsed = JSON.parse(raw);
         if (parsed && typeof parsed === 'object' && Object.keys(parsed).length) {
+          // auto را از پیش‌فرض تضمینی کن (همیشه باشد)
           if (!parsed.auto) parsed.auto = DEFAULT_LOCATIONS.auto;
           return parsed;
         }
       }
     } catch (e) { /* KV خطا خورد → پیش‌فرض */ }
   }
+  // وقتی KV وصل نیست یا خالی است — همه‌ی پیش‌فرض‌ها برمی‌گردند (section خالی نمی‌ماند)
   return { ...DEFAULT_LOCATIONS };
 }
 
@@ -77,7 +143,7 @@ async function saveLocations(env, locs) {
   return { ok: true };
 }
 
-// ─── کش سلامت لوکیشن‌ها (۵ دقیقه اعتبار) — پنل بدون تست فعال هم سلامت را می‌بیند ───
+// ─── کش سلامت لوکیشن‌ها (۵ دقیقه اعتبار) ───
 async function getHealthCache(env) {
   if (!env || !env.LOCATIONS) return {};
   try {
@@ -120,7 +186,6 @@ export default {
         gateway: 'emix-gateway',
         version: GATEWAY_VERSION,
         time: new Date().toISOString(),
-        // کدوم دیتاسنتر کلادفلر این درخواست را سرو کرد — کلید بخش گیمینگ
         colo: (request.cf && request.cf.colo) || null,
         country: (request.cf && request.cf.country) || null,
         city: (request.cf && request.cf.city) || null,
@@ -133,10 +198,11 @@ export default {
           flag: v.flag || '',
           upstream: v.upstream,
           note: v.note || '',
+          pending: v.pending || false,
+          healthy: v.healthy || false,
         })),
       };
-      // ?check=1 → سلامت هر لوکیشن به‌صورت فعال تست می‌شود (تأخیر واقعی تا آپ‌استریم)
-      // نتیجه در KV کش می‌شود تا پنل بدون تست فعال هم بتواند نشان بدهد
+      // ?check=1 → سلامت فعال هر لوکیشن
       if (url.searchParams.get('check') === '1') {
         const checks = await Promise.all(Object.entries(locs).map(async ([name, v]) => {
           const t0 = Date.now();
@@ -153,13 +219,12 @@ export default {
               latency_ms: Date.now() - t0,
             };
           } catch (e) {
-            // exit node ها /api/ping و /health و / همه را ۲۰۰ می‌دهند؛ fallback بزن
             try {
               const r2 = await fetch(`https://${v.upstream}/health`, {
                 method: 'GET',
                 signal: AbortSignal.timeout(6000),
               });
-              return { name, ok: r2.ok, status: r2.status, latency_ms: Date.now() - t0, error: r2.ok ? undefined : 'upstream /api/ping ناموفق' };
+              return { name, ok: r2.ok, status: r2.status, latency_ms: Date.now() - t0 };
             } catch (e2) {
               return { name, ok: false, status: 0, latency_ms: Date.now() - t0, error: String(e2 && e2.message || e2).slice(0, 120) };
             }
@@ -169,7 +234,6 @@ export default {
         payload.all_healthy = checks.every(c => c.ok);
         await saveHealthCache(env, checks);
       } else {
-        // کش سلامت تازه (اگر بود) — بدون هزینه‌ی تست فعال
         const cached = await getHealthCache(env);
         if (Object.keys(cached).length) {
           payload.location_health = Object.entries(cached).map(([name, h]) => ({
@@ -180,7 +244,6 @@ export default {
       return json(payload);
     }
 
-    // ─── سلامت سبک برای مانیتورینگ پنل (بدون احراز هویت) ───
     if (url.pathname === '/health') {
       const t0 = Date.now();
       try {
@@ -214,7 +277,7 @@ export default {
           const { name, label, flag, upstream, note } = body || {};
           if (!name || !upstream) return json({ ok: false, error: '«name» و «upstream» الزامی است' }, 400);
           if (!/^[a-z0-9-]{2,16}$/.test(name)) return json({ ok: false, error: 'نام باید ۲-۱۶ کاراکتر انگلیسی کوچک/خط تیره باشد' }, 400);
-          locs[name] = { label: label || name, flag: flag || '📍', upstream, note: note || '' };
+          locs[name] = { label: label || name, flag: flag || '📍', upstream, note: note || '', healthy: true, pending: false };
           const r = await saveLocations(env, locs);
           return json(r, r.ok ? 200 : 400);
         } catch (e) {
