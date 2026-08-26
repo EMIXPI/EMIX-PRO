@@ -377,6 +377,42 @@ def register_routes(app) -> None:
             headers={"Cache-Control": "no-store"},
         )
 
+    @app.get("/api/exit-check")
+    async def api_exit_check():
+        """برای تست سلامت خروج واقعی از طریق گیت‌وی کلادفلر.
+        این اندپوینت به یک سرویس IP-check عمومی وصل می‌شود و IP خروج سرور را برمی‌گرداند.
+        کاربرد: وقتی کاربر لوکیشن «ترکیه» را در گیمینگ انتخاب می‌کند، اینجا می‌فهمیم که
+        واقعاً از ترکیه خارج می‌شود یا هنوز از Railway (آمستردام) است."""
+        import urllib.request, json as _json
+        try:
+            # استفاده از ipapi.co — رایگان، بدون rate-limit شدید، اطلاعات کامل کشور/شهر/ISP
+            req = urllib.request.Request(
+                "https://ipapi.co/json/",
+                headers={"User-Agent": "EMIX-ExitCheck/1.0"},
+            )
+            with urllib.request.urlopen(req, timeout=8) as r:
+                data = _json.loads(r.read().decode("utf-8", "replace"))
+            return JSONResponse({
+                "ok": True,
+                "exit_ip": data.get("ip"),
+                "country": data.get("country_name"),
+                "country_code": data.get("country"),
+                "city": data.get("city"),
+                "isp": data.get("org"),
+                "region": data.get("region"),
+                "timezone": data.get("timezone"),
+            })
+        except Exception as exc:
+            # fallback به ipify اگر ipapi کار نکرد
+            try:
+                import urllib.request as ur
+                req2 = ur.Request("https://api.ipify.org?format=json", headers={"User-Agent": "EMIX-ExitCheck/1.0"})
+                with ur.urlopen(req2, timeout=6) as r:
+                    data2 = _json.loads(r.read().decode("utf-8", "replace"))
+                return JSONResponse({"ok": True, "exit_ip": data2.get("ip"), "country": None, "city": None, "isp": None, "fallback": "ipify"})
+            except Exception as e2:
+                return JSONResponse({"ok": False, "error": f"ipapi: {exc}; ipify: {e2}"}, 502)
+
     @app.post("/api/links/{uid}/ping")
     async def api_ping_link(uid: str, via: str = "direct", _=Depends(require_auth)):
         async with LINKS_LOCK:

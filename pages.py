@@ -204,62 +204,7 @@ input:focus~.ic-lock{color:var(--accent2);animation:wiggle .4s ease}
   *{animation-duration:.001s !important;animation-iteration-count:1 !important}
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   NixHD Signature Touches — dot-matrix indicators + premium gradient cards
-   ═══════════════════════════════════════════════════════════════════════════ */
-.dot-matrix{display:flex;gap:3px;flex-wrap:wrap;padding:8px 0}
-.dot-matrix .d{width:6px;height:6px;border-radius:50%;background:var(--dot-off);transition:background .2s,box-shadow .2s}
-.dot-matrix .d.on{background:var(--dot-on);box-shadow:0 0 6px var(--accent-glow)}
-.dot-matrix .d.warn{background:var(--amber);box-shadow:0 0 6px var(--amber-bg)}
-.dot-matrix .d.off{background:var(--red);box-shadow:0 0 6px var(--red-bg)}
 
-/* Premium gradient card — for hero metrics + best-link displays */
-.card-vy{background:var(--grad-vy);color:#0A0A0F;border:none;box-shadow:0 12px 36px rgba(139,92,246,0.32),0 4px 12px rgba(250,204,21,0.20)}
-.card-vy .vy-eyebrow{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;opacity:.7}
-.card-vy .vy-num{font-size:42px;font-weight:800;letter-spacing:-.03em;line-height:1}
-.card-vy .vy-label{font-size:12px;opacity:.75;margin-top:4px}
-
-/* Glow pulse for active nav items */
-.nav-it.on{box-shadow:inset 0 1px 0 rgba(255,255,255,0.04),0 0 18px rgba(139,92,246,0.18)}
-.nav-it.on i{text-shadow:0 0 12px var(--accent-glow)}
-
-/* Premium metric card with violet left edge */
-.metric{position:relative;overflow:hidden}
-.metric::before{content:'';position:absolute;top:0;right:0;width:100%;height:2px;background:linear-gradient(90deg,transparent,var(--accent-violet),var(--accent2),transparent);opacity:.6;transition:opacity .25s}
-.metric:hover::before{opacity:1}
-
-/* Buttons — NixHD feel: violet base, yellow glow */
-.btn-g{position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s,filter .2s}
-.btn-g::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,transparent 0%,rgba(250,204,21,0.18) 50%,transparent 100%);opacity:0;transition:opacity .25s;pointer-events:none}
-.btn-g:hover::after{opacity:1}
-.btn-g:hover{transform:translateY(-1px);box-shadow:0 8px 24px var(--accent-glow),0 0 0 1px var(--accent-violet)}
-
-/* Inputs — NixHD glass inputs with violet focus ring */
-input:focus,select:focus,textarea:focus{border-color:var(--accent-violet) !important;background:rgba(139,92,246,0.06) !important;box-shadow:0 0 0 4px var(--accent-glow) !important}
-
-/* Sidebar — slightly darker for depth, with subtle violet edge */
-.sidebar{background:rgba(10,10,15,0.92) !important;border-left-color:rgba(139,92,246,0.12) !important}
-[data-theme="light"] .sidebar{background:rgba(255,255,255,0.92) !important}
-.mob-top{background:rgba(10,10,15,0.92) !important;border-bottom-color:rgba(139,92,246,0.12) !important}
-[data-theme="light"] .mob-top{background:rgba(255,255,255,0.92) !important}
-
-/* Premium card hover — violet glow + slight lift */
-.card:hover{border-color:rgba(139,92,246,0.28) !important;box-shadow:0 24px 64px -16px rgba(0,0,0,0.6),0 0 0 1px rgba(139,92,246,0.18) inset,0 0 32px -8px var(--accent-glow) !important}
-
-/* Status badges — pill shape with glow */
-.badge{box-shadow:0 0 0 1px rgba(139,92,246,0.08) inset}
-.badge.ok{box-shadow:0 0 0 1px rgba(34,197,94,0.18) inset,0 0 12px rgba(34,197,94,0.18)}
-.badge.err{box-shadow:0 0 0 1px rgba(239,68,68,0.18) inset,0 0 12px rgba(239,68,68,0.18)}
-
-/* VPN Pro cards — distinct violet/yellow accent */
-.vpn-card{position:relative;overflow:hidden}
-.vpn-card::after{content:'';position:absolute;top:0;right:0;width:120px;height:120px;background:radial-gradient(circle at top right,var(--accent-glow),transparent 70%);pointer-events:none;opacity:.6}
-.vpn-wg-card::after{background:radial-gradient(circle at top right,rgba(139,92,246,0.20),transparent 70%)}
-.vpn-ovpn-card::after{background:radial-gradient(circle at top right,rgba(250,204,21,0.20),transparent 70%)}
-
-/* Trojan/Link health badge — NixHD style */
-.cfg-sub-tag{transition:all .18s ease}
-.cfg-sub-tag:hover{transform:translateY(-1px)}
 
 </style>
 </head>
@@ -1757,6 +1702,91 @@ html,body{max-width:100%;overflow-x:hidden}
   .topbar .tb-title{font-size:16px}
 }
 .log-timeline i{color:#FF6A45}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   NixHD Signature Touches — dot-matrix indicators + premium gradient cards
+   ═══════════════════════════════════════════════════════════════════════════ */
+.dot-matrix{display:flex;gap:3px;flex-wrap:wrap;padding:8px 0}
+.dot-matrix .d{width:6px;height:6px;border-radius:50%;background:var(--dot-off);transition:background .2s,box-shadow .2s}
+.dot-matrix .d.on{background:var(--dot-on);box-shadow:0 0 6px var(--accent-glow)}
+.dot-matrix .d.warn{background:var(--amber);box-shadow:0 0 6px var(--amber-bg)}
+.dot-matrix .d.off{background:var(--red);box-shadow:0 0 6px var(--red-bg)}
+
+/* Premium gradient card — for hero metrics + best-link displays */
+.card-vy{background:var(--grad-vy);color:#0A0A0F;border:none;box-shadow:0 12px 36px rgba(139,92,246,0.32),0 4px 12px rgba(250,204,21,0.20)}
+.card-vy .vy-eyebrow{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;opacity:.7}
+.card-vy .vy-num{font-size:42px;font-weight:800;letter-spacing:-.03em;line-height:1}
+.card-vy .vy-label{font-size:12px;opacity:.75;margin-top:4px}
+
+/* Glow pulse for active nav items */
+.nav-it.on{box-shadow:inset 0 1px 0 rgba(255,255,255,0.04),0 0 18px rgba(139,92,246,0.18)}
+.nav-it.on i{text-shadow:0 0 12px var(--accent-glow)}
+
+/* Premium metric card with violet left edge */
+.metric{position:relative;overflow:hidden}
+.metric::before{content:'';position:absolute;top:0;right:0;width:100%;height:2px;background:linear-gradient(90deg,transparent,var(--accent-violet),var(--accent2),transparent);opacity:.6;transition:opacity .25s}
+.metric:hover::before{opacity:1}
+
+/* Buttons — NixHD feel: violet base, yellow glow */
+.btn-g{position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s,filter .2s}
+.btn-g::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,transparent 0%,rgba(250,204,21,0.18) 50%,transparent 100%);opacity:0;transition:opacity .25s;pointer-events:none}
+.btn-g:hover::after{opacity:1}
+.btn-g:hover{transform:translateY(-1px);box-shadow:0 8px 24px var(--accent-glow),0 0 0 1px var(--accent-violet)}
+
+/* Inputs — NixHD glass inputs with violet focus ring */
+input:focus,select:focus,textarea:focus{border-color:var(--accent-violet) !important;background:rgba(139,92,246,0.06) !important;box-shadow:0 0 0 4px var(--accent-glow) !important}
+
+/* Sidebar — slightly darker for depth, with subtle violet edge */
+.sidebar{background:rgba(10,10,15,0.92) !important;border-left-color:rgba(139,92,246,0.12) !important}
+[data-theme="light"] .sidebar{background:rgba(255,255,255,0.92) !important}
+.mob-top{background:rgba(10,10,15,0.92) !important;border-bottom-color:rgba(139,92,246,0.12) !important}
+[data-theme="light"] .mob-top{background:rgba(255,255,255,0.92) !important}
+
+/* Premium card hover — violet glow + slight lift */
+.card:hover{border-color:rgba(139,92,246,0.28) !important;box-shadow:0 24px 64px -16px rgba(0,0,0,0.6),0 0 0 1px rgba(139,92,246,0.18) inset,0 0 32px -8px var(--accent-glow) !important}
+
+/* Status badges — pill shape with glow */
+.badge{box-shadow:0 0 0 1px rgba(139,92,246,0.08) inset}
+.badge.ok{box-shadow:0 0 0 1px rgba(34,197,94,0.18) inset,0 0 12px rgba(34,197,94,0.18)}
+.badge.err{box-shadow:0 0 0 1px rgba(239,68,68,0.18) inset,0 0 12px rgba(239,68,68,0.18)}
+
+/* VPN Pro cards — distinct violet/yellow accent */
+.vpn-card{position:relative;overflow:hidden}
+.vpn-card::after{content:'';position:absolute;top:0;right:0;width:120px;height:120px;background:radial-gradient(circle at top right,var(--accent-glow),transparent 70%);pointer-events:none;opacity:.6}
+.vpn-wg-card::after{background:radial-gradient(circle at top right,rgba(139,92,246,0.20),transparent 70%)}
+.vpn-ovpn-card::after{background:radial-gradient(circle at top right,rgba(250,204,21,0.20),transparent 70%)}
+
+/* VPN Pro inputs — login-page style (icon + wiggle on focus) */
+.vpn-field{display:flex;flex-direction:column}
+.vpn-field>label{font-size:10.5px;font-weight:700;color:var(--t2);margin-bottom:7px;text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;gap:6px}
+.vpn-input-wrap{position:relative;display:flex;align-items:center}
+.vpn-input-ic{position:absolute;right:11px;top:50%;transform:translateY(-50%);color:var(--t3);font-size:15px;pointer-events:none;transition:color .2s,transform .2s;z-index:1}
+.vpn-input{
+  width:100%;padding:12px 38px 12px 14px;border-radius:12px;border:1px solid var(--card-b);
+  background:rgba(0,0,0,.22);color:var(--t1);font-family:'Vazirmatn',ui-monospace,monospace;font-size:12.5px;
+  outline:none;transition:border-color .2s,background .2s,box-shadow .2s;direction:ltr;text-align:left;
+}
+[data-theme="light"] .vpn-input{background:rgba(139,92,246,.04)}
+.vpn-input::placeholder{color:var(--t3);opacity:.7}
+.vpn-input:focus{border-color:var(--accent-violet);background:rgba(139,92,246,.07);box-shadow:0 0 0 4px var(--accent-glow)}
+.vpn-input:focus~.vpn-input-ic{color:var(--accent2);animation:vpnWiggle .4s ease}
+@keyframes vpnWiggle{0%,100%{transform:translateY(-50%) rotate(0)}25%{transform:translateY(-50%) rotate(-12deg)}75%{transform:translateY(-50%) rotate(12deg)}}
+.vpn-textarea{
+  width:100%;min-height:140px;padding:12px 14px;border-radius:12px;border:1px solid var(--card-b);
+  background:rgba(0,0,0,.22);color:var(--t1);font-family:ui-monospace,'JetBrains Mono',monospace;font-size:11px;
+  outline:none;transition:border-color .2s,background .2s,box-shadow .2s;direction:ltr;text-align:left;resize:vertical;line-height:1.6;
+}
+[data-theme="light"] .vpn-textarea{background:rgba(139,92,246,.04)}
+.vpn-textarea:focus{border-color:var(--accent-violet);background:rgba(139,92,246,.07);box-shadow:0 0 0 4px var(--accent-glow)}
+.vpn-textarea::placeholder{color:var(--t3);opacity:.65}
+
+/* VPN empty-state — gentle call-to-action */
+.vpn-empty-state{transition:opacity .25s,transform .25s}
+.vpn-empty-state.hidden{opacity:0;transform:translateY(-4px);pointer-events:none;height:0;padding:0;margin:0;overflow:hidden;border:none}
+
+/* Trojan/Link health badge — NixHD style */
+.cfg-sub-tag{transition:all .18s ease}
+.cfg-sub-tag:hover{transform:translateY(-1px)}
 
 </style>
 <style>
@@ -3727,10 +3757,12 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
     </div>
     <div style="font-size:11px;color:var(--t3);margin-bottom:10px">کانفیگ گیمینگ = بدون mux + fragment ضد DPI + tcpNoDelay + TCP Fast Open + اولویت IPv4 — همه در لینک یا JSON اعمال می‌شوند. <b>نمی‌دانید کدام مسیر برایتان سریع‌تر است؟ اول «مقایسه‌ی مسیرها» را بزنید.</b> اگر سرعت‌تان بعد از مدتی افت کرد، حالت را روی «حداکثری» و ترنسپورت را XHTTP بگذارید. <b style="color:var(--amber-t)">روی ایرانسل، حالت «ایرانسل» را امتحان کنید.</b></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-blue" onclick="gamingCheckExitIP(this)"><i class="ti ti-world"></i> بررسی IP خروج واقعی</button>
       <button class="btn btn-blue" onclick="gamingCompare(this)"><i class="ti ti-scale"></i> مقایسه‌ی مسیرها (پنل vs گیت‌وی)</button>
       <button class="btn btn-g" onclick="gamingGenLinks()"><i class="ti ti-link"></i> تولید لینک‌ها</button>
       <button class="btn btn-g" onclick="gamingGenJson()"><i class="ti ti-code"></i> JSON کامل Xray (بهترین برای گیمینگ)</button>
     </div>
+    <div id="gaming-exit-result" style="margin-top:14px;display:none"></div>
     <div id="gaming-compare-result" style="margin-top:14px;display:none"></div>
     <div id="gaming-links-result" style="margin-top:14px;display:none"></div>
     <div id="gaming-json-result" style="margin-top:14px;display:none"></div>
@@ -3774,26 +3806,39 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
   <div class="card vpn-card vpn-wg-card" style="margin-bottom:18px">
     <div class="card-title"><i class="ti ti-key" style="color:var(--accent)"></i> WireGuard — تولید و مدیریت کانفیگ</div>
 
+    <!-- empty-state: وقتی هنوز سروری ست نشده، راهنمایی واضح نشان بده -->
+    <div id="wg-empty-state" class="vpn-empty-state" style="margin-bottom:14px;padding:14px 16px;background:rgba(139,92,246,0.06);border:1px dashed rgba(139,92,246,0.30);border-radius:14px;display:flex;gap:11px;align-items:flex-start">
+      <i class="ti ti-server-off" style="color:var(--accent2);font-size:22px;flex-shrink:0;margin-top:2px"></i>
+      <div style="flex:1;font-size:11.5px;line-height:1.8">
+        <b style="color:var(--accent2)">سرور WireGuard هنوز تنظیم نشده.</b><br>
+        روی <b>«اسکریپت راه‌اندازی سرور»</b> بزنید تا دستورات آماده برای VPS را بگیرید، سپس مقادیر برگشتی (آدرس، پورت، کلید عمومی) را اینجا وارد کنید. <b>یا</b> اگر VPS ندارید، یک VPS رایگان Oracle Cloud (Always Free) بگیرید.
+        <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">
+          <button class="btn btn-sm btn-g" onclick="vpnShowServerScript(this)"><i class="ti ti-server"></i> گرفتن اسکریپت سرور</button>
+          <button class="btn btn-sm btn-blue" onclick="vpnShowServerKey(this)"><i class="ti ti-key"></i> تولید کلید سرور</button>
+        </div>
+      </div>
+    </div>
+
     <div style="font-size:12px;font-weight:700;margin-bottom:10px;color:var(--t1)">۱) مشخصات سرور</div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:12px">
-      <div><label style="font-size:11px;color:var(--t3)">آدرس سرور (IP / دامنه)</label>
-        <input id="wg-endpoint" placeholder="vpn.example.com" style="width:100%;direction:ltr;text-align:left;font-family:monospace"></div>
-      <div><label style="font-size:11px;color:var(--t3)">پورت UDP</label>
-        <input id="wg-port" type="number" value="51820" style="width:100%;direction:ltr;text-align:left;font-family:monospace"></div>
-      <div style="grid-column:span 2"><label style="font-size:11px;color:var(--t3)">کلید عمومی سرور (Public Key)</label>
-        <input id="wg-server-pub" placeholder="ServerPublicKeyBase64=" style="width:100%;direction:ltr;text-align:left;font-family:monospace"></div>
+      <div class="vpn-field"><label>آدرس سرور (IP / دامنه)</label>
+        <div class="vpn-input-wrap"><i class="ti ti-world vpn-input-ic"></i><input id="wg-endpoint" class="vpn-input" placeholder="vpn.example.com"></div></div>
+      <div class="vpn-field"><label>پورت UDP</label>
+        <div class="vpn-input-wrap"><i class="ti ti-port vpn-input-ic"></i><input id="wg-port" type="number" value="51820" class="vpn-input"></div></div>
+      <div class="vpn-field" style="grid-column:span 2"><label>کلید عمومی سرور (Public Key)</label>
+        <div class="vpn-input-wrap"><i class="ti ti-key vpn-input-ic"></i><input id="wg-server-pub" placeholder="ServerPublicKeyBase64=" class="vpn-input"></div></div>
     </div>
 
     <div style="font-size:12px;font-weight:700;margin:14px 0 10px;color:var(--t1)">۲) تنظیمات کلاینت (پیش‌فرض سالم — قابل ویرایش)</div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:14px">
-      <div><label style="font-size:11px;color:var(--t3)">IP کلاینت (CIDR)</label>
-        <input id="wg-client-ip" value="10.7.0.2/32" style="width:100%;direction:ltr;text-align:left;font-family:monospace"></div>
-      <div><label style="font-size:11px;color:var(--t3)">DNS</label>
-        <input id="wg-dns" value="1.1.1.1, 1.0.0.1" style="width:100%;direction:ltr;text-align:left;font-family:monospace"></div>
-      <div><label style="font-size:11px;color:var(--t3)">Keepalive (ثانیه)</label>
-        <input id="wg-keepalive" type="number" value="25" style="width:100%;direction:ltr;text-align:left;font-family:monospace"></div>
-      <div><label style="font-size:11px;color:var(--t3)">MTU</label>
-        <input id="wg-mtu" type="number" value="1280" style="width:100%;direction:ltr;text-align:left;font-family:monospace"></div>
+      <div class="vpn-field"><label>IP کلاینت (CIDR)</label>
+        <div class="vpn-input-wrap"><i class="ti ti-address-book vpn-input-ic"></i><input id="wg-client-ip" value="10.7.0.2/32" class="vpn-input"></div></div>
+      <div class="vpn-field"><label>DNS</label>
+        <div class="vpn-input-wrap"><i class="ti ti-dns vpn-input-ic"></i><input id="wg-dns" value="1.1.1.1, 1.0.0.1" class="vpn-input"></div></div>
+      <div class="vpn-field"><label>Keepalive (ثانیه)</label>
+        <div class="vpn-input-wrap"><i class="ti ti-clock vpn-input-ic"></i><input id="wg-keepalive" type="number" value="25" class="vpn-input"></div></div>
+      <div class="vpn-field"><label>MTU</label>
+        <div class="vpn-input-wrap"><i class="ti ti-arrows-shuffle vpn-input-ic"></i><input id="wg-mtu" type="number" value="1280" class="vpn-input"></div></div>
     </div>
 
     <div style="font-size:12px;font-weight:700;margin:14px 0 10px;color:var(--t1)">۳) کلید کلاینت (اگر نداری، تولید کن)</div>
@@ -3819,6 +3864,18 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
   <div class="card vpn-card vpn-ovpn-card" style="margin-bottom:18px">
     <div class="card-title"><i class="ti ti-lock-access" style="color:var(--accent2)"></i> OpenVPN — مدیریت کانفیگ با Cert واقعی</div>
 
+    <!-- empty-state -->
+    <div id="ovpn-empty-state" class="vpn-empty-state" style="margin-bottom:14px;padding:14px 16px;background:rgba(250,204,21,0.06);border:1px dashed rgba(250,204,21,0.30);border-radius:14px;display:flex;gap:11px;align-items:flex-start">
+      <i class="ti ti-file-import" style="color:var(--accent2);font-size:22px;flex-shrink:0;margin-top:2px"></i>
+      <div style="flex:1;font-size:11.5px;line-height:1.8">
+        <b style="color:var(--accent2)">هنوز کانفیگ OpenVPN نداری.</b><br>
+        روی سرور VPS خود دستور <code dir="ltr">curl -O https://git.io/vpn -o openvpn-install.sh</code> را اجرا کن، فایل <code dir="ltr">emix-client.ovpn</code> تولید شده را اینجا paste کن، یا از <b>«اسکریپت راه‌اندازی سرور»</b> کمک بگیر.
+        <div style="margin-top:8px">
+          <button class="btn btn-sm btn-g" onclick="vpnShowOVPNServerScript(this)"><i class="ti ti-server"></i> گرفتن اسکریپت سرور</button>
+        </div>
+      </div>
+    </div>
+
     <div style="font-size:12px;font-weight:700;margin-bottom:10px;color:var(--t1)">روش ۱ — paste کردن فایل .ovpn کامل از سرور</div>
     <div style="font-size:11px;color:var(--t3);margin-bottom:8px;line-height:1.7">
       اگر از angristan یا یک نصب‌کننده‌ی OpenVPN استفاده کردید، فایل <code dir="ltr">emix-client.ovpn</code> حاوی <code dir="ltr">&lt;ca&gt;</code> و <code dir="ltr">&lt;cert&gt;</code> و <code dir="ltr">&lt;key&gt;</code> است. آن را اینجا paste کن — پنل آن را پارس می‌کند و از اول می‌سازد.
@@ -3838,7 +3895,7 @@ remote vpn.example.com 1194
 &lt;/cert&gt;
 &lt;key&gt;
 ...
-&lt;/key&gt;" style="width:100%;min-height:140px;direction:ltr;text-align:left;font-family:monospace;font-size:11px"></textarea>
+&lt;/key&gt;" class="vpn-textarea"></textarea>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;margin-bottom:18px">
       <button class="btn btn-g" onclick="vpnParseOVPNInline(this)"><i class="ti ti-file-import"></i> پارس و ذخیره</button>
       <button class="btn btn-o" onclick="vpnShowOVPNServerScript(this)"><i class="ti ti-server"></i> اسکریپت راه‌اندازی سرور</button>
@@ -3846,15 +3903,16 @@ remote vpn.example.com 1194
 
     <div style="font-size:12px;font-weight:700;margin:18px 0 10px;color:var(--t1)">روش ۲ — وارد کردن دستی مشخصات</div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:12px">
-      <div><label style="font-size:11px;color:var(--t3)">آدرس سرور</label>
-        <input id="ovpn-endpoint" placeholder="vpn.example.com" style="width:100%;direction:ltr;text-align:left;font-family:monospace"></div>
-      <div><label style="font-size:11px;color:var(--t3)">پورت</label>
-        <input id="ovpn-port" type="number" value="1194" style="width:100%;direction:ltr;text-align:left;font-family:monospace"></div>
-      <div><label style="font-size:11px;color:var(--t3)">پروتکل</label>
-        <select id="ovpn-protocol" style="width:100%">
+      <div class="vpn-field"><label>آدرس سرور</label>
+        <div class="vpn-input-wrap"><i class="ti ti-world vpn-input-ic"></i><input id="ovpn-endpoint" placeholder="vpn.example.com" class="vpn-input"></div></div>
+      <div class="vpn-field"><label>پورت</label>
+        <div class="vpn-input-wrap"><i class="ti ti-port vpn-input-ic"></i><input id="ovpn-port" type="number" value="1194" class="vpn-input"></div></div>
+      <div class="vpn-field"><label>پروتکل</label>
+        <div class="vpn-input-wrap"><i class="ti ti-bolt vpn-input-ic"></i><select id="ovpn-protocol" class="vpn-input">
           <option value="tcp" selected>TCP (سازگارتر — از CDN هم عبور می‌کند)</option>
           <option value="udp">UDP (سریع‌تر — مناسب گیمینگ)</option>
         </select></div>
+      </div>
     </div>
     <div style="font-size:11px;color:var(--t3);margin-bottom:10px;line-height:1.7">
       برای OpenVPN نیازی به ساخت کلید در پنل نیست — از فایل .ovpn که سرور تولید کرده استفاده کن. بالا رو روش ۱ استفاده کن.
@@ -5387,10 +5445,105 @@ function gamingFillLocSelect(locs){
   const sel=document.getElementById('gaming-location');
   if(!sel)return;
   const cur=sel.value;
-  sel.innerHTML='<option value="auto">🌍 auto — Railway</option>'+locs.filter(l=>l.name!=='auto')
-    .map(l=>`<option value="${l.name}">${l.flag||''} ${l.label||l.name}</option>`).join('');
+  // ✨ نمایش واضح: کدام لوکیشن واقعاً exit دارد vs pending
+  sel.innerHTML='<option value="auto">🌍 auto — Railway (آمستردام)</option>'+locs.filter(l=>l.name!=='auto')
+    .map(l=>{
+      const pend=l.pending?' ⚠ خروج = Railway':' ✓ خروج واقعی';
+      return `<option value="${l.name}">${l.flag||''} ${l.label||l.name}${pend}</option>`;
+    }).join('');
   if(cur)sel.value=cur;
 }
+/* ─── بررسی IP خروج واقعی برای لوکیشن انتخابی ─── */
+async function gamingCheckExitIP(btn){
+  const ic=btn?btn.querySelector('i'):null;
+  if(ic){ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite';if(btn)btn.disabled=true}
+  const out=document.getElementById('gaming-exit-result');
+  if(out){out.style.display='block';out.innerHTML='<span style="color:var(--t3)"><i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i> در حال بررسی IP خروج واقعی...</span>'}
+  try{
+    const wd=(document.getElementById('gaming-worker-domain').value||'').trim();
+    const loc=document.getElementById('gaming-location').value||'auto';
+    if(!wd){toast('اول دامنه‌ی وورکر را در تنظیمات گیمینگ وارد کنید','err');return}
+    // مسیر: وورکر → upstream → ipapi.co → IP خروج سرور
+    const r=await fetch(`https://${wd}/exit-ip?loc=${encodeURIComponent(loc)}`,{cache:'no-store'});
+    const j=await r.json();
+    if(!out)return;
+    if(j.ok){
+      const isReal = !j.pending && j.upstream && !j.upstream.includes('railway.app');
+      const exitStr = j.exit_ip ? `<b dir="ltr" style="font-family:monospace;color:var(--accent2)">${j.exit_ip}</b>` : '<span style="color:var(--red-t)">نامشخص</span>';
+      const locStr = [j.exit_country, j.exit_city].filter(Boolean).join(' / ') || 'نامشخص';
+      const ispStr = j.exit_isp || 'نامشخص';
+      const realFake = isReal
+        ? '<span class="badge bg-green" style="font-size:10px"><i class="ti ti-check"></i> خروج واقعی</span>'
+        : '<span class="badge bg-amber" style="font-size:10px"><i class="ti ti-alert-triangle"></i> خروج از Railway</span>';
+      out.innerHTML = `
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+          ${realFake}
+          <span style="font-size:11px;color:var(--t3)">لوکیشن: <b>${j.flag||''} ${j.label||j.loc}</b></span>
+        </div>
+        <div style="font-size:11.5px;line-height:1.9">
+          <div>🌐 IP خروج: ${exitStr}</div>
+          <div>📍 کشور/شهر: <b>${locStr}</b></div>
+          <div>🏢 ISP: <span dir="ltr">${ispStr}</span></div>
+          <div>⏱ تأخیر: <b>${toFa(Math.round(j.latency_ms||0))}ms</b></div>
+          <div style="font-size:10px;color:var(--t3);margin-top:6px">upstream: <code dir="ltr" style="font-size:10px">${j.upstream||'—'}</code></div>
+        </div>
+        ${!isReal ? `
+          <div style="margin-top:10px;padding:10px 12px;background:rgba(250,204,21,0.08);border:1px solid rgba(250,204,21,0.20);border-radius:10px;font-size:11px;line-height:1.7">
+            <b style="color:var(--amber-t)">⚠ این لوکیشن هنوز از Railway (آمستردام) خارج می‌شود.</b><br>
+            برای داشتن خروج واقعی از این کشور، باید یک VPS در همان کشور بگیرید (مثلاً Oracle Cloud Always Free برای دبی، یا ParsPack/اوبونتو برای ترکیه) و upstream این لوکیشن را در وورکر به آدرس آن VPS تغییر دهید.
+            <button class="btn btn-sm btn-g" style="margin-top:8px" onclick="gamingShowUpstreamGuide()"><i class="ti ti-book-2"></i> راهنمای تنظیم VPS خروج</button>
+          </div>
+        ` : ''}
+      `;
+      toast(`IP خروج: ${j.exit_ip||'نامشخص'} (${j.exit_country||'?'})`,'ok');
+    }else{
+      out.innerHTML = `<div style="color:var(--red-t)"><i class="ti ti-alert-circle"></i> خطا در بررسی IP خروج: ${(j.error||'نامشخص').slice(0,100)}</div>`;
+      toast('خطا در بررسی IP خروج','err');
+    }
+  }catch(e){
+    if(out)out.innerHTML=`<div style="color:var(--red-t)"><i class="ti ti-alert-circle"></i> خطا: ${e.message||e}</div>`;
+    toast('خطا در ارتباط با وورکر','err');
+  }finally{
+    if(ic){ic.className='ti ti-world';ic.style.animation='';if(btn)btn.disabled=false}
+  }
+}
+function gamingShowUpstreamGuide(){
+  const m=document.createElement('div');
+  m.className='modal-overlay';
+  m.onclick=(e)=>{if(e.target===m)m.remove()};
+  m.innerHTML=`
+    <div class="modal-box" style="max-width:680px">
+      <div class="modal-head">
+        <div class="modal-title"><i class="ti ti-server"></i> راهنمای تنظیم VPS خروج واقعی</div>
+        <button class="modal-x" onclick="this.closest('.modal-overlay').remove()">✕</button>
+      </div>
+      <div class="modal-body" style="font-size:12px;line-height:1.9">
+        <div style="padding:11px 13px;background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.20);border-radius:12px;margin-bottom:14px">
+          <b style="color:var(--accent2)">چرا؟</b> گیت‌وی کلادفلر فقط یک پروکسی است. IP خروج = IP upstream است. اگر upstream Railway باشد، خروج همیشه آمستردام است. برای خروج واقعی از کشور X، باید یک سرور در کشور X داشته باشید.
+        </div>
+        <b>۱) یک VPS در کشور موردنظر بگیرید:</b><br>
+        <ul style="margin:6px 0 14px 18px">
+          <li><b>ترکیه</b> — ParsPack, اوبونتو, آوا популярных</li>
+          <li><b>دبی</b> — Oracle Cloud Always Free (رایگان، ۴ هسته ARM)</li>
+          <li><b>آمستردام/فرانکفورت</b> — Hetzner, Contabo, Vultr</li>
+          <li><b>سنگاپور</b> — Vultr, DigitalOcean</li>
+        </ul>
+        <b>۲) EMIX backend را روی VPS دیپلوی کنید:</b><br>
+        <code dir="ltr" style="display:block;background:var(--bg);padding:8px;border-radius:8px;margin:6px 0;font-size:10.5px">git clone https://github.com/EMIXPI/EMIX-PRO.git<br>cd EMIX-PRO<br>pip install -r requirements.txt<br>python -m main</code>
+        <b>۳) upstream آن لوکیشن را در وورکر به‌روز کنید:</b><br>
+        <code dir="ltr" style="display:block;background:var(--bg);padding:8px;border-radius:8px;margin:6px 0;font-size:10.5px">curl -X POST https://emix-gateway.personalemixone.workers.dev/admin/locations \\
+  -H "X-EMIX-Token: emix-gw-7f3a9c2e5b1d84f6a0c9e3d7b5f21h8k4" \\
+  -H "Content-Type: application/json" \\
+  -d '{"name":"tr","label":"ترکیه — استانبول","flag":"🇹🇷","upstream":"your-vps.example.com","note":"VPS ترک واقعی"}'</code>
+        <b>۴) دوباره «بررسی IP خروج» را بزنید — حالا باید کشور ترکیه را ببینید.</b>
+        <div style="margin-top:14px;padding:10px 12px;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.20);border-radius:10px;font-size:11px">
+          <b style="color:var(--green-t)">نکته:</b> اگر فقط می‌خواهید نزدیک‌تر به ایران باشید (نه خروج واقعی)، می‌توانید روی «auto» بگذارید و PoP کلادفلر استانبول کار می‌کند — ولی IP خروج هنوز Railway است.
+        </div>
+      </div>
+    </div>`;
+  document.body.appendChild(m);
+}
+
 /* ─── اینباندهای گیت‌وی — چند ورودی روی خود وورکر ─── */
 async function gamingLoadInbounds(btn){
   const ic=btn?btn.querySelector('i'):null;
@@ -5700,6 +5853,11 @@ async function loadVPNPage(){
       if(wg.dns)document.getElementById('wg-dns').value=wg.dns;
       if(wg.keepalive)document.getElementById('wg-keepalive').value=wg.keepalive;
       if(wg.mtu)document.getElementById('wg-mtu').value=wg.mtu;
+      // empty-state: اگر سرور ست شده، کادر راهنما را پنهان کن
+      const wgEmpty=document.getElementById('wg-empty-state');
+      if(wgEmpty && (wg.server_endpoint || wg.server_pubkey)){
+        wgEmpty.classList.add('hidden');
+      }
     }
     if(ovpnR.ok){
       const ovpn=await ovpnR.json();
@@ -5707,6 +5865,11 @@ async function loadVPNPage(){
       if(ovpn.server_endpoint)document.getElementById('ovpn-endpoint').value=ovpn.server_endpoint;
       if(ovpn.server_port)document.getElementById('ovpn-port').value=ovpn.server_port;
       if(ovpn.protocol)document.getElementById('ovpn-protocol').value=ovpn.protocol;
+      // empty-state: اگر کانفیگ OVPN ست شده، کادر راهنما را پنهان کن
+      const ovpnEmpty=document.getElementById('ovpn-empty-state');
+      if(ovpnEmpty && (ovpn.server_endpoint || ovpn.has_inline_certs)){
+        ovpnEmpty.classList.add('hidden');
+      }
     }
   }catch(e){console.error('loadVPNPage',e);toast('خطا در بارگذاری VPN Pro','err')}
 }

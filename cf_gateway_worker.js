@@ -274,6 +274,48 @@ export default {
       }
     }
 
+    // ─── بررسی IP خروج واقعی برای یک لوکیشن ───
+    // GET /exit-ip?loc=tr → IP واقعی که از مسیر /loc/tr/ بیرون می‌آید را برمی‌گرداند
+    // کاربرد: کاربر می‌خواهد بداند وقتی لوکیشن «ترکیه» را انتخاب می‌کند، سایت‌ها کدام IP را می‌بینند
+    if (url.pathname === '/exit-ip') {
+      const locName = url.searchParams.get('loc') || 'auto';
+      const locs = await getLocations(env);
+      const loc = locs[locName] || locs.auto;
+      if (!loc) return json({ ok: false, error: 'لوکیشن یافت نشد' }, 404);
+      const t0 = Date.now();
+      try {
+        // از طریق خود upstream (Railway یا VPS) به یک سرویس IP-check عمومی وصل می‌شویم
+        // و درخواست می‌کنیم که IP خروج را برگرداند. چون upstream Railway است،
+        // IP برگشتی = IP خروج Railway خواهد بود (آمستردام) — مگر اینکه کاربر VPS ترک ست کرده باشد.
+        const target = `https://${loc.upstream}/api/exit-check`;
+        const r = await fetch(target, {
+          method: 'GET',
+          signal: AbortSignal.timeout(8000),
+          headers: { 'x-emix-gateway-check': '1' },
+        });
+        if (!r.ok) {
+          return json({ ok: false, loc: locName, label: loc.label, upstream: loc.upstream, pending: loc.pending || false, error: `upstream ${r.status}`, latency_ms: Date.now() - t0 }, 502);
+        }
+        const j = await r.json();
+        return json({
+          ok: true,
+          loc: locName,
+          label: loc.label,
+          flag: loc.flag || '',
+          upstream: loc.upstream,
+          pending: loc.pending || false,
+          exit_ip: j.exit_ip || j.ip || null,
+          exit_country: j.country || j.country_code || null,
+          exit_city: j.city || null,
+          exit_isp: j.isp || j.org || null,
+          latency_ms: Date.now() - t0,
+          colo: (request.cf && request.cf.colo) || null,
+        });
+      } catch (e) {
+        return json({ ok: false, loc: locName, label: loc.label, upstream: loc.upstream, pending: loc.pending || false, error: String(e && e.message || e).slice(0, 120), latency_ms: Date.now() - t0 }, 502);
+      }
+    }
+
     // ─── ادمین: مدیریت لوکیشن‌ها (نیازمند X-EMIX-Token) ───
     if (url.pathname === '/admin/locations') {
       if (!checkToken(request, env)) {
