@@ -137,7 +137,15 @@ async def load_state():
             for nid, n in (data.get("nodes") or {}).items():
                 NODES[nid] = _normalize_node(n)
             if "password_hash" in data:
-                AUTH["password_hash"] = data["password_hash"]
+                stored = data["password_hash"]
+                # Only accept sha256-format hashes (64 lowercase hex chars).
+                # Reject PBKDF2 format (pbkdf2$...) that may have been written
+                # by a newer version — prevents login lockout after downgrade.
+                if isinstance(stored, str) and len(stored) == 64 and all(c in "0123456789abcdef" for c in stored.lower()):
+                    AUTH["password_hash"] = stored
+                else:
+                    logger.warning("Stored password_hash is not sha256 format — ignoring and using fresh hash.")
+                    asyncio.create_task(save_state())  # persist fresh sha256 hash
             CONFIG["disable_logging"] = bool(data.get("disable_logging", False))
             apply_logging_state()
             logger.info(
