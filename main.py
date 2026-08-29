@@ -2933,13 +2933,68 @@ except Exception as _exc:
 
 
 # ══════════════════════════════════════════════════════════════════════════════
+# ماژول‌های آزمایشی (Experimental Modules) — toggle-based
+# فعال‌سازی: EMIX_EXPERIMENTAL=1 + EMIX_ENABLE_<FEATURE>=1
+# اگر فعال نشوند، هیچ اثری ندارند — پایداری اصلی حفظ می‌شود.
+# هر ماژول در try/except قرار دارد تا خرابی‌اش پنل را از کار نیندازد.
+# ══════════════════════════════════════════════════════════════════════════════
+try:
+    import experimental
+    logger.info(f"[bootstrap] experimental loaded: enabled={experimental.is_experimental_enabled()}")
+except Exception as _exc:
+    logger.error(f"[bootstrap] experimental load failed (ignored): {_exc}")
+
+try:
+    import security_exp
+    app.add_middleware(security_exp.SecurityHeadersMiddleware)
+    app.add_middleware(security_exp.RateLimitMiddleware)
+    logger.info("[bootstrap] security_exp middleware registered")
+except Exception as _exc:
+    logger.error(f"[bootstrap] security_exp load failed (ignored): {_exc}")
+
+try:
+    import link_emit
+    logger.info("[bootstrap] link_emit loaded (new share-link generators)")
+except Exception as _exc:
+    logger.error(f"[bootstrap] link_emit load failed (ignored): {_exc}")
+
+try:
+    import exp_api
+    app.include_router(exp_api.router)
+    logger.info("[bootstrap] exp_api routes registered (experimental section)")
+except Exception as _exc:
+    logger.error(f"[bootstrap] exp_api load failed (ignored): {_exc}")
+
+try:
+    import gaming_health
+    app.include_router(gaming_health.router)
+    logger.info("[bootstrap] gaming_health routes registered")
+except Exception as _exc:
+    logger.error(f"[bootstrap] gaming_health load failed (ignored): {_exc}")
+
+try:
+    import smart_route
+    app.include_router(smart_route.router)
+    logger.info("[bootstrap] smart_route routes registered")
+except Exception as _exc:
+    logger.error(f"[bootstrap] smart_route load failed (ignored): {_exc}")
+
+try:
+    import isp_detect
+    app.include_router(isp_detect.router)
+    logger.info("[bootstrap] isp_detect routes registered")
+except Exception as _exc:
+    logger.error(f"[bootstrap] isp_detect load failed (ignored): {_exc}")
+
+
+# ══════════════════════════════════════════════════════════════════════════════
 # /api/deployment-version — برای تأیید نسخه‌ی دیپلوی‌شده روی Railway
 # کاربر می‌تواند با مقایسه‌ی نسخه، تأیید کند که آیا Railway کد جدید را دیپلوی
 # کرده است یا هنوز روی نسخه‌ی قدیمی است. این اندپوینت بدون احراز هویت است
 # تا قبل از لاگین هم قابل بررسی باشد. (از /api/version استفاده نمی‌کنیم چون
 # آن مسیر قبلاً برای بررسی به‌روزرسانی در نظر گرفته شده است.)
 # ══════════════════════════════════════════════════════════════════════════════
-EMIX_VERSION = "9.9.4-stable-restore"
+EMIX_VERSION = "9.9.5-master-panel"
 EMIX_BUILD_DATE = "2026-08-29"
 
 @app.get("/api/deployment-version")
@@ -2947,6 +3002,13 @@ async def api_deployment_version():
     """اطلاعات نسخه‌ی دیپلوی‌شده — بدون نیاز به احراز هویت.
     اگر نسخه‌ای که می‌بینید با نسخه‌ی گیت‌هاب تطابق نداشت، یعنی Railway هنوز
     روی کد قدیمی است و باید «Deploy Latest Commit» (نه Redeploy) را بزنید."""
+    # خلاصه‌ی فیچرهای آزمایشی (اگر فعالند)
+    exp_summary = "disabled"
+    try:
+        import experimental
+        exp_summary = experimental.get_enabled_features_summary()
+    except Exception:
+        pass
     return {
         "service": "EMIX",
         "version": EMIX_VERSION,
@@ -2957,7 +3019,8 @@ async def api_deployment_version():
         "has_turbo": True,
         "has_gaming": True,
         "has_infra": True,
-        "features_summary": "ISP selector + TLS Mask + Smart Mode + Security + Clean IPs + Bridge CDN/VPS + Turbo 0-RTT + Gaming Center + CF Gateway deployed + Auto Volume + Full Health Check",
+        "experimental_section": exp_summary,
+        "features_summary": "ISP selector + TLS Mask + Smart Mode + Security + Clean IPs + Bridge CDN/VPS + Turbo 0-RTT + Gaming Center + CF Gateway deployed + Auto Volume + Full Health Check + Experimental Section (toggleable)",
     }
 
 
