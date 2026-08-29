@@ -274,18 +274,19 @@ async def exp_unified_configs():
     # links (main configs)
     async with LINKS_LOCK:
         for uuid, link in LINKS.items():
+            proto = link.get("protocol") or link.get("type") or "unknown"
             configs.append({
                 "uuid": uuid,
-                "name": link.get("name", ""),
-                "type": link.get("type", "unknown"),
+                "name": link.get("name", "") or link.get("label", ""),
+                "type": proto,
                 "section": "links",
-                "type_label": _type_label(link.get("type", "")),
-                "enabled": link.get("enabled", True),
-                "expiry": link.get("expiry"),
-                "usage_bytes": link.get("usage_bytes", 0),
+                "type_label": _type_label(proto),
+                "enabled": link.get("enabled", link.get("active", True)),
+                "expiry": link.get("expiry") or link.get("expires_at"),
+                "usage_bytes": link.get("usage_bytes", link.get("used_bytes", 0)),
                 "limit_bytes": link.get("limit_bytes"),
-                "url": link.get("url", ""),
-                "health": link.get("health", {}),
+                "url": link.get("url", "") or link.get("vless_link", ""),
+                "health": link.get("health") or link.get("last_ping", {}),
             })
 
     # subs (subscription groups)
@@ -408,7 +409,7 @@ async def exp_recheck_anti_dpi():
     results = []
     async with LINKS_LOCK:
         for uuid, link in LINKS.items():
-            ltype = link.get("type", "")
+            ltype = link.get("protocol") or link.get("type") or ""
             is_anti_dpi = (
                 "xhttp" in ltype or
                 "reality" in ltype or
@@ -417,13 +418,17 @@ async def exp_recheck_anti_dpi():
             )
             if not is_anti_dpi:
                 continue
+            lp = link.get("last_ping", {}) or {}
             results.append({
                 "uuid": uuid,
-                "name": link.get("name", ""),
+                "name": link.get("label", "") or link.get("name", ""),
                 "type": ltype,
                 "type_label": _type_label(ltype),
-                "enabled": link.get("enabled", True),
+                "enabled": link.get("active", link.get("enabled", True)),
                 "anti_dpi": True,
                 "needs_recheck": True,
+                "current_ping": lp.get("ok"),
+                "current_ws_ms": lp.get("ws_ms"),
+                "current_reply": lp.get("reply", ""),
             })
     return {"ok": True, "anti_dpi_configs": results, "total": len(results)}
