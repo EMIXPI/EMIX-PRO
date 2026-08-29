@@ -2994,7 +2994,7 @@ except Exception as _exc:
 # تا قبل از لاگین هم قابل بررسی باشد. (از /api/version استفاده نمی‌کنیم چون
 # آن مسیر قبلاً برای بررسی به‌روزرسانی در نظر گرفته شده است.)
 # ══════════════════════════════════════════════════════════════════════════════
-EMIX_VERSION = "9.9.5-master-panel"
+EMIX_VERSION = "9.9.6-auto-enable"
 EMIX_BUILD_DATE = "2026-08-29"
 
 @app.get("/api/deployment-version")
