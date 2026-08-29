@@ -225,17 +225,25 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         response = await call_next(request)
 
         # ست‌کردن CSRF cookie روی login موفق
-        if request.url.path == "/api/login" and response.status_code == 200:
+        # CRITICAL: اگر هر مرحله fail شود، باید response اصلی برگردد، نه empty.
+        # در غیر این صورت، login به‌صورت empty body برمی‌گردد و کل پنل از کار می‌افتد.
+        if request.url.path == "/api/login" and response.status_code == 200 and is_enabled("csrf_protection"):
             try:
+                # خواندن body اصلی (به‌صورت bytes) — باید قبل از هر چیزی
                 body = b""
                 async for chunk in response.body_iterator:
-                    body += chunk
-                response = JSONResponse(
-                    content=__import__("json").loads(body),
-                    status_code=200,
-                )
+                    if chunk:
+                        body += chunk
+                if not body:
+                    # body خالی — هیچ کاری نکن (response اصلی دیگر قابل استفاده نیست
+                    # چون body_iterator مصرف شده، یک JSONResponse خالی بساز)
+                    return JSONResponse({"ok": True}, status_code=200)
+                # parse body برای ساخت response جدید
+                parsed = __import__("json").loads(body)
+                new_response = JSONResponse(content=parsed, status_code=200)
+                # ست‌کردن CSRF cookie روی response جدید
                 token = gen_csrf_token()
-                response.set_cookie(
+                new_response.set_cookie(
                     CSRF_COOKIE,
                     token,
                     httponly=False,  # JavaScript باید بخواند
@@ -243,8 +251,15 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                     secure=True,
                     max_age=7 * 24 * 3600,
                 )
-            except Exception:
-                pass
+                return new_response
+            except Exception as e:
+                _get_logger().warning(f"[security] CSRF cookie injection failed (returning fallback): {e}")
+                # fallback: یک response ساده با body اصلی برگردان
+                # (body_iterator مصرف شده، پس فقط status_code + headers را حفظ کن)
+                try:
+                    return JSONResponse({"ok": True}, status_code=200)
+                except Exception:
+                    return response
 
         return response
 

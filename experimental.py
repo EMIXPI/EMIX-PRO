@@ -25,11 +25,15 @@ logger = logging.getLogger("EMIX.exp")
 # default=False یعنی به setup اضافی نیاز دارد و auto-enable نمی‌شود.
 _FEATURES = {
     # ── Security (Phase 1) ──
+    # NOTE: rate_limit, csrf_protection, csp_headers باید صریحاً فعال شوند.
+    # این سه فیچر middleware فعال می‌کنند که اگر auto-enabled باشند،
+    # می‌توانند به silently پنل را بشکنند (login empty body, POST blocked,
+    # inline scripts blocked). ادمین باید صریحاً EMIX_ENABLE_*=1 را تنظیم کند.
     "pbkdf2_password":    ("هش رمز PBKDF2 با backward-compat sha256", True, True),
-    "rate_limit":         ("محدودیت نرخ ورود و API", True, True),
+    "rate_limit":         ("محدودیت نرخ ورود و API (نیاز به middleware فعال)", False, True),
     "ip_whitelist":       ("whitelist IP برای endpoint‌های admin (نیاز به EMIX_ADMIN_IPS)", False, True),
-    "csrf_protection":    ("محافظت CSRF برای عملیات state-changing", True, True),
-    "csp_headers":        ("Content-Security-Policy headers", True, True),
+    "csrf_protection":    ("محافظت CSRF (نیاز به middleware فعال — POST بدون توکن مسدود)", False, True),
+    "csp_headers":        ("Content-Security-Policy headers (ممکن است inline scripts را بشکند)", False, True),
     "hsts":               ("Strict-Transport-Security", True, True),
     "totp_2fa":           ("احراز هویت دو مرحله‌ای TOTP (نیاز به EMIX_TOTP_SECRET)", False, True),
 
