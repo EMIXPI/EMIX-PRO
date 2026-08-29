@@ -42,26 +42,33 @@ QUOTA_CHECK_INTERVAL = 0.25
 # ══════════════════════════════════════════════════════════════════════════════
 
 class _TrojanHashCache:
-    """
-    UUID → trojan_hash رو cache می‌کنه.
-    هر بار که LINKS تغییر کنه (UUID اضافه/حذف بشه) باید invalidate بشه.
-    از اونجا که LINKS یه dict ساده‌ست و تغییراتش نادره، ما فقط
-    snapshot اندازه رو نگه می‌داریم و اگه عوض شد rebuild می‌کنیم.
+    """UUID → trojan_hash cache with content-based invalidation (Phase 6.12 fix).
+
+    OLD behavior: invalidate when ``len(LINKS)`` changes.
+      Bug: delete link A and add link B → len unchanged → cache stays stale
+      → wrong UUID returned for an existing password hash → potential auth
+      bypass or auth failure for the legitimate user.
+
+    NEW behavior: invalidate when the set of UUIDs changes.
+      Stored as ``frozenset`` snapshot under the lock. ``!=`` on frozensets
+      is O(min(|A|,|B|)) — cheap. SHA224 work only happens when the set
+      actually changes.
     """
     def __init__(self):
         self._cache: dict[str, str] = {}   # hash → uuid
-        self._snapshot_len: int = -1
+        self._snapshot_keys: frozenset = frozenset()
 
     def _rebuild(self, links_snapshot: dict):
         self._cache = {
             hashlib.sha224(uid.encode()).hexdigest(): uid
             for uid in links_snapshot
         }
-        self._snapshot_len = len(links_snapshot)
+        self._snapshot_keys = frozenset(links_snapshot.keys())
 
     async def find_uuid(self, pw_hash: str) -> str | None:
         async with LINKS_LOCK:
-            if len(LINKS) != self._snapshot_len:
+            current_keys = frozenset(LINKS.keys())
+            if current_keys != self._snapshot_keys:
                 self._rebuild(LINKS)
             return self._cache.get(pw_hash)
 

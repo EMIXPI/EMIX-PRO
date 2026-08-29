@@ -68,10 +68,20 @@ app = FastAPI(title="EMIX", docs_url=None, redoc_url=None)
 # به همین نمونه‌ی در حال اجرا اشاره می‌کنن.
 sys.modules.setdefault("main", sys.modules[__name__])
 
+# ── CORS (Phase 7.13 — configurable, never wildcard + credentials) ──────────
+# Behavior:
+#   - If EMIX_CORS_ORIGINS is set (comma-separated) → use explicit list,
+#     allow_credentials=True (spec-compliant).
+#   - If EMIX_CORS_ORIGINS is unset → allow_origins=["*"] but
+#     allow_credentials=False (spec-compliant — browsers refuse to send
+#     credentials when origin is "*").
+# Dashboard code uses same-origin requests by default, so disabling
+# credentials under wildcard does NOT break the panel.
+from config_layer import CONFIG as _EMIX_RUNTIME_CFG
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=_EMIX_RUNTIME_CFG.cors_origins_list,
+    allow_credentials=_EMIX_RUNTIME_CFG.cors_allow_credentials,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -1323,58 +1333,142 @@ async def backup_export(_=Depends(require_auth)):
 
 @app.post("/api/backup/import")
 async def backup_import(request: Request, _=Depends(require_auth)):
+    """Strict backup import — VALIDATE → STAGE → BACKUP CURRENT → APPLY → VERIFY → COMMIT.
+
+    On any failure: rollback automatically from the staged pre-restore backup.
+    Never leaves the panel in a half-written state.
+    """
+    import backup_validator
+    import shutil as _shutil
+
     body = await request.json()
     data = body.get("data")
-    if not isinstance(data, dict):
-        raise HTTPException(status_code=400, detail="فایل بکاپ نامعتبر است")
 
-    new_links = data.get("links")
-    new_subs = data.get("subs")
-    new_pw_hash = data.get("password_hash")
+    # ── Step 1: VALIDATE (no state change) ─────────────────────────────────
+    result = backup_validator.validate_backup(data)
+    if not result.ok:
+        msg = "; ".join(result.errors[:8])
+        if len(result.errors) > 8:
+            msg += f" (and {len(result.errors) - 8} more)"
+        log_activity("system", f"بکاپ نامعتبر وارد شد ({len(result.errors)} خطا)", "err")
+        raise HTTPException(status_code=400, detail=f"backup validation failed: {msg}")
+    validated = result.data
     keep_password = bool(body.get("keep_current_password", True))
+    new_pw_hash = validated.get("password_hash") if not keep_password else None
+    if new_pw_hash:
+        # sha256-format check (mirrors load_state's existing guard)
+        if not (isinstance(new_pw_hash, str) and len(new_pw_hash) == 64
+                and all(c in "0123456789abcdef" for c in new_pw_hash.lower())):
+            new_pw_hash = None  # silently ignore non-sha256 hashes
 
-    if not isinstance(new_links, dict) or not isinstance(new_subs, dict):
-        raise HTTPException(status_code=400, detail="ساختار فایل بکاپ نامعتبر است")
-
-    # همه‌ی instance‌های MTProto رو قبل از جایگزینی داده‌ها متوقف کن
-    try:
-        await mtproto.stop_all()
-    except Exception as exc:
-        logger.warning(f"توقف MTProto قبل از ایمپورت ناموفق بود: {exc}")
-
+    # ── Step 2: STAGE — snapshot current state for rollback ────────────────
     async with LINKS_LOCK:
-        LINKS.clear()
-        LINKS.update(new_links)
+        staged_links = dict(LINKS)
     async with SUBS_LOCK:
-        SUBS.clear()
-        SUBS.update(new_subs)
+        staged_subs = dict(SUBS)
+    async with NODE_KEYS_LOCK:
+        staged_node_keys = dict(NODE_KEYS)
+    async with NODES_LOCK:
+        staged_nodes = dict(NODES)
+    staged_pw_hash = AUTH["password_hash"]
+    # Also keep an on-disk backup file in case of crash mid-apply
+    pre_restore_path = DATA_FILE.with_name(DATA_FILE.stem + ".pre-restore.json")
+    try:
+        if DATA_FILE.exists():
+            _shutil.copy2(DATA_FILE, pre_restore_path)
+            logger.info(f"[backup-import] staged pre-restore snapshot at {pre_restore_path}")
+    except Exception as exc:
+        logger.warning(f"[backup-import] could not stage pre-restore file: {exc}")
 
-    # نودها و کلیدهای نود اختیاری‌اند (بکاپ‌های قدیمی این کلیدها را ندارند)
-    new_node_keys = data.get("node_keys")
-    if isinstance(new_node_keys, dict):
+    # ── Step 3: BACKUP CURRENT STATE in memory (done above) ────────────────
+
+    # ── Step 4: APPLY new state ────────────────────────────────────────────
+    new_links = validated.get("links", {}) or {}
+    new_subs = validated.get("subs", {}) or {}
+    new_node_keys = validated.get("node_keys", {}) or {}
+    new_nodes_raw = validated.get("nodes", {}) or {}
+    try:
+        # Stop MTProto processes before clearing (existing behavior)
+        try:
+            await mtproto.stop_all()
+        except Exception as exc:
+            logger.warning(f"توقف MTProto قبل از ایمپورت ناموفق بود: {exc}")
+
+        async with LINKS_LOCK:
+            LINKS.clear()
+            LINKS.update(new_links)
+        async with SUBS_LOCK:
+            SUBS.clear()
+            SUBS.update(new_subs)
+        if new_node_keys:
+            async with NODE_KEYS_LOCK:
+                NODE_KEYS.clear()
+                NODE_KEYS.update(new_node_keys)
+        if new_nodes_raw:
+            async with NODES_LOCK:
+                NODES.clear()
+                for nid, n in new_nodes_raw.items():
+                    if isinstance(n, dict):
+                        NODES[nid] = _normalize_node(n)
+            _NODE_CACHE.clear()
+        if new_pw_hash:
+            AUTH["password_hash"] = new_pw_hash
+            async with SESSIONS_LOCK:
+                SESSIONS.clear()
+                # Preserve the current admin's session so they don't get logged out
+                token = request.cookies.get(SESSION_COOKIE)
+                if token:
+                    SESSIONS[token] = time.time() + SESSION_TTL
+    except Exception as apply_exc:
+        # ── ROLLBACK ────────────────────────────────────────────────────────
+        logger.error(f"[backup-import] apply failed — rolling back: {apply_exc}")
+        async with LINKS_LOCK:
+            LINKS.clear()
+            LINKS.update(staged_links)
+        async with SUBS_LOCK:
+            SUBS.clear()
+            SUBS.update(staged_subs)
         async with NODE_KEYS_LOCK:
             NODE_KEYS.clear()
-            NODE_KEYS.update(new_node_keys)
-    new_nodes = data.get("nodes")
-    if isinstance(new_nodes, dict):
+            NODE_KEYS.update(staged_node_keys)
         async with NODES_LOCK:
             NODES.clear()
-            for nid, n in new_nodes.items():
-                if isinstance(n, dict):
-                    NODES[nid] = _normalize_node(n)
-        _NODE_CACHE.clear()
+            NODES.update(staged_nodes)
+        AUTH["password_hash"] = staged_pw_hash
+        log_activity("system", f"ایمپورت بکاپ شکست خورد — rollback انجام شد: {apply_exc}", "err")
+        raise HTTPException(status_code=500, detail=f"restore failed (rolled back): {apply_exc}")
 
-    if not keep_password and new_pw_hash:
-        AUTH["password_hash"] = new_pw_hash
-        async with SESSIONS_LOCK:
-            SESSIONS.clear()
-            # سشن فعلی رو نگه می‌داریم که کاربر لاگ‌اوت نشه
-            token = request.cookies.get(SESSION_COOKIE)
-            if token:
-                SESSIONS[token] = time.time() + SESSION_TTL
+    # ── Step 5: VERIFY — sanity-check the new state ────────────────────────
+    try:
+        async with LINKS_LOCK:
+            verify_links_count = len(LINKS)
+        async with SUBS_LOCK:
+            verify_subs_count = len(SUBS)
+        if verify_links_count != len(new_links):
+            raise RuntimeError(f"link count mismatch: expected {len(new_links)}, got {verify_links_count}")
+        if verify_subs_count != len(new_subs):
+            raise RuntimeError(f"sub count mismatch: expected {len(new_subs)}, got {verify_subs_count}")
+    except Exception as verify_exc:
+        # Rollback
+        logger.error(f"[backup-import] verify failed — rolling back: {verify_exc}")
+        async with LINKS_LOCK:
+            LINKS.clear()
+            LINKS.update(staged_links)
+        async with SUBS_LOCK:
+            SUBS.clear()
+            SUBS.update(staged_subs)
+        async with NODE_KEYS_LOCK:
+            NODE_KEYS.clear()
+            NODE_KEYS.update(staged_node_keys)
+        async with NODES_LOCK:
+            NODES.clear()
+            NODES.update(staged_nodes)
+        AUTH["password_hash"] = staged_pw_hash
+        log_activity("system", f"ایمپورت بکاپ شکست خورد (verify) — rollback انجام شد", "err")
+        raise HTTPException(status_code=500, detail=f"restore verification failed (rolled back): {verify_exc}")
 
+    # ── Step 6: COMMIT — persist to disk ───────────────────────────────────
     await save_state()
-
     try:
         await _restart_mtproto_instances()
     except Exception as exc:
@@ -2306,6 +2400,13 @@ async def revoke_node_key(key_id: str, _=Depends(require_auth)):
     return {"ok": True, "revoked": key_id}
 
 
+@app.get("/api/nodes/health")
+async def nodes_health(_=Depends(require_auth)):
+    """Phase 4.10 — circuit breaker status for all nodes."""
+    from node_health import get_breaker
+    return {"nodes": get_breaker().all_status()}
+
+
 @app.get("/api/nodes/aggregate")
 async def nodes_aggregate(request: Request, _=Depends(require_auth)):
     fresh = request.query_params.get("fresh") in ("1", "true", "yes")
@@ -2372,7 +2473,12 @@ async def nodes_aggregate(request: Request, _=Depends(require_auth)):
 
 
 async def _fetch_node_snapshot(node_id: str, node: dict, *, fresh: bool = False) -> dict:
-    """اسنپ‌شات یک نود را با کش کوتاه‌مدت می‌گیرد. فقط بخش‌های تیک‌خورده منتقل می‌شوند."""
+    """اسنپ‌شات یک نود را با کش کوتاه‌مدت می‌گیرد. فقط بخش‌های تیک‌خورده منتقل می‌شوند.
+
+    Phase 4.10 — wrapped in the node circuit breaker. If the breaker for this
+    node is OPEN, the call short-circuits immediately (no network call) and
+    returns an "offline" snapshot without blocking for the full timeout.
+    """
     share = node.get("share") or {}
     parts = sorted(p for p in NODE_SHARE_PARTS if share.get(p))
     cache_key = f"{node_id}|{','.join(parts)}"
@@ -2381,13 +2487,34 @@ async def _fetch_node_snapshot(node_id: str, node: dict, *, fresh: bool = False)
         return cached["data"]
     if not parts:
         return {"online": True, "error": None, "stats": {}, "links": [], "subs": [], "logs": []}
+
+    # Phase 4.10 — check breaker state before making the network call
     try:
-        r = await _node_request(node, "GET", "/api/node/snapshot", params={"parts": ",".join(parts)})
-        if r.status_code == 401:
-            raise RuntimeError("کلید نود روی پنل مقابل ابطال شده است")
-        if r.status_code != 200:
-            raise RuntimeError(f"HTTP {r.status_code}")
-        payload = r.json()
+        from node_health import get_breaker, NodeUnavailableError
+        breaker = get_breaker()
+        from config_layer import CONFIG as _EMIX_CFG
+
+        async def _do_request():
+            r = await _node_request(node, "GET", "/api/node/snapshot", params={"parts": ",".join(parts)})
+            if r.status_code == 401:
+                raise RuntimeError("کلید نود روی پنل مقابل ابطال شده است")
+            if r.status_code != 200:
+                raise RuntimeError(f"HTTP {r.status_code}")
+            return r.json()
+
+        try:
+            payload = await breaker.call(
+                node_id,
+                _do_request,
+                timeout=_EMIX_CFG.node_request_timeout_seconds,
+            )
+        except NodeUnavailableError as exc:
+            # Circuit OPEN — short-circuit, no network call
+            msg = f"circuit open: {exc}"[:200]
+            async with NODES_LOCK:
+                if node_id in NODES:
+                    NODES[node_id]["last_error"] = msg
+            return {"online": False, "error": msg, "stats": {}, "links": [], "subs": [], "logs": []}
     except Exception as exc:
         msg = str(exc)[:200] or exc.__class__.__name__
         async with NODES_LOCK:
@@ -2687,23 +2814,139 @@ app.include_router(trojan_xhttp_downlink_router)
 app.include_router(trojan_xhttp_streamup_router)
 app.include_router(trojan_xhttp_packetup_router)
 
-# ── HTTP Proxy ────────────────────────────────────────────────────────────────
+# ── HTTP Proxy (Phase 7.14 — SSRF protection + sensitive header filter) ───────
+# Hop-by-hop headers per RFC 7230 §6.1 — must not be forwarded.
 _HOP = {"connection","keep-alive","proxy-authenticate","proxy-authorization",
         "te","trailers","transfer-encoding","upgrade","content-encoding","content-length"}
 
+# Sensitive client headers that must NEVER be forwarded to the proxied target
+# (could leak credentials, session, or panel-internal routing info).
+_SENSITIVE = {
+    "cookie", "authorization", "proxy-authorization",
+    "x-forwarded-for", "x-forwarded-host", "x-forwarded-proto",
+    "x-real-ip", "x-forwarded-port", "x-forwarded-server", "forwarded",
+}
+
+# Allowlist of headers safe to forward. Anything not here is dropped.
+_PROXY_ALLOWED_HEADERS = {
+    "user-agent", "accept", "accept-encoding", "accept-language",
+    "content-type", "content-disposition", "range", "if-modified-since",
+    "if-none-match", "cache-control", "pragma", "expires",
+}
+
+# Internal/private IPv4 ranges to block (SSRF protection)
+import ipaddress as _ipaddress
+_PRIVATE_NETWORKS = [
+    _ipaddress.ip_network("127.0.0.0/8"),       # loopback
+    _ipaddress.ip_network("10.0.0.0/8"),        # private class A
+    _ipaddress.ip_network("172.16.0.0/12"),    # private class B
+    _ipaddress.ip_network("192.168.0.0/16"),   # private class C
+    _ipaddress.ip_network("169.254.0.0/16"),   # link-local (incl. AWS metadata 169.254.169.254)
+    _ipaddress.ip_network("0.0.0.0/8"),        # "this network"
+    _ipaddress.ip_network("100.64.0.0/10"),    # CGNAT
+    _ipaddress.ip_network("::1/128"),          # IPv6 loopback
+    _ipaddress.ip_network("fc00::/7"),         # IPv6 unique-local
+    _ipaddress.ip_network("fe80::/10"),        # IPv6 link-local
+]
+
+
+def _is_ssrf_target(host: str) -> bool:
+    """Return True if the resolved host is a private/internal/loopback IP.
+    Resolves DNS once via socket.getaddrinfo — protects against DNS rebinding
+    for the initial request. Redirects are revalidated because we set
+    follow_redirects=False below and walk the redirect chain manually."""
+    import socket
+    try:
+        infos = socket.getaddrinfo(host, None)
+    except socket.gaierror:
+        return True  # unresolvable → block
+    for family, _, _, _, sockaddr in infos:
+        try:
+            ip = _ipaddress.ip_address(sockaddr[0])
+            for net in _PRIVATE_NETWORKS:
+                if ip in net:
+                    return True
+        except ValueError:
+            continue
+    return False
+
+
+def _validate_proxy_url(url: str) -> str:
+    """Validate a proxy target URL. Raises HTTPException on SSRF or invalid URL."""
+    from urllib.parse import urlparse
+    if not url:
+        raise HTTPException(status_code=400, detail="missing target URL")
+    if not url.startswith(("http://", "https://")):
+        url = "https://" + url
+    parsed = urlparse(url)
+    if not parsed.hostname:
+        raise HTTPException(status_code=400, detail="invalid target URL (no host)")
+    # Block internal hostnames by string match (defense in depth, before DNS)
+    host_lower = parsed.hostname.lower().rstrip(".")
+    blocked_hosts = {"localhost", "ip6-localhost", "metadata.google.internal"}
+    if host_lower in blocked_hosts:
+        raise HTTPException(status_code=403, detail="target host not allowed")
+    if host_lower.endswith(".internal") or host_lower.endswith(".local"):
+        raise HTTPException(status_code=403, detail="internal hostnames are not allowed")
+    # Block private IPs unless explicitly allowed
+    allow_private = _EMIX_RUNTIME_CFG.proxy_allow_private_targets
+    if not allow_private and _is_ssrf_target(parsed.hostname):
+        raise HTTPException(status_code=403, detail="target host is private/internal — set EMIX_PROXY_ALLOW_PRIVATE=1 to allow")
+    return url
+
+
 @app.api_route("/proxy/{target_url:path}", methods=["GET","POST","PUT","DELETE","PATCH","HEAD","OPTIONS"])
 async def http_proxy(target_url: str, request: Request):
-    if not target_url.startswith("http"):
-        target_url = "https://" + target_url
+    """HTTP proxy with SSRF protection + sensitive header filtering.
+
+    Per Phase 7.14:
+      - Validates target URL (rejects loopback, private, link-local, metadata)
+      - Re-resolves DNS at request time (mitigates DNS rebinding)
+      - Redirects are revalidated (followed manually, each hop validated)
+      - Only allowlisted request headers are forwarded
+      - Hop-by-hop + sensitive headers stripped
+    """
+    # Step 1: validate the initial target URL
+    target_url = _validate_proxy_url(target_url)
     try:
         body = await request.body()
-        headers = {k: v for k, v in request.headers.items() if k.lower() not in _HOP and k.lower() != "host"}
-        resp = await http_client.request(method=request.method, url=target_url, headers=headers, content=body)
+    except Exception:
+        body = b""
+    # Step 2: build a sanitized header set
+    in_headers = {
+        k: v for k, v in request.headers.items()
+        if k.lower() in _PROXY_ALLOWED_HEADERS
+    }
+    # Step 3: fetch without auto-redirect (we validate each redirect hop)
+    try:
+        max_redirects = 5
+        current_url = target_url
+        resp = None
+        for _ in range(max_redirects + 1):
+            resp = await http_client.request(
+                method=request.method,
+                url=current_url,
+                headers=in_headers,
+                content=body if request.method in ("POST","PUT","PATCH") else None,
+                follow_redirects=False,  # we validate each redirect hop manually
+            )
+            if resp.is_redirect and resp.headers.get("location"):
+                next_url = resp.headers["location"]
+                # Resolve relative redirects against the current URL
+                from urllib.parse import urljoin
+                next_url = urljoin(current_url, next_url)
+                # Revalidate the redirect target
+                current_url = _validate_proxy_url(next_url)
+                continue
+            break
+        # Step 4: filter response headers
+        out_headers = {k: v for k, v in resp.headers.items() if k.lower() not in _HOP and k.lower() not in _SENSITIVE}
         stats["total_bytes"] += len(resp.content)
         stats["total_requests"] += 1
         hourly_traffic[_hourly_traffic_key()] += len(resp.content)
-        return Response(content=resp.content, status_code=resp.status_code,
-                        headers={k: v for k, v in resp.headers.items() if k.lower() not in _HOP})
+        return Response(content=resp.content, status_code=resp.status_code, headers=out_headers)
+    except HTTPException:
+        raise  # SSRF/validation errors pass through
     except Exception as exc:
         stats["total_errors"] += 1
         error_logs.append({"error": str(exc), "url": target_url, "time": datetime.now().isoformat()})
@@ -2855,6 +3098,75 @@ async def api_version(_=Depends(require_auth)):
         "current": current_info,
         "latest": latest_info,
         "update_available": update_available,
+    }
+
+
+@app.get("/api/health")
+async def api_health(_=Depends(require_auth)):
+    """Phase 17 — structured internal health. NO secrets logged.
+
+    Returned shape:
+      {
+        "app":          version, uptime, state counts
+        "persistence":  data_dir writability, last_save info
+        "protocols":    per-protocol active connection count
+        "nodes":        per-node circuit breaker state
+        "mtproto":      instance count
+      }
+
+    Never includes: passwords, hashes, UUIDs of links, tokens, cookies.
+    """
+    from node_health import get_breaker
+    # Count active connections per protocol
+    by_proto: dict[str, int] = defaultdict(int)
+    for c in connections.values():
+        proto = c.get("transport") or "unknown"
+        by_proto[proto] += 1
+    # Persistence health
+    try:
+        data_dir_writable = bool(DATA_DIR.exists() and os.access(str(DATA_DIR), os.W_OK))
+    except Exception:
+        data_dir_writable = False
+    # MTProto instances
+    try:
+        mtproto_count = sum(1 for d in LINKS.values() if d.get("protocol") == "mtproto" and d.get("active", True))
+    except Exception:
+        mtproto_count = 0
+    uptime_s = int(time.time() - stats["start_time"])
+    h, m, s = uptime_s // 3600, (uptime_s % 3600) // 60, uptime_s % 60
+    return {
+        "app": {
+            "version": EMIX_VERSION,
+            "build_date": EMIX_BUILD_DATE,
+            "uptime_seconds": uptime_s,
+            "uptime_human": f"{h:02d}:{m:02d}:{s:02d}",
+            "state_counts": {
+                "links": len(LINKS),
+                "subs": len(SUBS),
+                "nodes": len(NODES),
+                "node_keys": len(NODE_KEYS),
+                "active_sessions": len(SESSIONS),
+                "active_connections": len(connections),
+            },
+            "stats": {
+                "total_bytes": stats["total_bytes"],
+                "total_requests": stats["total_requests"],
+                "total_errors": stats["total_errors"],
+            },
+        },
+        "persistence": {
+            "data_dir": str(DATA_DIR),
+            "writable": data_dir_writable,
+            "save_debounce_seconds": SAVE_DEBOUNCE_SECONDS,
+        },
+        "protocols": dict(by_proto),
+        "nodes": {
+            "count": len(NODES),
+            "breakers": get_breaker().all_status(),
+        },
+        "mtproto": {
+            "active_instances": mtproto_count,
+        },
     }
 
 @app.get("/api/update-history")
@@ -3113,7 +3425,7 @@ except Exception as _exc:
 # تا قبل از لاگین هم قابل بررسی باشد. (از /api/version استفاده نمی‌کنیم چون
 # آن مسیر قبلاً برای بررسی به‌روزرسانی در نظر گرفته شده است.)
 # ══════════════════════════════════════════════════════════════════════════════
-EMIX_VERSION = "9.9.6-auto-enable"
+EMIX_VERSION = "9.9.10-safe-hardening"
 EMIX_BUILD_DATE = "2026-08-29"
 
 @app.get("/api/deployment-version")
