@@ -170,7 +170,9 @@ def validate_backup(data: Any) -> ValidationResult:
             for uid, link in links.items():
                 result.errors.extend(_validate_link(uid, link))
     else:
-        result.warnings.append("'links' missing — backup will have no link configurations")
+        # Missing 'links' is an error — a backup with no link data is meaningless
+        # and almost certainly indicates a malformed export.
+        result.errors.append("'links' is missing — backup contains no link configurations")
 
     if "subs" in data:
         subs = data["subs"]

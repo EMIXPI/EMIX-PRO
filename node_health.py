@@ -116,8 +116,10 @@ class NodeCircuitBreaker:
 
         - Raises NodeUnavailableError immediately if OPEN (after lazy cooldown check).
         - In HALF_OPEN, allows exactly one probe; on failure re-opens.
-        - On unexpected exception: counts as failure; on success: resets counters.
+        - On unexpected exception: counts as ONE failure per call (not per retry
+          attempt); on success: resets counters.
         - Retry: bounded (max_retries) with exponential backoff (250ms → 500ms → 1s).
+          Retries only continue while the breaker is still callable (HEALTHY/DEGRADED).
         """
         s = self._get(node_id)
         async with s._lock:
@@ -129,8 +131,11 @@ class NodeCircuitBreaker:
                 )
             s.total_calls += 1
 
-        # Exponential backoff retry loop
+        # Exponential backoff retry loop.
+        # Failure is recorded ONCE per call (not per attempt) to avoid
+        # amplifying a single bad request into N failure increments.
         last_exc: Optional[Exception] = None
+        failure_recorded = False
         for attempt in range(self.max_retries + 1):
             try:
                 t0 = time.monotonic()
@@ -143,18 +148,23 @@ class NodeCircuitBreaker:
                 return result
             except asyncio.TimeoutError as exc:
                 last_exc = exc
-                await self._record_failure(node_id, exc)
             except NodeUnavailableError:
-                raise  # don't retry circuit-open errors
+                raise
             except Exception as exc:  # noqa: BLE001 — breaker needs to count all failures
                 last_exc = exc
-                await self._record_failure(node_id, exc)
-            # backoff before next attempt
+            # backoff before next attempt (only if breaker is still callable)
             if attempt < self.max_retries:
+                # Check if breaker just opened — if so, stop retrying
+                if self.get_state(node_id) == NodeState.OPEN:
+                    break
                 delay_ms = self.backoff_base_ms * (2 ** attempt)
                 await asyncio.sleep(delay_ms / 1000.0)
-        # All retries exhausted — last_exc is set
-        raise last_exc  # type: ignore[misc]
+        # Record the failure ONCE (regardless of retries attempted)
+        if last_exc is not None and not failure_recorded:
+            await self._record_failure(node_id, last_exc)
+        if last_exc is not None:
+            raise last_exc  # type: ignore[misc]
+        raise RuntimeError("breaker: no result and no exception — unreachable")
 
     async def _record_success(self, node_id: str, latency_ms: float):
         s = self._get(node_id)
