@@ -3396,6 +3396,21 @@ try:
 except Exception as _exc:
     logger.error(f"[bootstrap] exp_api load failed (ignored): {_exc}")
 
+# Phase 2 — Protocol engine + adapters
+try:
+    import protocol_adapters  # registers all adapters via __init__.py
+    import protocols_api
+    app.include_router(protocols_api.router)
+    from protocol_engine import list_protocols, list_protocol_names, get_enabled_protocols
+    logger.info(
+        f"[bootstrap] protocol_engine loaded: "
+        f"{len(list_protocols())} registered "
+        f"({len(get_enabled_protocols())} serving) — "
+        f"names={list_protocol_names()}"
+    )
+except Exception as _exc:
+    logger.error(f"[bootstrap] protocol_engine load failed (ignored): {_exc}")
+
 try:
     import gaming_health
     app.include_router(gaming_health.router)
@@ -3425,7 +3440,7 @@ except Exception as _exc:
 # تا قبل از لاگین هم قابل بررسی باشد. (از /api/version استفاده نمی‌کنیم چون
 # آن مسیر قبلاً برای بررسی به‌روزرسانی در نظر گرفته شده است.)
 # ══════════════════════════════════════════════════════════════════════════════
-EMIX_VERSION = "9.9.10-safe-hardening"
+EMIX_VERSION = "9.10.0-protocol-engine"
 EMIX_BUILD_DATE = "2026-08-29"
 
 @app.get("/api/deployment-version")
