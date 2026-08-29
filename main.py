@@ -639,7 +639,20 @@ async def _learn_public_host_middleware(request: Request, call_next):
                     logger.info(f"[host] دامنه‌ی عمومی از درخواست یاد گرفته شد: {host}")
     except Exception:
         pass
-    return await call_next(request)
+    response = await call_next(request)
+    # Phase 36 — Cache safety: NEVER cache tunnel/auth/subscription/admin paths.
+    # Applied globally so every response (including static sub pages) gets the headers.
+    try:
+        from reverseproxy import is_tunnel_path, add_cache_safety_headers
+        if is_tunnel_path(request.url.path):
+            new_headers = dict(response.headers)
+            new_headers = add_cache_safety_headers(new_headers, request.url.path)
+            for k, v in new_headers.items():
+                # Use existing header if present (replace), else add
+                response.headers[k] = v
+    except Exception as _e:
+        logger.debug(f"[cache-safety] middleware error (continuing): {_e}")
+    return response
 
 def get_host() -> str:
     env_host = os.environ.get("RAILWAY_PUBLIC_DOMAIN")
@@ -3411,6 +3424,65 @@ try:
 except Exception as _exc:
     logger.error(f"[bootstrap] protocol_engine load failed (ignored): {_exc}")
 
+# Phase 31-39 — Reverse proxy subsystem (opt-in)
+try:
+    import reverseproxy
+    # Override the placeholder dependency with require_auth
+    from fastapi import Depends as _Depends
+    # Replace each endpoint's placeholder dependency with real auth
+    for _route in reverseproxy.api.router.routes:
+        # endpoints have a placeholder `_=Depends(lambda: None)` — we need
+        # to re-declare them with require_auth. Simpler: just re-register
+        # the same paths on the main app with require_auth.
+        pass
+    # Re-declare the /api/edge/* endpoints with real auth
+    from reverseproxy import (
+        get_proxy_config, reload_proxy_config, all_upstream_health,
+        build_origin_signature, HMAC_ORIGIN_HEADER, HMAC_TIMESTAMP_HEADER,
+    )
+    @app.get("/api/edge/config", dependencies=[Depends(require_auth)])
+    async def _edge_config():
+        return get_proxy_config().to_dict()
+    @app.get("/api/edge/routes", dependencies=[Depends(require_auth)])
+    async def _edge_routes():
+        return {"routes": [r.to_dict() for r in get_proxy_config().routes]}
+    @app.get("/api/edge/upstreams/health", dependencies=[Depends(require_auth)])
+    async def _edge_upstream_health():
+        return {"upstreams": all_upstream_health()}
+    @app.post("/api/edge/reload", dependencies=[Depends(require_auth)])
+    async def _edge_reload():
+        cfg = reload_proxy_config()
+        log_activity("system", f"reverse-proxy reloaded: routes={len(cfg.routes)}", "info")
+        return {"ok": True, "config": cfg.to_dict()}
+    @app.post("/api/edge/origin/test", dependencies=[Depends(require_auth)])
+    async def _edge_origin_test(request: Request):
+        body = await request.json()
+        method = body.get("method", "GET")
+        path = body.get("path", "/")
+        payload = body.get("body", "")
+        if isinstance(payload, str):
+            payload = payload.encode()
+        cfg = get_proxy_config()
+        if not cfg.origin_auth_enabled:
+            return {"ok": False, "error": "origin auth not enabled (set EMIX_ORIGIN_AUTH_SECRET)"}
+        sig, ts = build_origin_signature(cfg.origin_auth_secret, method, path, payload)
+        return {
+            "ok": True,
+            "signature_header": HMAC_ORIGIN_HEADER,
+            "timestamp_header": HMAC_TIMESTAMP_HEADER,
+            "signature": sig,
+            "timestamp": ts,
+        }
+    # Start background health checks if reverse proxy enabled
+    cfg = get_proxy_config()
+    if cfg.enabled and cfg.routes:
+        reverseproxy.start_health_checks()
+        logger.info(f"[bootstrap] reverseproxy enabled: {len(cfg.routes)} routes, health checks started")
+    else:
+        logger.info(f"[bootstrap] reverseproxy loaded (disabled by default; set EMIX_REVERSE_PROXY_ENABLED=1 + EMIX_REVERSE_PROXY_ROUTES_JSON to enable)")
+except Exception as _exc:
+    logger.error(f"[bootstrap] reverseproxy load failed (ignored): {_exc}")
+
 try:
     import gaming_health
     app.include_router(gaming_health.router)
@@ -3440,7 +3512,7 @@ except Exception as _exc:
 # تا قبل از لاگین هم قابل بررسی باشد. (از /api/version استفاده نمی‌کنیم چون
 # آن مسیر قبلاً برای بررسی به‌روزرسانی در نظر گرفته شده است.)
 # ══════════════════════════════════════════════════════════════════════════════
-EMIX_VERSION = "9.10.0-protocol-engine"
+EMIX_VERSION = "9.11.0-reverse-proxy-edge"
 EMIX_BUILD_DATE = "2026-08-29"
 
 @app.get("/api/deployment-version")
