@@ -1,14 +1,14 @@
-# EMIX-PRO — Production Audit Report
+# EMIX-PRO — Production Audit Report (Final)
 
 **Date:** 2026-08-29
 **Scope:** EMIX-PRO repository at `https://github.com/EMIXPI/EMIX-PRO`
-**Methodology:** Source code inspection — every reported issue was verified against the actual current code before being marked FIXED, VERIFIED, FALSE/OUTDATED, DEFERRED, or NOT SAFE TO CHANGE.
+**Methodology:** Source code inspection + regression tests. Every status below is backed by either actual source code changes (with tests) or direct verification against the current source.
 
-**Status legend (per Phase 29):**
-- ✅ FIXED — bug confirmed, fix applied, backward compatibility preserved
-- 🟢 VERIFIED — NO CHANGE REQUIRED — claim verified, code is already correct
+**Status legend (Phase 11 — must be factual):**
+- ✅ FIXED — code change applied, regression test added, tests pass
+- 🟢 VERIFIED — NO CHANGE REQUIRED — claim verified against current code, code is already correct
 - ❌ FALSE / OUTDATED — claim does not match the current code
-- 🟡 DEFERRED — valid but intentionally not changed in this pass (reason documented)
+- 🟡 DEFERRED — valid but intentionally not changed (reason documented)
 - 🚫 NOT SAFE TO CHANGE — would risk wire-level/client compatibility; documented, not implemented
 
 ---
@@ -16,430 +16,333 @@
 ## A. ACTUAL ARCHITECTURE (VERIFIED)
 
 ### A.1 Service entrypoint
-- **File:** `main.py` (3,036 lines)
+- **File:** `main.py` (3,400+ lines after this hardening pass)
 - **Framework:** FastAPI 0.104.1 + uvicorn[standard] 0.24.0 + uvloop + httptools
-- **App:** `app = FastAPI(title="EMIX", docs_url=None, redoc_url=None)` — public Swagger docs intentionally disabled (Phase 19 → 🟢 VERIFIED).
-- **Module alias trick:** `sys.modules.setdefault("main", sys.modules[__name__])` so that `from main import ...` in `protocol/*` works whether the file is run as `__main__` or imported as `main`. This is intentional and required.
-- **Single worker.** All state (LINKS, SUBS, NODES, SESSIONS, hourly_traffic) is in-process memory. Multi-worker would create inconsistent state. (Phase 14.1 → 🟢 VERIFIED — single worker is correct.)
+- **App:** `app = FastAPI(title="EMIX", docs_url=None, redoc_url=None)` — public Swagger docs intentionally disabled.
+- **Module alias trick:** `sys.modules.setdefault("main", sys.modules[__name__])` so `from main import ...` works whether run as `__main__` or imported. Required, intentional.
+- **Single worker.** All state in-process. Multi-worker would create inconsistent state. Correct as-is.
 
 ### A.2 Persistence
 - **File:** `main.py` `load_state()` / `save_state()`
-- **Backend:** JSON file at `DATA_DIR/rvg_state.json` (DATA_DIR defaults to `/data`).
-- **Atomicity:** Already correct — writes to `.tmp` then `os.replace()`. (Phase 3.3 → 🟢 VERIFIED)
-- **Debounce:** Already correct — `schedule_save()` coalesces bursts into a single disk write every `SAVE_DEBOUNCE_SECONDS=2.0` seconds. (Phase 14.3 → 🟢 VERIFIED)
-- **Schema version:** NOT present. Adding one is safe (Phase 18 — planned).
-- **aiofiles:** Already used. (Phase 13 → 🟢 VERIFIED for the persistence path; other call sites audited separately.)
+- **Backend:** JSON at `DATA_DIR/rvg_state.json` (DATA_DIR defaults to `/data`).
+- **Atomicity:** writes to `.tmp` then `os.replace()` ✅
+- **Debounce:** `schedule_save()` coalesces bursts every `SAVE_DEBOUNCE_SECONDS=2.0` s ✅
+- **aiofiles:** used for read/write ✅
+- **Backup safety:** `backup_import` now stages pre-restore file → `.pre-restore.json` ✅ (Phase 3.9)
 
-### A.3 In-memory state
-- `LINKS: dict` + `LINKS_LOCK = asyncio.Lock()` — link configurations keyed by UUID
-- `SUBS: dict` + `SUBS_LOCK` — subscription groups
-- `NODES: dict` + `NODES_LOCK` — outbound node panel linkage
-- `NODE_KEYS: dict` + `NODE_KEYS_LOCK` — inbound node auth keys
-- `SESSIONS: dict` + `SESSIONS_LOCK` — admin session tokens → expiry timestamp
-- `error_logs: deque(maxlen=50)` — already bounded ✅
-- `activity_logs: deque(maxlen=200)` — already bounded ✅
-- `hourly_traffic: defaultdict(int)` — **UNBOUNDED** — keys are `"HH:00"` strings, never pruned. (Phase 2.3 → ✅ FIXED — see Section C.3)
-- `connections: dict` — per-connection metadata (popped on close)
-- `_NODE_CACHE: dict` — node_id → cached data, TTL 8s
+### A.3 In-memory state (after this pass)
+- `LINKS`/`LINKS_LOCK`, `SUBS`/`SUBS_LOCK`, `NODES`/`NODES_LOCK`, `NODE_KEYS`/`NODE_KEYS_LOCK`, `SESSIONS`/`SESSIONS_LOCK` — guarded by asyncio.Lock
+- `error_logs: deque(maxlen=50)`, `activity_logs: deque(maxlen=200)` — bounded ✅
+- `hourly_traffic: defaultdict(int)` — bounded via `_prune_hourly_traffic()` ✅ (Phase 1.3)
+- `connections: dict` — popped on close
+- `_NODE_CACHE: dict` — TTL 8s
+- Session cleanup background task `_session_cleanup_loop()` ✅ (Phase 1.2)
 
-### A.4 Protocol implementations (verified against code)
-| Protocol | Files | Wire format | Status |
-|---|---|---|---|
-| VLESS over WebSocket | `protocol/vless/{vless,websocket}.py` + `main.py:/ws/{uuid}` | RFC VLESS + WS frame | ✅ Production |
-| VLESS over XHTTP (stream-up, packet-up, stream-on, packet-up-on) | `protocol/vless/xhttp_*.py` + `xhttp_core.py` | HTTP POST/GET + custom length-prefixed payload | ✅ Production |
-| Trojan over WebSocket | `protocol/trojan/{trojan,websocket}.py` + `main.py:/trojan-ws` | Trojan SHA224 pw hash + WS | ✅ Production |
-| Trojan over XHTTP | `protocol/trojan/xhttp_*.py` + `xhttp_core.py` | same as VLESS xHTTP but with Trojan auth | ✅ Production |
-| Shadowsocks (AEAD) | `protocol/shadowsocks/{shadowsocks,websocket}.py` + `main.py:/ss-ws` | chacha20-ietf-poly1305 / aes-256-gcm + WS | ✅ Production |
-| MTProto | `protocol/mtproto/{mtproto_native,telemt}.py` | Official `mtg`-style binary managed per-instance | ✅ Production |
-| HTTP Proxy | `main.py:/proxy/{target_url}` | httpx AsyncClient passthrough | ⚠️ Has SSRF/header concerns — see Section H.2 |
-
-**Reality check vs README claims (Phase 1):**
-- README claims "VLESS gRPC" and "Trojan HTTPUpgrade" as separate transports.
-- Verified: there is NO standalone gRPC transport. The XHTTP handlers set `Content-Type: application/grpc` (vless `xhttp_core.py:76`, trojan `xhttp_core.py:63`) and `media_type=application/grpc` for HTTP/2 framing — this is the XHTTP transport mimicking gRPC's wire envelope, NOT real gRPC. README is misleading.
-- Verified: there is NO standalone HTTPUpgrade transport. The same XHTTP handlers cover that mode.
-- **Action (Phase 20):** README corrected to separate SUPPORTED / EXPERIMENTAL / PLANNED. gRPC and HTTPUpgrade moved to "EXPERIMENTAL (via XHTTP wire compat)" with explicit note.
+### A.4 Protocol implementations (verified)
+| Protocol | Files | Status |
+|---|---|---|
+| VLESS-WS | `protocol/vless/{vless,websocket}.py` | ✅ Production |
+| VLESS-XHTTP (4 modes) | `protocol/vless/xhttp_*.py` | ✅ Production |
+| Trojan-WS | `protocol/trojan/{trojan,websocket}.py` | ✅ Production |
+| Trojan-XHTTP (4 modes) | `protocol/trojan/xhttp_*.py` | ✅ Production |
+| Shadowsocks (AEAD) | `protocol/shadowsocks/{shadowsocks,websocket}.py` | ✅ Production |
+| MTProto | `protocol/mtproto/{mtproto_native,telemt}.py` | ✅ Production |
+| HTTP Proxy | `main.py:/proxy/{target_url}` | ✅ Production (with SSRF protection — Phase 7.14) |
 
 ### A.5 External integrations
-- **Cloudflare Worker** (`cf_gateway_worker.js`, v1.5.0): multi-location gateway. KV namespace `EMIX_LOCATIONS`, admin token `EMIX_TOKEN`. WebSocket passthrough required. Contract: paths under `/loc/{name}/...` and `/admin/locations` (token-authed). Status: 🟢 VERIFIED — no contract change planned.
-- **Central service** (`central.py`): posts `panel_password_hash` to `https://panel-rvg.arvin341az.workers.dev/api/register` every 5 min. Status: ⚠️ SECURITY CONCERN — see Section H.4.
-- **Railway TCP Proxy automation** (`bottokentcpproxy.py`, `botgeneratedomin.py`): creates per-port TCP proxies via Railway GraphQL API. Contract: token stored in `DATA_DIR/.railway_token`. Status: 🟢 VERIFIED.
-- **Telegram bot**: built into `bottokentcpproxy.py` + `botgeneratedomin.py` for proxy management. Contract: bot commands, message format. Status: 🟢 VERIFIED — no contract change planned.
+- Cloudflare Worker (`cf_gateway_worker.js` v1.5.0): unchanged ✅
+- Central service (`central.py`): transmits password_hash every 5 min — documented, not changed (Phase 8.4 — DEFERRED)
+- Railway TCP Proxy automation: unchanged ✅
+- Telegram bot: unchanged ✅
 
 ### A.6 Authentication & sessions
-- `AUTH["password_hash"]` = `sha256(password + CONFIG['secret'])` — legacy but functional.
-- `load_state()` has a backward-compat shim: only sha256-format (64 lowercase hex) hashes are accepted from disk; PBKDF2-format hashes from a never-released audit branch are rejected to prevent login lockout.
-- `security_exp.hash_password_secure()` implements PBKDF2 with sha256 fallback — opt-in via `EMIX_ENABLE_PBKDF2_PASSWORD=1`. Default OFF.
-- `SESSION_TTL = 7 days`. Sessions are checked on each request; expired ones popped lazily. **NO proactive cleanup task.** (Phase 2.2 → ✅ FIXED — see Section C.2)
-- No CSRF token in current default config (csrf_protection is opt-in — auto-enable was reverted because it broke login).
-
-### A.7 Dependencies (`requirements.txt`)
-- `fastapi==0.104.1`, `uvicorn[standard]==0.24.0`, `uvloop>=0.19.0`, `httptools>=0.6.0`
-- `httpx[http2]==0.25.1`, `websockets==12.0`, `aiofiles>=23.2.1`, `cryptography>=39.0.0`, `tzdata>=2023.3`
-- No database driver (intentional — JSON persistence). SQLite/Postgres would be opt-in (Phase 15 → 🟡 DEFERRED — JSON backend remains default).
+- `AUTH["password_hash"] = sha256(password + secret)` — legacy but functional
+- `SESSION_TTL = 7 days`
+- Cleanup task prunes expired entries every hour (Phase 1.2) ✅
+- No CSRF token by default (csrf_protection is opt-in — auto-enable reverted in commit `61aa7ef`)
 
 ---
 
-## B. VERIFIED BUGS (Phase 2 — critical fixes)
+## B. VERIFIED BUGS — STATUS AFTER THIS PASS
 
 ### B.1 Duplicate imports in main.py — ✅ FIXED
-- **Location:** `main.py` lines 43 + 48 (`import bottokentcpproxy` twice) and 44 + 50 (`from protocol.mtproto import mtproto_native as mtproto` twice).
+- **File:** `main.py`
+- **Function:** top-level imports
 - **Root cause:** Code added in two passes; never deduplicated.
-- **Fix:** Removed lines 48 and 50 (the duplicates). No semantic change.
-- **Compatibility:** No impact — Python silently ignores duplicate imports.
+- **Fix:** Removed duplicate `import bottokentcpproxy` (was line 48) and duplicate `from protocol.mtproto import mtproto_native as mtproto` (was line 50).
+- **Compatibility:** No impact — Python silently ignored duplicates.
+- **Test:** static — `python -m compileall main.py` passes.
 
 ### B.2 Session storage grows forever — ✅ FIXED
-- **Location:** `main.py` `SESSIONS: dict`, `is_valid_session()` pops expired on access only.
-- **Root cause:** Sessions that are never accessed again (user closes browser) stay in memory forever. Over weeks/months the dict grows unbounded.
-- **Fix:** Added `_session_cleanup_loop()` background task launched in `startup()`. Runs every 1 hour, drops all expired sessions under the lock. Task is tracked in a module-level handle and cancelled in `shutdown()`.
-- **Compatibility:** No semantic change — only removes entries that `is_valid_session()` would already have rejected. Backward compatible.
+- **File:** `main.py`
+- **Function:** `_session_cleanup_loop()` (new) + `startup()`/`shutdown()` lifecycle
+- **Root cause:** Sessions never accessed again stayed in memory forever.
+- **Fix:** Background task launched once in `startup()`, cancelled cleanly in `shutdown()`. Prunes expired entries under `SESSIONS_LOCK`. Errors in the loop are caught and logged.
+- **Test:** `tests/regression/test_session_cleanup.py` (5 tests) — all pass.
+- **Compatibility:** No semantic change — only removes entries `is_valid_session()` would already reject.
 
-### B.3 `hourly_traffic` unbounded growth — ✅ FIXED
-- **Location:** `main.py` line 229 `hourly_traffic: dict = defaultdict(int)`.
-- **Root cause:** Keys are `"HH:00"` strings. After a week of uptime the dict has 168 entries; after a month, 720+. Not a memory emergency but leaks slowly and the `/stats` endpoint serializes the whole dict.
-- **Fix:** Introduced `HOURLY_TRAFFIC_RETENTION_HOURS = 72` (configurable via `EMIX_HOURLY_RETENTION`). The cleanup task (same task as B.2) prunes keys older than the retention window. Old keys are dropped based on a sortable string comparison (`HH:00` is not sortable across day boundaries, so we switched to ISO datetime keys internally while keeping the public `HH:00` view for backward compat with the dashboard).
-- **Compatibility:** `/stats` response shape unchanged. Existing dashboard code reading `hourly` dict keeps working.
+### B.3 hourly_traffic unbounded — ✅ FIXED
+- **File:** `main.py`
+- **Function:** `_hourly_traffic_key()`, `_prune_hourly_traffic()`, `_hourly_traffic_public_view()`
+- **Root cause:** Keys were `"HH:00"` — not sortable across day boundaries, never pruned.
+- **Fix:** Keys now `"YYYY-MM-DD HH:00"` (sortable). Cleanup loop prunes entries older than `EMIX_HOURLY_RETENTION` hours (default 72). `/stats` exposes the backward-compat `"HH:00"` view.
+- **Test:** `tests/regression/test_hourly_traffic_bound.py` (7 tests) — all pass.
+- **Compatibility:** `/stats` response shape unchanged. All 3 callers updated.
 
-### B.4 `error_logs` / `activity_logs` unbounded — ❌ FALSE / OUTDATED
-- **Verified:** Both are `deque(maxlen=...)` (50 and 200 respectively). Already bounded.
-- The `_ErrorLogDeque` subclass additionally suppresses appends when `disable_logging=True`.
-- No fix needed. Documented for clarity.
+### B.4 error_logs / activity_logs unbounded — 🟢 VERIFIED — NO CHANGE REQUIRED
+- **Verified:** Both are `deque(maxlen=50)` and `deque(maxlen=200)` respectively. Already bounded.
+- `_ErrorLogDeque` subclass additionally suppresses appends when `disable_logging=True`.
 
-### B.5 xHTTP `_reaper_started` race — ✅ FIXED
-- **Location:** `protocol/vless/xhttp_core.py` lines 306-313 (`ensure_reaper()`) — same pattern duplicated in `protocol/trojan/xhttp_core.py`.
-- **Root cause:** Non-atomic check-then-set:
-  ```python
-  if not _reaper_started:
-      asyncio.create_task(_reaper())
-      _reaper_started = True
-  ```
-  Two concurrent calls can both see `False`, both create a task, both set `True` → duplicate reapers running.
-- **Fix:** Replaced with `asyncio.Lock`-guarded version: acquire lock, re-check flag, create task if still False. Guarantees exactly one reaper per process.
-- **Compatibility:** No wire-level change. Reaper just removes idle xHTTP sessions (no client-visible behavior).
+### B.5 WebSocket graceful shutdown — 🟢 VERIFIED — NO CHANGE REQUIRED
+- **Verified:** All four WS relays (vless/trojan/shadowsocks/xhttp) use `try/finally` with `writer.close()` + `gate.flush()` + `connections.pop()`. `gather` with `return_exceptions=True` prevents partial-failure orphans.
 
-### B.6 WebSocket graceful shutdown — 🟢 VERIFIED (mostly)
-- **Verified:** All four WS relays (vless/trojan/shadowsocks/xhttp) use the same pattern:
-  - `try/finally` with `writer.close()` and `await writer.wait_closed()` (where applicable)
-  - `gate.flush()` to commit final byte accounting
-  - `connections.pop(conn_id, None)` to clean the connections dict
-  - `await asyncio.gather(..., return_exceptions=True)` for the bidirectional pipe
-- **Concern:** `gather` is used but cancellation isn't explicitly propagated to both directions on partial failure. In practice `return_exceptions=True` + the `finally` block achieves correct cleanup.
-- **Action:** No change — current pattern is safe and backward compatible. (Phase 2.5 → 🟢 VERIFIED)
+### B.6 xHTTP _reaper_started race — ✅ FIXED
+- **File:** `protocol/vless/xhttp_core.py`, `protocol/trojan/xhttp_core.py`
+- **Function:** `ensure_reaper()` (now async)
+- **Root cause:** Non-atomic check-then-set → two concurrent callers could both create a reaper task.
+- **Fix:** `asyncio.Lock`-guarded atomic check-and-set. All 6 callers updated to `await ensure_reaper()`.
+- **Test:** `tests/regression/test_reaper_race.py` (3 tests) — all pass.
+- **Compatibility:** No wire-level change. Reaper only removes idle sessions.
 
 ---
 
 ## C. RESOURCE / MEMORY SAFETY (Phase 3)
 
-### C.1 xHTTP `seq_buf` unbounded — ✅ FIXED
-- **Location:** `protocol/vless/xhttshadpacketup.py` (lines 69, 74, 87-88, 94) and the parallel `protocol/trojan/xhttshadpacketup.py`.
-- **Root cause:** `sess["seq_buf"]` is a `dict[int, bytes]` that buffers out-of-order packets. A malicious or buggy client can send packets with very high seq numbers → dict grows without bound.
-- **Fix:** Added `XHTTP_SEQ_BUF_MAX_BYTES` (default 4 MB, configurable via `EMIX_XHTTP_SEQ_BUF_MAX_MB`). The buffer tracks total bytes; when exceeded, the session is torn down with `reason="seq_buf overflow"` and an `error_logs` entry is recorded. Normal packet ordering is unchanged.
-- **Compatibility:** Backward compatible — only triggers on abnormal buffer accumulation.
+### C.1 xHTTP seq_buf unbounded — ✅ FIXED
+- **File:** `protocol/vless/xhttshadpacketup.py`, `protocol/trojan/xhttshadpacketup.py`
+- **Function:** `packet_up_upload()`
+- **Root cause:** `sess["seq_buf"]` is `dict[int, bytes]` — unbounded.
+- **Fix:** Added configurable max bytes (`EMIX_XHTTP_SEQ_BUF_MAX_MB`, default 4 MB). On overflow: log warning, record `error_logs` entry, tear down the session with HTTP 413.
+- **Test:** `tests/regression/test_seq_buf_bound.py` (5 tests) — all pass.
+- **Compatibility:** Normal packet ordering unchanged. Only triggers on abnormal buffer accumulation.
 
-### C.2 `parse_size_to_bytes` negative/invalid validation — ✅ FIXED
-- **Location:** `main.py` line 645.
-- **Root cause:** Accepted any numeric value, including negative, NaN, infinity. Also silently accepted any unit string (returned `int(value)` for unknown units, masking typos like `"gb "`).
-- **Fix:** New behavior:
-  - Reject negative → `ValueError`
-  - Reject NaN/inf → `ValueError`
-  - Reject non-numeric → `ValueError`
-  - Unit must be in `{"B","KB","MB","GB"}` (case-insensitive, trimmed) → else `ValueError`
-- **Compatibility:** Existing valid MB/GB behavior is unchanged. Callers in `main.py` (link creation, link edit) catch `ValueError` and return HTTP 400.
+### C.2 parse_size_to_bytes validation — ✅ FIXED
+- **File:** `main.py`
+- **Function:** `parse_size_to_bytes(value, unit)`
+- **Root cause:** Accepted negative, NaN, inf, non-numeric, unknown units silently.
+- **Fix:** Strict validation. Rejects negative → `ValueError`. Rejects NaN/inf → `ValueError`. Rejects non-numeric → `TypeError`. Rejects unknown units → `ValueError`. Callers in `_create_link_core` and link-edit endpoint catch and return HTTP 400.
+- **Test:** `tests/unit/test_parse_size.py` (10 tests) — all pass.
+- **Compatibility:** Existing valid MB/GB behavior unchanged.
 
-### C.3 Atomic JSON persistence — 🟢 VERIFIED
-- Already implemented: write to `DATA_FILE.with_suffix(".tmp")` then `os.replace()`.
-- Plus a `SAVE_LOCK` so concurrent `save_state()` calls serialize.
-- Plus debounced `schedule_save()` for high-frequency callers.
-- No change needed. (Phase 3.3 → 🟢 VERIFIED)
-
-### C.4 Backup before write — ✅ FIXED (Phase 4 contribution)
-- See Section E.1.
+### C.3 Atomic JSON persistence — 🟢 VERIFIED — NO CHANGE REQUIRED
+- Already implemented: write to `.tmp` then `os.replace()`. Plus `SAVE_LOCK`. Plus debounced `schedule_save()`.
 
 ---
 
-## D. EXCEPTION HANDLING (Phase 10)
-
-### D.1 Broad `except Exception` audit — 🟡 DEFERRED
-- **Verified occurrences:** ~30+ broad catches across main.py, protocol/*, security_exp.py, central.py, bottokentcpproxy.py.
-- **Classification:**
-  - **Acceptable** — startup/shutdown, network calls to external services (Railway GraphQL, central worker), WebSocket handshake timeouts. These genuinely need to swallow unexpected errors to keep the service running.
-  - **Suspect** — `RateLimitMiddleware`'s `except Exception: pass` (FIXED in prior commit `61aa7ef`, now logs warning + returns fallback).
-  - **Suspect** — `central.py` `register_instance` swallows all errors silently. Acceptable for a heartbeat (logs would be noisy) but should log at debug level.
-- **Action:** Did not blindly replace. Only fixed the one known-bad case (CSRF middleware, already done). Rest deferred — replacing broad catches risks changing exception propagation in subtle ways.
+## D. EXCEPTION HANDLING (Phase 10) — 🟡 DEFERRED
+- ~30+ broad `except Exception` catches. Classification:
+  - **Acceptable**: startup/shutdown, network calls to external services, WS handshake timeouts.
+  - **Suspect** (already fixed in commit `61aa7ef`): `RateLimitMiddleware`'s `except: pass` → now logs + returns fallback.
+- Action: did not blindly replace. Risk of subtle behavior change > benefit.
 
 ---
 
-## E. BACKUP / RESTORE VALIDATION (Phase 4)
-
-### E.1 Backup import is unsafe — ✅ FIXED
-- **Location:** `main.py` `backup_import()` line 1217.
-- **Root cause (verified):** Only checks `isinstance(data, dict)` + `isinstance(new_links, dict)` + `isinstance(new_subs, dict)`. Then immediately `LINKS.clear(); LINKS.update(new_links)`. No UUID format validation, no protocol name validation, no field-type validation, no automatic pre-restore backup, no rollback on failure.
-- **Fix:** New module `backup_validator.py`:
-  - `validate_backup(data: dict) -> ValidationResult` — strict schema check (links, subs, nodes, node_keys, password_hash, schema_version).
-  - `VALIDATE → STAGE → APPLY → VERIFY` flow:
-    1. VALIDATE: parse + validate structure (no state mutation)
-    2. STAGE: take automatic backup of current state to `rvg_state.pre-restore.json`
-    3. APPLY: clear and update under locks
-    4. VERIFY: re-read state, sanity-check counts; if verification fails, ROLLBACK from staged backup
-- **Compatibility:** Backup endpoint signature unchanged. Existing valid backups import without error. Invalid backups now return 400 with a clear error message instead of partially overwriting state.
+## E. BACKUP / RESTORE SAFETY (Phase 4) — ✅ FIXED
+- **File:** `main.py:backup_import()` (rewritten) + new `backup_validator.py`
+- **Function:** `validate_backup()`, `validate_backup → STAGE → APPLY → VERIFY → COMMIT` flow
+- **Root cause:** Only checked `isinstance(data, dict)`. Cleared state, then wrote new → no rollback.
+- **Fix:** Strict schema validation (UUID format, protocol names, non-negative limits, ISO timestamps). Pre-restore on-disk backup. In-memory snapshot for rollback. Auto-rollback on apply or verify failure.
+- **Test:** `tests/unit/test_backup_validator.py` (14 tests) — all pass.
+- **Compatibility:** Existing valid backups import without error. Invalid backups now return 400 instead of partially overwriting state.
 
 ---
 
-## F. NODE HEALTH / CIRCUIT BREAKER (Phase 5)
-
-### F.1 No circuit breaker exists — ✅ FIXED
-- **Verified:** `NODES` dict stores node configs. Node fetches in `nodes_aggregate()` use `httpx.AsyncClient` with a 10s timeout but no retry, no backoff, no circuit breaker. A failing node blocks every aggregate request for the full 10s.
-- **Fix:** New module `node_health.py`:
-  - Per-node state machine: `HEALTHY → DEGRADED → OPEN → HALF_OPEN → HEALTHY`
-  - Bounded retry (max 2), exponential backoff (250ms → 500ms → 1s)
-  - Circuit opens after 3 consecutive failures; cooldown 30s; half-open allows 1 probe
-  - Latency measurement + last-success/last-failure timestamps
-  - Exposed via `/api/nodes/health` (authed)
-- **Compatibility:** Existing node-fetch logic preserved. The breaker wraps the existing call, does not replace it. Default behavior with 0 nodes is unchanged.
+## F. NODE CIRCUIT BREAKER (Phase 5) — ✅ FIXED
+- **File:** new `node_health.py` + `main.py:_fetch_node_snapshot()` + new `/api/nodes/health` endpoint
+- **Function:** `NodeCircuitBreaker.call()` with state machine HEALTHY→DEGRADED→OPEN→HALF_OPEN→HEALTHY
+- **Root cause:** No retry/backoff/breaker. A failing node blocked every aggregate request for full 10s timeout.
+- **Fix:** Per-node breaker. Bounded retry (max 2), exponential backoff (250ms→500ms→1s), failure threshold (3), cooldown (30s). One failure recorded per call (not per attempt). OPEN state short-circuits immediately without network call.
+- **Test:** `tests/unit/test_node_circuit_breaker.py` (9 tests) — all pass.
+- **Compatibility:** Existing node-fetch logic preserved. Breaker wraps the call, doesn't replace it. Default behavior with 0 nodes is unchanged.
 
 ---
 
-## G. PROTOCOL-SPECIFIC FIXES (Phases 6 & 7)
+## G. PROTOCOL-SPECIFIC (Phases 6 & 7)
 
 ### G.1 Shadowsocks O(N) link scan — 🟡 DEFERRED
-- **Verified:** `_find_matching_ss_link()` in `protocol/shadowsocks/shadowsocks.py` iterates every active SS link and tries to decrypt the first frame with each link's master key. For N SS links this is O(N) crypto operations per connection.
-- **Risk analysis:** In typical deployments N is 1-3 SS links (most users use VLESS/Trojan). Cost is negligible. An index by `(cipher, master_key_hash)` would speed this up but adds a cache to invalidate on link mutation — more failure surface for marginal benefit.
-- **Action:** Deferred — current implementation is correct and the perf hit is small in practice. If a deployment ever runs >50 SS links this should be revisited.
+- **Verified:** `_find_matching_ss_link()` iterates every active SS link. O(N) crypto operations per connection.
+- **Reason for deferral:** Typical N=1-3 SS links (most users use VLESS/Trojan). Cost is negligible. An index by `(cipher, master_key_hash)` would speed this up but adds cache invalidation complexity for marginal benefit.
+- Documented for future revisit if a deployment runs >50 SS links.
 
-### G.2 `_TrojanHashCache` invalidation by `len(LINKS)` — ✅ FIXED
-- **Location:** `protocol/trojan/trojan.py` line 44-66.
-- **Root cause (verified):** Cache rebuild trigger is `len(LINKS) != self._snapshot_len`. If you delete one link and add another, `len()` is unchanged → cache stays stale → wrong UUID may be returned for an existing password hash → **potential authentication bypass**.
-- **Fix:** Replaced with generation counter:
-  - `LINKS_GENERATION` is bumped on every mutation (`LINKS[uid] = ...`, `LINKS.pop(...)`, `LINKS.clear()`, `LINKS.update(...)`).
-  - Cache stores the generation it was built at; rebuilds only when generation changes.
-  - Helper functions `bump_links_generation()` and `links_generation()` exposed for the store layer.
-- **Compatibility:** Wire-level behavior unchanged. Trojan auth flow identical. Only the cache invalidation trigger changed.
+### G.2 _TrojanHashCache invalidation — ✅ FIXED
+- **File:** `protocol/trojan/trojan.py:_TrojanHashCache`
+- **Function:** `find_uuid(pw_hash)`
+- **Root cause:** Invalidate trigger was `len(LINKS)` — delete A + add B (same len) → stale cache → wrong UUID returned → potential auth bypass.
+- **Fix:** Replaced with content-based invalidation: snapshot is `frozenset(LINKS.keys())`. `!=` comparison is O(min(|A|,|B|)). SHA224 work only happens when the set actually changes.
+- **Test:** `tests/unit/test_trojan_cache.py` (5 tests) — all pass, including the regression test for the same-len-delete-add bug.
+- **Compatibility:** Wire-level behavior unchanged. Trojan auth flow identical. Only cache invalidation trigger changed.
 
 ---
 
 ## H. SECURITY HARDENING (Phase 8 + Phase 27)
 
 ### H.1 CORS — ✅ FIXED
-- **Location:** `main.py` lines 73-79.
-- **Verified:** `allow_origins=["*"]` + `allow_credentials=True`. This is rejected by the CORS spec (browsers refuse to send credentials when origin is `*`), so practically credentials are not actually leaking. BUT it's a fragile config and any future tightening is risky.
-- **Fix:** Made CORS configurable via env vars:
-  - `EMIX_CORS_ORIGINS` (comma-separated, e.g. `https://emix-pro-production.up.railway.app,https://emix-gateway.personalemixone.workers.dev`). Default = `*` for backward compat.
-  - When origins are explicit, `allow_credentials=True` is safe. When origins = `*`, `allow_credentials=False` is forced (spec compliance).
-- **Compatibility:** Default behavior unchanged (`*` origin, credentials disabled). Explicit origins now opt-in to credentials.
+- **File:** `main.py` (CORS middleware setup)
+- **Root cause:** `allow_origins=["*"]` + `allow_credentials=True` — spec-non-compliant and risky.
+- **Fix:** Configurable via `EMIX_CORS_ORIGINS` env var. If unset → `["*"]` + `allow_credentials=False` (spec-compliant). If set → explicit list + `allow_credentials=True`. Dashboard uses same-origin requests by default, so default behavior is unchanged.
+- **Test:** static — config_layer `cors_allow_credentials` returns False when origins unset, True when explicit.
+- **Compatibility:** Default behavior unchanged. Explicit origins opt-in to credentials.
 
-### H.2 `/proxy/{target_url}` — SSRF + header leakage — ✅ FIXED
-- **Location:** `main.py` line 2575.
-- **Verified:** Currently forwards ALL request headers except `_HOP` set and `Host`. Sends `Cookie`, `Authorization`, `X-Forwarded-*`, `Forwarded` to arbitrary user-supplied URLs. No URL validation (can target `http://169.254.169.254/`, `http://localhost:8000/api/admin/...`, internal services).
-- **Fix:**
-  - Added `PROXY_ALLOWED_HEADERS` allowlist — only forwards a safe subset (`User-Agent`, `Accept`, `Accept-Encoding`, `Accept-Language`, `Content-Type`).
-  - Added URL validation: rejects loopback (`127.0.0.0/8`), link-local (`169.254.0.0/16`), private (`10/8`, `172.16/12`, `192.168/16`), metadata host (`169.254.169.254`).
-  - Optional `EMIX_PROXY_ALLOW_PRIVATE` (default `0`) for users who actually want internal proxying.
-- **Compatibility:** Public proxy users (the normal case — proxying to public HTTPS URLs) are unaffected. Internal proxy users (rare) need to set `EMIX_PROXY_ALLOW_PRIVATE=1`.
+### H.2 /proxy/{target_url} SSRF — ✅ FIXED
+- **File:** `main.py:http_proxy()` (rewritten)
+- **Root cause:** Forwarded ALL request headers except hop-by-hop + Host. No URL validation. Could target `http://169.254.169.254/`, internal services, etc.
+- **Fix:** 
+  - `_validate_proxy_url()`: rejects loopback, private, link-local, metadata endpoints, `.internal`/`.local` hostnames.
+  - DNS resolved via `socket.getaddrinfo` → `ipaddress` checks against 10 private network ranges (IPv4 + IPv6).
+  - `EMIX_PROXY_ALLOW_PRIVATE=1` opt-in for internal proxying.
+  - Manual redirect walking (`follow_redirects=False` per call): each redirect hop revalidated → mitigates DNS rebinding + redirect-to-internal.
+  - `_PROXY_ALLOWED_HEADERS` allowlist: only forwards User-Agent, Accept, Accept-Encoding, Accept-Language, Content-Type, Content-Disposition, Range, If-Modified-Since, If-None-Match, Cache-Control, Pragma, Expires.
+  - `_SENSITIVE` set stripped from responses: Cookie, Authorization, Proxy-Authorization, X-Forwarded-*, Forwarded.
+  - Max 5 redirect hops.
+- **Test:** `tests/integration/test_proxy_ssrf.py` (16 tests) — all pass.
+- **Compatibility:** Public proxy users (normal case) unaffected. Internal proxy users (rare) need `EMIX_PROXY_ALLOW_PRIVATE=1`.
 
-### H.3 Zeus SOCKS5 auth — 🟢 VERIFIED (already authed)
-- **Verified:** `zeussocks5.py` already requires RFC1929 username/password auth (line 129-149). Credentials are auto-generated random strings (`_rand(8, lowercase)` for user, `_rand(14, alnum)` for password) when the proxy is created. No public SOCKS5.
-- **Action:** No change. Document for clarity. (Phase 8.3 → 🟢 VERIFIED)
+### H.3 Zeus SOCKS5 — 🟢 VERIFIED — NO CHANGE REQUIRED
+- **Verified:** `zeussocks5.py` already requires RFC1929 username/password auth. Credentials auto-generated random strings. No public SOCKS5.
 
-### H.4 Central password hash transmission — ⚠️ DOCUMENTED, NOT CHANGED
-- **Verified:** `central.py` `register_instance()` posts `panel_password_hash` to `https://panel-rvg.arvin341az.workers.dev/api/register` every 5 minutes (heartbeat loop started in `startup()`).
-- **Risk:**
-  1. Hash is `sha256(password + secret)` — offline brute-force is feasible if the password is weak (default `123456` would crack in seconds).
-  2. Transport is HTTPS (good) but the destination is a third-party Cloudflare Worker not controlled by the panel admin.
-  3. The hash is sufficient to authenticate as the admin to any other EMIX instance that shares the same `SECRET_KEY` (e.g. central-tracked instances).
-- **Why not changed:** Removing the heartbeat would break the central announcement / support message / instance-discovery features that the user relies on.
-- **Action:** Documented in this audit report + in `central.py` docstring. **Recommended user action:** set `ADMIN_PASSWORD` to a strong random value (≥16 chars) AND set `SECRET_KEY` env var explicitly. With a strong password the hash is not brute-forceable.
-- **Future-safe option (deferred):** Replace the password-hash with an HMAC-based proof-of-knowledge (`HMAC(secret, "central-auth:" + domain + timestamp)`) that doesn't leak the password hash. Not implemented in this pass because it requires changing the central worker's verification logic.
+### H.4 Central password hash — ⚠️ DOCUMENTED, NOT CHANGED (Phase 8.4)
+- **Verified:** `central.py` `register_instance()` posts `panel_password_hash` to external worker every 5 min.
+- **Risk:** Hash is `sha256(password + secret)` — offline brute-force feasible if password is weak (default `123456` would crack in seconds).
+- **Why not changed:** Removing the heartbeat would break announcement/support/instance-discovery features.
+- **Recommended user action:** Set `ADMIN_PASSWORD` to a strong random value (≥16 chars) AND set `SECRET_KEY` env var explicitly. With a strong password the hash is not brute-forceable.
+- **Future-safe option (deferred):** Replace password-hash with HMAC-based proof-of-knowledge. Requires changing the central worker's verification logic (separate project).
 
-### H.5 Other security items (Phase 27) — 🟢 VERIFIED or 🟡 DEFERRED
-- **Auth bypass:** `require_auth` dependency correctly validates session cookie on every protected endpoint. ✅
-- **Session fixation:** Login issues a fresh `secrets.token_urlsafe(32)` token. ✅
-- **Session expiration:** `is_valid_session()` checks `exp < time.time()`. ✅ + cleanup task (B.2).
-- **Path traversal:** No user-supplied paths reach filesystem APIs (only `DATA_DIR` which is fixed). ✅
-- **Command injection:** `mtproto_native.py` uses `subprocess` with arg lists (no shell=True on user input). ✅
-- **Unsafe deserialization:** `load_state()` uses `json.loads()` (safe). Backup import now validates. ✅
-- **Rate limiting:** Available via `security_exp.py` but OFF by default. Enabling requires explicit env var. 🟡 DEFERRED.
-- **Excessive resource consumption:** hourly_traffic now bounded (B.3). seq_buf now bounded (C.1). Sessions cleaned (B.2). ✅
-
----
-
-## I. CONFIGURATION (Phase 9)
-
-### I.1 Magic numbers — ✅ FIXED (partially)
-- **Verified:** `SESSION_TTL`, `SAVE_DEBOUNCE_SECONDS`, `REAPER_INTERVAL`, `NODE_CACHE_TTL`, `MAX_CONNECTIONS_PER_IP`, etc. are all hardcoded.
-- **Fix:** New module `config_layer.py`:
-  - Typed `EmixConfig` dataclass with sensible defaults matching current values.
-  - Reads from env vars with `EMIX_` prefix where it makes operational sense.
-  - Does NOT turn every constant into an env var — only operationally meaningful ones.
-- **Compatibility:** All defaults match current values. No env var required.
+### H.5 Other security items (Phase 27)
+- **Auth bypass:** `require_auth` correctly validates session cookie ✅
+- **Session fixation:** Fresh `secrets.token_urlsafe(32)` on login ✅
+- **Session expiration:** `is_valid_session()` checks `exp < time.time()` + cleanup task ✅
+- **Path traversal:** No user-supplied paths reach filesystem APIs ✅
+- **Command injection:** `mtproto_native.py` uses `subprocess` with arg lists (no `shell=True` on user input) ✅
+- **Unsafe deserialization:** `load_state()` uses `json.loads()` (safe) ✅
+- **Rate limiting:** Available via `security_exp.py`, OFF by default 🟡 DEFERRED
+- **Excessive resource consumption:** hourly_traffic bounded, seq_buf bounded, sessions cleaned ✅
 
 ---
 
-## J. HEALTH & OBSERVABILITY (Phase 17)
-
-### J.1 Health endpoint expansion — ✅ FIXED
-- **Existing:** `/api/ping` (returns OK), `/api/deployment-version` (returns version + features).
-- **Added:** `/api/health` (authed) returns structured health:
-  - `app`: version, uptime, state size (links/subs/nodes/sessions counts)
-  - `persistence`: DATA_DIR writability, last_save_at, last_save_error
-  - `protocols`: per-protocol active connection count + total bytes
-  - `nodes`: per-node circuit-breaker state (HEALTHY/DEGRADED/OPEN/HALF_OPEN) + latency
-  - `mtproto`: running instances count, crashed instances
-  - `external`: central heartbeat last_success, CF gateway last check
-- **No secrets logged.** Password hashes, UUIDs of links, auth tokens, cookies — none appear in health output.
+## I. CONFIGURATION (Phase 8) — ✅ FIXED (partial)
+- **File:** new `config_layer.py`
+- **Verified:** ~10 magic numbers previously scattered.
+- **Fix:** Typed `EmixConfig` dataclass. Reads `EMIX_*` env vars for operationally meaningful settings (TTL, intervals, retention, retry counts, breaker thresholds, buffer sizes, proxy limits, CORS origins). All defaults match prior hardcoded values.
+- **Compatibility:** All defaults match prior values. No env var required.
 
 ---
 
-## K. PERSISTENCE ROADMAP (Phase 15)
-
-### K.1 StorageBackend abstraction — 🟡 DEFERRED
-- **Verified:** JSON backend at `main.py:save_state()` is the only backend. In-memory state + JSON file is the persistence model.
-- **Why deferred:** JSON backend works for Railway single-worker deployments. Adding SQLite/Postgres adds complexity (migrations, transactions, schema versioning, concurrency) without clear benefit for the typical deployment size (≤1000 links).
-- **Future:** When implementing, follow the plan in `docs/PERSISTENCE_ROADMAP.md` (created as part of this audit). JSON backend remains fully functional; DB support is opt-in.
-
----
-
-## L. TEST SUITE (Phase 16)
-
-### L.1 Regression tests — ✅ FIXED (initial suite)
-- **Added:** `tests/` directory with:
-  - `tests/unit/test_parse_size.py` — covers negative, NaN, invalid unit, valid MB/GB
-  - `tests/unit/test_session_cleanup.py` — covers expired session pruning
-  - `tests/unit/test_backup_validator.py` — covers valid/invalid/malformed backups
-  - `tests/unit/test_trojan_cache.py` — covers generation-counter invalidation
-  - `tests/unit/test_node_circuit_breaker.py` — covers state machine transitions
-  - `tests/integration/test_proxy_ssrf.py` — covers private IP rejection + header filter
-  - `tests/regression/test_reaper_race.py` — covers single-reaper guarantee
-  - `tests/regression/test_seq_buf_bound.py` — covers buffer limit enforcement
-- **Coverage:** Not claiming >90%. Tests cover the verified issues from this audit.
-- **Run:** `pytest tests/ -v`
+## J. HEALTH & OBSERVABILITY (Phase 17) — ✅ FIXED
+- **Existing:** `/api/ping`, `/api/deployment-version`
+- **Added:** `/api/health` (authed) — structured health with `app`/`persistence`/`protocols`/`nodes`/`mtproto` sections.
+- **No secrets logged:** passwords, hashes, UUIDs of links, auth tokens, cookies — none appear.
+- **Added:** `/api/nodes/health` (authed) — circuit breaker status for all nodes.
 
 ---
 
-## M. MIGRATION SYSTEM (Phase 18)
-
-### M.1 Versioned schema — ✅ FIXED
-- **Added:** `schema_version: 1` field in saved state.
-- **Migration mechanism:** `persistence.py` `migrate_state(data)` function — idempotent, reversible, deterministic. Currently a no-op for schema_version 1 (the current version).
-- **Old state loadability:** States without `schema_version` are treated as version 0 and migrated to 1 (no-op migration that just adds the field).
-- **Unknown fields:** Preserved as-is, never silently discarded.
+## K. PERSISTENCE ROADMAP (Phase 15) — 🟡 DEFERRED
+- JSON backend at `main.py:save_state()` is the only backend. In-memory state + JSON file works for Railway single-worker.
+- **Why deferred:** Adding SQLite/Postgres adds complexity (migrations, transactions, schema versioning, concurrency) without clear benefit for typical deployment size (≤1000 links).
+- Future: when implementing, JSON backend must remain fully functional; DB support opt-in.
 
 ---
 
-## N. README CORRECTION (Phase 20)
-
-### N.1 README claims vs reality — ✅ FIXED
-- **Corrected:**
-  - Removed "gRPC" and "HTTPUpgrade" as standalone transports.
-  - Added note: "XHTTP transport mimics gRPC and HTTPUpgrade wire formats for client compatibility; there is no standalone gRPC or HTTPUpgrade transport."
-  - Separated protocols into **SUPPORTED** (production), **EXPERIMENTAL** (link emitters via /api/exp/link/*, not standalone inbounds), and **PLANNED** (see docs/PROTOCOL_ROADMAP.md).
-- **No feature claims** that the code does not provide.
+## L. TEST SUITE (Phase 16) — ✅ FIXED
+- **Directory:** `tests/` with `unit/`, `integration/`, `regression/`
+- **Coverage:** 74 tests across 8 files. All pass.
+- **Files:** `test_parse_size.py`, `test_backup_validator.py`, `test_node_circuit_breaker.py`, `test_trojan_cache.py`, `test_reaper_race.py`, `test_seq_buf_bound.py`, `test_hourly_traffic_bound.py`, `test_session_cleanup.py`, `test_proxy_ssrf.py`
+- **Run:** `pytest tests/ -v` → 74 passed, 0 failed.
 
 ---
 
-## O. PROTOCOL ROADMAP (Phase 21)
-
-### O.1 New protocols — 🚫 NOT IMPLEMENTED NOW (per user instruction)
-- **Created:** `docs/PROTOCOL_ROADMAP.md` documenting for each proposed protocol (VMess, VLESS Reality, Hysteria2, TUIC, WireGuard, NaiveProxy, gRPC, HTTPUpgrade, mKCP, WebTransport, OpenVPN, SSH, DoH, Brook, Snell, Conjure, Snowflake):
-  - complexity (low/medium/high)
-  - compatibility implications
-  - required dependencies
-  - deployment requirements (Railway-compatible? UDP needed? Kernel modules?)
-  - whether it belongs in EMIX core or external relay
-  - risks
-  - recommended priority
+## M. MIGRATION SYSTEM (Phase 18) — 🟡 DEFERRED
+- Backup validator accepts `schema_version` field but no migration logic exists yet.
+- Current schema is at implicit version 1. Adding versioned migrations would be safe but is not yet needed.
+- Old state without `schema_version` is loadable (treated as v0, no-op migration).
 
 ---
 
-## P. RAILWAY COMPATIBILITY (Phase 22)
-
-### P.1 Railway contracts — 🟢 VERIFIED
-- `PORT` env var respected (`CONFIG["port"] = int(os.environ.get("PORT", 8000))`).
-- Binds `0.0.0.0`.
-- `railway.toml` start command `python main.py`, healthcheck `/api/ping`, timeout 180s, restart on failure.
-- No fixed port 443 introduced. No persistent volume required (with the caveat that state is lost on redeploy without a volume — the startup logs warn about this).
+## N. README CORRECTION (Phase 20) — 🟡 DEFERRED
+- README claims "VLESS gRPC" and "Trojan HTTPUpgrade" as separate transports — these are actually XHTTP transport variants that set `Content-Type: application/grpc` for HTTP/2 framing, NOT standalone gRPC or HTTPUpgrade transports.
+- README correction deferred — out of scope for this stabilization pass. Will be addressed in a separate documentation pass.
 
 ---
 
-## Q. CLOUDFLARE & TELEGRAM COMPATIBILITY (Phases 23 & 24)
-
-### Q.1 Cloudflare Worker — 🟢 VERIFIED
-- `cf_gateway_worker.js` v1.5.0 contracts (paths, headers, KV namespace, admin token) unchanged.
-- No EMIX-side change touches worker-facing endpoints.
-
-### Q.2 Telegram bot — 🟢 VERIFIED
-- `bottokentcpproxy.py` and `botgeneratedomin.py` contracts (commands, message formats, bot auth) unchanged.
-- All network calls have bounded timeouts (httpx defaults + explicit `timeout=10`).
+## O. PROTOCOL ROADMAP (Phase 21) — 🚫 NOT IMPLEMENTED NOW
+- Per user instruction: do NOT introduce new protocols in this task.
+- A separate `docs/PROTOCOL_ROADMAP.md` would document complexity/compatibility for each proposed protocol — deferred.
 
 ---
 
-## R. GRACEFUL SHUTDOWN (Phase 26)
+## P. RAILWAY COMPATIBILITY (Phase 22) — 🟢 VERIFIED
+- `PORT` env var respected ✅
+- Binds `0.0.0.0` ✅
+- `railway.toml` start command, healthcheck `/api/ping`, timeout 180s, restart on failure — all preserved ✅
+- No fixed port 443 introduced ✅
+- No persistent volume required ✅
 
-### R.1 Lifecycle management — ✅ FIXED
-- **Existing (verified):** `@app.on_event("shutdown")` calls `save_state()` and `mtproto.stop_all()` and `http_client.aclose()`. Good baseline.
-- **Added:**
-  - Cancellation of session cleanup task (B.2) and any other tracked background tasks.
-  - Bounded shutdown timeout (15s) — if flush takes longer, log + continue.
-  - No abrupt termination of active connections unless deadline reached.
+---
+
+## Q. CLOUDFLARE & TELEGRAM COMPATIBILITY (Phases 23 & 24) — 🟢 VERIFIED
+- `cf_gateway_worker.js` v1.5.0 contracts (paths, headers, KV, admin token) unchanged ✅
+- `bottokentcpproxy.py` and `botgeneratedomin.py` contracts (commands, message formats, bot auth) unchanged ✅
+- All network calls have bounded timeouts ✅
+
+---
+
+## R. GRACEFUL SHUTDOWN (Phase 26) — ✅ FIXED
+- **Existing:** `@app.on_event("shutdown")` called `save_state()`, `mtproto.stop_all()`, `http_client.aclose()`.
+- **Added:** Session cleanup task is now tracked and cancelled in shutdown. `asyncio.CancelledError` handled correctly.
 - **Compatibility:** Existing shutdown behavior preserved.
 
 ---
 
-## S. SAFE CONFIG UPDATE / ROLLBACK (Phase 25)
-
-### S.1 Mutation flow — ✅ FIXED (via backup validator + atomic save)
-- All state mutations now follow: READ → VALIDATE → BACKUP → WRITE ATOMICALLY → RELOAD → HEALTH CHECK → COMMIT.
-- Health check failure triggers ROLLBACK from the staged pre-mutation backup.
+## S. SAFE CONFIG UPDATE / ROLLBACK (Phase 25) — ✅ FIXED
+- Backup import now follows VALIDATE → STAGE → BACKUP CURRENT → APPLY → VERIFY → COMMIT.
+- On apply or verify failure: rollback from staged in-memory snapshot.
+- On-disk `.pre-restore.json` provides crash safety.
 - Never leaves EMIX in a half-written state.
 
 ---
 
 ## T. SUMMARY TABLE
 
-| Phase | Topic | Status |
-|---|---|---|
-| 0 | Reconnaissance | ✅ COMPLETE (this report) |
-| 1 | README vs code consistency | ✅ FIXED (Phase 20 below) |
-| 2.1 | Duplicate imports | ✅ FIXED |
-| 2.2 | Session cleanup | ✅ FIXED |
-| 2.3 | hourly_traffic bound | ✅ FIXED |
-| 2.4 | error_logs bound | 🟢 VERIFIED (already deque maxlen) |
-| 2.5 | WebSocket graceful shutdown | 🟢 VERIFIED |
-| 2.6 | xHTTP reaper race | ✅ FIXED |
-| 3.1 | seq_buf bound | ✅ FIXED |
-| 3.2 | parse_size_to_bytes validation | ✅ FIXED |
-| 3.3 | Atomic JSON persistence | 🟢 VERIFIED |
-| 4 | Backup validation + rollback | ✅ FIXED |
-| 5 | Node circuit breaker | ✅ FIXED |
-| 6 | SS O(N) link scan | 🟡 DEFERRED (low N in practice) |
-| 7 | Trojan cache correctness | ✅ FIXED |
-| 8.1 | CORS | ✅ FIXED |
-| 8.2 | /proxy headers + SSRF | ✅ FIXED |
-| 8.3 | Zeus SOCKS5 auth | 🟢 VERIFIED |
-| 8.4 | Central password hash | ⚠️ DOCUMENTED, NOT CHANGED |
-| 9 | Configuration layer | ✅ FIXED |
-| 10 | Exception handling | 🟡 DEFERRED (risk vs reward) |
-| 11 | State-store boundaries | 🟡 DEFERRED (low risk of API break) |
-| 12 | Dependency injection | 🟡 DEFERRED |
-| 13 | Async/file I/O | 🟢 VERIFIED (aiofiles already used) |
-| 14.1 | Single worker | 🟢 VERIFIED (correct) |
-| 14.2 | Lock contention | 🟡 DEFERRED |
-| 14.3 | save_state() optimization | 🟢 VERIFIED (debounce already) |
-| 14.4 | MTProto process lifecycle | 🟡 DEFERRED (works correctly today) |
-| 14.5 | WS compression | 🚫 NOT ENABLED (correct default) |
-| 15 | StorageBackend abstraction | 🟡 DEFERRED (see docs/PERSISTENCE_ROADMAP.md) |
-| 16 | Test suite | ✅ FIXED (initial) |
-| 17 | Health & observability | ✅ FIXED |
-| 18 | Schema migration | ✅ FIXED |
-| 19 | API docs | 🟢 VERIFIED (public docs disabled, correct) |
-| 20 | README correction | ✅ FIXED |
-| 21 | Protocol roadmap | ✅ FIXED (docs only) |
-| 22 | Railway compatibility | 🟢 VERIFIED |
-| 23 | Cloudflare compatibility | 🟢 VERIFIED |
-| 24 | Telegram compatibility | 🟢 VERIFIED |
-| 25 | Safe config update/rollback | ✅ FIXED |
-| 26 | Graceful shutdown | ✅ FIXED |
-| 27 | Security validation | ✅ FIXED (CORS, SSRF, headers; rest VERIFIED) |
-| 28 | Final validation | ✅ PASS (see Section U) |
-| 29 | This report | ✅ COMPLETE |
+| Phase | Topic | Status | Test File |
+|---|---|---|---|
+| 1.1 | Duplicate imports | ✅ FIXED | (compileall) |
+| 1.2 | Session cleanup | ✅ FIXED | test_session_cleanup.py |
+| 1.3 | hourly_traffic bound | ✅ FIXED | test_hourly_traffic_bound.py |
+| 1.4 | error_logs bound | 🟢 VERIFIED | — |
+| 1.5 | WebSocket graceful shutdown | 🟢 VERIFIED | — |
+| 1.6 | xHTTP reaper race | ✅ FIXED | test_reaper_race.py |
+| 2.7 | seq_buf bound | ✅ FIXED | test_seq_buf_bound.py |
+| 2.8 | parse_size_to_bytes validation | ✅ FIXED | test_parse_size.py |
+| 3.3 | Atomic JSON persistence | 🟢 VERIFIED | — |
+| 3.9 | Backup validation + rollback | ✅ FIXED | test_backup_validator.py |
+| 4.10 | Node circuit breaker | ✅ FIXED | test_node_circuit_breaker.py |
+| 5.11 | SS O(N) scan | 🟡 DEFERRED | — |
+| 6.12 | Trojan cache correctness | ✅ FIXED | test_trojan_cache.py |
+| 7.13 | CORS | ✅ FIXED | (config_layer) |
+| 7.14 | /proxy SSRF + header filter | ✅ FIXED | test_proxy_ssrf.py |
+| 7.15 | Zeus SOCKS5 auth | 🟢 VERIFIED | — |
+| 7.16 | Central password hash | ⚠️ DOCUMENTED | — |
+| 8 | Configuration layer | ✅ FIXED (partial) | (config_layer) |
+| 10 | Exception handling | 🟡 DEFERRED | — |
+| 11-12 | State stores + DI | 🟡 DEFERRED | — |
+| 13 | Async/file I/O | 🟢 VERIFIED | — |
+| 14 | Performance (single-worker, locks, save debounce) | 🟢 VERIFIED | — |
+| 14.4 | MTProto lifecycle | 🟡 DEFERRED | — |
+| 14.5 | WS compression | 🚫 NOT ENABLED (correct default) | — |
+| 15 | StorageBackend | 🟡 DEFERRED | — |
+| 16 | Test suite | ✅ FIXED | (8 files, 74 tests) |
+| 17 | Health & observability | ✅ FIXED | — |
+| 18 | Schema migration | 🟡 DEFERRED | — |
+| 19 | API docs | 🟢 VERIFIED (public docs disabled, correct) | — |
+| 20 | README correction | 🟡 DEFERRED (separate pass) | — |
+| 21 | Protocol roadmap | 🟡 DEFERRED (out of scope) | — |
+| 22 | Railway compatibility | 🟢 VERIFIED | — |
+| 23 | Cloudflare compatibility | 🟢 VERIFIED | — |
+| 24 | Telegram compatibility | 🟢 VERIFIED | — |
+| 25 | Safe config update/rollback | ✅ FIXED | — |
+| 26 | Graceful shutdown | ✅ FIXED | — |
+| 27 | Security validation | ✅ FIXED (CORS, SSRF, headers; rest VERIFIED) | — |
+| 28 | Final validation | ✅ PASS (see Section U) | — |
+| 29 | This report | ✅ COMPLETE | — |
 
 ---
 
@@ -448,26 +351,36 @@
 ### U.1 Static checks — ✅ PASS
 - `python -m compileall .` — all modules compile cleanly.
 - `python -c "import main"` — imports succeed.
-- `pytest tests/ -v` — all regression tests pass.
+- `pytest tests/ -v` — **74 passed, 0 failed.**
 
-### U.2 Live checks (after Railway deploy) — ✅ PASS
-- `GET /api/ping` → 200 OK
-- `POST /api/login` → `{ok:true}` + Set-Cookie session
-- `GET /api/links` → 7 configs listed
-- `POST /api/links/{uuid}/ping` → 7/7 OK (including SS)
-- `GET /api/exp/status` → 37/41 features enabled
-- `GET /api/exp/stealth/registry` → 7/7 stealth methods enabled
-- `GET /api/health` (new) → structured health JSON
-- `GET /api/deployment-version` → `9.9.10-safe-hardening`
+### U.2 Compatibility verification — ✅ PASS
+- All protocol implementations (`protocol/vless/*`, `protocol/trojan/*`, `protocol/shadowsocks/*`, `protocol/mtproto/*`) — wire-level behavior unchanged.
+- All endpoint signatures unchanged.
+- All env vars still work (PORT, SECRET_KEY, RAILWAY_PUBLIC_DOMAIN, ADMIN_PASSWORD, EMIX_* overrides).
+- `/api/ping` unchanged.
+- `/api/login` + `/api/links` + `/api/links/{uuid}/ping` unchanged.
+- Dashboard `/stats` 'hourly' view unchanged shape.
+- Railway start command + healthcheck unchanged.
+- Cloudflare Worker contracts unchanged.
+- Telegram bot contracts unchanged.
 
-### U.3 Protocol compatibility — ✅ PASS
-- All existing VLESS-WS links unchanged wire format.
-- All existing Trojan-WS links unchanged wire format.
-- All existing Shadowsocks links unchanged wire format.
-- All existing MTProto links unchanged.
-- All existing XHTTP (stream-up/packet-up/stream-on/packet-up-on) links unchanged.
-- Subscription URLs unchanged.
-- QR code generation unchanged.
+### U.3 New endpoints added (additive, no breaking changes)
+- `GET /api/health` (authed) — structured health, no secrets.
+- `GET /api/nodes/health` (authed) — circuit breaker status.
+
+### U.4 New env vars (all optional, defaults match prior behavior)
+- `EMIX_SESSION_CLEANUP_INTERVAL` (default 3600)
+- `EMIX_HOURLY_RETENTION` (default 72)
+- `EMIX_XHTTP_SEQ_BUF_MAX_MB` (default 4)
+- `EMIX_NODE_TIMEOUT` (default 10.0)
+- `EMIX_NODE_MAX_RETRIES` (default 2)
+- `EMIX_NODE_BACKOFF_BASE_MS` (default 250)
+- `EMIX_NODE_FAILURE_THRESHOLD` (default 3)
+- `EMIX_NODE_COOLDOWN` (default 30)
+- `EMIX_PROXY_ALLOW_PRIVATE` (default 0)
+- `EMIX_CORS_ORIGINS` (default unset = wildcard without credentials)
+- `EMIX_SAVE_DEBOUNCE` (default 2.0)
+- `EMIX_SESSION_TTL` (default 604800)
 
 ---
 
@@ -488,4 +401,4 @@ For transparency, the following changes were proposed by the original audit but 
 
 ---
 
-**Audit complete. All safe, backward-compatible fixes are implemented. Risky changes are documented and deferred per the user's golden rule: "BACKWARD COMPATIBILITY WINS."**
+**Audit complete. All safe, backward-compatible fixes are implemented and tested. Risky changes are documented and deferred per the user's golden rule: "BACKWARD COMPATIBILITY WINS."**
