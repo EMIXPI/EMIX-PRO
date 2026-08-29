@@ -3600,6 +3600,228 @@ try:
 except Exception as _exc:
     logger.error(f"[bootstrap] reverseproxy load failed (ignored): {_exc}")
 
+# ── SNI Management + Security Signatures + VPN Pro (Phase SNI-Management + Security + VPN-Pro) ──
+try:
+    import sni_management
+    import security_signatures
+    import vpn_pro
+    # SNI Management: CRUD + health check + ArvanCloud compat
+    @app.get("/api/security/sni/profiles", dependencies=[Depends(require_auth)])
+    async def _sni_list():
+        return await sni_management.all_profiles_dict()
+    @app.post("/api/security/sni/profiles", dependencies=[Depends(require_auth)])
+    async def _sni_create(request: Request):
+        body = await request.json()
+        # Validate fields
+        ok, val = sni_management.validate_server_name(body.get("server_name"))
+        if not ok:
+            raise HTTPException(status_code=400, detail=f"invalid server_name: {val}")
+        ok_alpn, alpn_val = sni_management.validate_alpn(body.get("alpn") or ["h2", "http/1.1"])
+        if not ok_alpn:
+            raise HTTPException(status_code=400, detail=f"invalid alpn: {alpn_val}")
+        ok_tls, tls_val = sni_management.validate_tls_version(body.get("min_tls_version"))
+        if not ok_tls:
+            raise HTTPException(status_code=400, detail=f"invalid min_tls_version: {tls_val}")
+        try:
+            profile = sni_management.SNIProfile(
+                id=generate_uuid(),
+                name=str(body.get("name") or "")[:60],
+                server_name=val,
+                enabled=bool(body.get("enabled", True)),
+                alpn=alpn_val,
+                min_tls_version=tls_val,
+                verify_certificate=bool(body.get("verify_certificate", True)),
+                host_header=body.get("host_header"),
+                description=str(body.get("description") or "")[:500],
+            )
+            await sni_management.create_profile(profile)
+            log_activity("system", f"SNI profile «{profile.name}» ساخته شد", "ok")
+            return {"ok": True, "profile": profile.to_dict()}
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc))
+    @app.put("/api/security/sni/profiles/{profile_id}", dependencies=[Depends(require_auth)])
+    async def _sni_update(profile_id: str, request: Request):
+        body = await request.json()
+        try:
+            updated = await sni_management.update_profile(profile_id, body)
+            if updated is None:
+                raise HTTPException(status_code=404, detail="profile not found")
+            return {"ok": True, "profile": updated.to_dict()}
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc))
+    @app.delete("/api/security/sni/profiles/{profile_id}", dependencies=[Depends(require_auth)])
+    async def _sni_delete(profile_id: str):
+        ok = await sni_management.delete_profile(profile_id)
+        if not ok:
+            raise HTTPException(status_code=404, detail="profile not found")
+        log_activity("system", f"SNI profile deleted: {profile_id}", "warn")
+        return {"ok": True, "deleted": profile_id}
+    @app.post("/api/security/sni/profiles/{profile_id}/health", dependencies=[Depends(require_auth)])
+    async def _sni_health(profile_id: str):
+        profile = await sni_management.get_profile(profile_id)
+        if profile is None:
+            raise HTTPException(status_code=404, detail="profile not found")
+        result = await sni_management.health_check_profile(profile)
+        return {"ok": True, "result": result}
+    @app.post("/api/security/sni/profiles/{profile_id}/arvan", dependencies=[Depends(require_auth)])
+    async def _sni_arvan(profile_id: str):
+        profile = await sni_management.get_profile(profile_id)
+        if profile is None:
+            raise HTTPException(status_code=404, detail="profile not found")
+        result = await sni_management.check_arvan_compatibility(profile)
+        return {"ok": True, "result": result}
+    # Security Signatures: list + health check
+    @app.get("/api/security/signatures", dependencies=[Depends(require_auth)])
+    async def _sig_list():
+        return security_signatures.all_profiles_dict()
+    @app.get("/api/security/signatures/{profile_id}", dependencies=[Depends(require_auth)])
+    async def _sig_get(profile_id: str):
+        p = security_signatures.get_profile(profile_id)
+        if p is None:
+            raise HTTPException(status_code=404, detail="signature profile not found")
+        return {"profile": p.to_dict(), "supported_in_runtime": p.is_supported_in_runtime()}
+    @app.post("/api/security/signatures/{profile_id}/health", dependencies=[Depends(require_auth)])
+    async def _sig_health(profile_id: str):
+        p = security_signatures.get_profile(profile_id)
+        if p is None:
+            raise HTTPException(status_code=404, detail="signature profile not found")
+        result = await security_signatures.health_check_profile(p)
+        return {"ok": True, "result": result}
+    @app.get("/api/security/signatures/randomized", dependencies=[Depends(require_auth)])
+    async def _sig_randomized():
+        return security_signatures.randomized_profile_dict()
+    @app.post("/api/security/signatures/randomized/seed", dependencies=[Depends(require_auth)])
+    async def _sig_seed(request: Request):
+        body = await request.json()
+        seed = body.get("seed")
+        security_signatures.set_random_seed(int(seed) if seed is not None else None)
+        return {"ok": True, "seed": seed, "note": "deterministic mode for testing only" if seed is not None else "secure randomness restored"}
+    @app.get("/api/security/signatures/recommend", dependencies=[Depends(require_auth)])
+    async def _sig_recommend(protocol: str = "", transport: str = "", client: str = ""):
+        p = security_signatures.recommend_profile(protocol=protocol, transport=transport, client_capability=client)
+        if p is None:
+            raise HTTPException(status_code=404, detail="no recommendation for given inputs")
+        return {"recommended": p.to_dict()}
+    # VPN Pro: nodes + preflight + config generators
+    @app.get("/api/vpn/nodes", dependencies=[Depends(require_auth)])
+    async def _vpn_nodes():
+        return await vpn_pro.all_nodes_dict()
+    @app.post("/api/vpn/nodes", dependencies=[Depends(require_auth)])
+    async def _vpn_node_create(request: Request):
+        body = await request.json()
+        try:
+            proto_str = (body.get("protocol") or "wireguard").lower()
+            proto = vpn_pro.VPNProtocol(proto_str)
+            node = vpn_pro.VPNNode(
+                id=generate_uuid(),
+                name=str(body.get("name") or "")[:60],
+                provider=str(body.get("provider") or "manual")[:30],
+                hostname=str(body.get("hostname") or "")[:200],
+                ip=str(body.get("ip") or "")[:45],
+                ssh_port=int(body.get("ssh_port") or 22),
+                protocol=proto,
+                region=str(body.get("region") or "")[:60],
+                wg_listen_port=int(body.get("wg_listen_port") or 51820),
+                wg_address_range=str(body.get("wg_address_range") or "10.8.0.0/24")[:40],
+                wg_dns=str(body.get("wg_dns") or "1.1.1.1")[:60],
+                wg_mtu=int(body.get("wg_mtu") or 1420),
+                wg_keepalive=int(body.get("wg_keepalive") or 25),
+                ovpn_port=int(body.get("ovpn_port") or 1194),
+                ovpn_protocol=str(body.get("ovpn_protocol") or "udp")[:5],
+                ovpn_cipher=str(body.get("ovpn_cipher") or "AES-256-GCM")[:40],
+                ovpn_network=str(body.get("ovpn_network") or "10.8.0.0/24")[:40],
+                ovpn_dns=str(body.get("ovpn_dns") or "1.1.1.1")[:60],
+            )
+            await vpn_pro.create_node(node)
+            log_activity("system", f"VPN node «{node.name}» ساخته شد ({proto.value})", "ok")
+            return {"ok": True, "node": node.to_dict()}
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc))
+    @app.get("/api/vpn/nodes/{node_id}", dependencies=[Depends(require_auth)])
+    async def _vpn_node_get(node_id: str):
+        node = await vpn_pro.get_node(node_id)
+        if node is None:
+            raise HTTPException(status_code=404, detail="node not found")
+        return {"node": node.to_dict()}
+    @app.delete("/api/vpn/nodes/{node_id}", dependencies=[Depends(require_auth)])
+    async def _vpn_node_delete(node_id: str):
+        ok = await vpn_pro.delete_node(node_id)
+        if not ok:
+            raise HTTPException(status_code=404, detail="node not found")
+        log_activity("system", f"VPN node deleted: {node_id}", "warn")
+        return {"ok": True, "deleted": node_id}
+    @app.post("/api/vpn/nodes/{node_id}/preflight", dependencies=[Depends(require_auth)])
+    async def _vpn_preflight(node_id: str):
+        node = await vpn_pro.get_node(node_id)
+        if node is None:
+            raise HTTPException(status_code=404, detail="node not found")
+        return await vpn_pro.preflight_check(node)
+    @app.post("/api/vpn/nodes/{node_id}/wireguard/server-config", dependencies=[Depends(require_auth)])
+    async def _vpn_wg_server_config(node_id: str):
+        node = await vpn_pro.get_node(node_id)
+        if node is None:
+            raise HTTPException(status_code=404, detail="node not found")
+        if node.protocol != vpn_pro.VPNProtocol.WIREGUARD and node.protocol.value != "wireguard":
+            raise HTTPException(status_code=400, detail="node is not a WireGuard node")
+        result = vpn_pro.generate_wireguard_server_config(node)
+        # Store the server public key on the node for future client config generation
+        await vpn_pro.update_node(node_id, {
+            "wg_server_public_key": result["server_public_key"],
+            "wg_server_private_key": result["server_private_key"],  # NOT exposed in to_dict()
+        })
+        log_activity("system", f"WireGuard server config generated for node «{node.name}»", "info")
+        return result
+    @app.post("/api/vpn/nodes/{node_id}/wireguard/client", dependencies=[Depends(require_auth)])
+    async def _vpn_wg_client_config(node_id: str, request: Request):
+        node = await vpn_pro.get_node(node_id)
+        if node is None:
+            raise HTTPException(status_code=404, detail="node not found")
+        body = await request.json()
+        client_name = str(body.get("name") or "client")[:60]
+        client_ip = body.get("ip") or ""
+        result = vpn_pro.generate_wireguard_client_config(node, client_name, client_ip)
+        # Add to node's client list (public key + name only — no private key in storage)
+        node.clients.append({
+            "name": client_name,
+            "ip": result["client_ip"],
+            "public_key": result["client_public_key"],
+            "created_at": time.time(),
+            "enabled": True,
+        })
+        log_activity("system", f"WireGuard client «{client_name}» added to node «{node.name}»", "info")
+        return result
+    @app.post("/api/vpn/nodes/{node_id}/openvpn/server-config", dependencies=[Depends(require_auth)])
+    async def _vpn_ovpn_server_config(node_id: str):
+        node = await vpn_pro.get_node(node_id)
+        if node is None:
+            raise HTTPException(status_code=404, detail="node not found")
+        if node.protocol != vpn_pro.VPNProtocol.OPENVPN and node.protocol.value != "openvpn":
+            raise HTTPException(status_code=400, detail="node is not an OpenVPN node")
+        result = vpn_pro.generate_openvpn_server_config(node)
+        log_activity("system", f"OpenVPN server config generated for node «{node.name}»", "info")
+        return result
+    @app.post("/api/vpn/nodes/{node_id}/openvpn/client", dependencies=[Depends(require_auth)])
+    async def _vpn_ovpn_client_config(node_id: str, request: Request):
+        node = await vpn_pro.get_node(node_id)
+        if node is None:
+            raise HTTPException(status_code=404, detail="node not found")
+        body = await request.json()
+        client_name = str(body.get("name") or "client")[:60]
+        result = vpn_pro.generate_openvpn_client_config(node, client_name)
+        node.clients.append({
+            "name": client_name,
+            "created_at": time.time(),
+            "enabled": True,
+        })
+        log_activity("system", f"OpenVPN client «{client_name}» added to node «{node.name}»", "info")
+        return result
+    @app.get("/api/vpn/providers", dependencies=[Depends(require_auth)])
+    async def _vpn_providers():
+        return vpn_pro.all_providers_dict()
+    logger.info("[bootstrap] SNI Management + Security Signatures + VPN Pro routes registered")
+except Exception as _exc:
+    logger.error(f"[bootstrap] SNI/Security/VPN-Pro load failed (ignored): {_exc}")
+
 try:
     import gaming_health
     app.include_router(gaming_health.router)
@@ -3629,7 +3851,7 @@ except Exception as _exc:
 # تا قبل از لاگین هم قابل بررسی باشد. (از /api/version استفاده نمی‌کنیم چون
 # آن مسیر قبلاً برای بررسی به‌روزرسانی در نظر گرفته شده است.)
 # ══════════════════════════════════════════════════════════════════════════════
-EMIX_VERSION = "9.12.0-sni-spoofing"
+EMIX_VERSION = "9.13.0-sni-mgmt-security-vpn"
 EMIX_BUILD_DATE = "2026-08-29"
 
 @app.get("/api/deployment-version")
