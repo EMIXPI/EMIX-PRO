@@ -201,13 +201,26 @@ async def _probe_ws_tunnel(kind: str, uid: str, link: dict, use_ed: bool = False
                 )
                 await ws.send(stream.encrypt_chunk(addr + PING_HTTP_REQ))
                 body = b""
+                raw_accum = b""
                 while not body:
                     raw = await asyncio.wait_for(ws.recv(), timeout=PING_TIMEOUT_WS)
-                    stream.feed(raw.encode() if isinstance(raw, str) else raw)
+                    raw_b = raw.encode() if isinstance(raw, str) else raw
+                    raw_accum += raw_b
+                    # FAST PING PATH: سرور برای تست پینگ، پاسخ synthetic HTTP
+                    # (نه رمزنگاری‌شده SS) می‌فرستد. اگر اولین bytes شبیه HTTP باشد،
+                    # نیازی به decrypt نیست — پینگ موفق است.
+                    if raw_accum[:4] in (b"HTTP", b"http"):
+                        body = raw_accum
+                        break
+                    stream.feed(raw_b)
                     try:
                         body = b"".join(stream.try_decrypt_chunks())
                     except ValueError:
-                        return {"ok": False, "detail": "AEAD decrypt ناموفق — پسورد/سالت نامعتبر"}
+                        # شاید پاسخ plaintext از fast ping path بود — بررسی
+                        if raw_accum[:4] in (b"HTTP", b"http"):
+                            body = raw_accum
+                        else:
+                            return {"ok": False, "detail": "AEAD decrypt ناموفق — پسورد/سالت نامعتبر"}
 
             e2e_ms = _ping_ms(t1)
             first_line = body.split(b"\r\n", 1)[0][:64]
