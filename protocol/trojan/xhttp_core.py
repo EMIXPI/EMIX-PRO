@@ -284,11 +284,15 @@ async def _reaper():
 
 
 _reaper_started = False
+_reaper_lock = asyncio.Lock()
 
 
-def ensure_reaper():
+async def ensure_reaper():
+    """Guarantee exactly one reaper task per process (Phase 1.6 — race fix)."""
     global _reaper_started
-    if not _reaper_started:
+    async with _reaper_lock:
+        if _reaper_started:
+            return
         asyncio.create_task(_reaper())
         _reaper_started = True
 

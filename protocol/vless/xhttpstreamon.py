@@ -33,7 +33,7 @@ router = APIRouter()
 # ══════════════════════════════ STREAM-ONE (GET پیوسته‌ی دانلینک) ══════════════════════════════
 @router.get("/xhttp-siz10/{mode}/{uuid}/{session_id}")
 async def xhttp_downlink(mode: str, uuid: str, session_id: str, request: Request):
-    ensure_reaper()
+    await ensure_reaper()
     try:
         await _check_link(uuid)
     except HTTPException:

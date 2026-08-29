@@ -22,6 +22,7 @@ from main import (
     LINKS_LOCK,
     stats,
     hourly_traffic,
+    _hourly_traffic_key,
     connections,
     logger,
     is_link_allowed,
@@ -146,7 +147,7 @@ async def check_and_use(uid: str, n: int) -> bool:
             return False
         link["used_bytes"] += n
         stats["total_bytes"] += n
-        hourly_traffic[now_ir().strftime("%H:00")] += n
+        hourly_traffic[_hourly_traffic_key()] += n
     return True
 
 async def relay_ws_to_tcp(ws: WebSocket, writer: asyncio.StreamWriter, conn_id: str, uid: str):

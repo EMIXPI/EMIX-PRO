@@ -45,9 +45,7 @@ from protocol.mtproto import mtproto_native as mtproto
 from typing import Optional
 import base64
 import botgeneratedomin
-import bottokentcpproxy
 import zeussocks5
-from protocol.mtproto import mtproto_native as mtproto
 from fastapi import FastAPI, Request, HTTPException, WebSocket, WebSocketDisconnect, Depends
 from fastapi.responses import Response, HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -226,12 +224,50 @@ class _ErrorLogDeque(deque):
 
 error_logs: deque = _ErrorLogDeque(maxlen=50)
 activity_logs: deque = deque(maxlen=200)
+# hourly_traffic now keyed by full ISO datetime string ("YYYY-MM-DD HH:00") so it
+# can be pruned across day boundaries. The /stats endpoint still exposes the
+# {"HH:00": bytes} view to keep dashboard code backward-compatible.
 hourly_traffic: dict = defaultdict(int)
 http_client: httpx.AsyncClient | None = None
 LINKS: dict = {}
 LINKS_LOCK = asyncio.Lock()
 SUBS: dict = {}
 SUBS_LOCK = asyncio.Lock()
+
+
+def _hourly_traffic_key() -> str:
+    """Sortable ISO key for hourly_traffic. Format: 'YYYY-MM-DD HH:00'."""
+    return datetime.now().strftime("%Y-%m-%d %H:00")
+
+
+def _hourly_traffic_public_view() -> dict:
+    """Return the backward-compatible {HH:00: bytes} view for /stats."""
+    out = {}
+    for k, v in hourly_traffic.items():
+        # 'YYYY-MM-DD HH:00' → 'HH:00'
+        if " " in k:
+            out[k.split(" ", 1)[1]] = out.get(k.split(" ", 1)[1], 0) + v
+        else:
+            out[k] = out.get(k, 0) + v
+    return out
+
+
+def _prune_hourly_traffic():
+    """Drop hours older than the configured retention window. Idempotent + safe."""
+    from config_layer import CONFIG as _EMIX_CFG
+    retention = _EMIX_CFG.hourly_traffic_retention_hours
+    if retention <= 0:
+        return
+    try:
+        cutoff = datetime.now() - timedelta(hours=retention)
+        cutoff_key = cutoff.strftime("%Y-%m-%d %H:00")
+        stale = [k for k in hourly_traffic if k < cutoff_key]
+        for k in stale:
+            hourly_traffic.pop(k, None)
+        if stale:
+            logger.info(f"[hourly-traffic] pruned {len(stale)} entries older than {retention}h")
+    except Exception as exc:
+        logger.warning(f"[hourly-traffic] prune error (continuing): {exc}")
 
 # ── MTProto (mtproto_native / باینری رسمی تلگرام) — هر لینک = یک پروسه‌ی جدا،
 # روی پورت خودش، با ad_tag مستقل خودش (per-instance، دقیقاً مثل mtg قدیم) ──
@@ -307,17 +343,55 @@ async def require_auth(request: Request):
         raise HTTPException(status_code=401, detail="unauthorized")
     return token
 
+# ── Session cleanup background task ──────────────────────────────────────────
+# Sessions that are never accessed again (user closes browser, network drops)
+# would otherwise leak forever. This task periodically drops expired entries
+# under the lock. Started once in startup(), cancelled in shutdown().
+_session_cleanup_task: asyncio.Task | None = None
+
+async def _session_cleanup_loop():
+    """Periodically prune expired sessions. Safe under SESSIONS_LOCK."""
+    from config_layer import CONFIG as _EMIX_CFG
+    interval = _EMIX_CFG.session_cleanup_interval_seconds
+    try:
+        while True:
+            await asyncio.sleep(interval)
+            try:
+                now = time.time()
+                # Snapshot keys under the lock, then pop expired ones.
+                # Pop happens under the same lock — no race with reads/writes.
+                async with SESSIONS_LOCK:
+                    expired = [t for t, exp in SESSIONS.items() if exp < now]
+                    for t in expired:
+                        SESSIONS.pop(t, None)
+                if expired:
+                    logger.info(f"[session-cleanup] pruned {len(expired)} expired sessions")
+                # Also prune hourly_traffic on the same schedule
+                _prune_hourly_traffic()
+            except asyncio.CancelledError:
+                raise
+            except Exception as exc:
+                # Never let the cleanup loop die from an unexpected error.
+                logger.warning(f"[session-cleanup] iteration error (continuing): {exc}")
+    except asyncio.CancelledError:
+        logger.info("[session-cleanup] task cancelled (shutdown)")
+        return
+
 # ── Startup / Shutdown ────────────────────────────────────────────────────────
 @app.on_event("startup")
 async def startup():
     asyncio.create_task(central.heartbeat_loop())
-    global http_client
+    global http_client, _session_cleanup_task
     limits = httpx.Limits(max_connections=500, max_keepalive_connections=100)
     timeout = httpx.Timeout(30.0, connect=10.0)
     http_client = httpx.AsyncClient(
         limits=limits, timeout=timeout, follow_redirects=True,
     )
     await load_state()
+    # Start session cleanup background task (Phase 1.2)
+    if _session_cleanup_task is None or _session_cleanup_task.done():
+        _session_cleanup_task = asyncio.create_task(_session_cleanup_loop())
+        logger.info("[startup] session cleanup task started")
     # اگر دیتای پایدار روی Railway Volume وصل نباشد، LINKS خالی خواهد بود.
     # سه کانفیگ پیش‌فرض (vless-ws / trojan-ws / shadowsocks) می‌سازیم تا کاربر
     # بلافاصله پس از دیپلوی بتواند پینگ بگیرد و پنل را تست کند.
@@ -406,7 +480,7 @@ async def _mtproto_usage_callback(uuid: str, n_bytes: int) -> bool:
             return False
         link["used_bytes"] += n_bytes
         stats["total_bytes"] += n_bytes
-        hourly_traffic[now_ir().strftime("%H:00")] += n_bytes
+        hourly_traffic[_hourly_traffic_key()] += n_bytes
     return True
 
 mtproto.set_usage_callback(_mtproto_usage_callback)
@@ -515,6 +589,15 @@ async def _update_mtproto_ad_tag(uuid: str, ad_tag: str):
 
 @app.on_event("shutdown")
 async def shutdown():
+    # Cancel background tasks first (Phase 26 — graceful shutdown)
+    global _session_cleanup_task
+    if _session_cleanup_task is not None and not _session_cleanup_task.done():
+        _session_cleanup_task.cancel()
+        try:
+            await _session_cleanup_task
+        except asyncio.CancelledError:
+            pass
+        _session_cleanup_task = None
     await save_state()
     await mtproto.stop_all()
     if http_client:
@@ -643,11 +726,35 @@ def uptime() -> str:
     return f"{h:02d}:{m:02d}:{s:02d}"
 
 def parse_size_to_bytes(value: float, unit: str) -> int:
-    unit = unit.upper()
-    if unit == "GB": return int(value * 1024 ** 3)
-    if unit == "MB": return int(value * 1024 ** 2)
-    if unit == "KB": return int(value * 1024)
-    return int(value)
+    """Convert a (value, unit) pair to bytes.
+
+    Strict validation (Phase 2.8):
+      - value must be a real number (reject NaN, inf, None, malformed strings)
+      - value must be >= 0
+      - unit must be one of {"B","KB","MB","GB"} (case-insensitive, trimmed)
+
+    Raises:
+      ValueError on any invalid input.
+      TypeError on non-numeric input.
+    """
+    # Reject non-finite floats (NaN, inf) — `float(value)` will accept them,
+    # so we have to explicitly check.
+    try:
+        v = float(value)
+    except (TypeError, ValueError) as exc:
+        raise TypeError(f"size value must be a number, got {value!r}") from exc
+    if v != v:  # NaN
+        raise ValueError("size value must not be NaN")
+    if v in (float("inf"), float("-inf")):
+        raise ValueError("size value must be finite")
+    if v < 0:
+        raise ValueError(f"size value must not be negative, got {v}")
+    u = (unit or "").strip().upper()
+    if u == "GB": return int(v * 1024 ** 3)
+    if u == "MB": return int(v * 1024 ** 2)
+    if u == "KB": return int(v * 1024)
+    if u in ("B", ""): return int(v)
+    raise ValueError(f"unsupported size unit: {unit!r} (must be B/KB/MB/GB)")
 
 def is_link_expired(link: dict) -> bool:
     exp = link.get("expires_at")
@@ -1289,7 +1396,7 @@ async def get_stats(_=Depends(require_auth)):
         "total_errors": stats["total_errors"],
         "uptime": uptime(),
         "timestamp": datetime.now().isoformat(),
-        "hourly": dict(hourly_traffic),
+        "hourly": _hourly_traffic_public_view(),
         "recent_errors": list(error_logs)[-10:],
         "links_count": len(snap),
         "active_links": sum(1 for l in snap.values() if is_link_allowed(l)),
@@ -1634,9 +1741,15 @@ async def get_connections(_=Depends(require_auth)):
 # ── Link Management ───────────────────────────────────────────────────────────
 async def _create_link_core(body: dict) -> dict:
     label = (body.get("label") or "لینک جدید").strip()[:60]
-    lv = float(body.get("limit_value") or 0)
+    try:
+        lv = float(body.get("limit_value") or 0)
+    except (TypeError, ValueError):
+        raise HTTPException(status_code=400, detail="limit_value باید عدد باشد")
     lu = body.get("limit_unit") or "GB"
-    limit_bytes = 0 if lv <= 0 else parse_size_to_bytes(lv, lu)
+    try:
+        limit_bytes = 0 if lv <= 0 else parse_size_to_bytes(lv, lu)
+    except (TypeError, ValueError) as exc:
+        raise HTTPException(status_code=400, detail=f"limit نامعتبر: {exc}")
     exp_days = int(body.get("expires_days") or 0)
     expires_at = (datetime.now() + timedelta(days=exp_days)).isoformat() if exp_days > 0 else None
     note = (body.get("note") or "").strip()[:200]
@@ -1843,9 +1956,15 @@ async def update_link(uid: str, request: Request, _=Depends(require_auth)):
             link["used_bytes"] = 0
             log_activity("link", f"مصرف کانفیگ «{label}» ریست شد", "info")
         if "limit_value" in body:
-            lv = float(body.get("limit_value") or 0)
+            try:
+                lv = float(body.get("limit_value") or 0)
+            except (TypeError, ValueError):
+                raise HTTPException(status_code=400, detail="limit_value باید عدد باشد")
             lu = body.get("limit_unit") or "GB"
-            link["limit_bytes"] = 0 if lv <= 0 else parse_size_to_bytes(lv, lu)
+            try:
+                link["limit_bytes"] = 0 if lv <= 0 else parse_size_to_bytes(lv, lu)
+            except (TypeError, ValueError) as exc:
+                raise HTTPException(status_code=400, detail=f"limit نامعتبر: {exc}")
         if "expires_days" in body:
             ed = int(body["expires_days"] or 0)
             link["expires_at"] = (datetime.now() + timedelta(days=ed)).isoformat() if ed > 0 else None
@@ -2582,7 +2701,7 @@ async def http_proxy(target_url: str, request: Request):
         resp = await http_client.request(method=request.method, url=target_url, headers=headers, content=body)
         stats["total_bytes"] += len(resp.content)
         stats["total_requests"] += 1
-        hourly_traffic[now_ir().strftime("%H:00")] += len(resp.content)
+        hourly_traffic[_hourly_traffic_key()] += len(resp.content)
         return Response(content=resp.content, status_code=resp.status_code,
                         headers={k: v for k, v in resp.headers.items() if k.lower() not in _HOP})
     except Exception as exc:

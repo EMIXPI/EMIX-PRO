@@ -27,7 +27,7 @@ router = APIRouter()
 
 @router.post("/txhttp-siz10/stream-up/{uuid}/{session_id}")
 async def trojan_stream_up_upload(uuid: str, session_id: str, request: Request):
-    ensure_reaper()
+    await ensure_reaper()
     sess = await _get_or_create_session(uuid, "stream-up", session_id, _req_client_ip(request))
     if sess.get("closed"):
         raise HTTPException(status_code=404, detail="session closed")
