@@ -1,0 +1,95 @@
+# configs/emixpro.edge.example.yaml
+# ════════════════════════════════════════════════════════════════════════════
+# Example edge/CDN configuration for EMIX-PRO.
+#
+# This file is DOCUMENTATION ONLY — EMIX reads its configuration from
+# environment variables (see config_layer.py + reverseproxy/config.py),
+# NOT from YAML. Use this file as a reference when setting Railway env vars.
+#
+# To apply: copy the relevant values into Railway → Variables.
+# ════════════════════════════════════════════════════════════════════════════
+
+# ─── Core service ───────────────────────────────────────────────────────────
+# PORT is set by Railway automatically.
+# ADMIN_PASSWORD should be a strong random value (≥16 chars).
+# SECRET_KEY should be a strong random value (≥32 chars).
+# RAILWAY_PUBLIC_DOMAIN is set by Railway when you generate a domain.
+
+# ─── CORS (Phase 7.13) ─────────────────────────────────────────────────────
+# Comma-separated list of allowed origins.
+# When unset: allow_origins=["*"] but allow_credentials=False (spec-compliant).
+# When set: explicit list + allow_credentials=True.
+emix_cors_origins: "https://emix.example.com,https://api.emix.example.com"
+
+# ─── Trusted CDN/Edge hostnames (Phase 37) ─────────────────────────────────
+# Comma-separated, glob patterns supported.
+# Only these hosts may set X-Forwarded-For etc. that EMIX trusts.
+emix_trusted_edges: "cloudflare.com,*.workers.dev,arvancloud.com,*.arvancloud.com"
+
+# ─── HMAC Origin Authentication (Phase 39) ─────────────────────────────────
+# 32-byte secret shared between edge and EMIX.
+# Generate with: openssl rand -hex 32
+# When unset: origin auth is DISABLED (all requests pass).
+emix_origin_auth_secret: "REPLACE_WITH_32_BYTE_HEX_SECRET"
+
+# ─── Cache Safety (Phase 36 — non-negotiable) ──────────────────────────────
+# Applies Cache-Control: no-store on all tunnel/auth paths.
+# Default: 1 (enabled).
+emix_cache_safety: "1"
+
+# ─── Minimum TLS version (Phase 31) ────────────────────────────────────────
+# 1.2 or 1.3
+emix_min_tls_version: "1.2"
+
+# ─── Reverse Proxy (opt-in — Phase 31-39) ──────────────────────────────────
+emix_reverse_proxy_enabled: "0"  # set to "1" to enable
+emix_reverse_proxy_routes_json: |
+  [
+    {
+      "host": "emix.example.com",
+      "path": "/",
+      "transport": "http",
+      "upstreams": [
+        {"url": "http://127.0.0.1:8000", "weight": 2, "priority": 1, "verify_tls": true}
+      ],
+      "lb_strategy": "round_robin",
+      "connect_timeout": 10.0,
+      "read_timeout": 30.0,
+      "ws_idle_timeout": 300.0,
+      "health_check_path": "/api/ping",
+      "health_check_interval": 30.0,
+      "health_check_timeout": 5.0
+    },
+    {
+      "host": "tunnel.emix.example.com",
+      "transport": "websocket",
+      "upstreams": [
+        {"url": "http://127.0.0.1:8000"}
+      ],
+      "ws_idle_timeout": 600.0
+    }
+  ]
+
+# ─── Performance tuning (Phase 1.2-1.6, 2.7-2.8) ──────────────────────────
+emix_session_ttl: "604800"              # 7 days (default)
+emix_session_cleanup_interval: "3600"   # 1 hour (default)
+emix_save_debounce: "2.0"                # 2 seconds (default)
+emix_hourly_retention: "72"             # 72 hours (default)
+emix_xhttp_seq_buf_max_mb: "4"          # 4 MB (default)
+emix_node_timeout: "10.0"               # 10 seconds (default)
+emix_node_max_retries: "2"              # 2 retries (default)
+emix_node_failure_threshold: "3"        # 3 consecutive failures (default)
+emix_node_cooldown: "30"               # 30 seconds (default)
+emix_proxy_max_bytes: "52428800"        # 50 MB (default)
+
+# ─── Experimental features (opt-in — Phase 8.1-8.4) ───────────────────────
+emix_experimental: "1"                            # auto-enabled
+emix_enable_pbkdf2_password: "0"                  # use sha256 (default)
+emix_enable_rate_limit: "0"                        # OFF by default
+emix_enable_csrf_protection: "0"                  # OFF (can break POST requests)
+emix_enable_csp_headers: "0"                       # OFF (can break inline scripts)
+emix_enable_hsts: "1"                              # ON (safe — just a header)
+
+# ─── Logging ───────────────────────────────────────────────────────────────
+# Set to "1" to suppress all logging (for high-throughput deployments).
+emix_disable_logging: "0"
