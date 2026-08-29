@@ -1788,6 +1788,84 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent-violet) !impor
 .cfg-sub-tag{transition:all .18s ease}
 .cfg-sub-tag:hover{transform:translateY(-1px)}
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   Experimental Section — Responsive Grid (mobile-first)
+   ▸ auto-fit/minmax → cards natively collapse on narrow screens
+   ▸ header badge wraps below title on small screens
+   ▸ sub-sections two-column on desktop, single-column on mobile
+   ▸ feature cards stack with smaller padding on phones
+   ═══════════════════════════════════════════════════════════════════════════ */
+.exp-features-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(min(320px,100%),1fr));
+  gap:14px;
+  margin-bottom:24px;
+}
+.exp-subsections{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:18px;
+  margin-top:20px;
+}
+.exp-stealth-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(min(280px,100%),1fr));
+  gap:10px;
+}
+.exp-action-btn{
+  width:100%;
+  text-align:right;
+  justify-content:flex-start;
+  font-size:12px;
+}
+.exp-recheck-btn{
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  padding:12px 16px;
+}
+
+/* Tablet */
+@media(max-width:900px){
+  .exp-features-grid{gap:10px}
+  .exp-subsections{gap:14px}
+  .exp-stealth-grid{gap:8px}
+}
+
+/* Mobile — single column, tighter padding, full-width buttons */
+@media(max-width:640px){
+  .exp-features-grid{
+    grid-template-columns:1fr;
+    gap:10px;
+    margin-bottom:18px;
+  }
+  .exp-subsections{
+    grid-template-columns:1fr;
+    gap:14px;
+    margin-top:14px;
+  }
+  .exp-stealth-grid{
+    grid-template-columns:1fr;
+    gap:8px;
+  }
+  .exp-sub-card{padding:16px !important}
+  #pg-experimental .page-hdr h1{font-size:20px}
+  #pg-experimental .page-hdr p{font-size:11.5px;line-height:1.55}
+  #exp-warning{padding:12px 14px}
+  #exp-warning > div:last-child > div:last-child{font-size:11px;line-height:1.55}
+  #exp-warning code{font-size:10px;padding:1px 5px}
+}
+
+/* Extra small phones */
+@media(max-width:380px){
+  .exp-sub-card{padding:12px !important}
+  .exp-action-btn{font-size:11px;padding:8px 10px}
+  #pg-experimental .page-hdr h1{font-size:18px}
+  #pg-experimental .page-hdr i.ti-flask{font-size:22px}
+}
+
 </style>
 <style>
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -4321,38 +4399,40 @@ remote vpn.example.com 1194
 
 <!-- ════════════════════════════════════════════════════════════════════════════
      بخش آزمایشی (Experimental Section) — تمام فیچرهای جدید در اینجا قرار دارند
-     فعال‌سازی: EMIX_EXPERIMENTAL=1 + EMIX_ENABLE_<FEATURE>=1
-     اگر فعال نباشد، این بخش فقط نمایش status می‌دهد و هیچ تأثیری ندارد.
+     حالت: AUTO-ENABLED — بعد از هر deploy خودکار فعال است.
+     برای غیرفعال‌کردن: EMIX_EXPERIMENTAL=0 یا EMIX_ENABLE_<FEATURE>=0
      ════════════════════════════════════════════════════════════════════════════ -->
 <section class="pg" id="pg-experimental">
   <div class="page-hdr" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
-    <div>
-      <h1 style="font-size:24px;font-weight:800;color:#8B5CF6;display:flex;align-items:center;gap:10px">
+    <div style="min-width:0;flex:1">
+      <h1 style="font-size:24px;font-weight:800;color:#8B5CF6;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
         <i class="ti ti-flask" style="font-size:28px"></i> بخش آزمایشی (Experimental)
       </h1>
-      <p style="color:var(--t3);font-size:13px;margin-top:4px">تمام فیچرهای جدید — toggle-based. فعال‌سازی با متغیرهای محیطی.</p>
+      <p style="color:var(--t3);font-size:13px;margin-top:4px">تمام فیچرهای جدید — auto-enabled بعد از deploy. برای غیرفعال‌کردن: <code style="background:rgba(0,0,0,.3);padding:2px 6px;border-radius:4px;color:#8B5CF6">EMIX_EXPERIMENTAL=0</code> یا <code style="background:rgba(0,0,0,.3);padding:2px 6px;border-radius:4px;color:#8B5CF6">EMIX_ENABLE_&lt;FEATURE&gt;=0</code></p>
     </div>
-    <div id="exp-status-badge" style="padding:8px 16px;border-radius:12px;background:rgba(139,92,246,.1);border:1px solid rgba(139,92,246,.3);font-weight:700;font-size:13px;color:#8B5CF6">Loading...</div>
+    <div id="exp-status-badge" style="padding:8px 16px;border-radius:12px;background:rgba(139,92,246,.1);border:1px solid rgba(139,92,246,.3);font-weight:700;font-size:13px;color:#8B5CF6;flex-shrink:0">Loading...</div>
   </div>
 
-  <!-- Warning Banner -->
-  <div id="exp-warning" style="padding:14px 18px;background:linear-gradient(135deg,rgba(250,204,21,.08),rgba(239,68,68,.08));border:1px solid rgba(250,204,21,.3);border-radius:14px;margin-bottom:20px;display:flex;gap:12px;align-items:flex-start">
-    <i class="ti ti-alert-triangle" style="font-size:22px;color:#FACC15;flex-shrink:0"></i>
-    <div>
-      <div style="font-weight:700;color:#FACC15;margin-bottom:4px">راهنمای فعال‌سازی</div>
+  <!-- Info Banner (auto-enabled) -->
+  <div id="exp-warning" style="padding:14px 18px;background:linear-gradient(135deg,rgba(16,185,129,.08),rgba(139,92,246,.08));border:1px solid rgba(16,185,129,.3);border-radius:14px;margin-bottom:20px;display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap">
+    <i class="ti ti-circle-check" style="font-size:22px;color:#10B981;flex-shrink:0"></i>
+    <div style="flex:1;min-width:200px">
+      <div style="font-weight:700;color:#10B981;margin-bottom:4px">بخش آزمایشی خودکار فعال است</div>
       <div style="font-size:12px;color:var(--t2);line-height:1.6">
-        برای فعال‌سازی هر فیچر، دو متغیر محیطی در Railway تنظیم کنید:<br>
-        <code style="background:rgba(0,0,0,.3);padding:2px 6px;border-radius:4px;color:#8B5CF6">EMIX_EXPERIMENTAL=1</code>
-        (فعال‌سازی کل بخش) و
-        <code style="background:rgba(0,0,0,.3);padding:2px 6px;border-radius:4px;color:#8B5CF6">EMIX_ENABLE_&lt;FEATURE&gt;=1</code>
-        (فعال‌سازی فیچر خاص).<br>
-        پس از تغییر، <strong>Deploy Latest Commit</strong> در Railway را بزنید (نه Redeploy).
+        بعد از هر redeploy در Railway، کل بخش آزمایشی و همه‌ی فیچرها (به جز مواردی که به setup اضافی نیاز دارند) خودکار فعال می‌شوند.<br>
+        استثناها (که باید صریحاً فعال شوند):
+        <code style="background:rgba(0,0,0,.3);padding:2px 6px;border-radius:4px;color:#FACC15">ip_whitelist</code>
+        (نیاز به <code style="background:rgba(0,0,0,.3);padding:2px 6px;border-radius:4px;color:#FACC15">EMIX_ADMIN_IPS</code>)،
+        <code style="background:rgba(0,0,0,.3);padding:2px 6px;border-radius:4px;color:#FACC15">totp_2fa</code>
+        (نیاز به <code style="background:rgba(0,0,0,.3);padding:2px 6px;border-radius:4px;color:#FACC15">EMIX_TOTP_SECRET</code>)،
+        <code style="background:rgba(0,0,0,.3);padding:2px 6px;border-radius:4px;color:#FACC15">telegram_bot</code>
+        (نیاز به <code style="background:rgba(0,0,0,.3);padding:2px 6px;border-radius:4px;color:#FACC15">EMIX_BOT_TOKEN</code>).
       </div>
     </div>
   </div>
 
   <!-- Features Grid -->
-  <div id="exp-features-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;margin-bottom:24px">
+  <div id="exp-features-grid" class="exp-features-grid">
     <div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--t3)">
       <i class="ti ti-loader-2" style="font-size:32px;animation:spin 1s linear infinite"></i>
       <div style="margin-top:8px;font-size:13px">در حال بارگذاری...</div>
@@ -4360,9 +4440,9 @@ remote vpn.example.com 1194
   </div>
 
   <!-- Sub-sections -->
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:20px">
-    <div class="card" style="padding:20px">
-      <h3 style="font-size:16px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px">
+  <div class="exp-subsections">
+    <div class="card exp-sub-card" style="padding:20px">
+      <h3 style="font-size:16px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
         <i class="ti ti-bolt" style="color:#8B5CF6"></i> تولید لینک‌های جدید
       </h3>
       <p style="font-size:12px;color:var(--t3);margin-bottom:14px;line-height:1.6">
@@ -4370,35 +4450,35 @@ remote vpn.example.com 1194
         کاربر می‌تواند لینک را در کلاینت خود وارد کند.
       </p>
       <div style="display:flex;flex-direction:column;gap:8px">
-        <button class="btn btn-o" onclick="expEmitLink('vmess')" style="text-align:right"><i class="ti ti-link"></i> VMESS base64-JSON</button>
-        <button class="btn btn-o" onclick="expEmitLink('vless-reality')" style="text-align:right"><i class="ti ti-shield-lock"></i> VLESS-Reality</button>
-        <button class="btn btn-o" onclick="expEmitLink('trojan-reality')" style="text-align:right"><i class="ti ti-shield-lock"></i> Trojan-Reality</button>
-        <button class="btn btn-o" onclick="expEmitLink('ss2022')" style="text-align:right"><i class="ti ti-key"></i> Shadowsocks-2022</button>
-        <button class="btn btn-o" onclick="expEmitLink('spiderx')" style="text-align:right"><i class="ti ti-route"></i> Reality spiderX path</button>
-        <button class="btn btn-o" onclick="expEmitLink('finalmask')" style="text-align:right"><i class="ti ti-mask"></i> FinalMask (TLS fragmentation)</button>
-        <button class="btn btn-o" onclick="expEmitLink('utls')" style="text-align:right"><i class="ti ti-fingerprint"></i> uTLS fingerprint</button>
+        <button class="btn btn-o exp-action-btn" onclick="expEmitLink('vmess')" style="text-align:right"><i class="ti ti-link"></i> VMESS base64-JSON</button>
+        <button class="btn btn-o exp-action-btn" onclick="expEmitLink('vless-reality')" style="text-align:right"><i class="ti ti-shield-lock"></i> VLESS-Reality</button>
+        <button class="btn btn-o exp-action-btn" onclick="expEmitLink('trojan-reality')" style="text-align:right"><i class="ti ti-shield-lock"></i> Trojan-Reality</button>
+        <button class="btn btn-o exp-action-btn" onclick="expEmitLink('ss2022')" style="text-align:right"><i class="ti ti-key"></i> Shadowsocks-2022</button>
+        <button class="btn btn-o exp-action-btn" onclick="expEmitLink('spiderx')" style="text-align:right"><i class="ti ti-route"></i> Reality spiderX path</button>
+        <button class="btn btn-o exp-action-btn" onclick="expEmitLink('finalmask')" style="text-align:right"><i class="ti ti-mask"></i> FinalMask (TLS fragmentation)</button>
+        <button class="btn btn-o exp-action-btn" onclick="expEmitLink('utls')" style="text-align:right"><i class="ti ti-fingerprint"></i> uTLS fingerprint</button>
       </div>
     </div>
 
-    <div class="card" style="padding:20px">
-      <h3 style="font-size:16px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px">
+    <div class="card exp-sub-card" style="padding:20px">
+      <h3 style="font-size:16px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
         <i class="ti ti-rss" style="color:#FACC15"></i> فرمت‌های سابسکریپشن
       </h3>
       <p style="font-size:12px;color:var(--t3);margin-bottom:14px;line-height:1.6">
         خروجی subscription در چند فرمت برای پشتیبانی همه‌ی کلاینت‌ها (v2rayN/sing-box/Clash.Meta).
       </p>
       <div style="display:flex;flex-direction:column;gap:8px">
-        <button class="btn btn-o" onclick="expSub('raw')" style="text-align:right"><i class="ti ti-file-text"></i> raw (پیش‌فرض)</button>
-        <button class="btn btn-o" onclick="expSub('json')" style="text-align:right"><i class="ti ti-braces"></i> JSON (v2rayN/sing-box)</button>
-        <button class="btn btn-o" onclick="expSub('clash')" style="text-align:right"><i class="ti ti-code"></i> Clash.Meta YAML</button>
-        <button class="btn btn-o" onclick="expSub('encrypted')" style="text-align:right"><i class="ti ti-lock"></i> Encrypted (base64)</button>
+        <button class="btn btn-o exp-action-btn" onclick="expSub('raw')" style="text-align:right"><i class="ti ti-file-text"></i> raw (پیش‌فرض)</button>
+        <button class="btn btn-o exp-action-btn" onclick="expSub('json')" style="text-align:right"><i class="ti ti-braces"></i> JSON (v2rayN/sing-box)</button>
+        <button class="btn btn-o exp-action-btn" onclick="expSub('clash')" style="text-align:right"><i class="ti ti-code"></i> Clash.Meta YAML</button>
+        <button class="btn btn-o exp-action-btn" onclick="expSub('encrypted')" style="text-align:right"><i class="ti ti-lock"></i> Encrypted (base64)</button>
       </div>
     </div>
   </div>
 
   <!-- Stealth Section -->
   <div class="card" style="padding:20px;margin-top:18px;border:1px solid rgba(139,92,246,.3)">
-    <h3 style="font-size:16px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px">
+    <h3 style="font-size:16px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
       <i class="ti ti-ghost" style="color:#8B5CF6"></i> بخش استتار و جعل (Stealth/Disguise)
       <span style="font-size:11px;background:rgba(139,92,246,.2);color:#8B5CF6;padding:2px 8px;border-radius:8px;font-weight:600">مجزا</span>
     </h3>
@@ -4406,20 +4486,20 @@ remote vpn.example.com 1194
       متدهای استتار/جعل داده — هر یک toggle-based، بدون تأثیر در کد اصلی.
       این متدها فقط param های جعل را به لینک اضافه می‌کنند؛ اجرای واقعی آن‌ها در کلاینت (xray-core 26+) است.
     </p>
-    <div id="exp-stealth-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px">
+    <div id="exp-stealth-grid" class="exp-stealth-grid">
       <div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--t3);font-size:12px">بارگذاری...</div>
     </div>
   </div>
 
   <!-- Anti-DPI Recheck -->
   <div class="card" style="padding:20px;margin-top:18px;border:1px solid rgba(250,204,21,.3)">
-    <h3 style="font-size:16px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px">
+    <h3 style="font-size:16px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
       <i class="ti ti-shield-check" style="color:#FACC15"></i> بررسی مجدد کانفیگ‌های ضد-DPI
     </h3>
     <p style="font-size:12px;color:var(--t3);margin-bottom:14px;line-height:1.6">
       همه‌ی کانفیگ‌های ضد-DPI (XHTTP/Reality/WS با TLS) را با پینگ واقعی تست می‌کند.
     </p>
-    <button class="btn btn-pur" onclick="expRecheckAntiDPI()" style="background:linear-gradient(135deg,#8B5CF6,#FACC15);color:#fff;font-weight:700">
+    <button class="btn btn-pur exp-recheck-btn" onclick="expRecheckAntiDPI()" style="background:linear-gradient(135deg,#8B5CF6,#FACC15);color:#fff;font-weight:700;width:100%">
       <i class="ti ti-refresh"></i> بررسی مجدد همه‌ی کانفیگ‌های ضد-DPI
     </button>
     <div id="exp-antidpi-result" style="margin-top:14px"></div>
@@ -9058,7 +9138,7 @@ function loadNodesPage(){ loadNodeKeys(); loadNodes(); }
 
 // ═════════════════════════════════════════════════════════════════════════════
 // JavaScript برای بخش آزمایشی (Experimental Section)
-// فعال‌سازی: EMIX_EXPERIMENTAL=1 — اگر فعال نباشد، UI فقط نمایش status می‌دهد
+// حالت: AUTO-ENABLED — بعد از deploy خودکار فعال است (مگر EMIX_EXPERIMENTAL=0)
 // ═════════════════════════════════════════════════════════════════════════════
 async function loadExperimentalPage(){
   try{
@@ -9069,10 +9149,10 @@ async function loadExperimentalPage(){
       document.getElementById('exp-features-grid').innerHTML = `
         <div style="grid-column:1/-1;text-align:center;padding:40px">
           <i class="ti ti-lock-off" style="font-size:48px;color:#EF4444;opacity:.6"></i>
-          <h3 style="margin-top:14px;color:#EF4444">بخش آزمایشی فعال نیست</h3>
+          <h3 style="margin-top:14px;color:#EF4444">بخش آزمایشی غیرفعال شده</h3>
           <p style="color:var(--t3);font-size:12px;margin-top:8px;line-height:1.6">
-            برای فعال‌سازی، متغیر محیطی <code style="background:rgba(0,0,0,.3);padding:2px 6px;border-radius:4px;color:#8B5CF6">EMIX_EXPERIMENTAL=1</code>
-            را در Railway تنظیم کنید و Deploy Latest Commit را بزنید.
+            ادمین با <code style="background:rgba(0,0,0,.3);padding:2px 6px;border-radius:4px;color:#EF4444">EMIX_EXPERIMENTAL=0</code>
+            آن را غیرفعال کرده است. برای فعال‌سازی، این متغیر را حذف یا به <code style="background:rgba(0,0,0,.3);padding:2px 6px;border-radius:4px;color:#10B981">1</code> تنظیم کنید و Deploy Latest Commit را بزنید.
           </p>
         </div>`;
       return;
@@ -9085,15 +9165,15 @@ async function loadExperimentalPage(){
     // Render feature cards
     const grid = document.getElementById('exp-features-grid');
     grid.innerHTML = d.features.map(f => `
-      <div style="padding:14px;border-radius:14px;background:rgba(139,92,246,${f.enabled ? '.08' : '.03'});border:1px solid rgba(139,92,246,${f.enabled ? '.4' : '.15'});">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <div style="font-weight:700;font-size:13px">${f.key}</div>
-          <span style="font-size:10px;padding:2px 8px;border-radius:6px;background:${f.enabled ? 'rgba(16,185,129,.2)' : 'rgba(0,0,0,.3)'};color:${f.enabled ? '#10B981' : 'var(--t3)'};font-weight:600">
+      <div class="exp-feature-card" style="padding:14px;border-radius:14px;background:rgba(139,92,246,${f.enabled ? '.08' : '.03'});border:1px solid rgba(139,92,246,${f.enabled ? '.4' : '.15'});">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px;flex-wrap:wrap">
+          <div style="font-weight:700;font-size:13px;flex:1;min-width:0;word-break:break-word">${f.key}</div>
+          <span style="font-size:10px;padding:2px 8px;border-radius:6px;background:${f.enabled ? 'rgba(16,185,129,.2)' : 'rgba(0,0,0,.3)'};color:${f.enabled ? '#10B981' : 'var(--t3)'};font-weight:600;flex-shrink:0">
             ${f.enabled ? '✓ ON' : '✗ OFF'}
           </span>
         </div>
         <div style="font-size:11px;color:var(--t3);line-height:1.5;margin-bottom:8px">${f.description}</div>
-        <div style="font-size:10px;color:var(--t4);font-family:monospace">${f.env_var}=1</div>
+        <div style="font-size:10px;color:var(--t4);font-family:monospace;word-break:break-all">${f.env_var}=1</div>
         ${f.requires_experimental ? '<div style="font-size:10px;color:#FACC15;margin-top:4px">⚠ نیاز به EMIX_EXPERIMENTAL=1</div>' : ''}
       </div>
     `).join('');
@@ -9102,10 +9182,10 @@ async function loadExperimentalPage(){
     if(stealthR.ok){
       const sd = await stealthR.json();
       document.getElementById('exp-stealth-grid').innerHTML = sd.stealth_methods.map(m => `
-        <div style="padding:12px;border-radius:12px;background:rgba(0,0,0,.3);border:1px solid rgba(139,92,246,${m.enabled ? '.4' : '.15'});">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-            <div style="font-weight:700;font-size:12px">${m.name}</div>
-            <span style="font-size:9px;padding:1px 6px;border-radius:4px;background:${m.enabled ? 'rgba(16,185,129,.2)' : 'rgba(0,0,0,.3)'};color:${m.enabled ? '#10B981' : 'var(--t3)'};">${m.enabled ? 'ON' : 'OFF'}</span>
+        <div class="exp-stealth-card" style="padding:12px;border-radius:12px;background:rgba(0,0,0,.3);border:1px solid rgba(139,92,246,${m.enabled ? '.4' : '.15'});">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:6px;flex-wrap:wrap">
+            <div style="font-weight:700;font-size:12px;flex:1;min-width:0;word-break:break-word">${m.name}</div>
+            <span style="font-size:9px;padding:1px 6px;border-radius:4px;background:${m.enabled ? 'rgba(16,185,129,.2)' : 'rgba(0,0,0,.3)'};color:${m.enabled ? '#10B981' : 'var(--t3)'};flex-shrink:0">${m.enabled ? 'ON' : 'OFF'}</span>
           </div>
           <div style="font-size:10px;color:var(--t3);line-height:1.4">${m.description}</div>
           <div style="font-size:9px;color:var(--t4);margin-top:4px">پلتفرم: ${m.platform}</div>
