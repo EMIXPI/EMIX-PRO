@@ -139,6 +139,17 @@ async def load_state():
             async with aiofiles.open(DATA_FILE, "r", encoding="utf-8") as f:
                 raw = await f.read()
             data = json.loads(raw)
+            # ── SNI spoofing backward-compat (Phase 1, §6.1) ────────────────────
+            # Old backups created before this feature was added will be missing
+            # `spoof_sni` and `spoof_sni_enabled`. Fill in safe defaults so the
+            # rest of the code can assume the fields exist. Behavior is identical
+            # to before (effective SNI = host when spoof_sni_enabled is False).
+            for uid, link in (data.get("links") or {}).items():
+                if isinstance(link, dict):
+                    if "spoof_sni" not in link:
+                        link["spoof_sni"] = None
+                    if "spoof_sni_enabled" not in link:
+                        link["spoof_sni_enabled"] = False
             LINKS.update(data.get("links", {}))
             SUBS.update(data.get("subs", {}))
             NODE_KEYS.update(data.get("node_keys", {}))
@@ -673,8 +684,13 @@ def generate_share_link(uuid: str, host: str, remark: str = "EMIX", protocol: st
     link = LINKS.get(uuid) or {}
     alpn = link.get("alpn", "h2")
     fp = link.get("fingerprint", "chrome")
+    # SNI Spoofing (per-link, opt-in): returns `host` unchanged when disabled
+    # or when the configured spoof value fails validation. 100% backward compat.
+    effective_sni = _get_effective_sni(link, host)
 
     if protocol == "mtproto":
+        # MTProto uses its own FakeTLS domain (mtproto_domain) — SNI spoofing
+        # is NOT applicable here. Skip entirely to preserve behavior.
         secret = link.get("mtproto_secret")
         if not secret:
             return f"tg://proxy?server={host}&port=0&secret=not_ready#{quote(remark)}"
@@ -692,6 +708,12 @@ def generate_share_link(uuid: str, host: str, remark: str = "EMIX", protocol: st
         )
 
     if protocol == "shadowsocks":
+        # SS v2ray-plugin uses `host=` parameter for BOTH WS Host header AND
+        # TLS SNI. Changing it would break WS routing through CDN edge.
+        # The protocol file (protocol/shadowsocks/shadowsocks.py) is NOT modified.
+        # SNI spoofing for SS is therefore NOT supported in this implementation
+        # — falls back to original host behavior (the panel domain).
+        # This is documented as "Partial support" in the protocol matrix.
         cipher = link.get("ss_cipher", DEFAULT_CIPHER)
         password = link.get("ss_password", "")
         return generate_ss_link(host, 443, cipher, password, remark)
@@ -699,7 +721,7 @@ def generate_share_link(uuid: str, host: str, remark: str = "EMIX", protocol: st
     if protocol == "trojan-ws":
         params = {
             "security": "tls", "type": "ws", "host": host,
-            "path": "/trojan-ws", "sni": host, "fp": fp, "alpn": alpn,
+            "path": "/trojan-ws", "sni": effective_sni, "fp": fp, "alpn": alpn,
         }
         query = "&".join(f"{k}={quote(str(v))}" for k, v in params.items())
         return f"trojan://{uuid}@{host}:443?{query}#{quote(remark)}"
@@ -709,7 +731,7 @@ def generate_share_link(uuid: str, host: str, remark: str = "EMIX", protocol: st
         path = f"/txhttp-siz10/{mode}/{uuid}"
         params = {
             "security": "tls", "type": "xhttp", "mode": mode, "host": host,
-            "path": path, "sni": host, "fp": fp, "alpn": alpn,
+            "path": path, "sni": effective_sni, "fp": fp, "alpn": alpn,
         }
         query = "&".join(f"{k}={quote(str(v))}" for k, v in params.items())
         return f"trojan://{uuid}@{host}:443?{query}#{quote(remark)}"
@@ -722,7 +744,7 @@ def generate_share_link(uuid: str, host: str, remark: str = "EMIX", protocol: st
             "type": "ws",
             "host": host,
             "path": path,
-            "sni": host,
+            "sni": effective_sni,
             "fp": fp,
             "alpn": alpn,
         }
@@ -736,7 +758,7 @@ def generate_share_link(uuid: str, host: str, remark: str = "EMIX", protocol: st
             "mode": mode,
             "host": host,
             "path": path,
-            "sni": host,
+            "sni": effective_sni,
             "fp": fp,
             "alpn": alpn,
         }
@@ -778,6 +800,63 @@ def parse_size_to_bytes(value: float, unit: str) -> int:
     if u == "KB": return int(v * 1024)
     if u in ("B", ""): return int(v)
     raise ValueError(f"unsupported size unit: {unit!r} (must be B/KB/MB/GB)")
+
+
+# ─── SNI Spoofing helpers (per-link, opt-in, zero breaking changes) ────────
+# Default behavior preserved: when spoof_sni_enabled is False or unset,
+# _get_effective_sni() returns the original host — code path is 100%
+# identical to behavior before this feature was introduced.
+import re as _re
+
+_SNI_HOSTNAME_RE = _re.compile(r"^[a-z0-9][a-z0-9\-\.]*[a-z0-9]$")
+_SNI_IPV4_RE = _re.compile(r"^\d+\.\d+\.\d+\.\d+$")
+_SNI_BLOCKED_HOSTS = frozenset({"localhost", "127.0.0.1", "0.0.0.0", "::1", "ip6-localhost"})
+
+
+def _validate_sni(value) -> str | None:
+    """Validate and normalize a spoof SNI value. Returns None if invalid.
+
+    Rules (RFC 1123 subset):
+      - non-empty string after trim+lower
+      - 3 ≤ length ≤ 253
+      - only ASCII letters/digits/hyphens/dots
+      - must contain at least one dot (TLD separator)
+      - must NOT be an IPv4 or IPv6 address
+      - must NOT be localhost / 127.0.0.1 / 0.0.0.0 / ::1
+    """
+    if not value:
+        return None
+    try:
+        s = str(value).strip().lower()
+    except Exception:
+        return None
+    if not s:
+        return None
+    if len(s) > 253 or len(s) < 3:
+        return None
+    if not _SNI_HOSTNAME_RE.fullmatch(s):
+        return None
+    if "." not in s:
+        return None
+    if _SNI_IPV4_RE.match(s):
+        return None
+    if s in _SNI_BLOCKED_HOSTS:
+        return None
+    return s
+
+
+def _get_effective_sni(link: dict | None, host: str) -> str:
+    """Return spoofed SNI if enabled+valid, otherwise return original host.
+
+    Defensive: if link is None, spoof_sni_enabled is False/missing, or the
+    configured spoof value fails validation, fall back to the original host.
+    This preserves 100% backward compatibility — every existing link
+    continues to use its host as the SNI.
+    """
+    if not link or not link.get("spoof_sni_enabled"):
+        return host
+    spoof = _validate_sni(link.get("spoof_sni"))
+    return spoof if spoof else host
 
 def is_link_expired(link: dict) -> bool:
     exp = link.get("expires_at")
@@ -1870,6 +1949,20 @@ async def _create_link_core(body: dict) -> dict:
     if fp_val not in ("chrome", "firefox", "ios"):
         fp_val = "chrome"
 
+    # ── SNI Spoofing (per-link, opt-in, zero breaking changes) ──────────
+    # Default: spoof_sni=None, spoof_sni_enabled=False → effective SNI = host
+    # (identical to behavior before this feature was introduced).
+    # MTProto + HTTP-Proxy skip SNI spoofing entirely (handled in generate_share_link).
+    spoof_raw = (body.get("spoof_sni") or "").strip() if isinstance(body.get("spoof_sni"), str) else ""
+    spoof_enabled = bool(body.get("spoof_sni_enabled", False))
+    spoof_sni = None
+    if spoof_enabled and spoof_raw:
+        spoof_sni = _validate_sni(spoof_raw)
+        if not spoof_sni:
+            raise HTTPException(status_code=400, detail="دامنه‌ی SNI نامعتبر است (باید hostname معتبر، غیر IP، غیر localhost باشد)")
+    # If user enabled but didn't provide a valid domain, silently disable
+    spoof_enabled = spoof_enabled and bool(spoof_sni)
+
     uid = generate_uuid()
     link_data = {
         "label": label,
@@ -1885,6 +1978,8 @@ async def _create_link_core(body: dict) -> dict:
         "sub_id": sub_id,
         "protocol": protocol,
         "ad_tag": None,
+        "spoof_sni": spoof_sni,
+        "spoof_sni_enabled": spoof_enabled,
     }
 
     if protocol == "mtproto":
@@ -2012,6 +2107,11 @@ async def list_links(_=Depends(require_auth)):
             **extra,
             "protocol": proto,
             "expired": is_link_expired(d),
+            # SNI spoofing: expose the effective SNI used in generated share-links
+            # so the dashboard can show what the client will actually receive.
+            "spoof_sni": d.get("spoof_sni"),
+            "spoof_sni_enabled": bool(d.get("spoof_sni_enabled", False)),
+            "effective_sni": _get_effective_sni(d, host),
             "vless_link": generate_share_link(uid, host, remark=f"EMIX-{d['label']}", protocol=proto),
             "sub_url": f"https://{host}/sub/{uid}",
         })
@@ -2082,7 +2182,24 @@ async def update_link(uid: str, request: Request, _=Depends(require_auth)):
         if "fingerprint" in body:
             fp_val = str(body["fingerprint"]).strip()
             link["fingerprint"] = fp_val if fp_val in ("chrome", "firefox", "ios") else "chrome"
-        if any(k in body for k in ("label", "note", "limit_value", "expires_days", "alpn", "fingerprint")):
+        # ── SNI Spoofing (per-link, opt-in) ──────────────────────────────────
+        # PATCH semantics:
+        #   - "spoof_sni": update the spoof domain (validated; None if invalid)
+        #   - "spoof_sni_enabled": toggle on/off; if enabling but spoof_sni is
+        #     None/invalid, reject with 400 (admin must set a valid domain first)
+        # Default behavior preserved when fields absent from PATCH body.
+        if "spoof_sni" in body:
+            new_spoof = _validate_sni(body.get("spoof_sni"))
+            link["spoof_sni"] = new_spoof
+            # If spoof_sni was just cleared and the link is currently enabled, disable
+            if not new_spoof and link.get("spoof_sni_enabled"):
+                link["spoof_sni_enabled"] = False
+        if "spoof_sni_enabled" in body:
+            want_enabled = bool(body.get("spoof_sni_enabled"))
+            if want_enabled and not link.get("spoof_sni"):
+                raise HTTPException(status_code=400, detail="ابتدا یک دامنه‌ی SNI معتبر وارد کنید")
+            link["spoof_sni_enabled"] = want_enabled
+        if any(k in body for k in ("label", "note", "limit_value", "expires_days", "alpn", "fingerprint", "spoof_sni", "spoof_sni_enabled")):
             log_activity("link", f"کانفیگ «{link['label']}» ویرایش شد", "info")
         new_sub = body.get("sub_id", "UNCHANGED")
         if new_sub != "UNCHANGED":
@@ -3512,7 +3629,7 @@ except Exception as _exc:
 # تا قبل از لاگین هم قابل بررسی باشد. (از /api/version استفاده نمی‌کنیم چون
 # آن مسیر قبلاً برای بررسی به‌روزرسانی در نظر گرفته شده است.)
 # ══════════════════════════════════════════════════════════════════════════════
-EMIX_VERSION = "9.11.0-reverse-proxy-edge"
+EMIX_VERSION = "9.12.0-sni-spoofing"
 EMIX_BUILD_DATE = "2026-08-29"
 
 @app.get("/api/deployment-version")

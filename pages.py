@@ -2158,6 +2158,41 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
         </div>
       </div>
 
+      <!-- ── SNI Spoofing (per-link, opt-in) ──────────────────────────────────
+           Hidden for MTProto (uses FakeTLS domain — SNI spoofing not applicable)
+           Hidden for Shadowsocks (v2ray-plugin host= is shared between WS Host
+           and TLS SNI — changing it would break routing through CDN edge).
+           Visible for: VLESS-WS, VLESS-XHTTP, Trojan-WS, Trojan-XHTTP. -->
+      <div class="cm-section" id="sni-spoof-field" style="display:none;margin-bottom:0">
+        <div class="cm-section-label"><i class="ti ti-mask"></i> SNI Spoofing (جعل SNI در TLS Handshake)</div>
+        <div class="cm-row2" style="align-items:center;gap:10px">
+          <label class="tog-wrap" style="display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none">
+            <span class="tog" id="nl-spoof-toggle" onclick="cmToggleSpoof()"></span>
+            <span style="font-size:12px;font-weight:600;color:var(--t2)">🎭 فعال‌سازی SNI جعلی</span>
+          </label>
+        </div>
+        <div id="nl-spoof-controls" style="display:none;margin-top:10px">
+          <div class="cm-row2" style="gap:8px">
+            <input class="cm-input" id="nl-spoof-sni" type="text" placeholder="www.google.com" style="direction:ltr;text-align:left;font-family:monospace">
+            <select class="cm-input" id="nl-spoof-preset" onchange="cmSpoofPreset(this)" style="flex:.5">
+              <option value="">— انتخاب سریع —</option>
+              <option value="www.google.com">www.google.com</option>
+              <option value="www.cloudflare.com">www.cloudflare.com</option>
+              <option value="docs.google.com">docs.google.com</option>
+              <option value="drive.google.com">drive.google.com</option>
+              <option value="images.unsplash.com">images.unsplash.com</option>
+              <option value="api.github.com">api.github.com</option>
+              <option value="mail.yahoo.com">mail.yahoo.com</option>
+            </select>
+          </div>
+          <div class="cm-note" style="margin-top:8px">
+            <i class="ti ti-info-circle"></i>
+            <span>SNI جعلی در هندشیک TLS ارسال می‌شود. دامنه باید واقعی و روی CDN قابل resolve باشد.</span>
+          </div>
+        </div>
+        <input type="hidden" id="nl-spoof-enabled" value="0">
+      </div>
+
       <div class="cm-section" id="mtproto-port-field" style="display:none;margin-bottom:0">
         <div id="auto-domain-box" style="margin-top:10px, display: none">
           <div id="auto-domain-token-wrap" style="display:none;margin-top:9px">
@@ -6683,6 +6718,7 @@ async function loadLinks(){
       <div class="cfg-badges-col">
         ${protoBadge(l.protocol)}
         ${pingBadgeHtml(l)}
+        ${l.spoof_sni_enabled && l.spoof_sni ? `<span class="cfg-sub-tag" style="background:linear-gradient(135deg,rgba(139,92,246,.18),rgba(250,204,21,.12));color:#FFD1C2;padding:3px 9px;border-radius:20px;border:1px solid rgba(139,92,246,.25);font-weight:700" title="SNI جعلی فعال — SNI ارسالی در TLS Handshake: ${esc(l.spoof_sni)}"><i class="ti ti-mask" style="color:#FFD1C2"></i> 🎭 ${esc(l.spoof_sni)}</span>` : ''}
         ${isMt && l.ad_tag ? `<span class="cfg-sub-tag" style="background:linear-gradient(135deg,rgba(168,85,247,.18),rgba(202,138,4,.12));color:#FFB199;padding:3px 9px;border-radius:20px;border:1px solid rgba(168,85,247,.25);font-weight:700"><i class="ti ti-speakerphone" style="color:#FFB199"></i> تبلیغ فعال</span>` : ''}
         ${isMt && l.mtproto_public_host ? `<span class="cfg-sub-tag"><i class="ti ti-route"></i> ${esc(l.mtproto_public_host)}:${l.mtproto_public_port}</span>` : ''}
         ${isMt && !l.mtproto_public_host && l.mtproto_public_pending ? `<span class="cfg-sub-tag" style="color:var(--amber-t)"><i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i> در حال ساخت TCP Proxy عمومی...</span>` : ''}
@@ -6863,6 +6899,7 @@ function cmSelectBase(val, el){
   const mtNote = document.getElementById('mtproto-note');
   const portField = document.getElementById('mtproto-port-field');
   const ssField = document.getElementById('ss-cipher-field');
+  const sniSpoofField = document.getElementById('sni-spoof-field');
 
   if (val === 'telproxy') {
     streamSection.style.display = 'none';
@@ -6870,6 +6907,7 @@ function cmSelectBase(val, el){
     mtNote.style.display = 'flex';
     portField.style.display = 'block';
     if (ssField) ssField.style.display = 'none';
+    if (sniSpoofField) sniSpoofField.style.display = 'none';  // MTProto uses FakeTLS — no SNI spoofing
     document.getElementById('cm-head-title').textContent = 'ساخت پروکسی جدید';
     document.getElementById('cm-head-sub').textContent = 'ساخت پروکسی تلگرام (MTProto) با پورت TCP اختصاصی';
     document.getElementById('cm-submit-text').textContent = 'ساخت پروکسی';
@@ -6884,6 +6922,9 @@ function cmSelectBase(val, el){
     mtNote.style.display = 'none';
     portField.style.display = 'none';
     if (ssField) ssField.style.display = 'block';
+    // SS v2ray-plugin host= is shared between WS Host + TLS SNI — changing it
+    // would break routing through CDN edge. SNI spoofing NOT supported for SS.
+    if (sniSpoofField) sniSpoofField.style.display = 'none';
     document.getElementById('cm-head-title').textContent = 'ساخت کانفیگ Shadowsocks';
     document.getElementById('cm-head-sub').textContent = 'رمزنگاری AEAD، پسورد به‌صورت خودکار ساخته می‌شود';
     document.getElementById('cm-submit-text').textContent = 'ساخت کانفیگ';
@@ -6894,6 +6935,8 @@ function cmSelectBase(val, el){
     mtNote.style.display = 'none';
     portField.style.display = 'none';
     if (ssField) ssField.style.display = 'none';
+    // VLESS + Trojan (WS/XHTTP) — SNI spoofing fully supported
+    if (sniSpoofField) sniSpoofField.style.display = 'block';
     document.getElementById('cm-head-title').textContent = 'ساخت کانفیگ جدید';
     document.getElementById('cm-head-sub').textContent = 'تنظیمات کامل پروتکل، ترابرد و محدودیت‌ها در یک صفحه';
     document.getElementById('cm-submit-text').textContent = 'ساخت کانفیگ';
@@ -6946,6 +6989,27 @@ function cmSetSni(domain, el){
   el.parentElement.querySelectorAll('.cm-pill').forEach(c => c.classList.remove('active'));
   el.classList.add('active');
 }
+
+// ── SNI Spoofing toggle/preset helpers (per-link, opt-in) ───────────────
+function cmToggleSpoof(){
+  const toggle = document.getElementById('nl-spoof-toggle');
+  const controls = document.getElementById('nl-spoof-controls');
+  const enabledInput = document.getElementById('nl-spoof-enabled');
+  const sniInput = document.getElementById('nl-spoof-sni');
+  if(!toggle || !controls || !enabledInput) return;
+  const isOn = toggle.classList.toggle('on');
+  controls.style.display = isOn ? 'block' : 'none';
+  enabledInput.value = isOn ? '1' : '0';
+  if(!isOn && sniInput) sniInput.value = '';
+}
+function cmSpoofPreset(sel){
+  const v = (sel && sel.value) || '';
+  if(!v) return;
+  const sniInput = document.getElementById('nl-spoof-sni');
+  if(sniInput) sniInput.value = v;
+  sel.value = '';  // reset dropdown so user can pick again
+}
+
 function cmClearSniPills(){
   const wrap = document.getElementById('nl-mtproto-domain').closest('.cm-section').querySelector('.cm-pills');
   wrap?.querySelectorAll('.cm-pill').forEach(c => c.classList.remove('active'));
@@ -7020,14 +7084,36 @@ async function createLink(){
   const alpn = (isMt || isSs) ? null : (document.getElementById('nl-alpn').value || 'h2,http/1.1');
   const fingerprint = (isMt || isSs) ? null : (document.getElementById('nl-fp').value || 'chrome');
   const ss_cipher = isSs ? (document.getElementById('nl-ss-cipher').value || 'chacha20-ietf-poly1305') : null;
+  // ── SNI Spoofing (per-link, opt-in) ──────────────────────────────────
+  // Only sent for VLESS/Trojan (WS/XHTTP). The backend also validates +
+  // rejects invalid values, so client-side is just UX.
+  let spoof_sni = null, spoof_sni_enabled = false;
+  if (!isMt && !isSs) {
+    const spoofEnabledEl = document.getElementById('nl-spoof-enabled');
+    const spoofSniEl = document.getElementById('nl-spoof-sni');
+    if (spoofEnabledEl && spoofEnabledEl.value === '1' && spoofSniEl) {
+      spoof_sni = spoofSniEl.value.trim();
+      spoof_sni_enabled = !!spoof_sni;
+      if (spoof_sni_enabled && !spoof_sni) {
+        toast('یک دامنه‌ی SNI معتبر وارد کنید', 'err'); return;
+      }
+    }
+  }
   try{
     const url = nodeId ? ('/api/nodes/'+nodeId+'/links') : '/api/links';
-    const r=await authF(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({label,limit_value:val||0,limit_unit:unit,expires_days:exp||0,note,sub_id,protocol,mtproto_port,mtproto_domain,mtproto_public_host,mtproto_public_port,alpn,fingerprint,ss_cipher})});
+    const r=await authF(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({label,limit_value:val||0,limit_unit:unit,expires_days:exp||0,note,sub_id,protocol,mtproto_port,mtproto_domain,mtproto_public_host,mtproto_public_port,alpn,fingerprint,ss_cipher,spoof_sni,spoof_sni_enabled})});
     if(!r.ok){
       const d=await r.json().catch(()=>({}));
       throw new Error(d.detail||'failed');
     }
-    ['nl-label','nl-val','nl-exp','nl-note','nl-mtproto-port','nl-mtproto-domain','nl-mtproto-public-host','nl-mtproto-public-port'].forEach(id=>document.getElementById(id).value='');
+    ['nl-label','nl-val','nl-exp','nl-note','nl-mtproto-port','nl-mtproto-domain','nl-mtproto-public-host','nl-mtproto-public-port','nl-spoof-sni'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+    // Reset SNI spoofing toggle to OFF after successful submit
+    const spoofToggle=document.getElementById('nl-spoof-toggle');
+    const spoofControls=document.getElementById('nl-spoof-controls');
+    const spoofEnabledInput=document.getElementById('nl-spoof-enabled');
+    if(spoofToggle){spoofToggle.classList.remove('on');}
+    if(spoofControls){spoofControls.style.display='none';}
+    if(spoofEnabledInput){spoofEnabledInput.value='0';}
     toast(isMt ? 'پروکسی ساخته شد ✓' : (nodeId?'کانفیگ روی نود ساخته شد ✓':'کانفیگ ساخته شد ✓'),'ok');
     loadLinks();
   }catch(e){toast('✗ '+(e.message||'خطا (شاید کلید این نود اجازه‌ی ساخت از راه دور ندارد)'),'err')}

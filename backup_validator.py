@@ -117,6 +117,20 @@ def _validate_link(uid: str, link: Any) -> list[str]:
     if created is not None and not _is_iso_timestamp(created):
         errors.append(f"link[{uid[:8]}] 'created_at' must be ISO timestamp or null")
 
+    # ── SNI spoofing fields (optional, but if present must be right type) ──
+    # spoof_sni: must be a string (or null). Empty string is allowed (treated
+    # as "no spoof"). Validation of the domain content is done at runtime by
+    # _validate_sni() in main.py — the backup validator only checks types.
+    spoof_sni = link.get("spoof_sni")
+    if spoof_sni is not None and not isinstance(spoof_sni, str):
+        errors.append(f"link[{uid[:8]}] 'spoof_sni' must be a string or null, got {type(spoof_sni).__name__}")
+    elif isinstance(spoof_sni, str) and len(spoof_sni) > 253:
+        errors.append(f"link[{uid[:8]}] 'spoof_sni' must be ≤ 253 chars (RFC 1123)")
+
+    spoof_enabled = link.get("spoof_sni_enabled", False)
+    if not isinstance(spoof_enabled, bool):
+        errors.append(f"link[{uid[:8]}] 'spoof_sni_enabled' must be boolean, got {type(spoof_enabled).__name__}")
+
     return errors
 
 
