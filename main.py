@@ -3674,19 +3674,9 @@ try:
     @app.get("/api/security/signatures", dependencies=[Depends(require_auth)])
     async def _sig_list():
         return security_signatures.all_profiles_dict()
-    @app.get("/api/security/signatures/{profile_id}", dependencies=[Depends(require_auth)])
-    async def _sig_get(profile_id: str):
-        p = security_signatures.get_profile(profile_id)
-        if p is None:
-            raise HTTPException(status_code=404, detail="signature profile not found")
-        return {"profile": p.to_dict(), "supported_in_runtime": p.is_supported_in_runtime()}
-    @app.post("/api/security/signatures/{profile_id}/health", dependencies=[Depends(require_auth)])
-    async def _sig_health(profile_id: str):
-        p = security_signatures.get_profile(profile_id)
-        if p is None:
-            raise HTTPException(status_code=404, detail="signature profile not found")
-        result = await security_signatures.health_check_profile(p)
-        return {"ok": True, "result": result}
+    # IMPORTANT: specific routes (randomized, recommend) MUST come BEFORE
+    # /api/security/signatures/{profile_id} — otherwise FastAPI matches
+    # "randomized" or "recommend" against the {profile_id} path parameter.
     @app.get("/api/security/signatures/randomized", dependencies=[Depends(require_auth)])
     async def _sig_randomized():
         return security_signatures.randomized_profile_dict()
@@ -3702,6 +3692,19 @@ try:
         if p is None:
             raise HTTPException(status_code=404, detail="no recommendation for given inputs")
         return {"recommended": p.to_dict()}
+    @app.get("/api/security/signatures/{profile_id}", dependencies=[Depends(require_auth)])
+    async def _sig_get(profile_id: str):
+        p = security_signatures.get_profile(profile_id)
+        if p is None:
+            raise HTTPException(status_code=404, detail="signature profile not found")
+        return {"profile": p.to_dict(), "supported_in_runtime": p.is_supported_in_runtime()}
+    @app.post("/api/security/signatures/{profile_id}/health", dependencies=[Depends(require_auth)])
+    async def _sig_health(profile_id: str):
+        p = security_signatures.get_profile(profile_id)
+        if p is None:
+            raise HTTPException(status_code=404, detail="signature profile not found")
+        result = await security_signatures.health_check_profile(p)
+        return {"ok": True, "result": result}
     # VPN Pro: nodes + preflight + config generators
     @app.get("/api/vpn/nodes", dependencies=[Depends(require_auth)])
     async def _vpn_nodes():
