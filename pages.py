@@ -2932,6 +2932,8 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
     <div class="nav-it" data-pg="logs"><i class="ti ti-history"></i> لاگ فعالیت‌ها</div>
     <div class="nav-it" data-pg="errors"><i class="ti ti-alert-triangle"></i> خطاها</div>
     <div class="nav-it" data-pg="settings"><i class="ti ti-settings"></i> تنظیمات</div>
+    <div class="nav-it" data-pg="experimental" style="background:linear-gradient(135deg,rgba(139,92,246,.18),rgba(250,204,21,.10));border-top:1px solid rgba(139,92,246,.3);margin-top:8px"><i class="ti ti-flask" style="color:#8B5CF6"></i> 🧪 بخش آزمایشی <span class="nav-badge" id="exp-nb" style="background:#8B5CF6;color:#fff">جدید</span></div>
+    <div class="nav-it" data-pg="unified-configs"><i class="ti ti-grid-dots" style="color:#FACC15"></i> 🎯 همه‌ی کانفیگ‌ها</div>
   </div>
   <div class="sb-foot">
     <button class="theme-btn" onclick="toggleTheme()"><i class="ti ti-moon" id="theme-icon"></i> <span id="theme-label">تم روشن</span></button>
@@ -4316,6 +4318,139 @@ remote vpn.example.com 1194
     </div>
   </div>
 </section>
+
+<!-- ════════════════════════════════════════════════════════════════════════════
+     بخش آزمایشی (Experimental Section) — تمام فیچرهای جدید در اینجا قرار دارند
+     فعال‌سازی: EMIX_EXPERIMENTAL=1 + EMIX_ENABLE_<FEATURE>=1
+     اگر فعال نباشد، این بخش فقط نمایش status می‌دهد و هیچ تأثیری ندارد.
+     ════════════════════════════════════════════════════════════════════════════ -->
+<section class="pg" id="pg-experimental">
+  <div class="page-hdr" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+    <div>
+      <h1 style="font-size:24px;font-weight:800;color:#8B5CF6;display:flex;align-items:center;gap:10px">
+        <i class="ti ti-flask" style="font-size:28px"></i> بخش آزمایشی (Experimental)
+      </h1>
+      <p style="color:var(--t3);font-size:13px;margin-top:4px">تمام فیچرهای جدید — toggle-based. فعال‌سازی با متغیرهای محیطی.</p>
+    </div>
+    <div id="exp-status-badge" style="padding:8px 16px;border-radius:12px;background:rgba(139,92,246,.1);border:1px solid rgba(139,92,246,.3);font-weight:700;font-size:13px;color:#8B5CF6">Loading...</div>
+  </div>
+
+  <!-- Warning Banner -->
+  <div id="exp-warning" style="padding:14px 18px;background:linear-gradient(135deg,rgba(250,204,21,.08),rgba(239,68,68,.08));border:1px solid rgba(250,204,21,.3);border-radius:14px;margin-bottom:20px;display:flex;gap:12px;align-items:flex-start">
+    <i class="ti ti-alert-triangle" style="font-size:22px;color:#FACC15;flex-shrink:0"></i>
+    <div>
+      <div style="font-weight:700;color:#FACC15;margin-bottom:4px">راهنمای فعال‌سازی</div>
+      <div style="font-size:12px;color:var(--t2);line-height:1.6">
+        برای فعال‌سازی هر فیچر، دو متغیر محیطی در Railway تنظیم کنید:<br>
+        <code style="background:rgba(0,0,0,.3);padding:2px 6px;border-radius:4px;color:#8B5CF6">EMIX_EXPERIMENTAL=1</code>
+        (فعال‌سازی کل بخش) و
+        <code style="background:rgba(0,0,0,.3);padding:2px 6px;border-radius:4px;color:#8B5CF6">EMIX_ENABLE_&lt;FEATURE&gt;=1</code>
+        (فعال‌سازی فیچر خاص).<br>
+        پس از تغییر، <strong>Deploy Latest Commit</strong> در Railway را بزنید (نه Redeploy).
+      </div>
+    </div>
+  </div>
+
+  <!-- Features Grid -->
+  <div id="exp-features-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;margin-bottom:24px">
+    <div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--t3)">
+      <i class="ti ti-loader-2" style="font-size:32px;animation:spin 1s linear infinite"></i>
+      <div style="margin-top:8px;font-size:13px">در حال بارگذاری...</div>
+    </div>
+  </div>
+
+  <!-- Sub-sections -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:20px">
+    <div class="card" style="padding:20px">
+      <h3 style="font-size:16px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px">
+        <i class="ti ti-bolt" style="color:#8B5CF6"></i> تولید لینک‌های جدید
+      </h3>
+      <p style="font-size:12px;color:var(--t3);margin-bottom:14px;line-height:1.6">
+        صدور share-link برای پروتکل‌های جدید (VMESS/Reality/SS-2022/FinalMask) بدون نیاز به inbound واقعی.
+        کاربر می‌تواند لینک را در کلاینت خود وارد کند.
+      </p>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <button class="btn btn-o" onclick="expEmitLink('vmess')" style="text-align:right"><i class="ti ti-link"></i> VMESS base64-JSON</button>
+        <button class="btn btn-o" onclick="expEmitLink('vless-reality')" style="text-align:right"><i class="ti ti-shield-lock"></i> VLESS-Reality</button>
+        <button class="btn btn-o" onclick="expEmitLink('trojan-reality')" style="text-align:right"><i class="ti ti-shield-lock"></i> Trojan-Reality</button>
+        <button class="btn btn-o" onclick="expEmitLink('ss2022')" style="text-align:right"><i class="ti ti-key"></i> Shadowsocks-2022</button>
+        <button class="btn btn-o" onclick="expEmitLink('spiderx')" style="text-align:right"><i class="ti ti-route"></i> Reality spiderX path</button>
+        <button class="btn btn-o" onclick="expEmitLink('finalmask')" style="text-align:right"><i class="ti ti-mask"></i> FinalMask (TLS fragmentation)</button>
+        <button class="btn btn-o" onclick="expEmitLink('utls')" style="text-align:right"><i class="ti ti-fingerprint"></i> uTLS fingerprint</button>
+      </div>
+    </div>
+
+    <div class="card" style="padding:20px">
+      <h3 style="font-size:16px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px">
+        <i class="ti ti-rss" style="color:#FACC15"></i> فرمت‌های سابسکریپشن
+      </h3>
+      <p style="font-size:12px;color:var(--t3);margin-bottom:14px;line-height:1.6">
+        خروجی subscription در چند فرمت برای پشتیبانی همه‌ی کلاینت‌ها (v2rayN/sing-box/Clash.Meta).
+      </p>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <button class="btn btn-o" onclick="expSub('raw')" style="text-align:right"><i class="ti ti-file-text"></i> raw (پیش‌فرض)</button>
+        <button class="btn btn-o" onclick="expSub('json')" style="text-align:right"><i class="ti ti-braces"></i> JSON (v2rayN/sing-box)</button>
+        <button class="btn btn-o" onclick="expSub('clash')" style="text-align:right"><i class="ti ti-code"></i> Clash.Meta YAML</button>
+        <button class="btn btn-o" onclick="expSub('encrypted')" style="text-align:right"><i class="ti ti-lock"></i> Encrypted (base64)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stealth Section -->
+  <div class="card" style="padding:20px;margin-top:18px;border:1px solid rgba(139,92,246,.3)">
+    <h3 style="font-size:16px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px">
+      <i class="ti ti-ghost" style="color:#8B5CF6"></i> بخش استتار و جعل (Stealth/Disguise)
+      <span style="font-size:11px;background:rgba(139,92,246,.2);color:#8B5CF6;padding:2px 8px;border-radius:8px;font-weight:600">مجزا</span>
+    </h3>
+    <p style="font-size:12px;color:var(--t3);margin-bottom:14px;line-height:1.6">
+      متدهای استتار/جعل داده — هر یک toggle-based، بدون تأثیر در کد اصلی.
+      این متدها فقط param های جعل را به لینک اضافه می‌کنند؛ اجرای واقعی آن‌ها در کلاینت (xray-core 26+) است.
+    </p>
+    <div id="exp-stealth-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px">
+      <div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--t3);font-size:12px">بارگذاری...</div>
+    </div>
+  </div>
+
+  <!-- Anti-DPI Recheck -->
+  <div class="card" style="padding:20px;margin-top:18px;border:1px solid rgba(250,204,21,.3)">
+    <h3 style="font-size:16px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px">
+      <i class="ti ti-shield-check" style="color:#FACC15"></i> بررسی مجدد کانفیگ‌های ضد-DPI
+    </h3>
+    <p style="font-size:12px;color:var(--t3);margin-bottom:14px;line-height:1.6">
+      همه‌ی کانفیگ‌های ضد-DPI (XHTTP/Reality/WS با TLS) را با پینگ واقعی تست می‌کند.
+    </p>
+    <button class="btn btn-pur" onclick="expRecheckAntiDPI()" style="background:linear-gradient(135deg,#8B5CF6,#FACC15);color:#fff;font-weight:700">
+      <i class="ti ti-refresh"></i> بررسی مجدد همه‌ی کانفیگ‌های ضد-DPI
+    </button>
+    <div id="exp-antidpi-result" style="margin-top:14px"></div>
+  </div>
+</section>
+
+<!-- Unified Configs View (Phase 8) — همه‌ی کانفیگ‌ها در یک view مرکزی -->
+<section class="pg" id="pg-unified-configs">
+  <div class="page-hdr" style="margin-bottom:20px">
+    <h1 style="font-size:24px;font-weight:800;color:#FACC15;display:flex;align-items:center;gap:10px">
+      <i class="ti ti-grid-dots" style="font-size:28px"></i> همه‌ی کانفیگ‌ها (Unified)
+    </h1>
+    <p style="color:var(--t3);font-size:13px;margin-top:4px">نمایش مرکزی همه‌ی کانفیگ‌ها از همه‌ی بخش‌های پنل — با type badge و سلامت.</p>
+  </div>
+
+  <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+    <button class="btn btn-o" onclick="filterUnifiedConfigs('all')">همه</button>
+    <button class="btn btn-o" onclick="filterUnifiedConfigs('links')">کانفیگ‌های اصلی</button>
+    <button class="btn btn-o" onclick="filterUnifiedConfigs('subscriptions')">ساب‌گروپ‌ها</button>
+    <button class="btn btn-o" onclick="filterUnifiedConfigs('nodes')">نودها</button>
+    <button class="btn btn-o" onclick="filterUnifiedConfigs('vpn-pro')">VPN Pro</button>
+    <button class="btn btn-o" onclick="filterUnifiedConfigs('experimental')">آزمایشی</button>
+  </div>
+
+  <div id="unified-configs-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px">
+    <div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--t3)">
+      <i class="ti ti-loader-2" style="font-size:32px;animation:spin 1s linear infinite"></i>
+      <div style="margin-top:8px;font-size:13px">بارگذاری...</div>
+    </div>
+  </div>
+</section>
 </main>
 <script>
 let isDark=localStorage.getItem('rvg-theme')!=='light';
@@ -4476,7 +4611,7 @@ function navTo(name){
   document.querySelectorAll('.pg').forEach(p=>p.classList.toggle('on',p.id==='pg-'+name));
   // ورود پلکانی کارت‌ها فقط هنگام سوییچ صفحه
   if(name==='links'){document.body.classList.add('cascade');setTimeout(()=>document.body.classList.remove('cascade'),650)}
-  const loaders={links:loadLinks,bridge:loadBridgePage,connections:loadConns,errors:loadErrs,subscriptions:loadSubsPage,subgroups:loadSubs,logs:loadActivity,updates:loadVersion,support:loadSupportMsgs,nodes:loadNodesPage,zeus:loadZeusPage,gaming:loadGamingPage,vpn:loadVPNPage};  if(loaders[name])loaders[name]();
+  const loaders={links:loadLinks,bridge:loadBridgePage,connections:loadConns,errors:loadErrs,subscriptions:loadSubsPage,subgroups:loadSubs,logs:loadActivity,updates:loadVersion,support:loadSupportMsgs,nodes:loadNodesPage,zeus:loadZeusPage,gaming:loadGamingPage,vpn:loadVPNPage,experimental:loadExperimentalPage,'unified-configs':loadUnifiedConfigsPage};  if(loaders[name])loaders[name]();
   closeSb();window.scrollTo({top:0,behavior:'smooth'});
 }
 document.querySelectorAll('.nav-it').forEach(el=>el.addEventListener('click',()=>navTo(el.dataset.pg)));
@@ -8920,6 +9055,220 @@ async function loadNodes(fresh){
 }
 
 function loadNodesPage(){ loadNodeKeys(); loadNodes(); }
+
+// ═════════════════════════════════════════════════════════════════════════════
+// JavaScript برای بخش آزمایشی (Experimental Section)
+// فعال‌سازی: EMIX_EXPERIMENTAL=1 — اگر فعال نباشد، UI فقط نمایش status می‌دهد
+// ═════════════════════════════════════════════════════════════════════════════
+async function loadExperimentalPage(){
+  try{
+    const r = await authF('/api/exp/status');
+    if(!r.ok){
+      document.getElementById('exp-status-badge').textContent = '⚠ بخش غیرفعال';
+      document.getElementById('exp-status-badge').style.color = '#EF4444';
+      document.getElementById('exp-features-grid').innerHTML = `
+        <div style="grid-column:1/-1;text-align:center;padding:40px">
+          <i class="ti ti-lock-off" style="font-size:48px;color:#EF4444;opacity:.6"></i>
+          <h3 style="margin-top:14px;color:#EF4444">بخش آزمایشی فعال نیست</h3>
+          <p style="color:var(--t3);font-size:12px;margin-top:8px;line-height:1.6">
+            برای فعال‌سازی، متغیر محیطی <code style="background:rgba(0,0,0,.3);padding:2px 6px;border-radius:4px;color:#8B5CF6">EMIX_EXPERIMENTAL=1</code>
+            را در Railway تنظیم کنید و Deploy Latest Commit را بزنید.
+          </p>
+        </div>`;
+      return;
+    }
+    const d = await r.json();
+    document.getElementById('exp-status-badge').innerHTML = d.experimental_enabled ?
+      '✓ فعال — ' + d.features.filter(f=>f.enabled).length + ' فیچر' :
+      '⚠ غیرفعال (EMIX_EXPERIMENTAL=0)';
+    document.getElementById('exp-status-badge').style.color = d.experimental_enabled ? '#10B981' : '#FACC15';
+    // Render feature cards
+    const grid = document.getElementById('exp-features-grid');
+    grid.innerHTML = d.features.map(f => `
+      <div style="padding:14px;border-radius:14px;background:rgba(139,92,246,${f.enabled ? '.08' : '.03'});border:1px solid rgba(139,92,246,${f.enabled ? '.4' : '.15'});">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div style="font-weight:700;font-size:13px">${f.key}</div>
+          <span style="font-size:10px;padding:2px 8px;border-radius:6px;background:${f.enabled ? 'rgba(16,185,129,.2)' : 'rgba(0,0,0,.3)'};color:${f.enabled ? '#10B981' : 'var(--t3)'};font-weight:600">
+            ${f.enabled ? '✓ ON' : '✗ OFF'}
+          </span>
+        </div>
+        <div style="font-size:11px;color:var(--t3);line-height:1.5;margin-bottom:8px">${f.description}</div>
+        <div style="font-size:10px;color:var(--t4);font-family:monospace">${f.env_var}=1</div>
+        ${f.requires_experimental ? '<div style="font-size:10px;color:#FACC15;margin-top:4px">⚠ نیاز به EMIX_EXPERIMENTAL=1</div>' : ''}
+      </div>
+    `).join('');
+    // Render stealth grid
+    const stealthR = await authF('/api/exp/stealth/registry');
+    if(stealthR.ok){
+      const sd = await stealthR.json();
+      document.getElementById('exp-stealth-grid').innerHTML = sd.stealth_methods.map(m => `
+        <div style="padding:12px;border-radius:12px;background:rgba(0,0,0,.3);border:1px solid rgba(139,92,246,${m.enabled ? '.4' : '.15'});">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <div style="font-weight:700;font-size:12px">${m.name}</div>
+            <span style="font-size:9px;padding:1px 6px;border-radius:4px;background:${m.enabled ? 'rgba(16,185,129,.2)' : 'rgba(0,0,0,.3)'};color:${m.enabled ? '#10B981' : 'var(--t3)'};">${m.enabled ? 'ON' : 'OFF'}</span>
+          </div>
+          <div style="font-size:10px;color:var(--t3);line-height:1.4">${m.description}</div>
+          <div style="font-size:9px;color:var(--t4);margin-top:4px">پلتفرم: ${m.platform}</div>
+        </div>
+      `).join('');
+    }else{
+      document.getElementById('exp-stealth-grid').innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:14px;color:var(--t3);font-size:11px">بخش استتار فعال نیست</div>';
+    }
+  }catch(e){
+    document.getElementById('exp-status-badge').textContent = '⚠ بخش غیرفعال';
+    document.getElementById('exp-features-grid').innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--t3);font-size:12px">${e.message}</div>`;
+  }
+}
+
+// ── Emit link functions ──────────────────────────────────────────────
+async function expEmitLink(type){
+  const modals = {
+    'vmess': { title: 'VMESS base64-JSON', fields: ['address','port','uuid','name','net','host','path','sni','fp'] },
+    'vless-reality': { title: 'VLESS-Reality', fields: ['address','port','uuid','pbk','sni','fp','name'] },
+    'trojan-reality': { title: 'Trojan-Reality', fields: ['address','port','password','pbk','sni','fp','name'] },
+    'ss2022': { title: 'Shadowsocks-2022', fields: ['method','password','address','port','name'] },
+    'spiderx': { title: 'Reality spiderX', fields: ['uuid','sub_id'] },
+    'finalmask': { title: 'FinalMask', fields: ['base_link','tls_fragment','salamander','bbr','noise'] },
+    'utls': { title: 'uTLS fingerprint', fields: ['link','fp'] }
+  };
+  const m = modals[type];
+  if(!m){ return; }
+  // ساده: prompt-based
+  let body = {};
+  for(const f of m.fields){
+    const v = prompt(m.title + ' — ' + f + ':');
+    if(v === null){ return; }
+    if(f === 'tls_fragment' || f === 'salamander' || f === 'bbr'){
+      body['fm_config'] = body['fm_config'] || {};
+      body['fm_config'][f] = v === '1' || v === 'true';
+    }else if(f === 'noise'){
+      body['fm_config'] = body['fm_config'] || {};
+      body['fm_config'][f] = parseInt(v || '0');
+    }else if(f === 'port'){
+      body[f] = parseInt(v || '443');
+    }else{
+      body[f] = v;
+    }
+  }
+  try{
+    const r = await authF('/api/exp/link/' + type.replace('_','-'), { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+    const d = await r.json();
+    if(d.ok){
+      navigator.clipboard.writeText(d.link).then(()=>alert('✓ لینک تولید شد و در کلیپ‌بورد کپی شد:\n\n' + d.link));
+    }else{
+      alert('⚠ ' + (d.detail || 'خطا در تولید لینک'));
+    }
+  }catch(e){ alert('⚠ خطا: ' + e.message); }
+}
+
+async function expSub(format){
+  // get all links first
+  try{
+    const lr = await authF('/api/links');
+    const ld = await lr.json();
+    const links = (ld.links || []).map(l => ({url: l.url || '', name: l.name || ''})).filter(l => l.url);
+    if(!links.length){ alert('هیچ کانفیگی موجود نیست'); return; }
+    const r = await authF('/api/exp/subscription', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ links: links.map(l=>l.url), remarks: links.map(l=>l.name), format }) });
+    const d = await r.json();
+    if(d.ok){
+      const blob = new Blob([d.content], {type:'text/plain'});
+      const u = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = u;
+      a.download = 'subscription.' + format + (format==='clash' ? '.yaml' : format==='json' ? '.json' : '.txt');
+      a.click();
+      URL.revokeObjectURL(u);
+    }else{
+      alert('⚠ ' + (d.detail || 'خطا'));
+    }
+  }catch(e){ alert('⚠ خطا: ' + e.message); }
+}
+
+async function expRecheckAntiDPI(){
+  document.getElementById('exp-antidpi-result').innerHTML = '<div style="padding:14px;text-align:center;color:var(--t3);font-size:12px"><i class="ti ti-loader-2 ti-spin"></i> در حال بررسی...</div>';
+  try{
+    const r = await authF('/api/exp/recheck-anti-dpi', { method:'POST' });
+    const d = await r.json();
+    if(!d.ok){ throw new Error(d.detail || 'error'); }
+    let html = '<div style="font-size:12px;color:var(--t3);margin-bottom:8px">تعداد: ' + d.total + ' کانفیگ ضد-DPI</div>';
+    if(d.anti_dpi_configs && d.anti_dpi_configs.length){
+      html += d.anti_dpi_configs.map(c => `
+        <div style="padding:10px 12px;background:rgba(0,0,0,.3);border-radius:10px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-weight:700;font-size:12px">${c.name || c.uuid.slice(0,8)}</div>
+            <div style="font-size:10px;color:var(--t3);">${c.type_label}</div>
+          </div>
+          <div>
+            <button class="btn btn-o" style="font-size:10px;padding:4px 8px" onclick="pingLink('${c.uuid}')"><i class="ti ti-activity-heartbeat"></i> پینگ</button>
+          </div>
+        </div>`).join('');
+    }else{
+      html += '<div style="text-align:center;padding:14px;color:var(--t3);font-size:12px">هیچ کانفیگ ضد-DPI یافت نشد</div>';
+    }
+    document.getElementById('exp-antidpi-result').innerHTML = html;
+  }catch(e){
+    document.getElementById('exp-antidpi-result').innerHTML = '<div style="padding:14px;color:#EF4444;font-size:12px">⚠ ' + e.message + '</div>';
+  }
+}
+
+// ── Unified Configs View (Phase 8) ────────────────────────────────────
+let _unifiedConfigsCurrent = [];
+let _unifiedConfigsFilter = 'all';
+
+async function loadUnifiedConfigsPage(){
+  try{
+    const r = await authF('/api/exp/unified-configs');
+    if(!r.ok){
+      document.getElementById('unified-configs-grid').innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--t3);font-size:12px">⚠ بخش آزمایشی فعال نیست (EMIX_EXPERIMENTAL=1)</div>';
+      return;
+    }
+    const d = await r.json();
+    _unifiedConfigsCurrent = d.configs || [];
+    renderUnifiedConfigs();
+  }catch(e){
+    document.getElementById('unified-configs-grid').innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:30px;color:#EF4444;font-size:12px">' + e.message + '</div>';
+  }
+}
+
+function filterUnifiedConfigs(section){
+  _unifiedConfigsFilter = section;
+  renderUnifiedConfigs();
+}
+
+function renderUnifiedConfigs(){
+  const grid = document.getElementById('unified-configs-grid');
+  let configs = _unifiedConfigsCurrent;
+  if(_unifiedConfigsFilter !== 'all'){
+    configs = configs.filter(c => c.section === _unifiedConfigsFilter);
+  }
+  if(!configs.length){
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--t3);font-size:12px">هیچ کانفیگی یافت نشد</div>';
+    return;
+  }
+  const sectionColors = {
+    'links': '#8B5CF6',
+    'subscriptions': '#FACC15',
+    'nodes': '#4ADE80',
+    'vpn-pro': '#3B82F6',
+    'experimental': '#EC4899',
+  };
+  grid.innerHTML = configs.map(c => {
+    const color = sectionColors[c.section] || '#888';
+    return `
+      <div style="padding:14px;border-radius:14px;background:rgba(0,0,0,.3);border:1px solid rgba(${color === '#8B5CF6' ? '139,92,246' : color === '#FACC15' ? '250,204,21' : color === '#4ADE80' ? '74,222,128' : color === '#3B82F6' ? '59,130,246' : '236,72,153'},.3);">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:700;font-size:13px;color:${color};margin-bottom:2px">${c.name || c.uuid.slice(0,8)}</div>
+            <div style="font-size:10px;color:var(--t3)">${c.type_label || c.type || 'unknown'}</div>
+          </div>
+          <span style="font-size:9px;padding:2px 6px;border-radius:4px;background:rgba(${color === '#8B5CF6' ? '139,92,246' : color === '#FACC15' ? '250,204,21' : color === '#4ADE80' ? '74,222,128' : color === '#3B82F6' ? '59,130,246' : '236,72,153'},.2);color:${color};font-weight:600;text-transform:uppercase">${c.section}</span>
+        </div>
+        ${c.url ? '<div style="font-size:10px;color:var(--t4);font-family:monospace;word-break:break-all;background:rgba(0,0,0,.4);padding:4px 6px;border-radius:4px;margin-top:6px">' + (c.url.length > 60 ? c.url.slice(0,60) + '...' : c.url) + '</div>' : ''}
+        ${c.endpoint ? '<div style="font-size:10px;color:var(--t3);margin-top:4px">Endpoint: ' + c.endpoint + '</div>' : ''}
+        <div style="font-size:9px;color:var(--t4);margin-top:6px;font-family:monospace">UUID: ${c.uuid.slice(0,12)}...</div>
+      </div>`;
+  }).join('');
+}
 </script>
 </body></html>"""
 
