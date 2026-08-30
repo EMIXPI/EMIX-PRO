@@ -3911,8 +3911,8 @@ except Exception as _exc:
 # تا قبل از لاگین هم قابل بررسی باشد. (از /api/version استفاده نمی‌کنیم چون
 # آن مسیر قبلاً برای بررسی به‌روزرسانی در نظر گرفته شده است.)
 # ══════════════════════════════════════════════════════════════════════════════
-EMIX_VERSION = "9.15.0-sni-direct-unified-fix"
-EMIX_BUILD_DATE = "2026-08-29"
+EMIX_VERSION = "9.16.0-ui-cleanup-oneclick"
+EMIX_BUILD_DATE = "2026-08-30"
 
 @app.get("/api/deployment-version")
 async def api_deployment_version():

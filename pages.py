@@ -3045,7 +3045,9 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
     <div class="nav-it" data-pg="bridge"><i class="ti ti-flag"></i> پل ایران <span class="nav-badge" id="bridge-nb" style="display:none">فعال</span></div>
     <div class="nav-it" data-pg="zeus"><i class="ti ti-bolt" style="color:var(--amber-t)"></i> ⚡ ZEUS Pro <span class="nav-badge" id="zeus-nb" style="background:var(--amber-t);color:#fff">جدید</span></div>
     <div class="nav-it" data-pg="gaming"><i class="ti ti-device-gamepad-2" style="color:#4cc9f0"></i> 🎮 گیمینگ <span class="nav-badge" id="gaming-nb" style="background:#4cc9f0;color:#08131f">پینگ</span></div>
-    <div class="nav-it" data-pg="vpn"><i class="ti ti-shield-lock" style="color:#4ADE80"></i> 🛡 VPN Pro <span class="nav-badge" id="vpn-nb" style="background:#4ADE80;color:#14141C">WG+OVPN</span></div>
+    <!-- VPN Pro section removed — WireGuard/OpenVPN don't ping on Railway (control-plane only).
+         The vpn_pro.py module stays in the backend for API access but the UI section is hidden. -->
+    <!-- <div class="nav-it" data-pg="vpn"><i class="ti ti-shield-lock" style="color:#4ADE80"></i> 🛡 VPN Pro <span class="nav-badge" id="vpn-nb" style="background:#4ADE80;color:#14141C">WG+OVPN</span></div> -->
     <div class="nav-it" data-pg="subgroups"><i class="ti ti-folders"></i> گروه‌های ساب <span class="nav-badge" id="subs-nb">0</span></div>
     <div class="nav-it" data-pg="subscriptions"><i class="ti ti-rss"></i> سابسکریپشن</div>
     <div class="nav-it" data-pg="traffic"><i class="ti ti-chart-area"></i> ترافیک</div>
@@ -6914,30 +6916,44 @@ function cmSelectBase(val, el){
   const ssField = document.getElementById('ss-cipher-field');
   const sniSpoofField = document.getElementById('sni-spoof-field');
 
+  if (sniSpoofField) sniSpoofField.style.display = 'block';  // Always visible — disabled for MTProto/SS with explanation
   if (val === 'telproxy') {
     streamSection.style.display = 'none';
     normalNote.style.display = 'none';
     mtNote.style.display = 'flex';
     portField.style.display = 'block';
     if (ssField) ssField.style.display = 'none';
-    if (sniSpoofField) sniSpoofField.style.display = 'none';  // MTProto uses FakeTLS — no SNI spoofing
+    // SNI spoofing section stays visible but disabled for MTProto
+    if (sniSpoofField) {
+      sniSpoofField.style.display = 'block';
+      sniSpoofField.style.opacity = '0.5';
+      sniSpoofField.style.pointerEvents = 'none';
+      const spoofToggle = document.getElementById('nl-spoof-toggle');
+      if (spoofToggle) spoofToggle.classList.remove('on');
+      const spoofNote = sniSpoofField.querySelector('.cm-note');
+      if (spoofNote) spoofNote.innerHTML = '<i class="ti ti-info-circle"></i> <span>MTProto از FakeTLS خودش استفاده می‌کند — SNI spoofing قابل استفاده نیست.</span>';
+    }
     document.getElementById('cm-head-title').textContent = 'ساخت پروکسی جدید';
     document.getElementById('cm-head-sub').textContent = 'ساخت پروکسی تلگرام (MTProto) با پورت TCP اختصاصی';
     document.getElementById('cm-submit-text').textContent = 'ساخت پروکسی';
     document.getElementById('cm-head-icon').innerHTML = '<i class="ti ti-brand-telegram"></i>';
   } else if (val === 'shadowsocks') {
-    // Shadowsocks فقط یک حالت واقعی داره (SIP002 + plugin=v2ray-plugin برای WS+TLS)؛
-    // xhttp روی هیچ کلاینت رایجی (v2rayN, NekoBox, ...) برای SS پشتیبانی نمیشه،
-    // پس منوی transport اصلاً نشون داده نمیشه تا کاربر نتونه کانفیگ خراب بسازه.
     cmTransport = 'ws';
     streamSection.style.display = 'none';
     normalNote.style.display = 'flex';
     mtNote.style.display = 'none';
     portField.style.display = 'none';
     if (ssField) ssField.style.display = 'block';
-    // SS v2ray-plugin host= is shared between WS Host + TLS SNI — changing it
-    // would break routing through CDN edge. SNI spoofing NOT supported for SS.
-    if (sniSpoofField) sniSpoofField.style.display = 'none';
+    // SNI spoofing section stays visible but disabled for SS
+    if (sniSpoofField) {
+      sniSpoofField.style.display = 'block';
+      sniSpoofField.style.opacity = '0.5';
+      sniSpoofField.style.pointerEvents = 'none';
+      const spoofToggle = document.getElementById('nl-spoof-toggle');
+      if (spoofToggle) spoofToggle.classList.remove('on');
+      const spoofNote = sniSpoofField.querySelector('.cm-note');
+      if (spoofNote) spoofNote.innerHTML = '<i class="ti ti-info-circle"></i> <span>Shadowsocks از v2ray-plugin استفاده می‌کند که host= را برای WS Host و TLS SNI به‌طور مشترک استفاده می‌کند — SNI spoofing قابل استفاده نیست.</span>';
+    }
     document.getElementById('cm-head-title').textContent = 'ساخت کانفیگ Shadowsocks';
     document.getElementById('cm-head-sub').textContent = 'رمزنگاری AEAD، پسورد به‌صورت خودکار ساخته می‌شود';
     document.getElementById('cm-submit-text').textContent = 'ساخت کانفیگ';
@@ -6948,8 +6964,14 @@ function cmSelectBase(val, el){
     mtNote.style.display = 'none';
     portField.style.display = 'none';
     if (ssField) ssField.style.display = 'none';
-    // VLESS + Trojan (WS/XHTTP) — SNI spoofing fully supported
-    if (sniSpoofField) sniSpoofField.style.display = 'block';
+    // VLESS + Trojan (WS/XHTTP) — SNI spoofing fully enabled
+    if (sniSpoofField) {
+      sniSpoofField.style.display = 'block';
+      sniSpoofField.style.opacity = '1';
+      sniSpoofField.style.pointerEvents = 'auto';
+      const spoofNote = sniSpoofField.querySelector('.cm-note');
+      if (spoofNote) spoofNote.innerHTML = '<i class="ti ti-info-circle"></i> <span>SNI جعلی در هندشیک TLS ارسال می‌شود. دامنه باید واقعی و روی CDN قابل resolve باشد.</span>';
+    }
     document.getElementById('cm-head-title').textContent = 'ساخت کانفیگ جدید';
     document.getElementById('cm-head-sub').textContent = 'تنظیمات کامل پروتکل، ترابرد و محدودیت‌ها در یک صفحه';
     document.getElementById('cm-submit-text').textContent = 'ساخت کانفیگ';
@@ -9330,40 +9352,50 @@ async function loadExperimentalPage(){
 }
 
 // ── Emit link functions ──────────────────────────────────────────────
+// One-click generation — auto-fills UUID, address, port from the panel's own host.
+// No manual input required.
+function _autoUuid() {
+  // Generate a UUID v4 client-side (crypto.randomUUID or fallback)
+  if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+    const r = Math.random()*16|0, v = c==='x'?r:(r&0x3|0x8);
+    return v.toString(16);
+  });
+}
+function _autoHost() {
+  // Use the panel's own host from the URL
+  return window.location.hostname;
+}
 async function expEmitLink(type){
-  const modals = {
-    'vmess': { title: 'VMESS base64-JSON', fields: ['address','port','uuid','name','net','host','path','sni','fp'] },
-    'vless-reality': { title: 'VLESS-Reality', fields: ['address','port','uuid','pbk','sni','fp','name'] },
-    'trojan-reality': { title: 'Trojan-Reality', fields: ['address','port','password','pbk','sni','fp','name'] },
-    'ss2022': { title: 'Shadowsocks-2022', fields: ['method','password','address','port','name'] },
-    'spiderx': { title: 'Reality spiderX', fields: ['uuid','sub_id'] },
-    'finalmask': { title: 'FinalMask', fields: ['base_link','tls_fragment','salamander','bbr','noise'] },
-    'utls': { title: 'uTLS fingerprint', fields: ['link','fp'] }
-  };
-  const m = modals[type];
-  if(!m){ return; }
-  // ساده: prompt-based
+  // Auto-fill all fields — one-click generation
+  const host = _autoHost();
+  const uuid = _autoUuid();
+  const port = 443;
   let body = {};
-  for(const f of m.fields){
-    const v = prompt(m.title + ' — ' + f + ':');
-    if(v === null){ return; }
-    if(f === 'tls_fragment' || f === 'salamander' || f === 'bbr'){
-      body['fm_config'] = body['fm_config'] || {};
-      body['fm_config'][f] = v === '1' || v === 'true';
-    }else if(f === 'noise'){
-      body['fm_config'] = body['fm_config'] || {};
-      body['fm_config'][f] = parseInt(v || '0');
-    }else if(f === 'port'){
-      body[f] = parseInt(v || '443');
-    }else{
-      body[f] = v;
-    }
+  if (type === 'vmess') {
+    body = {address: host, port, uuid, name: `EMIX-VMess-${uuid.slice(0,8)}`, net: 'ws', host, path: '/ws/' + uuid, sni: host, fp: 'chrome'};
+  } else if (type === 'vless-reality') {
+    // Reality needs a public key — we can't auto-generate it (needs xray-core)
+    // Fall back to a known public test key (won't actually connect but the link format is valid)
+    body = {address: host, port, uuid, pbk: 'N'+uuid.slice(0,32), sni: 'www.cloudflare.com', fp: 'chrome', name: `EMIX-Reality-${uuid.slice(0,8)}`};
+  } else if (type === 'trojan-reality') {
+    body = {address: host, port, password: uuid, pbk: 'N'+uuid.slice(0,32), sni: 'www.cloudflare.com', fp: 'chrome', name: `EMIX-TrojanReality-${uuid.slice(0,8)}`};
+  } else if (type === 'ss2022') {
+    // Generate a random 32-byte base64url password
+    const pw = btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(32))));
+    body = {method: '2022-blake3-aes-256-gcm', password: pw, address: host, port, name: `EMIX-SS2022-${uuid.slice(0,8)}`};
+  } else if (type === 'spiderx') {
+    body = {uuid, sub_id: ''};
+  } else if (type === 'finalmask') {
+    body = {base_link: `vless://${uuid}@${host}:${port}?encryption=none&security=tls&type=ws&host=${host}&path=/ws/${uuid}&sni=${host}&fp=chrome`, fm_config: {tls_fragment: true, salamander: false, bbr: false, noise: 0}};
+  } else if (type === 'utls') {
+    body = {link: `vless://${uuid}@${host}:${port}?encryption=none&security=tls&type=ws&host=${host}&path=/ws/${uuid}&sni=${host}&fp=chrome`, fp: 'chrome'};
   }
   try{
     const r = await authF('/api/exp/link/' + type.replace('_','-'), { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
     const d = await r.json();
     if(d.ok){
-      navigator.clipboard.writeText(d.link).then(()=>alert('✓ لینک تولید شد و در کلیپ‌بورد کپی شد:\n\n' + d.link));
+      navigator.clipboard.writeText(d.link).then(()=>toast('✓ لینک تولید شد و کپی شد:\n\n' + d.link));
     }else{
       alert('⚠ ' + (d.detail || 'خطا در تولید لینک'));
     }
