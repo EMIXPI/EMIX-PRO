@@ -275,6 +275,14 @@ async def exp_unified_configs():
     async with LINKS_LOCK:
         for uuid, link in LINKS.items():
             proto = link.get("protocol") or link.get("type") or "unknown"
+            # Generate the actual share-link on-the-fly (includes SNI spoofing + allowInsecure)
+            from main import generate_share_link, get_host
+            host = get_host()
+            share_url = ""
+            try:
+                share_url = generate_share_link(uuid, host, remark=f"EMIX-{link.get('label', link.get('name', ''))}", protocol=proto)
+            except Exception:
+                pass
             configs.append({
                 "uuid": uuid,
                 "name": link.get("name", "") or link.get("label", ""),
@@ -285,7 +293,8 @@ async def exp_unified_configs():
                 "expiry": link.get("expiry") or link.get("expires_at"),
                 "usage_bytes": link.get("usage_bytes", link.get("used_bytes", 0)),
                 "limit_bytes": link.get("limit_bytes"),
-                "url": link.get("url", "") or link.get("vless_link", ""),
+                "url": share_url,
+                "sub_url": f"/sub/{uuid}",
                 "health": link.get("health") or link.get("last_ping", {}),
             })
 
