@@ -2113,6 +2113,12 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
             <span class="alpn-chip-dot"><i class="ti ti-check"></i></span> h3
           </div>
         </div>
+        <div class="cm-pills" style="margin-top:6px">
+          <span class="cm-pill active" onclick="cmAlpnPreset(['h2','http/1.1'],this)">استاندارد</span>
+          <span class="cm-pill" onclick="cmAlpnPreset(['h2'],this)">مدرن (h2)</span>
+          <span class="cm-pill" onclick="cmAlpnPreset(['http/1.1'],this)">قدیمی (http/1.1)</span>
+          <span class="cm-pill" onclick="cmAlpnPreset(['h2','http/1.1','h3'],this)">همه</span>
+        </div>
         
         <div class="stream-sub-label"><i class="ti ti-fingerprint"></i> Fingerprint (TLS Client Hello)</div>
         <div class="fp-grid" id="fp-pills">
@@ -2183,11 +2189,18 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
               <option value="images.unsplash.com">images.unsplash.com</option>
               <option value="api.github.com">api.github.com</option>
               <option value="mail.yahoo.com">mail.yahoo.com</option>
+              <option value="www.microsoft.com">www.microsoft.com</option>
+              <option value="www.amazon.com">www.amazon.com</option>
+              <option value="speedtest.net">speedtest.net</option>
             </select>
           </div>
           <div class="cm-note" style="margin-top:8px">
             <i class="ti ti-info-circle"></i>
             <span>SNI جعلی در هندشیک TLS ارسال می‌شود. دامنه باید واقعی و روی CDN قابل resolve باشد.</span>
+          </div>
+          <div id="nl-spoof-cdn-warn" class="cm-note" style="margin-top:8px;display:none;background:rgba(250,204,21,.08);border:1px solid rgba(250,204,21,.3);border-radius:10px">
+            <i class="ti ti-alert-triangle" style="color:#FACC15"></i>
+            <span style="color:#FACC15"><b>هشدار:</b> SNI Spoofing فقط از طریق CDN (Cloudflare/ArvanCloud) کار می‌کند. بدون CDN، SNI مستقیم به دامنه‌ی پنل برمی‌گردد (امن ولی بدون استتار). برای فعال‌سازی کامل، متغیر <code style="background:rgba(0,0,0,.3);padding:1px 4px;border-radius:3px;color:#FACC15">EMIX_CDN_DOMAIN</code> را در Railway تنظیم کنید (مثلاً دامنه‌ی Cloudflare Worker گیت‌وی).</span>
           </div>
         </div>
         <input type="hidden" id="nl-spoof-enabled" value="0">
@@ -7001,6 +7014,8 @@ function cmToggleSpoof(){
   controls.style.display = isOn ? 'block' : 'none';
   enabledInput.value = isOn ? '1' : '0';
   if(!isOn && sniInput) sniInput.value = '';
+  // Show CDN warning if SNI spoof is ON but no CDN domain configured
+  cmCheckSpoofCdnWarning(isOn);
 }
 function cmSpoofPreset(sel){
   const v = (sel && sel.value) || '';
@@ -7008,6 +7023,34 @@ function cmSpoofPreset(sel){
   const sniInput = document.getElementById('nl-spoof-sni');
   if(sniInput) sniInput.value = v;
   sel.value = '';  // reset dropdown so user can pick again
+}
+function cmCheckSpoofCdnWarning(isOn){
+  // Check if the link list response had cdn_domain=null — if so, show warning
+  // when SNI spoof is toggled ON. We read from the first link's cdn_domain field.
+  const warn = document.getElementById('nl-spoof-cdn-warn');
+  if(!warn) return;
+  if(!isOn){ warn.style.display = 'none'; return; }
+  // Try to read CDN domain from the first link in allLinksList
+  let hasCdn = false;
+  if(window.allLinksList && allLinksList.length > 0){
+    hasCdn = !!allLinksList[0].cdn_domain;
+  }
+  warn.style.display = hasCdn ? 'none' : 'block';
+}
+// ── ALPN preset helper ─────────────────────────────────────────────────
+function cmAlpnPreset(alpnList, el){
+  // Clear all active chips first
+  document.querySelectorAll('#alpn-pills .alpn-chip').forEach(c => c.classList.remove('active'));
+  // Activate the chips in the preset list
+  alpnList.forEach(alpn => {
+    const chip = document.querySelector(`#alpn-pills .alpn-chip[data-alpn="${alpn}"]`);
+    if(chip) chip.classList.add('active');
+  });
+  // Update the hidden input
+  cmUpdateAlpn();
+  // Update pill active states
+  el.parentElement.querySelectorAll('.cm-pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
 }
 
 function cmClearSniPills(){

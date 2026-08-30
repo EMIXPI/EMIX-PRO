@@ -688,6 +688,39 @@ def generate_share_link(uuid: str, host: str, remark: str = "EMIX", protocol: st
     # or when the configured spoof value fails validation. 100% backward compat.
     effective_sni = _get_effective_sni(link, host)
 
+    # ── CDN-domain routing for SNI Spoofing ──────────────────────────────
+    # CRITICAL FIX: SNI Spoofing only works through a CDN (Cloudflare/ArvanCloud)
+    # that accepts arbitrary SNIs on its edge. When connecting DIRECTLY to Railway,
+    # Railway's TLS terminator has a cert for *.up.railway.app → SNI mismatch →
+    # TLS handshake fails on the client (even though panel ping works, because
+    # the panel's own ping is same-origin).
+    #
+    # Fix: when spoof_sni_enabled AND EMIX_CDN_DOMAIN is set:
+    #   - URL host = CDN domain (client connects to CDN edge, not Railway directly)
+    #   - host param = CDN domain (for CDN routing via Host header)
+    #   - sni param = spoofed domain (CDN accepts any SNI)
+    #
+    # When spoof_sni_enabled but EMIX_CDN_DOMAIN is NOT set:
+    #   - sni = panel host (fallback — no spoofing, works on direct Railway)
+    #   - This is safe but doesn't provide SNI disguise
+    cdn_domain = os.environ.get("EMIX_CDN_DOMAIN", "").strip().lower()
+    spoof_enabled = bool(link.get("spoof_sni_enabled"))
+    spoof_valid = bool(_validate_sni(link.get("spoof_sni")))
+    use_cdn_routing = spoof_enabled and spoof_valid and cdn_domain
+    if use_cdn_routing:
+        # Client connects to CDN edge → CDN routes to panel via Host header
+        connection_host = cdn_domain
+        ws_host = cdn_domain
+        # SNI stays as the spoofed domain (CDN accepts any SNI)
+        effective_sni = _validate_sni(link.get("spoof_sni")) or host
+    else:
+        # Direct Railway connection (or spoof disabled) — use panel host
+        connection_host = host
+        ws_host = host
+        if spoof_enabled and not cdn_domain:
+            # Spoof requested but no CDN — fallback to panel host (safe, no spoof)
+            effective_sni = host
+
     if protocol == "mtproto":
         # MTProto uses its own FakeTLS domain (mtproto_domain) — SNI spoofing
         # is NOT applicable here. Skip entirely to preserve behavior.
@@ -720,21 +753,21 @@ def generate_share_link(uuid: str, host: str, remark: str = "EMIX", protocol: st
 
     if protocol == "trojan-ws":
         params = {
-            "security": "tls", "type": "ws", "host": host,
+            "security": "tls", "type": "ws", "host": ws_host,
             "path": "/trojan-ws", "sni": effective_sni, "fp": fp, "alpn": alpn,
         }
         query = "&".join(f"{k}={quote(str(v))}" for k, v in params.items())
-        return f"trojan://{uuid}@{host}:443?{query}#{quote(remark)}"
+        return f"trojan://{uuid}@{connection_host}:443?{query}#{quote(remark)}"
 
     if protocol.startswith("trojan-xhttp-"):
         mode = protocol.replace("trojan-xhttp-", "")
         path = f"/txhttp-siz10/{mode}/{uuid}"
         params = {
-            "security": "tls", "type": "xhttp", "mode": mode, "host": host,
+            "security": "tls", "type": "xhttp", "mode": mode, "host": ws_host,
             "path": path, "sni": effective_sni, "fp": fp, "alpn": alpn,
         }
         query = "&".join(f"{k}={quote(str(v))}" for k, v in params.items())
-        return f"trojan://{uuid}@{host}:443?{query}#{quote(remark)}"
+        return f"trojan://{uuid}@{connection_host}:443?{query}#{quote(remark)}"
 
     if protocol == "vless-ws":
         path = f"/ws/{uuid}"
@@ -742,7 +775,7 @@ def generate_share_link(uuid: str, host: str, remark: str = "EMIX", protocol: st
             "encryption": "none",
             "security": "tls",
             "type": "ws",
-            "host": host,
+            "host": ws_host,
             "path": path,
             "sni": effective_sni,
             "fp": fp,
@@ -756,14 +789,14 @@ def generate_share_link(uuid: str, host: str, remark: str = "EMIX", protocol: st
             "security": "tls",
             "type": "xhttp",
             "mode": mode,
-            "host": host,
+            "host": ws_host,
             "path": path,
             "sni": effective_sni,
             "fp": fp,
             "alpn": alpn,
         }
     query = "&".join(f"{k}={quote(str(v))}" for k, v in params.items())
-    return f"vless://{uuid}@{host}:443?{query}#{quote(remark)}"
+    return f"vless://{uuid}@{connection_host}:443?{query}#{quote(remark)}"
 
 def uptime() -> str:
     secs = int(time.time() - stats["start_time"])
@@ -2112,6 +2145,15 @@ async def list_links(_=Depends(require_auth)):
             "spoof_sni": d.get("spoof_sni"),
             "spoof_sni_enabled": bool(d.get("spoof_sni_enabled", False)),
             "effective_sni": _get_effective_sni(d, host),
+            # CDN routing status — tells the dashboard whether SNI spoofing
+            # will actually work (requires CDN domain) or will fallback to
+            # panel host (safe but no disguise)
+            "cdn_domain": os.environ.get("EMIX_CDN_DOMAIN", "").strip().lower() or None,
+            "sni_spoof_active": bool(
+                d.get("spoof_sni_enabled")
+                and _validate_sni(d.get("spoof_sni"))
+                and os.environ.get("EMIX_CDN_DOMAIN", "").strip()
+            ),
             "vless_link": generate_share_link(uid, host, remark=f"EMIX-{d['label']}", protocol=proto),
             "sub_url": f"https://{host}/sub/{uid}",
         })
@@ -3854,7 +3896,7 @@ except Exception as _exc:
 # تا قبل از لاگین هم قابل بررسی باشد. (از /api/version استفاده نمی‌کنیم چون
 # آن مسیر قبلاً برای بررسی به‌روزرسانی در نظر گرفته شده است.)
 # ══════════════════════════════════════════════════════════════════════════════
-EMIX_VERSION = "9.13.0-sni-mgmt-security-vpn"
+EMIX_VERSION = "9.14.0-sni-cdn-fix"
 EMIX_BUILD_DATE = "2026-08-29"
 
 @app.get("/api/deployment-version")
