@@ -2198,9 +2198,9 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
             <i class="ti ti-info-circle"></i>
             <span>SNI جعلی در هندشیک TLS ارسال می‌شود. دامنه باید واقعی و روی CDN قابل resolve باشد.</span>
           </div>
-          <div id="nl-spoof-cdn-warn" class="cm-note" style="margin-top:8px;display:none;background:rgba(250,204,21,.08);border:1px solid rgba(250,204,21,.3);border-radius:10px">
-            <i class="ti ti-alert-triangle" style="color:#FACC15"></i>
-            <span style="color:#FACC15"><b>هشدار:</b> SNI Spoofing فقط از طریق CDN (Cloudflare/ArvanCloud) کار می‌کند. بدون CDN، SNI مستقیم به دامنه‌ی پنل برمی‌گردد (امن ولی بدون استتار). برای فعال‌سازی کامل، متغیر <code style="background:rgba(0,0,0,.3);padding:1px 4px;border-radius:3px;color:#FACC15">EMIX_CDN_DOMAIN</code> را در Railway تنظیم کنید (مثلاً دامنه‌ی Cloudflare Worker گیت‌وی).</span>
+          <div id="nl-spoof-cdn-warn" class="cm-note" style="margin-top:8px;display:none;background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.25);border-radius:10px">
+            <i class="ti ti-info-circle" style="color:#10B981"></i>
+            <span style="color:#10B981"><b>حالت مستقیم:</b> بدون CDN، پارامتر <code style="background:rgba(0,0,0,.3);padding:1px 4px;border-radius:3px;color:#10B981">allowInsecure=1</code> به لینک اضافه می‌شود. کلاینت بررسی cert را رد می‌کند → SNI جعلی در TLS Handshake ارسال می‌شود → DPI گول می‌خورد. برای حداکثر استتار، <code style="background:rgba(0,0,0,.3);padding:1px 4px;border-radius:3px;color:#10B981">EMIX_CDN_DOMAIN</code> را در Railway تنظیم کنید (حالت CDN امن‌تر است).</span>
           </div>
         </div>
         <input type="hidden" id="nl-spoof-enabled" value="0">
@@ -9461,20 +9461,42 @@ function renderUnifiedConfigs(){
     'vpn-pro': '#3B82F6',
     'experimental': '#EC4899',
   };
+  const protoIcon = (proto) => {
+    if(!proto) return 'ti ti-link';
+    if(proto.includes('vless')) return 'ti ti-bolt';
+    if(proto.includes('trojan')) return 'ti ti-shield-lock';
+    if(proto.includes('shadowsocks') || proto.includes('ss')) return 'ti ti-key';
+    if(proto.includes('mtproto')) return 'ti ti-brand-telegram';
+    if(proto.includes('vmess')) return 'ti ti-atom';
+    if(proto.includes('wireguard')) return 'ti ti-shield-lock-filled';
+    if(proto.includes('openvpn')) return 'ti ti-lock';
+    return 'ti ti-link';
+  };
   grid.innerHTML = configs.map(c => {
     const color = sectionColors[c.section] || '#888';
+    const colorRgb = color === '#8B5CF6' ? '139,92,246' : color === '#FACC15' ? '250,204,21' : color === '#4ADE80' ? '74,222,128' : color === '#3B82F6' ? '59,130,246' : '236,72,153';
+    const url = c.url || c.vless_link || '';
+    const canCopy = url && url.startsWith(('vless://','trojan://','ss://','vmess://','tg://','socks5://'));
     return `
-      <div style="padding:14px;border-radius:14px;background:rgba(0,0,0,.3);border:1px solid rgba(${color === '#8B5CF6' ? '139,92,246' : color === '#FACC15' ? '250,204,21' : color === '#4ADE80' ? '74,222,128' : color === '#3B82F6' ? '59,130,246' : '236,72,153'},.3);">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
-          <div style="flex:1;min-width:0">
-            <div style="font-weight:700;font-size:13px;color:${color};margin-bottom:2px">${c.name || c.uuid.slice(0,8)}</div>
-            <div style="font-size:10px;color:var(--t3)">${c.type_label || c.type || 'unknown'}</div>
+      <div class="cfg-card" style="padding:14px;border-radius:14px;background:var(--card);border:1px solid rgba(${colorRgb},.25);">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;gap:8px;flex-wrap:wrap">
+          <div style="flex:1;min-width:0;display:flex;align-items:center;gap:8px">
+            <i class="${protoIcon(c.type)}" style="color:${color};font-size:16px"></i>
+            <div style="min-width:0">
+              <div style="font-weight:700;font-size:13px;color:var(--t1);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(c.name || c.uuid.slice(0,8))}</div>
+              <div style="font-size:10px;color:var(--t3)">${esc(c.type_label || c.type || 'unknown')}</div>
+            </div>
           </div>
-          <span style="font-size:9px;padding:2px 6px;border-radius:4px;background:rgba(${color === '#8B5CF6' ? '139,92,246' : color === '#FACC15' ? '250,204,21' : color === '#4ADE80' ? '74,222,128' : color === '#3B82F6' ? '59,130,246' : '236,72,153'},.2);color:${color};font-weight:600;text-transform:uppercase">${c.section}</span>
+          <span style="font-size:9px;padding:2px 6px;border-radius:4px;background:rgba(${colorRgb},.15);color:${color};font-weight:600;text-transform:uppercase;flex-shrink:0">${c.section}</span>
         </div>
-        ${c.url ? '<div style="font-size:10px;color:var(--t4);font-family:monospace;word-break:break-all;background:rgba(0,0,0,.4);padding:4px 6px;border-radius:4px;margin-top:6px">' + (c.url.length > 60 ? c.url.slice(0,60) + '...' : c.url) + '</div>' : ''}
-        ${c.endpoint ? '<div style="font-size:10px;color:var(--t3);margin-top:4px">Endpoint: ' + c.endpoint + '</div>' : ''}
-        <div style="font-size:9px;color:var(--t4);margin-top:6px;font-family:monospace">UUID: ${c.uuid.slice(0,12)}...</div>
+        ${url ? `<div style="font-size:9.5px;color:var(--t4);font-family:monospace;word-break:break-all;background:rgba(0,0,0,.4);padding:6px 8px;border-radius:6px;margin-top:6px;max-height:60px;overflow-y:auto;line-height:1.4">${esc(url)}</div>` : ''}
+        ${c.endpoint ? '<div style="font-size:10px;color:var(--t3);margin-top:4px"><i class="ti ti-server" style="font-size:9px"></i> ' + esc(c.endpoint) + '</div>' : ''}
+        ${canCopy ? `
+        <div style="display:flex;gap:6px;margin-top:8px">
+          <button class="btn btn-sm btn-g btn-icon" onclick="navigator.clipboard.writeText('${esc(url)}').then(()=>toast('لینک کپی شد ✓','ok'))" title="کپی لینک"><i class="ti ti-copy"></i></button>
+          <button class="btn btn-sm btn-g btn-icon" onclick="showQR('${esc(url)}')" title="QR Code"><i class="ti ti-qrcode"></i></button>
+          ${c.sub_url || c.section === 'links' ? `<button class="btn btn-sm btn-g btn-icon" onclick="navigator.clipboard.writeText('${esc(window.location.origin + (c.sub_url || '/sub/' + c.uuid))}').then(()=>toast('Sub URL کپی شد','ok'))" title="Sub URL"><i class="ti ti-rss"></i></button>` : ''}
+        </div>` : ''}
       </div>`;
   }).join('');
 }

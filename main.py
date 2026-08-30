@@ -689,37 +689,44 @@ def generate_share_link(uuid: str, host: str, remark: str = "EMIX", protocol: st
     effective_sni = _get_effective_sni(link, host)
 
     # ── CDN-domain routing for SNI Spoofing ──────────────────────────────
-    # CRITICAL FIX: SNI Spoofing only works through a CDN (Cloudflare/ArvanCloud)
-    # that accepts arbitrary SNIs on its edge. When connecting DIRECTLY to Railway,
-    # Railway's TLS terminator has a cert for *.up.railway.app → SNI mismatch →
-    # TLS handshake fails on the client (even though panel ping works, because
-    # the panel's own ping is same-origin).
+    # SNI Spoofing works in two modes:
     #
-    # Fix: when spoof_sni_enabled AND EMIX_CDN_DOMAIN is set:
-    #   - URL host = CDN domain (client connects to CDN edge, not Railway directly)
+    # Mode A — CDN routing (preferred, when EMIX_CDN_DOMAIN is set):
+    #   - URL host = CDN domain (client connects to CDN edge, not Railway)
     #   - host param = CDN domain (for CDN routing via Host header)
     #   - sni param = spoofed domain (CDN accepts any SNI)
+    #   - No allowInsecure needed (CDN's cert is valid)
     #
-    # When spoof_sni_enabled but EMIX_CDN_DOMAIN is NOT set:
-    #   - sni = panel host (fallback — no spoofing, works on direct Railway)
-    #   - This is safe but doesn't provide SNI disguise
+    # Mode B — Direct Railway with allowInsecure (when no CDN):
+    #   - URL host = panel domain (client connects to Railway directly)
+    #   - host param = panel domain
+    #   - sni param = spoofed domain (Railway presents *.up.railway.app cert)
+    #   - allowInsecure=1 → client skips cert verification → TLS succeeds
+    #   - Less secure (no MITM protection) but works for DPI evasion
+    #   - DPI sees the spoofed SNI in the ClientHello, not the cert
     cdn_domain = os.environ.get("EMIX_CDN_DOMAIN", "").strip().lower()
     spoof_enabled = bool(link.get("spoof_sni_enabled"))
     spoof_valid = bool(_validate_sni(link.get("spoof_sni")))
     use_cdn_routing = spoof_enabled and spoof_valid and cdn_domain
+    allow_insecure = False
     if use_cdn_routing:
-        # Client connects to CDN edge → CDN routes to panel via Host header
+        # Mode A — CDN routing
         connection_host = cdn_domain
         ws_host = cdn_domain
-        # SNI stays as the spoofed domain (CDN accepts any SNI)
         effective_sni = _validate_sni(link.get("spoof_sni")) or host
-    else:
-        # Direct Railway connection (or spoof disabled) — use panel host
+    elif spoof_enabled and spoof_valid and not cdn_domain:
+        # Mode B — Direct Railway with allowInsecure=1
+        # Client connects to Railway → sends SNI=spoofed → Railway presents
+        # its own cert → client skips verification (allowInsecure=1) → TLS OK
+        # DPI sees the spoofed SNI in ClientHello → doesn't block
         connection_host = host
         ws_host = host
-        if spoof_enabled and not cdn_domain:
-            # Spoof requested but no CDN — fallback to panel host (safe, no spoof)
-            effective_sni = host
+        effective_sni = _validate_sni(link.get("spoof_sni"))
+        allow_insecure = True
+    else:
+        # No spoof — standard behavior (100% backward compat)
+        connection_host = host
+        ws_host = host
 
     if protocol == "mtproto":
         # MTProto uses its own FakeTLS domain (mtproto_domain) — SNI spoofing
@@ -756,6 +763,8 @@ def generate_share_link(uuid: str, host: str, remark: str = "EMIX", protocol: st
             "security": "tls", "type": "ws", "host": ws_host,
             "path": "/trojan-ws", "sni": effective_sni, "fp": fp, "alpn": alpn,
         }
+        if allow_insecure:
+            params["allowInsecure"] = "1"
         query = "&".join(f"{k}={quote(str(v))}" for k, v in params.items())
         return f"trojan://{uuid}@{connection_host}:443?{query}#{quote(remark)}"
 
@@ -766,6 +775,8 @@ def generate_share_link(uuid: str, host: str, remark: str = "EMIX", protocol: st
             "security": "tls", "type": "xhttp", "mode": mode, "host": ws_host,
             "path": path, "sni": effective_sni, "fp": fp, "alpn": alpn,
         }
+        if allow_insecure:
+            params["allowInsecure"] = "1"
         query = "&".join(f"{k}={quote(str(v))}" for k, v in params.items())
         return f"trojan://{uuid}@{connection_host}:443?{query}#{quote(remark)}"
 
@@ -781,6 +792,8 @@ def generate_share_link(uuid: str, host: str, remark: str = "EMIX", protocol: st
             "fp": fp,
             "alpn": alpn,
         }
+        if allow_insecure:
+            params["allowInsecure"] = "1"
     else:
         mode = protocol.replace("xhttp-", "")
         path = f"/xhttp-siz10/{mode}/{uuid}"
@@ -795,6 +808,8 @@ def generate_share_link(uuid: str, host: str, remark: str = "EMIX", protocol: st
             "fp": fp,
             "alpn": alpn,
         }
+        if allow_insecure:
+            params["allowInsecure"] = "1"
     query = "&".join(f"{k}={quote(str(v))}" for k, v in params.items())
     return f"vless://{uuid}@{connection_host}:443?{query}#{quote(remark)}"
 
@@ -3896,7 +3911,7 @@ except Exception as _exc:
 # تا قبل از لاگین هم قابل بررسی باشد. (از /api/version استفاده نمی‌کنیم چون
 # آن مسیر قبلاً برای بررسی به‌روزرسانی در نظر گرفته شده است.)
 # ══════════════════════════════════════════════════════════════════════════════
-EMIX_VERSION = "9.14.0-sni-cdn-fix"
+EMIX_VERSION = "9.15.0-sni-direct-unified-fix"
 EMIX_BUILD_DATE = "2026-08-29"
 
 @app.get("/api/deployment-version")
