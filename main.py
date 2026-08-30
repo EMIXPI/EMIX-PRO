@@ -3911,7 +3911,7 @@ except Exception as _exc:
 # تا قبل از لاگین هم قابل بررسی باشد. (از /api/version استفاده نمی‌کنیم چون
 # آن مسیر قبلاً برای بررسی به‌روزرسانی در نظر گرفته شده است.)
 # ══════════════════════════════════════════════════════════════════════════════
-EMIX_VERSION = "9.16.0-ui-cleanup-oneclick"
+EMIX_VERSION = "9.17.0-sni-visible-no-broken"
 EMIX_BUILD_DATE = "2026-08-30"
 
 @app.get("/api/deployment-version")

@@ -2169,7 +2169,7 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
            Hidden for Shadowsocks (v2ray-plugin host= is shared between WS Host
            and TLS SNI — changing it would break routing through CDN edge).
            Visible for: VLESS-WS, VLESS-XHTTP, Trojan-WS, Trojan-XHTTP. -->
-      <div class="cm-section" id="sni-spoof-field" style="display:none;margin-bottom:0">
+      <div class="cm-section" id="sni-spoof-field" style="display:block;margin-bottom:0">
         <div class="cm-section-label"><i class="ti ti-mask"></i> SNI Spoofing (جعل SNI در TLS Handshake)</div>
         <div class="cm-row2" style="align-items:center;gap:10px">
           <label class="tog-wrap" style="display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none">
@@ -4493,20 +4493,24 @@ remote vpn.example.com 1194
   <div class="exp-subsections">
     <div class="card exp-sub-card" style="padding:20px">
       <h3 style="font-size:16px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-        <i class="ti ti-bolt" style="color:#8B5CF6"></i> تولید لینک‌های جدید
+        <i class="ti ti-bolt" style="color:#8B5CF6"></i> ابزارهای ویرایش لینک
       </h3>
       <p style="font-size:12px;color:var(--t3);margin-bottom:14px;line-height:1.6">
-        صدور share-link برای پروتکل‌های جدید (VMESS/Reality/SS-2022/FinalMask) بدون نیاز به inbound واقعی.
-        کاربر می‌تواند لینک را در کلاینت خود وارد کند.
+        این ابزارها روی لینک‌های موجود (VLESS/Trojan) اعمال می‌شوند و واقعاً کار می‌کنند.
+        لینک موجود خود را کپی کنید و در اینجا پردازش کنید.
       </p>
       <div style="display:flex;flex-direction:column;gap:8px">
-        <button class="btn btn-o exp-action-btn" onclick="expEmitLink('vmess')" style="text-align:right"><i class="ti ti-link"></i> VMESS base64-JSON</button>
-        <button class="btn btn-o exp-action-btn" onclick="expEmitLink('vless-reality')" style="text-align:right"><i class="ti ti-shield-lock"></i> VLESS-Reality</button>
-        <button class="btn btn-o exp-action-btn" onclick="expEmitLink('trojan-reality')" style="text-align:right"><i class="ti ti-shield-lock"></i> Trojan-Reality</button>
-        <button class="btn btn-o exp-action-btn" onclick="expEmitLink('ss2022')" style="text-align:right"><i class="ti ti-key"></i> Shadowsocks-2022</button>
-        <button class="btn btn-o exp-action-btn" onclick="expEmitLink('spiderx')" style="text-align:right"><i class="ti ti-route"></i> Reality spiderX path</button>
         <button class="btn btn-o exp-action-btn" onclick="expEmitLink('finalmask')" style="text-align:right"><i class="ti ti-mask"></i> FinalMask (TLS fragmentation)</button>
         <button class="btn btn-o exp-action-btn" onclick="expEmitLink('utls')" style="text-align:right"><i class="ti ti-fingerprint"></i> uTLS fingerprint</button>
+      </div>
+      <div style="margin-top:12px;padding:10px 12px;border-radius:10px;background:rgba(250,204,21,.06);border:1px solid rgba(250,204,21,.2)">
+        <div style="font-size:11px;color:#FACC15;line-height:1.6">
+          <i class="ti ti-info-circle"></i>
+          <b>نکته:</b> پروتکل‌های VMess، Reality، SS-2022 نیاز به سرور مجزا دارند (xray-core).
+          EMIX فقط VLESS/Trojan/Shadowsocks/MTProto را به‌صورت واقعی هاست می‌کند.
+          لینک تولیدی برای این پروتکل‌ها فقط فرمت لینک است و متصل نمی‌شود.
+          برای استفاده، یک سرور xray-core جداگانه راه‌اندازی کنید.
+        </div>
       </div>
     </div>
 
@@ -4745,7 +4749,23 @@ function navTo(name){
   closeSb();window.scrollTo({top:0,behavior:'smooth'});
 }
 document.querySelectorAll('.nav-it').forEach(el=>el.addEventListener('click',()=>navTo(el.dataset.pg)));
-function openModal(id){document.getElementById(id).classList.add('open')}
+function openModal(id){
+  document.getElementById(id).classList.add('open');
+  // When opening create-link modal, initialize protocol sections
+  // (otherwise SNI spoofing + other sections stay display:none from HTML)
+  if(id === 'modal-create-link'){
+    setTimeout(()=>{
+      const sel = document.querySelector('#dd-base .cm-opt.sel');
+      if(sel){
+        cmSelectBase(sel.dataset.base, sel);
+      } else {
+        // Fallback: default to vless
+        const vlessOpt = document.querySelector('#dd-base .cm-opt[data-base="vless"]');
+        if(vlessOpt) cmSelectBase('vless', vlessOpt);
+      }
+    }, 50);
+  }
+}
 function closeModal(id){document.getElementById(id).classList.remove('open')}
 let supportDevDismissCount=0;
 const supportDevDismissTexts=['د اخه مگه دست خودته:(','نکن مشتی نداریمااااا'];
