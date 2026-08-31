@@ -3540,6 +3540,22 @@ except Exception as _exc:
 
 
 # ═════════════════════════════════════════════════════════════════════════════
+# ماژول پل چندلوکیشن v2 (multiloc.py) — Worker-Terminated Egress:
+#   - اسکن coloهای کلادفلر با هندشیک TLS واقعی (/cdn-cgi/trace)
+#   - SNI-Trace: اثبات زنده‌ی جعل SNI ( ingress ریلوی + لبه‌ی CF)
+#   - لینک‌های پل دو حالته: خروج CF (وورکر v2 /vl) یا تونل /loc
+#   - سینک UUIDها به وورکر + تست خروج واقعی (/egress-test)
+# اگر این ماژول حذف شود یا خطا بدهد، پنل و همه‌ی تونل‌ها بدون تغییر کار می‌کنند.
+# ═════════════════════════════════════════════════════════════════════════════
+try:
+    import multiloc
+    multiloc.register_routes(app)
+    logger.info(f"[bootstrap] multiloc v{multiloc.MULTILOC_VERSION} routes registered (multi-location bridge v2 + WTE)")
+except Exception as _exc:
+    logger.error(f"[bootstrap] multiloc بارگذاری نشد (نادیده گرفته شد): {_exc}")
+
+
+# ═════════════════════════════════════════════════════════════════════════════
 # ماژول زیرساخت ریلوی — volume خودکار + سلامت‌سنجی کل پنل (railway_infra.py)
 # اگر این ماژول حذف شود یا خطا بدهد، پنل و همه‌ی تونل‌ها بدون تغییر کار می‌کنند.
 # ═════════════════════════════════════════════════════════════════════════════
@@ -3911,7 +3927,7 @@ except Exception as _exc:
 # تا قبل از لاگین هم قابل بررسی باشد. (از /api/version استفاده نمی‌کنیم چون
 # آن مسیر قبلاً برای بررسی به‌روزرسانی در نظر گرفته شده است.)
 # ══════════════════════════════════════════════════════════════════════════════
-EMIX_VERSION = "9.17.0-sni-visible-no-broken"
+EMIX_VERSION = "10.0.0-multiloc-wte"
 EMIX_BUILD_DATE = "2026-08-30"
 
 @app.get("/api/deployment-version")

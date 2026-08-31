@@ -2196,7 +2196,7 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
           </div>
           <div class="cm-note" style="margin-top:8px">
             <i class="ti ti-info-circle"></i>
-            <span>SNI جعلی در هندشیک TLS ارسال می‌شود. دامنه باید واقعی و روی CDN قابل resolve باشد.</span>
+            <span>SNI جعلی در هندشیک TLS ارسال می‌شود. درخروجی «پل چندلوکیشن v2 → ردیاب SNI» می‌توانی <b>با مدرک زنده</b> ببینی هندشیک واقعاً قبول می‌شود یا نه — آزمون با هندشیک واقعی TLS انجام می‌شود، نه حدس.</span>
           </div>
           <div id="nl-spoof-cdn-warn" class="cm-note" style="margin-top:8px;display:none;background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.25);border-radius:10px">
             <i class="ti ti-info-circle" style="color:#10B981"></i>
@@ -3045,6 +3045,7 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
     <div class="nav-it" data-pg="bridge"><i class="ti ti-flag"></i> پل ایران <span class="nav-badge" id="bridge-nb" style="display:none">فعال</span></div>
     <div class="nav-it" data-pg="zeus"><i class="ti ti-bolt" style="color:var(--amber-t)"></i> ⚡ ZEUS Pro <span class="nav-badge" id="zeus-nb" style="background:var(--amber-t);color:#fff">جدید</span></div>
     <div class="nav-it" data-pg="gaming"><i class="ti ti-device-gamepad-2" style="color:#4cc9f0"></i> 🎮 گیمینگ <span class="nav-badge" id="gaming-nb" style="background:#4cc9f0;color:#08131f">پینگ</span></div>
+    <div class="nav-it" data-pg="multiloc" style="background:linear-gradient(135deg,rgba(16,185,129,.15),rgba(76,201,240,.08))"><i class="ti ti-world" style="color:#10B981"></i> 🌐 پل چندلوکیشن <span class="nav-badge" id="ml-nb" style="background:#10B981;color:#fff">v2</span></div>
     <!-- VPN Pro section removed — WireGuard/OpenVPN don't ping on Railway (control-plane only).
          The vpn_pro.py module stays in the backend for API access but the UI section is hidden. -->
     <!-- <div class="nav-it" data-pg="vpn"><i class="ti ti-shield-lock" style="color:#4ADE80"></i> 🛡 VPN Pro <span class="nav-badge" id="vpn-nb" style="background:#4ADE80;color:#14141C">WG+OVPN</span></div> -->
@@ -3911,6 +3912,152 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
 </section>
 
 <!-- ════════════════════════════════════════════════════════════════════════════
+     🌐 MULTI-LOC v2 — پل هوشمند چندلوکیشن (Worker-Terminated Egress)
+     معماری: کاربر → IP آنیکست CF (colo انتخابی) → Worker v2 (/vl)
+              ├─ حالت «خروج CF» : تونل داخل وورکر ختم می‌شود → خروج از colo اجرا
+              └─ حالت «تونل»     : /loc/{name} → Railway (پایدار)
+     ════════════════════════════════════════════════════════════════════════════ -->
+<section class="pg" id="pg-multiloc">
+  <div class="node-hero" style="margin-bottom:18px">
+    <div class="node-hero-top">
+      <div class="node-hero-title">
+        <div class="node-hero-icon" style="background:rgba(16,185,129,.15);color:#10B981"><i class="ti ti-world"></i></div>
+        <div>
+          <div class="tb-title">پل چندلوکیشن v2 — خروج واقعی از لبه‌ی کلادفلر</div>
+          <div class="tb-sub">کانفیگ‌های پل‌شده‌ی چند کشور بدون هیچ سرور اضافه + دیباگ فوق پیشرفته با مدرک زنده</div>
+        </div>
+      </div>
+      <div class="tb-right">
+        <span class="badge" id="ml-status-badge">بارگذاری...</span>
+      </div>
+    </div>
+    <div class="node-hero-metrics">
+      <div class="node-metric">
+        <div class="node-metric-top"><i class="ti ti-cloud-bolt"></i><span class="node-metric-label">Worker گیت‌وی</span></div>
+        <div class="node-metric-val" id="ml-worker-ver" style="font-size:15px;direction:ltr">—</div>
+        <div class="node-metric-sub" id="ml-worker-domain-lbl" style="direction:ltr;text-align:left;overflow:hidden;text-overflow:ellipsis">—</div>
+      </div>
+      <div class="node-metric">
+        <div class="node-metric-top"><i class="ti ti-flame"></i><span class="node-metric-label">حالت خروج CF (WTE)</span></div>
+        <div class="node-metric-val" id="ml-wte-status" style="font-size:15px">—</div>
+        <div class="node-metric-sub" id="ml-wte-sub">تونل داخل وورکر ختم می‌شود</div>
+      </div>
+      <div class="node-metric">
+        <div class="node-metric-top"><i class="ti ti-flag"></i><span class="node-metric-label">لوکیشن‌های تاییدشده</span></div>
+        <div class="node-metric-val" id="ml-loc-count" style="font-size:15px">—</div>
+        <div class="node-metric-sub" id="ml-loc-sub">با هندشیک واقعی TLS اثبات‌شده</div>
+      </div>
+      <div class="node-metric">
+        <div class="node-metric-top"><i class="ti ti-direction-horizontal"></i><span class="node-metric-label">آخرین خروج تست‌شده</span></div>
+        <div class="node-metric-val" id="ml-egress-last" style="font-size:15px">—</div>
+        <div class="node-metric-sub" id="ml-egress-sub">مدرک زنده از /egress-test</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ۱) وضعیت و راه‌اندازی وورکر v2 -->
+  <div class="conn-toolbar" style="margin-bottom:14px">
+    <div class="conn-toolbar-title"><i class="ti ti-cloud-cog"></i> گیت‌وی کلادفلر v2 (WTE) و سینک خودکار</div>
+  </div>
+  <div class="card" style="margin-bottom:18px">
+    <div class="card-title"><i class="ti ti-cloud-bolt"></i> Worker v2 — سرور VLESS داخل وورکر</div>
+    <div style="font-size:11.5px;color:var(--t3);margin-bottom:12px;line-height:1.9">
+      <b>چی‌کار می‌کند؟</b> تونل VLESS همین‌جا داخل وورکر کلادفلر خاتمه می‌یابد و ترافیک از <b>همان colo</b> که کاربر وارد شده به اینترنت می‌رود
+      — یعنی سایت‌ها IP کلادفلرِ آن region را می‌بینند، <b>نه IP ریلوی آمستردام</b>. هر «لوکیشن» = یک IP ورودی آنیکست؛ بدون خرید هیچ سروری.
+      <span style="color:var(--amber-t)">اگر وورکر هنوز v1.x است، کد v2 را با یک Paste آپگرید کن (۲ دقیقه):</span>
+    </div>
+    <div id="ml-worker-upgrade" style="display:none;margin-bottom:14px;padding:14px;background:rgba(250,204,21,.06);border:1px solid rgba(250,204,21,.3);border-radius:10px;font-size:12px;line-height:2">
+      <b style="color:var(--amber-t)">آپگرید وورکر به v2 (فقط یک بار):</b><br>
+      ۱) <b>dash.cloudflare.com → Workers &amp; Pages</b> → وورکر emix-gateway را باز کن → <b>Edit code</b><br>
+      ۲) کل کد را پاک کن و کد v2 زیر را Paste کن → <b>Save and Deploy</b><br>
+      ۳) اگر KV بایند نکرده‌ای: Settings → Bindings → KV namespace با نام <code>LOCATIONS</code> بساز و متصل کن<br>
+      ۴) متغیر <code>EMIX_TOKEN</code> را مثل قبل نگه دار (برای سینک UUID از پنل)<br>
+      <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+        <button class="btn btn-pur" onclick="mlCopyWorkerCode()"><i class="ti ti-clipboard-copy"></i> کپی کد کامل Worker v2</button>
+        <a class="btn btn-o" href="/api/multiloc/worker-code" target="_blank" id="ml-worker-code-link" style="display:none">دانلود</a>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-blue" onclick="mlStatus(true)"><i class="ti ti-radar-2"></i> تست گیت‌وی</button>
+      <button class="btn btn-g" onclick="mlSyncWorker(this)"><i class="ti ti-refresh-sync"></i> سینک UUIDها به وورکر</button>
+      <span id="ml-sync-result" style="font-size:11.5px;color:var(--t3);align-self:center"></span>
+    </div>
+  </div>
+
+  <!-- ۲) اسکن colo — دیباگ فوق پیشرفته -->
+  <div class="conn-toolbar" style="margin-bottom:14px">
+    <div class="conn-toolbar-title"><i class="ti ti-radar"></i> اسکنر لوکیشن — نقشه‌ی تاییدشده‌ی IP → PoP (مدرک زنده)</div>
+  </div>
+  <div class="card" style="margin-bottom:18px">
+    <div class="card-title"><i class="ti ti-signal-4g"></i> اسکن و صحت‌سنجی IPهای کلادفلر</div>
+    <div style="font-size:11.5px;color:var(--t3);margin-bottom:14px;line-height:1.8">
+      هر IP با <b>هندشیک TLS واقعی + GET /cdn-cgi/trace</b> پروب می‌شود؛ فقط IPهایی که واقعاً دامنه‌ی وورکر شما را سرو کنند و coloشان خوانده شود نگه داشته می‌شوند.
+      نتیجه: لیست لوکیشن‌های <b>سالم و آماده</b> با RTT — هیچ IP تاییدنشده‌ای به کاربر داده نمی‌شود.
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <button class="btn btn-g" id="ml-scan-btn" onclick="mlScan(this,false)"><i class="ti ti-radar-2"></i> اسکن سریع (~۳۰ ثانیه)</button>
+      <button class="btn btn-blue" id="ml-scan-deep-btn" onclick="mlScan(this,true)"><i class="ti ti-radar"></i> اسکن عمیق (~۹۰ ثانیه)</button>
+      <span id="ml-scan-progress" style="font-size:11.5px;color:var(--t3)">آماده</span>
+    </div>
+    <div id="ml-loc-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;margin-top:14px"></div>
+    <div id="ml-scan-stats" style="margin-top:12px;font-size:11.5px;color:var(--t3)"></div>
+  </div>
+
+  <!-- ۳) سازنده‌ی ساده‌ی کانفیگ‌های پل -->
+  <div class="conn-toolbar" style="margin-bottom:14px">
+    <div class="conn-toolbar-title"><i class="ti ti-link-plus"></i> سازنده‌ی کانفیگ‌های پل — فقط چند کلیک</div>
+  </div>
+  <div class="card" style="margin-bottom:18px">
+    <div class="card-title"><i class="ti ti-wand"></i> ساخت کانفیگ‌های چندلوکیشن</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--t3)">کانفیگ پایه</label>
+        <select id="ml-cfg-sel" style="width:100%" class="cm-input"></select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--t3)">حالت خروج</label>
+        <select id="ml-mode-sel" style="width:100%" class="cm-input">
+          <option value="worker" selected>خروج CF — جعل خروجی (سایت‌ها IP کلادفلر می‌بینند)</option>
+          <option value="railway">تونل پایدار — خروج Railway (مثل قبل)</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--t3)">لوکیشن‌ها</label>
+        <select id="ml-colo-sel" style="width:100%" class="cm-input">
+          <option value="all" selected>همه‌ی لوکیشن‌های تاییدشده</option>
+          <option value="auto">فقط Auto (نزدیک‌ترین PoP به ISP)</option>
+        </select>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-p" onclick="mlBuild(this)"><i class="ti ti-magic-wand"></i> ساخت کانفیگ‌های پل</button>
+      <button class="btn btn-g" id="ml-copy-all-btn" style="display:none" onclick="mlCopyAll()"><i class="ti ti-clipboard-copy"></i> کپی همه</button>
+      <span id="ml-build-result" style="font-size:11.5px;color:var(--t3);align-self:center"></span>
+    </div>
+    <div id="ml-links-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px;margin-top:14px"></div>
+    <textarea id="ml-links-raw" style="display:none;width:100%;margin-top:12px;direction:ltr;text-align:left;font-family:monospace;font-size:11px;height:150px" readonly></textarea>
+  </div>
+
+  <!-- ۴) SNI-Trace — دیباگ فوق پیشرفته‌ی جعل SNI -->
+  <div class="conn-toolbar" style="margin-bottom:14px">
+    <div class="conn-toolbar-title"><i class="ti ti-mask"></i> SNI-Trace — اثبات زنده‌ی جعل SNI (نه حدس)</div>
+  </div>
+  <div class="card" style="margin-bottom:18px">
+    <div class="card-title"><i class="ti ti-bug"></i> ردیاب SNI جعلی</div>
+    <div style="font-size:11.5px;color:var(--t3);margin-bottom:12px;line-height:1.8">
+      پنل با SNI جعلی شما <b>واقعاً</b> به ingress ریلوی و لبه‌ی کلادفلر هندشیک TLS می‌زند و نتیجه را با مدرک نشان می‌دهد:
+      آیا هندشیک کامل شد؟ لایه‌ی HTTP با Host درست رسید؟ پس DPI دقیقاً چه SNI‌ای می‌بیند؟
+      برای فعال‌سازی، در «ساخت کانفیگ» گزینه‌ی 🎭 SNI جعلی را روشن کن — لینک خروجی sni جعلی + allowInsecure خواهد داشت.
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <input class="cm-input" id="ml-sni-input" placeholder="www.microsoft.com" style="flex:1;min-width:220px;direction:ltr;text-align:left;font-family:monospace">
+      <button class="btn btn-pur" onclick="mlSniTrace(this)"><i class="ti ti-route"></i> تست زنده</button>
+    </div>
+    <div id="ml-sni-result" style="margin-top:14px;display:none"></div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════════════════
      VPN PRO — WireGuard و OpenVPN
      پروتکل‌های مستقل از VLESS/Trojan — کاربر سرور خودش را deploy می‌کند
      ════════════════════════════════════════════════════════════════════════════ -->
@@ -4745,7 +4892,7 @@ function navTo(name){
   document.querySelectorAll('.pg').forEach(p=>p.classList.toggle('on',p.id==='pg-'+name));
   // ورود پلکانی کارت‌ها فقط هنگام سوییچ صفحه
   if(name==='links'){document.body.classList.add('cascade');setTimeout(()=>document.body.classList.remove('cascade'),650)}
-  const loaders={links:loadLinks,bridge:loadBridgePage,connections:loadConns,errors:loadErrs,subscriptions:loadSubsPage,subgroups:loadSubs,logs:loadActivity,updates:loadVersion,support:loadSupportMsgs,nodes:loadNodesPage,zeus:loadZeusPage,gaming:loadGamingPage,vpn:loadVPNPage,experimental:loadExperimentalPage,'unified-configs':loadUnifiedConfigsPage};  if(loaders[name])loaders[name]();
+  const loaders={links:loadLinks,bridge:loadBridgePage,connections:loadConns,errors:loadErrs,subscriptions:loadSubsPage,subgroups:loadSubs,logs:loadActivity,updates:loadVersion,support:loadSupportMsgs,nodes:loadNodesPage,zeus:loadZeusPage,gaming:loadGamingPage,multiloc:loadMultilocPage,vpn:loadVPNPage,experimental:loadExperimentalPage,'unified-configs':loadUnifiedConfigsPage};  if(loaders[name])loaders[name]();
   closeSb();window.scrollTo({top:0,behavior:'smooth'});
 }
 document.querySelectorAll('.nav-it').forEach(el=>el.addEventListener('click',()=>navTo(el.dataset.pg)));
@@ -5566,6 +5713,170 @@ async function pingAllViaWorker(){
 }
 const COLO_NAMES={IST:'استانبول 🇹🇷',FRA:'فرانکفورت 🇩🇪',MRS:'مارسی 🇫🇷',BAH:'بحرین 🇧🇭',DXB:'دبی 🇦🇪',AMS:'آمستردام 🇳🇱',LHR:'لندن 🇬🇧',CDG:'پاریس 🇫🇷',MIL:'میلان 🇮🇹',VIE:'وین 🇦🇹',WAW:'ورشو 🇵🇱',KIV:'کیشیناو 🇲🇩',DME:'مسکو 🇷🇺',TAS:'تاشکند 🇺🇿',ALA:'آلماتی 🇰🇿',SIN:'سنگاپور 🇸🇬',DXB2:'دبی۲',TLV:'تل‌آویو',DOH:'دوحه 🇶🇦',KWI:'کویت 🇰🇼'};
 
+/* ═════════════════ پل چندلوکیشن v2 — MultiLoc (WTE) ═════════════════ */
+let mlLinksCache=[],mlStatusCache=null;
+async function loadMultilocPage(){ await mlStatus(false); await mlLoadLocations(false); mlFillCfgSelect(); }
+async function mlStatus(toastIt){
+  try{
+    const r=await authF('/api/multiloc/status');
+    if(!r.ok)throw new Error('status '+r.status);
+    const j=await r.json();mlStatusCache=j;
+    const sb=document.getElementById('ml-status-badge');
+    const ready=j.ready&&j.worker&&j.worker.supports_wte;
+    sb.textContent=j.ready?(j.worker.supports_wte?'آماده — WTE فعال':'وورکر v1 — آپگرید لازم'):'Worker تنظیم نشده';
+    sb.className='badge '+(ready?'bg-green':(j.ready?'bg-amber':'bg-red'));
+    document.getElementById('ml-worker-ver').textContent=(j.worker&&j.worker.version)||'—';
+    document.getElementById('ml-worker-domain-lbl').textContent=j.worker_domain||'—';
+    const wte=document.getElementById('ml-wte-status');
+    if(j.worker&&j.worker.supports_wte){wte.textContent='فعال ✓';wte.style.color='var(--green-t)';document.getElementById('ml-wte-sub').textContent='سرور VLESS داخل وورکر — خروج از colo';}
+    else{wte.textContent='غیرفعال';wte.style.color='var(--amber-t)';document.getElementById('ml-wte-sub').textContent='کد v2 وورکر را Paste کن';}
+    document.getElementById('ml-worker-upgrade').style.display=(j.worker&&j.worker.supports_wte||!j.ready)?'none':'';
+    if(j.locations_cached){document.getElementById('ml-loc-count').textContent=toFa(j.locations_cached)+' لوکیشن';}
+    if(toastIt)toast(ready?'گیت‌وی WTE آماده است ✓':'وضعیت گیت‌وی به‌روز شد',ready?'ok':'info');
+  }catch(e){ const sb=document.getElementById('ml-status-badge');sb.textContent='خطا';sb.className='badge bg-red'; if(toastIt)toast('خطا در وضعیت مولتی‌لوک: '+(e.message||''),'err'); }
+}
+async function mlScan(btn,deep){
+  const pr=document.getElementById('ml-scan-progress');
+  const old=btn.innerHTML;btn.disabled=true;pr.textContent='در حال اسکن — هندشیک واقعی TLS...';
+  try{
+    const r=await authF('/api/multiloc/scan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({deep:!!deep})});
+    if(!r.ok)throw new Error((await r.json().catch(()=>({}))).error||('HTTP '+r.status));
+    const j=await r.json();
+    if(!j.ok){toast(j.error||'اسکن ناموفق','err');pr.textContent='ناموفق';return}
+    mlRenderLocations(j.locations,j.stats);
+    pr.textContent='انجام شد ✓ '+toFa(j.stats.colos)+' colo از '+toFa(j.stats.probed)+' IP';
+    document.getElementById('ml-loc-count').textContent=toFa(j.locations.length)+' لوکیشن';
+    toast('اسکن کامل شد — '+toFa(j.stats.colos)+' لوکیشن تایید شد ✓','ok');
+  }catch(e){pr.textContent='خطا';toast('اسکن ناموفق: '+(e.message||''),'err');}
+  finally{btn.disabled=false;btn.innerHTML=old;}
+}
+async function mlLoadLocations(render){
+  try{
+    const r=await authF('/api/multiloc/locations');
+    if(!r.ok)return;
+    const j=await r.json();
+    if(j.ok&&j.locations){mlRenderLocations(j.locations,j.stats);}
+  }catch(e){}
+}
+function mlRenderLocations(locs,stats){
+  const g=document.getElementById('ml-loc-grid');if(!g)return;
+  g.innerHTML=locs.map(l=>{
+    const rtt=l.rtt_ms?toFa(Math.round(l.rtt_ms))+' ms':'—';
+    const ip=(l.best_ip||'—');
+    return `<div class="card" style="margin:0;padding:12px;border:1px solid var(--card-b)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <b style="font-size:13px">${l.flag} ${esc(l.city)}</b>
+        <span class="badge ${l.key==='auto'?'bg-blue':'bg-green'}" style="font-size:10px">${l.colo?esc(l.colo):'AUTO'}</span>
+      </div>
+      <div style="font-size:11px;color:var(--t3);direction:ltr;text-align:left;font-family:monospace;overflow:hidden;text-overflow:ellipsis">${esc(ip)}</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
+        <span style="font-size:11px;color:var(--t3)">RTT: <b style="color:var(--green-t)">${rtt}</b></span>
+        <button class="btn btn-o btn-sm" style="font-size:10px;padding:4px 10px" onclick="mlEgress('${esc(l.key)}',this)">تست خروج</button>
+      </div>
+      <div id="ml-eg-${esc(l.key)}" style="font-size:10.5px;color:var(--t3);margin-top:6px;display:none"></div>
+    </div>`;
+  }).join('')||'<div style="font-size:11.5px;color:var(--t3);padding:8px">هنوز اسکنی ثبت نشده — دکمه‌ی اسکن را بزن</div>';
+  if(stats){document.getElementById('ml-scan-stats').innerHTML=`پروب: ${toFa(stats.probed)} · سالم: ${toFa(stats.alive)} · coloهای یکتا: ${toFa(stats.colos)} · مرده: ${toFa(stats.dead)} — <b>RTT از دید سرور پنل</b> (از ISP خودت با /cdn-cgi/trace روی همان IP قابل بازبینی است)`;}
+}
+async function mlEgress(key,btn){
+  const box=document.getElementById('ml-eg-'+key);if(!box)return;
+  const old=btn.innerHTML;btn.disabled=true;btn.innerHTML='...';
+  try{
+    const r=await authF('/api/multiloc/egress-check?ip='+encodeURIComponent(key==='auto'?'auto':key));
+    const j=await r.json();
+    box.style.display='block';
+    if(j.ok){
+      box.innerHTML=`<b style="color:var(--green-t)">IP خروج: ${esc(j.exit_ip||'?')}</b> · ${esc(j.exit_country||j.colo_country||'?')} ${j.exit_city?('— '+esc(j.exit_city)):''} <span style="opacity:.6">(${esc(j.colo||'?')})</span>`;
+      document.getElementById('ml-egress-last').textContent=(j.exit_country||'?')+' · '+(j.exit_ip||'?');
+      document.getElementById('ml-egress-sub').textContent=j.note?('colo: '+j.colo):'مدرک زنده از /egress-test';
+    } else {
+      box.innerHTML='<b style="color:var(--amber-t)">'+esc(j.error||'تست ناموفق — وورکر v2 لازم است')+'</b>';
+    }
+  }catch(e){box.style.display='block';box.innerHTML='<b style="color:var(--red-t)">خطا</b>';}
+  finally{btn.disabled=false;btn.innerHTML=old;}
+}
+function mlFillCfgSelect(){
+  const sel=document.getElementById('ml-cfg-sel');if(!sel)return;
+  const cands=allLinksList.filter(l=>!l._nodeId&&(((l.protocol||'').startsWith('vless'))||((l.protocol||'').startsWith('trojan'))));
+  const list=cands.length?cands:allLinksList.filter(l=>!l._nodeId);
+  sel.innerHTML='<option value="">همه‌ی کانفیگ‌های مجاز ('+toFa(list.length)+')</option>'+list.map(l=>`<option value="${esc(l.uuid)}">${esc(l.label)} · ${esc((l.protocol||'').toUpperCase())}</option>`).join('');
+}
+async function mlBuild(btn){
+  const uuid=document.getElementById('ml-cfg-sel').value||null;
+  const mode=document.getElementById('ml-mode-sel').value;
+  const coloSel=document.getElementById('ml-colo-sel').value;
+  const colos=coloSel==='auto'?['auto']:null;
+  const old=btn.innerHTML;btn.disabled=true;btn.innerHTML='<i class="ti ti-loader ti-spin"></i> در حال ساخت...';
+  try{
+    const r=await authF('/api/multiloc/links',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({uuid,mode,colos})});
+    if(!r.ok)throw new Error((await r.json().catch(()=>({}))).error||('HTTP '+r.status));
+    const j=await r.json();
+    if(!j.ok){toast(j.error||'ساخت ناموفق','err');return}
+    mlLinksCache=j.links;
+    const grid=document.getElementById('ml-links-grid');
+    grid.innerHTML=j.links.map((l,i)=>`
+      <div class="card" style="margin:0;padding:12px;border:1px solid var(--card-b)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <b style="font-size:12.5px">${l.flag} ${esc(l.city)} ${l.colo?('· <span style="font-size:10px;opacity:.7">'+esc(l.colo)+'</span>'):''}</b>
+          <span class="badge ${l.exit.includes('Cloudflare')?'bg-green':'bg-blue'}" style="font-size:9.5px">${esc(l.exit)}</span>
+        </div>
+        <div style="font-size:10px;color:var(--t3);margin-bottom:6px">${esc(l.label)} · ${esc((l.protocol||'').toUpperCase())} ${l.rtt_ms?('· '+toFa(Math.round(l.rtt_ms))+'ms'):''}</div>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-g btn-sm" style="font-size:10px;padding:4px 10px;flex:1" onclick="mlCopyOne(${i},this)"><i class="ti ti-clipboard-copy"></i> کپی لینک</button>
+          <button class="btn btn-o btn-sm" style="font-size:10px;padding:4px 8px" onclick="navigator.clipboard.writeText('https://${esc(location.host)}/sub/'+encodeURIComponent('${esc(j.links[i].uuid)}'))" title="کپی لینک ساب"><i class="ti ti-rss"></i></button>
+        </div>
+      </div>`).join('');
+    document.getElementById('ml-copy-all-btn').style.display='';
+    document.getElementById('ml-links-raw').style.display='';
+    document.getElementById('ml-links-raw').value=j.links.map(l=>l.url).join('\n');
+    document.getElementById('ml-build-result').textContent=toFa(j.count)+' کانفیگ پل ساخته شد ✓'+(j.auto_sync?(' · '+j.auto_sync):'');
+    toast(toFa(j.count)+' کانفیگ '+j.mode_label+' ساخته شد ✓','ok');
+  }catch(e){toast('ساخت ناموفق: '+(e.message||''),'err');}
+  finally{btn.disabled=false;btn.innerHTML=old;}
+}
+function mlCopyOne(i,btn){ navigator.clipboard.writeText(mlLinksCache[i].url).then(()=>toast('لینک '+mlLinksCache[i].city+' کپی شد ✓','ok')).catch(()=>toast('کپی ناموفق','err')); }
+function mlCopyAll(){ navigator.clipboard.writeText(mlLinksCache.map(l=>l.url).join('\n')).then(()=>toast('همه‌ی '+toFa(mlLinksCache.length)+' لینک کپی شد ✓','ok')).catch(()=>toast('کپی ناموفق','err')); }
+async function mlSyncWorker(btn){
+  const res=document.getElementById('ml-sync-result');const old=btn.innerHTML;btn.disabled=true;res.textContent='در حال سینک...';
+  try{
+    const r=await authF('/api/multiloc/sync-worker',{method:'POST'});
+    const j=await r.json();
+    if(j.ok){res.innerHTML=`<b style="color:var(--green-t)">✓ ${toFa(j.pushed||j.synced||0)} UUID سینک شد${j.pools?(' · '+toFa(Object.keys(j.pools||{}).length)+' استخر IP'):''}</b>`;toast('سینک وورکر کامل شد ✓','ok');}
+    else{res.innerHTML='<b style="color:var(--amber-t)">'+esc(j.error||'سینک ناموفق')+'</b>';}
+  }catch(e){res.innerHTML='<b style="color:var(--red-t)">خطا</b>';}
+  finally{btn.disabled=false;btn.innerHTML=old;}
+}
+async function mlCopyWorkerCode(){
+  try{
+    const r=await authF('/api/multiloc/worker-code');
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    const code=await r.text();
+    await navigator.clipboard.writeText(code);
+    toast('کد کامل Worker v2 کپی شد — در Edit Code وورکر Paste کن و Deploy کن ✓','ok');
+  }catch(e){toast('کپی ناموفق — از لینک دانلود استفاده کن','err');}
+}
+async function mlSniTrace(btn){
+  const inp=document.getElementById('ml-sni-input');
+  const sni=(inp.value||'').trim();
+  const box=document.getElementById('ml-sni-result');
+  if(!sni||!sni.includes('.')){toast('یک دامنه‌ی معتبر وارد کنید','err');return}
+  const old=btn.innerHTML;btn.disabled=true;btn.innerHTML='<i class="ti ti-loader ti-spin"></i> تست زنده...';
+  try{
+    const r=await authF('/api/multiloc/sni-trace',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sni})});
+    const j=await r.json();
+    box.style.display='block';
+    let h='<div style="padding:12px;background:var(--bg);border-radius:10px;border:1px solid var(--card-b);font-size:11.5px;line-height:2">';
+    h+=`<b>دامنه‌ی جعلی: <code style="direction:ltr;display:inline-block">${esc(j.spoof_sni||sni)}</code></b><br>`;
+    const t=j.tests||{};
+    if(t.panel_control)h+=`کنترل (SNI واقعی پنل): ${t.panel_control.tls_ok?'<b style="color:var(--green-t)">هندشیک ✓</b>':'<b style="color:var(--red-t)">✗</b>'} ${t.panel_control.http?('· '+esc(t.panel_control.http)):'<br>'}<br>`;
+    if(t.railway_fake_sni)h+=`جعل مستقیم به ریلوی (SNI=${esc(j.spoof_sni)}): ${t.railway_fake_sni.tls_ok&&t.railway_fake_sni.http&&String(t.railway_fake_sni.http).includes('200')?'<b style="color:var(--green-t)">هندشیک + HTTP 200 ✓</b>':'<b style="color:var(--red-t)">ناموفق</b>'} ${t.railway_fake_sni.error?('· '+esc(t.railway_fake_sni.error)):'<br>'}<br>`;
+    if(t.cloudflare_fake_sni)h+=`جعل به لبه‌ی کلادفلر: ${t.cloudflare_fake_sni.tls_ok&&String(t.cloudflare_fake_sni.http||'').includes('200')?'<b style="color:var(--green-t)">قابل fronting ✓</b>':'<b style="color:var(--amber-t)"> rout نمی‌شود (طبیعی)</b>'}<br>`;
+    (j.verdicts||[]).forEach(v=>{h+=`<div style="margin-top:8px;padding:8px;border-radius:8px;background:${v.ok?'rgba(16,185,129,.08)':'rgba(250,204,21,.08)'}"><b style="color:${v.ok?'var(--green-t)':'var(--amber-t)'}">${v.ok?'✓':'⚠'} ${esc(v.mode)}</b> — ${esc(v.msg)}</div>`;});
+    h+='</div>';
+    box.innerHTML=h;
+  }catch(e){box.style.display='block';box.innerHTML='<b style="color:var(--red-t)">خطا در تست</b>';}
+  finally{btn.disabled=false;btn.innerHTML=old;}
+}
 async function loadGamingPage(){
   try{
     const r=await authF('/api/gaming/config');

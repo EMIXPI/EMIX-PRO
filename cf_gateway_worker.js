@@ -1,27 +1,30 @@
 // ══════════════════════════════════════════════════════════════════════════════
-// EMIX Gateway — Cloudflare Worker v1.5.0 (مولتی‌لوکیشن + گیمینگ + UI کامل)
-// ──────────────────────────────────────────────────────────────────────────────
-// این Worker پل بین کاربران ایرانی و بک‌اند EMIX (Railway) است:
+// EMIX Gateway — Cloudflare Worker v2.0.0-wte (Worker-Terminated Egress)
+// ─────────────────────────────────────────────────────────────────────────────
+// 🚀 چی تازه در v2.0 (WTE = خاتمه‌ی تونل داخل خود وورکر):
 //
-//   کاربر ──► بهترین IP کلادفلر ──► این Worker ──► لوکیشن انتخابی ──► اینترنت
+//   کاربر ──► IP آنیکست کلادفلر (colo دلخواه) ──► این Worker
+//              ├── /vl        : سرور VLESS داخل وورکر — تونل همین‌جا خاتمه می‌یابد
+//              │               و خروج اینترنت از «همان colo اجرای وورکر» انجام می‌شود.
+//              │               → سایت‌ها IP کلادفلر آن region را می‌بینند، نه Railway!
+//              │               → این همان جعلِ خروجیِ واقعیِ چندلوکیشن است (بدون سرور اضافه)
+//              ├── /egress-test: IP و کشورِ خروج واقعی از دید همین colo (با مدرک)
+//              └── /loc/{name} : (مثل قبل) تونل پایدار → بک‌اند Railway
 //
-// ✅ امکانات v1.5:
-//   ۱) مولتی‌لوکیشن: مسیر /loc/{name}/... به بک‌اند آن لوکیشن فوروارد می‌شود
-//      - لوکیشن‌ها یا همین‌جا در DEFAULT_LOCATIONS تعریف می‌شوند (ادیت کد)
-//      - یا در KV (اگر bind شده باشد) به‌صورت داینامیک — بدون ری‌دیپلوی
-//   ۲) /gateway-status → وضعیت گیت‌وی + PoP + سلامت لوکیشن‌ها (با کش ۵ دقیقه)
-//   ۳) /admin/locations (توکن‌دار) → افزودن/حذف لوکیشن از پنل EMIX
-//   ۴) WebSocket passthrough — لازم برای VLESS-over-WS / Trojan-over-WS
-//   ۵) TLS کامل بین کاربر و کلادفلر
-//   ۶) لوکیشن‌های پیش‌فرض متعدد — section خروجی دیگر خالی نمی‌ماند
+// ✅ کاملاً سازگار با v1.x — همه‌ی اندپوینت‌های قبلی سر جایشان هستند.
+// ✅ UUID ها یا در KV «vless_uuids» ذخیره می‌شوند (سینک از پنل EMIX) یا در
+//    متغیر محیطی VLESS_UUIDS (با کاما جدا).
+// ✅ TCP با cloudflare:sockets connect() — UDP فقط برای DNS (روی DoH).
+//
+// دیپلوی: dash.cloudflare.com → Workers & Pages → (وورکر emix-gateway موجود را
+// باز کن) → Edit code → همه را با همین فایل عوض کن → Save & Deploy.
 // ══════════════════════════════════════════════════════════════════════════════
 
-const GATEWAY_VERSION = '1.5.0';
+import { connect } from 'cloudflare:sockets';
 
-// ─── لوکیشن‌های پیش‌فرض ───
-// این‌ها بلافاصله بعد از دیپلوی worker فعال‌اند. کاربر می‌تواند از پنل اضافه/حذف کند.
-// auto = همان Railway production (پیش‌فرض، همیشه سالم)
-// بقیه = قالب‌های آماده — فقط upstream را بعد از deploy سرور خروج عوض کنید
+const GATEWAY_VERSION = '2.0.0-wte';
+
+// ─── لوکیشن‌های پیش‌فرض (حالت تونل /loc — مثل v1) ───
 const DEFAULT_LOCATIONS = {
   auto: {
     label: 'Auto — Railway EMIX',
@@ -29,78 +32,6 @@ const DEFAULT_LOCATIONS = {
     upstream: 'emix-pro-production.up.railway.app',
     note: 'مسیر پیش‌فرض — مستقیم به بک‌اند EMIX روی Railway',
     healthy: true,
-  },
-  de: {
-    label: 'آلمان — فرانکفورت',
-    flag: '🇩🇪',
-    upstream: 'emix-pro-production.up.railway.app',
-    note: 'سرور خروج آلمان هنوز تنظیم نشده — از پنل EMIX یک exit node روی Railway Frankfurt دیپلوی کنید و upstream اینجا را به‌روز کنید',
-    healthy: false,
-    pending: true,
-  },
-  nl: {
-    label: 'هلند — آمستردام',
-    flag: '🇳🇱',
-    upstream: 'emix-pro-production.up.railway.app',
-    note: 'سرور خروج هلند هنوز تنظیم نشده — یک exit node روی Koyeb Amsterdam دیپلوی کنید',
-    healthy: false,
-    pending: true,
-  },
-  fr: {
-    label: 'فرانسه — پاریس',
-    flag: '🇫🇷',
-    upstream: 'emix-pro-production.up.railway.app',
-    note: 'سرور خروج فرانسه هنوز تنظیم نشده — یک exit node روی Render Paris دیپلوی کنید',
-    healthy: false,
-    pending: true,
-  },
-  tr: {
-    label: 'ترکیه — استانبول',
-    flag: '🇹🇷',
-    upstream: 'emix-pro-production.up.railway.app',
-    note: 'سرور خروج ترکیه هنوز تنظیم نشده — بهترین تعادل پینگ برای بازی‌های MENA. یک VPS ترک بگیر و exit node را رویش اجرا کن',
-    healthy: false,
-    pending: true,
-  },
-  ae: {
-    label: 'امارات — دبی',
-    flag: '🇦🇪',
-    upstream: 'emix-pro-production.up.railway.app',
-    note: 'سرور خروج امارات — نزدیک‌ترین به ایران. Oracle Cloud Dubai (Always Free)',
-    healthy: false,
-    pending: true,
-  },
-  ru: {
-    label: 'روسیه — مسکو',
-    flag: '🇷🇺',
-    upstream: 'emix-pro-production.up.railway.app',
-    note: 'سرور خروج روسیه — برای بازی‌های آسیای میانه و دانلود',
-    healthy: false,
-    pending: true,
-  },
-  us: {
-    label: 'آمریکا — واشنگتن',
-    flag: '🇺🇸',
-    upstream: 'emix-pro-production.up.railway.app',
-    note: 'سرور خروج آمریکا — برای دسترسی به سرویس‌های آمریکایی',
-    healthy: false,
-    pending: true,
-  },
-  uk: {
-    label: 'انگلیس — لندن',
-    flag: '🇬🇧',
-    upstream: 'emix-pro-production.up.railway.app',
-    note: 'سرور خروج انگلیس',
-    healthy: false,
-    pending: true,
-  },
-  sg: {
-    label: 'سنگاپور',
-    flag: '🇸🇬',
-    upstream: 'emix-pro-production.up.railway.app',
-    note: 'سرور خروج آسیای شرقی — برای بازی‌های آسیایی',
-    healthy: false,
-    pending: true,
   },
 };
 
@@ -124,61 +55,28 @@ async function getLocations(env) {
       const raw = await env.LOCATIONS.get('locations');
       if (raw) {
         const parsed = JSON.parse(raw);
-        if (parsed && typeof parsed === 'object' && Object.keys(parsed).length) {
-          kvLocs = parsed;
-        }
+        if (parsed && typeof parsed === 'object' && Object.keys(parsed).length) kvLocs = parsed;
       }
     } catch (e) { /* KV خطا خورد → پیش‌فرض */ }
   }
-  // merge: شروع از DEFAULT_LOCATIONS، سپس override با KV (تا پیش‌فرض‌های جدید همیشه موجود باشند)
-  // اگر کاربر یک لوکیشن را در KV حذف کرده بود و آن هم پیش‌فرض است، حذفش حفظ می‌شود
   const merged = { ...DEFAULT_LOCATIONS };
   if (kvLocs) {
     for (const [k, v] of Object.entries(kvLocs)) {
-      // اگر کاربر صریحاً upstream تنظیم کرده، اولویت با کاربر است
-      // اگر upstream خالی/null بود، از پیش‌فرض استفاده کن
-      if (v && v.upstream) {
-        merged[k] = v;
-      } else if (merged[k]) {
-        // کاربر یک placeholder برای لوکیشن پیش‌فرض گذاشته — نگه دار ولی upstream پیش‌فرض بگذار
-        merged[k] = { ...merged[k], ...v, upstream: merged[k].upstream };
-      } else {
-        merged[k] = v;
-      }
+      if (v && v.upstream) merged[k] = v;
+      else if (merged[k]) merged[k] = { ...merged[k], ...v, upstream: merged[k].upstream };
+      else merged[k] = v;
     }
   }
-  // auto را از پیش‌فرض تضمینی کن (همیشه باشد)
   if (!merged.auto) merged.auto = DEFAULT_LOCATIONS.auto;
   return merged;
 }
 
 async function saveLocations(env, locs) {
   if (!env || !env.LOCATIONS) {
-    return { ok: false, error: 'KV namespace «LOCATIONS» به worker بایند نشده — از Settings → Bindings یک KV بسازید و متصل کنید (یا لوکیشن را در خود کد اضافه کنید)' };
+    return { ok: false, error: 'KV namespace «LOCATIONS» به worker بایند نشده' };
   }
   await env.LOCATIONS.put('locations', JSON.stringify(locs));
   return { ok: true };
-}
-
-// ─── کش سلامت لوکیشن‌ها (۵ دقیقه اعتبار) ───
-async function getHealthCache(env) {
-  if (!env || !env.LOCATIONS) return {};
-  try {
-    const raw = await env.LOCATIONS.get('health_cache');
-    if (!raw) return {};
-    const parsed = JSON.parse(raw);
-    if (!parsed || !parsed.ts || Date.now() - parsed.ts > 5 * 60 * 1000) return {};
-    return parsed.data || {};
-  } catch (e) { return {}; }
-}
-
-async function saveHealthCache(env, checks) {
-  if (!env || !env.LOCATIONS) return;
-  try {
-    const data = {};
-    for (const c of checks) data[c.name] = { ok: c.ok, latency_ms: c.latency_ms, ts: Date.now() };
-    await env.LOCATIONS.put('health_cache', JSON.stringify({ ts: Date.now(), data }));
-  } catch (e) { /* کش اختیاری است */ }
 }
 
 function checkToken(request, env) {
@@ -186,6 +84,175 @@ function checkToken(request, env) {
   if (!expected) return false;
   return request.headers.get('x-emix-token') === expected;
 }
+
+// ─── UUIDهای مجاز VLESS (از KV سینک‌شده توسط پنل، یا متغیر محیطی) ───
+async function getAllowedUuids(env) {
+  const allowed = new Set();
+  const envList = (env && env.VLESS_UUIDS) || '';
+  for (const u of envList.split(',')) {
+    const t = u.trim().toLowerCase();
+    if (t) allowed.add(t);
+  }
+  if (env && env.LOCATIONS) {
+    try {
+      const raw = await env.LOCATIONS.get('vless_uuids');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) for (const u of parsed) allowed.add(String(u).toLowerCase());
+      }
+    } catch (e) { /* ignore */ }
+  }
+  return allowed;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// 🆕 بخش WTE — سرور VLESS داخل وورکر (edgetunnel-style)
+// ══════════════════════════════════════════════════════════════════════════════
+
+function toUuidString(bytes) {
+  const hex = Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+}
+
+function parseVlessHeader(buf) {
+  if (buf.length < 24) return null;
+  try {
+    const version = buf[0];
+    const uuidStr = toUuidString(buf.slice(1, 17));
+    let idx = 17;
+    const addonLen = buf[idx];
+    idx += 1 + addonLen;
+    if (buf.length < idx + 4) return null;
+    const command = buf[idx]; idx++;
+    const port = (buf[idx] << 8) | buf[idx + 1]; idx += 2;
+    const atype = buf[idx]; idx++;
+    let hostname = '';
+    if (atype === 1) {
+      if (buf.length < idx + 4) return null;
+      hostname = `${buf[idx]}.${buf[idx + 1]}.${buf[idx + 2]}.${buf[idx + 3]}`;
+      idx += 4;
+    } else if (atype === 2) {
+      if (buf.length < idx + 1) return null;
+      const len = buf[idx]; idx++;
+      if (buf.length < idx + len) return null;
+      hostname = new TextDecoder().decode(buf.slice(idx, idx + len));
+      idx += len;
+    } else if (atype === 3) {
+      if (buf.length < idx + 16) return null;
+      const parts = [];
+      for (let i = 0; i < 16; i += 2) {
+        parts.push((buf[idx + i] * 256 + buf[idx + i + 1]).toString(16));
+      }
+      hostname = parts.join(':');
+      idx += 16;
+    } else {
+      return null;
+    }
+    if (idx > buf.length) return null;
+    return { version, uuidStr, command, port, hostname, payload: buf.slice(idx) };
+  } catch (e) {
+    return null;
+  }
+}
+
+async function wsBytes(data) {
+  if (data instanceof ArrayBuffer) return new Uint8Array(data);
+  if (typeof data === 'string') return new TextEncoder().encode(data);
+  try { return new Uint8Array(await data.arrayBuffer()); } catch (e) { return null; }
+}
+
+async function handleDnsOverHttps(ws, payload) {
+  // UDP فقط برای DNS (پورت 53) — روی DoH کلادفلر پاسخ داده می‌شود
+  ws.send(new Uint8Array([0, 0]));
+  try {
+    const dnsQuery = payload.slice(2); // حذف پیشوند طول ۲ بایتی UDP
+    const resp = await fetch('https://1.1.1.1/dns-query', {
+      method: 'POST',
+      headers: { 'content-type': 'application/dns-message' },
+      body: dnsQuery,
+    });
+    const respBuf = new Uint8Array(await resp.arrayBuffer());
+    const out = new Uint8Array(2 + respBuf.length);
+    out[0] = (respBuf.length >> 8) & 0xff;
+    out[1] = respBuf.length & 0xff;
+    out.set(respBuf, 2);
+    ws.send(out);
+  } catch (e) { /* سکوت — کلاینت retry می‌کند */ }
+}
+
+async function handleVlessSession(ws, env) {
+  const allowed = await getAllowedUuids(env);
+  let headerDone = false;
+  let writer = null;
+  let tcpSocket = null;
+  let closed = false;
+
+  const cleanup = () => {
+    if (closed) return;
+    closed = true;
+    try { if (tcpSocket) tcpSocket.close(); } catch (e) {}
+    try { ws.close(); } catch (e) {}
+  };
+
+  ws.addEventListener('message', async (event) => {
+    try {
+      const data = await wsBytes(event.data);
+      if (!data || data.length === 0) return;
+
+      if (!headerDone) {
+        headerDone = true;
+        const hdr = parseVlessHeader(data);
+        if (!hdr) { ws.close(1002, 'bad header'); return; }
+        if (!allowed.has(hdr.uuidStr)) { ws.close(1008, 'unauthorized'); return; }
+        if (hdr.command === 0x02) { // UDP
+          if (hdr.port === 53) { await handleDnsOverHttps(ws, hdr.payload); }
+          else { ws.close(1002, 'udp-dns-only'); }
+          return;
+        }
+        if (hdr.command !== 0x01) { ws.close(1002, 'cmd'); return; }
+
+        // پاسخ VLESS: [version, addonLen=0]
+        ws.send(new Uint8Array([hdr.version, 0]));
+
+        tcpSocket = connect({ hostname: hdr.hostname, port: hdr.port });
+        writer = tcpSocket.writable.getWriter();
+        if (hdr.payload && hdr.payload.length) await writer.write(hdr.payload);
+
+        // TCP → WebSocket (خروج اینترنت از colo همین وورکر)
+        tcpSocket.readable.pipeTo(new WritableStream({
+          write(chunk) {
+            if (ws.readyState === 1) { try { ws.send(chunk); } catch (e) {} }
+          },
+          close() { cleanup(); },
+          abort() { cleanup(); },
+        })).catch(() => cleanup());
+        return;
+      }
+
+      // پیام‌های بعدی → TCP
+      if (writer && data.length) {
+        try { await writer.write(data); } catch (e) { cleanup(); }
+      }
+    } catch (e) {
+      cleanup();
+    }
+  });
+
+  ws.addEventListener('close', () => cleanup());
+  ws.addEventListener('error', () => cleanup());
+}
+
+async function handleVlessUpgrade(request, env) {
+  const pair = new WebSocketPair();
+  const [client, server] = Object.values(pair);
+  server.accept();
+  handleVlessSession(server, env).catch(() => { try { server.close(); } catch (e) {} });
+  return new Response(null, { status: 101, webSocket: client, headers: { ...CORS } });
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// روتینگ اصلی
+// ══════════════════════════════════════════════════════════════════════════════
 
 export default {
   async fetch(request, env, ctx) {
@@ -195,13 +262,61 @@ export default {
       return new Response(null, { status: 204, headers: CORS });
     }
 
-    // ─── عمومی: وضعیت گیت‌وی (پنل + تست پینگ + تشخیص PoP) ───
+    // ─── 🆕 سرور VLESS داخل وورکر (WTE) ───
+    if (url.pathname === '/vl' || url.pathname.startsWith('/vl/')) {
+      const upgrade = (request.headers.get('Upgrade') || '').toLowerCase();
+      if (upgrade !== 'websocket') {
+        return json({
+          ok: true, wte: true, endpoint: '/vl',
+          hint: 'این مسیر WebSocket می‌خواهد — لینک vless-ws پنل EMIX همین‌جا ختم می‌شود',
+          colo: (request.cf && request.cf.colo) || null,
+        }, 426);
+      }
+      return handleVlessUpgrade(request, env);
+    }
+
+    // ─── 🆕 تست خروج واقعی از دید همین colo (مدرک زنده) ───
+    if (url.pathname === '/egress-test') {
+      const t0 = Date.now();
+      const colo = (request.cf && request.cf.colo) || null;
+      const country = (request.cf && request.cf.country) || null;
+      const city = (request.cf && request.cf.city) || null;
+      try {
+        const r = await fetch('https://ipapi.co/json/', {
+          headers: { 'User-Agent': 'EMIX-EgressTest/2.0' },
+          signal: AbortSignal.timeout(8000),
+        });
+        const j = await r.json();
+        return json({
+          ok: true, mode: 'worker-colo-egress', wte: true,
+          colo, colo_country: country, colo_city: city,
+          exit_ip: j.ip || null,
+          exit_country: j.country_name || null,
+          exit_country_code: j.country || null,
+          exit_city: j.city || null,
+          exit_isp: j.org || null,
+          latency_ms: Date.now() - t0,
+          note: 'این IP خروجِ واقعی است که سایت‌ها از تونل /vl می‌بینند (نه IP Railway)',
+        });
+      } catch (e) {
+        return json({
+          ok: false, mode: 'worker-colo-egress', colo,
+          error: String((e && e.message) || e).slice(0, 140),
+        }, 502);
+      }
+    }
+
+    // ─── عمومی: وضعیت گیت‌وی ───
     if (url.pathname === '/gateway-status') {
       const locs = await getLocations(env);
+      const allowed = await getAllowedUuids(env);
       const payload = {
         ok: true,
         gateway: 'emix-gateway',
         version: GATEWAY_VERSION,
+        wte: true,
+        vless_endpoint: '/vl',
+        vless_uuid_count: allowed.size,
         time: new Date().toISOString(),
         colo: (request.cf && request.cf.colo) || null,
         country: (request.cf && request.cf.country) || null,
@@ -210,16 +325,11 @@ export default {
         kv_bound: !!(env && env.LOCATIONS),
         token_set: !!(env && env.EMIX_TOKEN),
         locations: Object.entries(locs).map(([name, v]) => ({
-          name,
-          label: v.label || name,
-          flag: v.flag || '',
-          upstream: v.upstream,
-          note: v.note || '',
-          pending: v.pending || false,
-          healthy: v.healthy || false,
+          name, label: v.label || name, flag: v.flag || '',
+          upstream: v.upstream, note: v.note || '',
+          pending: v.pending || false, healthy: v.healthy || false,
         })),
       };
-      // ?check=1 → سلامت فعال هر لوکیشن
       if (url.searchParams.get('check') === '1') {
         const checks = await Promise.all(Object.entries(locs).map(async ([name, v]) => {
           const t0 = Date.now();
@@ -229,34 +339,13 @@ export default {
               signal: AbortSignal.timeout(8000),
               headers: { 'x-emix-gateway-check': '1' },
             });
-            return {
-              name,
-              ok: r.ok,
-              status: r.status,
-              latency_ms: Date.now() - t0,
-            };
+            return { name, ok: r.ok, status: r.status, latency_ms: Date.now() - t0 };
           } catch (e) {
-            try {
-              const r2 = await fetch(`https://${v.upstream}/health`, {
-                method: 'GET',
-                signal: AbortSignal.timeout(6000),
-              });
-              return { name, ok: r2.ok, status: r2.status, latency_ms: Date.now() - t0 };
-            } catch (e2) {
-              return { name, ok: false, status: 0, latency_ms: Date.now() - t0, error: String(e2 && e2.message || e2).slice(0, 120) };
-            }
+            return { name, ok: false, status: 0, latency_ms: Date.now() - t0, error: String((e && e.message) || e).slice(0, 120) };
           }
         }));
         payload.location_health = checks;
         payload.all_healthy = checks.every(c => c.ok);
-        await saveHealthCache(env, checks);
-      } else {
-        const cached = await getHealthCache(env);
-        if (Object.keys(cached).length) {
-          payload.location_health = Object.entries(cached).map(([name, h]) => ({
-            name, ok: h.ok, latency_ms: h.latency_ms, cached: true,
-          }));
-        }
       }
       return json(payload);
     }
@@ -265,32 +354,46 @@ export default {
       const t0 = Date.now();
       try {
         const r = await fetch(`https://${DEFAULT_LOCATIONS.auto.upstream}/api/ping`, {
-          method: 'GET',
-          signal: AbortSignal.timeout(6000),
+          method: 'GET', signal: AbortSignal.timeout(6000),
         });
-        return json({ ok: r.ok, gateway: 'emix-gateway', upstream_ok: r.ok, latency_ms: Date.now() - t0, colo: (request.cf && request.cf.colo) || null });
+        return json({ ok: r.ok, gateway: 'emix-gateway', wte: true, upstream_ok: r.ok, latency_ms: Date.now() - t0, colo: (request.cf && request.cf.colo) || null });
       } catch (e) {
-        return json({ ok: false, upstream_ok: false, latency_ms: Date.now() - t0, error: String(e && e.message || e).slice(0, 120) }, 502);
+        return json({ ok: false, upstream_ok: false, latency_ms: Date.now() - t0, error: String((e && e.message) || e).slice(0, 120) }, 502);
       }
     }
 
-    // ─── بررسی IP خروج واقعی برای یک لوکیشن ───
-    // GET /exit-ip?loc=tr → IP واقعی که از مسیر /loc/tr/ بیرون می‌آید را برمی‌گرداند
-    // کاربرد: کاربر می‌خواهد بداند وقتی لوکیشن «ترکیه» را انتخاب می‌کند، سایت‌ها کدام IP را می‌بینند
+    // ─── بررسی IP خروج واقعی برای یک لوکیشن (حالت تونل) ───
     if (url.pathname === '/exit-ip') {
       const locName = url.searchParams.get('loc') || 'auto';
+      const via = url.searchParams.get('via') || 'upstream';
+      if (via === 'worker') {
+        // خروج از خود وورکر (WTE) — بدون عبور از Railway
+        const t0 = Date.now();
+        try {
+          const r = await fetch('https://ipapi.co/json/', {
+            headers: { 'User-Agent': 'EMIX-ExitCheck/2.0' },
+            signal: AbortSignal.timeout(8000),
+          });
+          const j = await r.json();
+          return json({
+            ok: true, loc: locName, via: 'worker', wte: true,
+            colo: (request.cf && request.cf.colo) || null,
+            exit_ip: j.ip || null, exit_country: j.country_name || null,
+            exit_city: j.city || null, exit_isp: j.org || null,
+            latency_ms: Date.now() - t0,
+          });
+        } catch (e) {
+          return json({ ok: false, error: String((e && e.message) || e).slice(0, 120) }, 502);
+        }
+      }
       const locs = await getLocations(env);
       const loc = locs[locName] || locs.auto;
       if (!loc) return json({ ok: false, error: 'لوکیشن یافت نشد' }, 404);
       const t0 = Date.now();
       try {
-        // از طریق خود upstream (Railway یا VPS) به یک سرویس IP-check عمومی وصل می‌شویم
-        // و درخواست می‌کنیم که IP خروج را برگرداند. چون upstream Railway است،
-        // IP برگشتی = IP خروج Railway خواهد بود (آمستردام) — مگر اینکه کاربر VPS ترک ست کرده باشد.
         const target = `https://${loc.upstream}/api/exit-check`;
         const r = await fetch(target, {
-          method: 'GET',
-          signal: AbortSignal.timeout(8000),
+          method: 'GET', signal: AbortSignal.timeout(8000),
           headers: { 'x-emix-gateway-check': '1' },
         });
         if (!r.ok) {
@@ -298,33 +401,25 @@ export default {
         }
         const j = await r.json();
         return json({
-          ok: true,
-          loc: locName,
-          label: loc.label,
-          flag: loc.flag || '',
-          upstream: loc.upstream,
-          pending: loc.pending || false,
+          ok: true, loc: locName, label: loc.label, flag: loc.flag || '',
+          upstream: loc.upstream, pending: loc.pending || false,
           exit_ip: j.exit_ip || j.ip || null,
           exit_country: j.country || j.country_code || null,
-          exit_city: j.city || null,
-          exit_isp: j.isp || j.org || null,
-          latency_ms: Date.now() - t0,
-          colo: (request.cf && request.cf.colo) || null,
+          exit_city: j.city || null, exit_isp: j.isp || j.org || null,
+          latency_ms: Date.now() - t0, colo: (request.cf && request.cf.colo) || null,
         });
       } catch (e) {
-        return json({ ok: false, loc: locName, label: loc.label, upstream: loc.upstream, pending: loc.pending || false, error: String(e && e.message || e).slice(0, 120), latency_ms: Date.now() - t0 }, 502);
+        return json({ ok: false, loc: locName, label: loc.label, upstream: loc.upstream, pending: loc.pending || false, error: String((e && e.message) || e).slice(0, 120), latency_ms: Date.now() - t0 }, 502);
       }
     }
 
-    // ─── ادمین: مدیریت لوکیشن‌ها (نیازمند X-EMIX-Token) ───
+    // ─── ادمین: مدیریت لوکیشن‌ها (توکن‌دار) ───
     if (url.pathname === '/admin/locations') {
       if (!checkToken(request, env)) {
-        return json({ ok: false, error: 'توکن نامعتبر — header «X-EMIX-Token» لازم است (Secret با نام EMIX_TOKEN در worker ست کنید)' }, 401);
+        return json({ ok: false, error: 'توکن نامعتبر — header «X-EMIX-Token» لازم است' }, 401);
       }
       const locs = await getLocations(env);
-
       if (request.method === 'GET') return json({ ok: true, locations: locs });
-
       if (request.method === 'POST') {
         try {
           const body = await request.json();
@@ -343,7 +438,6 @@ export default {
           return json({ ok: false, error: 'JSON نامعتبر: ' + e.message }, 400);
         }
       }
-
       if (request.method === 'DELETE') {
         const name = url.searchParams.get('name');
         if (!name || name === 'auto') return json({ ok: false, error: 'نام نامعتبر یا «auto» (غیرقابل حذف)' }, 400);
@@ -353,7 +447,42 @@ export default {
       }
     }
 
-    // ─── روتینگ لوکیشن: /loc/{name}/بقیه‌ی مسیر ───
+    // ─── 🆕 ادمین: سینک UUIDهای VLESS از پنل EMIX (توکن‌دار) ───
+    if (url.pathname === '/admin/vless-uuids') {
+      if (!checkToken(request, env)) {
+        return json({ ok: false, error: 'توکن نامعتبر — header «X-EMIX-Token» لازم است' }, 401);
+      }
+      if (request.method === 'GET') {
+        const allowed = await getAllowedUuids(env);
+        return json({ ok: true, count: allowed.size, uuids: Array.from(allowed) });
+      }
+      if (request.method === 'POST') {
+        if (!env || !env.LOCATIONS) {
+          return json({ ok: false, error: 'KV «LOCATIONS» بایند نشده — UUIDها فقط از متغیر VLESS_UUIDS خوانده می‌شوند' }, 400);
+        }
+        try {
+          const body = await request.json();
+          const uuids = Array.isArray(body && body.uuids)
+            ? body.uuids.map(u => String(u).toLowerCase()).filter(u => u.length === 36)
+            : [];
+          if (!uuids.length) return json({ ok: false, error: 'uuids خالی یا نامعتبر است' }, 400);
+          await env.LOCATIONS.put('vless_uuids', JSON.stringify(uuids));
+          if (body.pools && typeof body.pools === 'object') {
+            await env.LOCATIONS.put('colo_pools', JSON.stringify(body.pools));
+          }
+          return json({ ok: true, synced: uuids.length, pools: Object.keys((body && body.pools) || {}).length });
+        } catch (e) {
+          return json({ ok: false, error: 'JSON نامعتبر: ' + e.message }, 400);
+        }
+      }
+      if (request.method === 'DELETE') {
+        if (!env || !env.LOCATIONS) return json({ ok: false, error: 'KV بایند نشده' }, 400);
+        await env.LOCATIONS.delete('vless_uuids');
+        return json({ ok: true });
+      }
+    }
+
+    // ─── روتینگ لوکیشن: /loc/{name}/بقیه‌ی مسیر (حالت تونل) ───
     let locName = 'auto';
     const m = url.pathname.match(/^\/loc\/([a-z0-9-]+)(\/.*)?$/);
     if (m) {
@@ -384,10 +513,7 @@ export default {
       return json({ ok: false, error: 'خطای آپ‌استریم: ' + e.message, upstream: loc.upstream, location: locName }, 502);
     }
 
-    // ⚠ حیاتی برای WebSocket: پاسخ 101 (Switching Protocols) قابل بازسازی با
-    // new Response() نیست — کد status 101 در سازنده‌ی Response مجاز نیست و باعث
-    // خطای 500 و قطع همه‌ی تونل‌های WS می‌شود. برای آپگرید WS باید پاسخ اصلی
-    // دقیقاً همان‌طور که هست برگردد (استریم دوطرفه‌ی WebSocket حفظ می‌شود).
+    // ⚠ حیاتی برای WebSocket: پاسخ 101 باید همان‌طور که هست برگردد
     if (resp.status === 101 || resp.websocket) {
       return resp;
     }
