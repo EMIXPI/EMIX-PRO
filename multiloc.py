@@ -86,6 +86,10 @@ COLO_META = {
     "NRT": ("توکیو", "🇯🇵"), "KIX": ("اوساکا", "🇯🇵"), "ICN": ("سئول", "🇰🇷"),
     "BOM": ("مومبای", "🇮🇳"), "DEL": ("دهلی", "🇮🇳"), "MAA": ("چنای", "🇮🇳"),
     "LAX": ("لس‌آنجلس", "🇺🇸"), "SJC": ("سان‌خوزه", "🇺🇸"), "SEA": ("سیاتل", "🇺🇸"),
+    "MAN": ("منچستر", "🇬🇧"), "OTP": ("بخارست", "🇷🇴"), "BUD": ("بوداپست", "🇭🇺"),
+    "BEG": ("بلگراد", "🇷🇸"), "ZAG": ("زاگرب", "🇭🇷"), "KBP": ("کیف", "🇺🇦"),
+    "ATH": ("آتن", "🇬🇷"), "SOF": ("صوفیه", "🇧🇬"), "RIX": ("ریگا", "🇱🇻"),
+    "BKK": ("بانکوک", "🇹🇭"), "CGK": ("جاکارتا", "🇮🇩"), "KUL": ("کوالالامپور", "🇲🇾"),
     "DFW": ("دالاس", "🇺🇸"), "ORD": ("شیکاگو", "🇺🇸"), "IAD": ("واشنگتن", "🇺🇸"),
     "EWR": ("نیوجرسی", "🇺🇸"), "MIA": ("میامی", "🇺🇸"), "ATL": ("آتلانتا", "🇺🇸"),
     "YYZ": ("تورنتو", "🇨🇦"), "YVR": ("ونکوور", "🇨🇦"), "GRU": ("سائوپائولو", "🇧🇷"),
@@ -402,9 +406,18 @@ async def _worker_admin(path: str, payload: dict, timeout: float = 15.0) -> dict
             r = await cli.request("POST", f"https://{domain}{path}",
                                   json=payload, headers={"x-emix-token": token})
             try:
-                return r.json()
+                data = r.json()
             except Exception:
                 return {"ok": False, "error": f"پاسخ غیر JSON ({r.status_code})", "status": r.status_code}
+            # پاسخ وورکر v1 (مثل 404 detail) → پیام مهربان برای آپگرید به v2
+            if "ok" not in data:
+                hint = ("وورکر اندپوینت /admin/vless-uuids را ندارد — کد Worker v2 (WTE) را "
+                        "از کارت آپگرید همین صفحه Paste کن")
+                return {"ok": False, "error": hint,
+                        "raw": str(data.get("detail") or data)[:120], "status": r.status_code}
+            if not data.get("ok") and not data.get("error"):
+                data["error"] = "وورکر پاسخ ok=false داد (جزئیات نامشخص)"
+            return data
     except Exception as exc:
         return {"ok": False, "error": f"{type(exc).__name__}: {exc}"}
 
