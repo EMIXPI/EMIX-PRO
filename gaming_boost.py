@@ -921,7 +921,7 @@ def _replace_query_param(url: str, key: str, value: str) -> str:
 # ─── سلامت ورودی VPS (پروب واقعی TLS — نه حدس) ─────────────────────────
 async def _vps_health(cfg: dict, timeout: float = 6.0) -> dict:
     """آیا پل VPS واقعاً به لبه‌ی کلادفلر می‌رسد؟
-    TCP + هندشیک TLS با server_hostname = دامنه‌ی وورکر + تأیید گواهی:
+    TCP + TLS با server_hostname = دامنه‌ی وورکر + تأیید گواهی:
     اگر گواهی معتبر دامنه‌ی وورکر ارائه شود، یعنی آن‌سوی پل واقعاً Cloudflare است.
     (socat با DNS کهنه پس از ری‌دیپلوی → بلاک‌هول TLS → alive=False)"""
     ip = (cfg.get("vps_ip") or "").strip()
@@ -930,28 +930,24 @@ async def _vps_health(cfg: dict, timeout: float = 6.0) -> dict:
     port = int(cfg.get("vps_port") or 443)
     domain = _norm_domain(cfg.get("worker_domain", "")) or "emix-gateway.personalemixone.workers.dev"
     t0 = time.time()
+    ctx = ssl.create_default_context()
     try:
         reader, writer = await asyncio.wait_for(
-            asyncio.open_connection(ip, port), timeout=timeout)
-    except Exception as e:
-        return {"alive": False, "error": f"TCP: {type(e).__name__}: {e}"}
-    try:
-        loop = asyncio.get_running_loop()
-        ctx = ssl.create_default_context()
-        tls_writer = await asyncio.wait_for(
-            loop.start_tls(writer, reader, ctx, server_hostname=domain),
-            timeout=max(2.0, timeout - (time.time() - t0)))
-        try:
-            tls_writer.close()
-        except Exception:
-            pass
-        return {"alive": True, "rtt_ms": round((time.time() - t0) * 1000, 1),
-                "cert_verified": True, "reaches": "Cloudflare (دامنه‌ی وورکر)"}
+            asyncio.open_connection(ip, port, ssl=ctx, server_hostname=domain),
+            timeout=timeout)
     except ssl.SSLCertVerificationError as e:
         return {"alive": False, "error": f"گواهی نامعتبر — پل به Cloudflare نمی‌رسد: {e}",
                 "tls_handshake": True}
+    except asyncio.TimeoutError:
+        return {"alive": False, "error": f"TLS timeout > {timeout:.0f}s — پل بلاک‌هول است (DNS کهنه/سرویس مرده)"}
     except Exception as e:
-        return {"alive": False, "error": f"TLS: {type(e).__name__}: {e}"}
+        return {"alive": False, "error": f"TCP/TLS: {type(e).__name__}: {e}"}
+    try:
+        writer.close()
+    except Exception:
+        pass
+    return {"alive": True, "rtt_ms": round((time.time() - t0) * 1000, 1),
+            "cert_verified": True, "reaches": "Cloudflare (دامنه‌ی وورکر)"}
 
 
 # ─── سینک UUIDهای VLESS به وورکر (برای مسیر WTE /vl) ───────────────────
