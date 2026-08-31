@@ -18,6 +18,7 @@ from datetime import datetime, timezone
 
 from fastapi import Request, HTTPException
 
+from protocol.net_connect import open_connection_v4first
 from main import (
     LINKS,
     LINKS_LOCK,
@@ -178,9 +179,7 @@ async def _open_tcp_from_trojan_header(first_chunk: bytes):
         raise ValueError("trojan auth failed")
 
     try:
-        reader, writer = await asyncio.wait_for(
-            asyncio.open_connection(address, port), timeout=TROJAN_TCP_CONNECT_TIMEOUT
-        )
+        reader, writer = await open_connection_v4first(address, port, timeout=TROJAN_TCP_CONNECT_TIMEOUT)
     except asyncio.TimeoutError:
         logger.error(f"Trojan-XHTTP TCP connect TIMEOUT -> {address}:{port} (>{TROJAN_TCP_CONNECT_TIMEOUT}s)")
         raise

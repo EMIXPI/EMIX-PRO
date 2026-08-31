@@ -446,7 +446,8 @@ def _forge_vless_link(uuid: str, worker_domain: str, addr: str, remark: str) -> 
     params = {
         "encryption": "none", "security": "tls", "sni": worker_domain,
         "host": worker_domain, "type": "ws", "path": "/vl",
-        "fp": "chrome", "alpn": "h2,http/1.1",
+        # WS روی http/1.1 — اگر h2 مذاکره شود، هندشیک آپگرید HTTP/1.1 در لبه‌ی CF رد می‌شود
+        "alpn": "http/1.1", "fp": "chrome",
     }
     query = "&".join(f"{k}={quote(str(v))}" for k, v in params.items())
     return f"vless://{uuid}@{addr}:443?{query}#{quote(remark)}"

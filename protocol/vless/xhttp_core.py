@@ -15,6 +15,7 @@ import time
 import traceback
 from datetime import datetime, timezone
 from protocol.trojan.trojan import parse_trojan_header, find_uuid_by_trojan_hash
+from protocol.net_connect import open_connection_v4first
 
 from fastapi import Request, HTTPException
 from starlette.requests import ClientDisconnect
@@ -199,9 +200,7 @@ async def _open_tcp_from_header(first_chunk: bytes, is_trojan: bool = False):
         command, address, port, payload = await parse_vless_header(first_chunk)
 
     try:
-        reader, writer = await asyncio.wait_for(
-            asyncio.open_connection(address, port), timeout=TCP_CONNECT_TIMEOUT
-        )
+        reader, writer = await open_connection_v4first(address, port, timeout=TCP_CONNECT_TIMEOUT)
     except asyncio.TimeoutError:
         logger.error(f"XHTTP TCP connect TIMEOUT -> {address}:{port} (>{TCP_CONNECT_TIMEOUT}s)")
         raise

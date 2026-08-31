@@ -21,6 +21,7 @@ from main import (
     schedule_save,
     log_activity,
 )
+from protocol.net_connect import open_connection_v4first
 from protocol.trojan.trojan import (
     RELAY_BUF,
     WRITE_HIGH_WATER,
@@ -162,9 +163,7 @@ async def trojan_ws_tunnel(ws: WebSocket):
             return
         # ──────────────────────────────────────────────────────────────────
 
-        reader, writer = await asyncio.wait_for(
-            asyncio.open_connection(address, port), timeout=10.0
-        )
+        reader, writer = await open_connection_v4first(address, port, timeout=10.0)
         _tune_socket(writer)
 
         if payload:

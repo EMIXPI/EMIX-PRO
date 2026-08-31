@@ -39,6 +39,7 @@
 import asyncio
 import json
 import re
+import ssl
 import time
 from datetime import datetime
 from urllib.parse import parse_qs, quote, unquote, urlparse
@@ -916,10 +917,63 @@ def _replace_query_param(url: str, key: str, value: str) -> str:
     return re.sub(rf"([?&]{key}=)[^&#]*", rf"\g<1>{value}", url)
 
 
+# ─── سلامت ورودی VPS (پروب واقعی TLS — نه حدس) ─────────────────────────
+async def _vps_health(cfg: dict, timeout: float = 6.0) -> dict:
+    """آیا پل VPS واقعاً به لبه‌ی کلادفلر می‌رسد؟
+    TCP + هندشیک TLS با server_hostname = دامنه‌ی وورکر + تأیید گواهی:
+    اگر گواهی معتبر دامنه‌ی وورکر ارائه شود، یعنی آن‌سوی پل واقعاً Cloudflare است.
+    (socat با DNS کهنه پس از ری‌دیپلوی → بلاک‌هول TLS → alive=False)"""
+    ip = (cfg.get("vps_ip") or "").strip()
+    if not ip:
+        return {"alive": False, "error": "vps_ip تنظیم نشده"}
+    port = int(cfg.get("vps_port") or 443)
+    domain = _norm_domain(cfg.get("worker_domain", "")) or "emix-gateway.personalemixone.workers.dev"
+    t0 = time.time()
+    try:
+        reader, writer = await asyncio.wait_for(
+            asyncio.open_connection(ip, port), timeout=timeout)
+    except Exception as e:
+        return {"alive": False, "error": f"TCP: {type(e).__name__}: {e}"}
+    try:
+        loop = asyncio.get_running_loop()
+        ctx = ssl.create_default_context()
+        tls_writer = await asyncio.wait_for(
+            loop.start_tls(writer, reader, ctx, server_hostname=domain),
+            timeout=max(2.0, timeout - (time.time() - t0)))
+        try:
+            tls_writer.close()
+        except Exception:
+            pass
+        return {"alive": True, "rtt_ms": round((time.time() - t0) * 1000, 1),
+                "cert_verified": True, "reaches": "Cloudflare (دامنه‌ی وورکر)"}
+    except ssl.SSLCertVerificationError as e:
+        return {"alive": False, "error": f"گواهی نامعتبر — پل به Cloudflare نمی‌رسد: {e}",
+                "tls_handshake": True}
+    except Exception as e:
+        return {"alive": False, "error": f"TLS: {type(e).__name__}: {e}"}
+
+
+# ─── سینک UUIDهای VLESS به وورکر (برای مسیر WTE /vl) ───────────────────
+async def _sync_worker_uuids(cfg: dict) -> dict:
+    """UUIDهای کانفیگ‌های vless فعال را به KV وورکر می‌فرستد تا مسیر /vl
+    آن‌ها را قبول کند. بی‌صدا و خودکار — اگر وورکر v1 باشد فقط پیام یادآوری."""
+    async with LINKS_LOCK:
+        uuids = [uid for uid, d in LINKS.items()
+                 if d.get("active", True) and str(d.get("protocol", "vless-ws")).startswith("vless")
+                 and is_link_allowed(d)]
+    if not uuids:
+        return {"ok": False, "error": "کانفیگ vless فعالی برای سینک نیست"}
+    res = await _call_worker(cfg, "/admin/vless-uuids", method="POST",
+                             payload={"uuids": uuids})
+    res["pushed"] = len(uuids)
+    return res
+
+
 def _gaming_link(url: str, entry_host: str, entry_port: int, worker_domain: str, location: str,
-                 fp: str = "", sni_override: str = "") -> str | None:
+                 fp: str = "", sni_override: str = "", wte: bool = False) -> str | None:
     """بازنویسی لینک برای عبور از گیت‌وی کلادفلر با ورودی و لوکیشن دلخواه.
-    fp: اثر انگشت uTLS حالت ضد ضریب · sni_override: SNI سفارشی (دامنه‌ی شخصی)"""
+    fp: اثر انگشت uTLS حالت ضد ضریب · sni_override: SNI سفارشی (دامنه‌ی شخصی)
+    wte: خاتمه‌ی تونل داخل وورکر (مسیر /vl) — خروج از همان colo، بدون رفت‌وبرگشت Railway (کم‌تاخیر)"""
     try:
         if not url.startswith(("vless://", "trojan://")):
             return None
@@ -933,7 +987,11 @@ def _gaming_link(url: str, entry_host: str, entry_port: int, worker_domain: str,
         old_path = unquote((qs.get("path") or ["/"])[0])
         if not old_path.startswith("/"):
             old_path = "/" + old_path
-        new_path = f"/loc/{location}{old_path}"
+        if wte:
+            # WTE: تونل داخل وورکر خاتمه می‌یابد (سرور VLESS وورکر v2+) — مسیر ثابت /vl
+            new_path = "/vl"
+        else:
+            new_path = f"/loc/{location}{old_path}"
         out = _replace_query_param(out, "path", quote(new_path, safe=""))
 
         # host و sni باید دامنه‌ی گیت‌وی باشند تا کلادفلر درست روت کند
@@ -941,6 +999,9 @@ def _gaming_link(url: str, entry_host: str, entry_port: int, worker_domain: str,
         eff_sni = _norm_domain(sni_override) or worker_domain
         out = _replace_query_param(out, "host", worker_domain)
         out = _replace_query_param(out, "sni", eff_sni)
+        # WS روی http/1.1 — اگر ALPN به h2 مذاکره شود آپگرید HTTP/1.1 در لبه‌ی CF رد می‌شود
+        if "type=ws" in out or "type=%22ws%22" in out or "transport=ws" in out:
+            out = _replace_query_param(out, "alpn", quote("http/1.1", safe=""))
 
         # اثر انگشت uTLS حالت ضد ضریب — جعل handshake به مرورگر واقعی
         if fp:
@@ -954,7 +1015,11 @@ async def _gaming_links(entry: str, location: str, override_ip: str = "",
                          mode: str = "balanced", transport: str = "ws") -> dict:
     """همه‌ی لینک‌های مجاز + نسخه‌ی گیمینگ‌شان.
     entry: direct=مستقیم کلادفلر | vps=سرور ایران | panel=خود پنل (بدون وورکر — سریع‌ترین اگر ریلوی برای شما فیلتر نباشد)
-    mode: حالت ضد ضریب (speed/balanced/stealth/irancell/irancell-xhttp) · transport: ws | xhttp-stream-up | xhttp-packet-up"""
+    mode: حالت ضد ضریب (speed/balanced/stealth/irancell/irancell-xhttp) · transport: ws | xhttp-stream-up | xhttp-packet-up
+
+    🆕 WTE (خاتمه در وورکر): کانفیگ‌های vless به‌جای رفت‌وبرگشت Railway از مسیر /vl
+    خاتمه می‌یابند → خروج از همان colo کلادفلر = کمترین تاخیر گیمینگ.
+    🆕 خودترمیمی: اگر ورودی VPS ناسالم بود، بدون خطا به ورودی کلادفلر سوئیچ می‌شود."""
     cfg = _load_cfg()
     worker_domain = _norm_domain(cfg.get("worker_domain", ""))
     anti = _anti_dpi_cfg(mode)
@@ -967,6 +1032,21 @@ async def _gaming_links(entry: str, location: str, override_ip: str = "",
     wanted_protos = set(topt["protocols"])
 
     location = (location or "auto").strip().lower()
+    vps_fallback = False
+
+    # ── قابلیت WTE وورکر را یک بار بپرس (نسخه ≥ 2 سرور VLESS دارد) ──
+    wte_available = False
+    worker_wte_note = None
+    if entry != "panel" and worker_domain:
+        try:
+            wst = await _call_worker(cfg, "/gateway-status")
+            wver = str(wst.get("version", "") or "")
+            major = int(wver.split(".")[0]) if wver.split(".")[0].isdigit() else 0
+            wte_available = bool(wst.get("wte")) or major >= 2
+        except Exception:
+            wte_available = False
+        if not wte_available:
+            worker_wte_note = "وورکر v1 است — مسیر تونل /loc استفاده می‌شود (خروج Railway)"
 
     if entry == "panel":
         # ورودی خود پنل: بدون گیت‌وی وورکر — کوتاه‌ترین مسیر اگر ریلوی مستقیم در دسترس باشد
@@ -976,8 +1056,20 @@ async def _gaming_links(entry: str, location: str, override_ip: str = "",
     elif entry == "vps":
         if not cfg.get("vps_ip"):
             return {"ok": False, "error": "IP سرور ایران (VPS) تنظیم نشده"}
-        entry_host, entry_port = cfg["vps_ip"], int(cfg.get("vps_port") or 443)
-        entry_label = f"ورودی VPS ایران ({entry_host})"
+        # خودترمیمی: اول سلامت واقعی پل (TCP+TLS+گواهی) — اگر ناسالم بود
+        # به‌جای لینک مرده، خودکار به ورودی کلادفلر سوئیچ می‌کنیم (بدون دخالت کاربر)
+        vh = await _vps_health(cfg)
+        if not vh.get("alive"):
+            entry = "direct"
+            entry_host = override_ip or cfg.get("best_ip") or worker_domain
+            entry_port = 443
+            entry_label = (f"⚠️ ورودی VPS ({cfg['vps_ip']}) پاسخگو نبود — به‌صورت خودکار به "
+                           f"ورودی کلادفلر سوئیچ شد ({entry_host}) · دلیل: {vh.get('error', '')[:80]}")
+            vps_fallback = True
+        else:
+            entry_host, entry_port = cfg["vps_ip"], int(cfg.get("vps_port") or 443)
+            entry_label = f"ورودی VPS ایران ({entry_host}) · پل سالم ({vh.get('rtt_ms')}ms تا CF)"
+            vps_fallback = False
     else:
         # direct: بهترین IP اسکن‌شده یا خود دامنه‌ی worker
         entry_host = override_ip or cfg.get("best_ip") or worker_domain
@@ -1005,25 +1097,41 @@ async def _gaming_links(entry: str, location: str, override_ip: str = "",
                 gaming = _replace_query_param(gaming, "fp", anti["fp"])
         else:
             gaming = _gaming_link(original, entry_host, entry_port, worker_domain, location,
-                                  fp=anti.get("fp", ""), sni_override=cfg.get("custom_sni", ""))
+                                  fp=anti.get("fp", ""), sni_override=cfg.get("custom_sni", ""),
+                                  wte=wte_available and proto.startswith("vless"))
         if gaming:
             # آپدیت remark برای تفکیک سریع در کلاینت
             tr_short = "WS" if transport == "ws" else "XHTTP"
             base = f"🎮 {d['label']}" if entry == "panel" else f"🎮 {d['label']} · {location}"
-            suffix = f"{base} · {tr_short} · {anti['short']}"
+            exit_tag = " · خروج CF (WTE)" if (wte_available and proto.startswith("vless")) else ""
+            suffix = f"{base}{exit_tag} · {tr_short} · {anti['short']}"
             gaming = gaming.split("#")[0] + "#" + quote(suffix)
             out.append({
                 "uuid": uid,
                 "label": d.get("label", uid[:8]),
                 "protocol": proto,
+                "exit": ("Cloudflare colo (WTE — کم‌تاخیر)" if (wte_available and proto.startswith("vless"))
+                         else ("Railway آمستردام" if entry != "panel" else "خود پنل")),
                 "original": original,
                 "gaming": gaming,
             })
     if not out:
         return {"ok": False, "error": f"کانفیگ «{topt['label']}» فعالی وجود ندارد — اول از صفحه‌ی کانفیگ‌ها یک کانفیگ {topt['protocols'][0]} بسازید یا ترنسپورت را WebSocket بگذارید"}
+
+    # ── سینک خودکار UUIDها به وورکر (لازم برای مسیر WTE /vl) ──
+    sync_note = None
+    if wte_available and any(l["exit"].startswith("Cloudflare") for l in out):
+        try:
+            sync = await _sync_worker_uuids(cfg)
+            sync_note = (f"{sync.get('pushed', 0)} UUID به وورکر سینک شد (خودکار)" if sync.get("ok")
+                         else f"سینک خودکار نشد: {sync.get('error', '')[:80]}")
+        except Exception as exc:
+            sync_note = f"سینک خودکار ناموفق: {exc}"
+
     return {"ok": True, "entry": entry_label, "location": location, "worker_domain": worker_domain,
             "mode": mode, "mode_label": anti["label"], "transport": transport,
-            "transport_label": topt["label"], "links": out}
+            "transport_label": topt["label"], "wte": wte_available,
+            "vps_fallback": vps_fallback, "sync": sync_note, "links": out}
 
 
 def _build_gaming_xray_json(entry: str, location: str, link_url: str, mode: str = "balanced") -> dict:
@@ -1178,6 +1286,14 @@ def register_routes(app) -> None:
         res = await _call_worker(cfg, "/gateway-status")
         res["configured"] = True
         res["checked_at"] = datetime.utcnow().isoformat()
+        # WTE: نسخه‌ی ≥ 2 یعنی سرور VLESS داخل وورکر فعال است (خروج CF، بدون Railway)
+        wver = str(res.get("version", "") or "")
+        major = int(wver.split(".")[0]) if wver.split(".")[0].isdigit() else 0
+        res["wte"] = bool(res.get("wte")) or major >= 2
+        res["wte_endpoint"] = "/vl" if res.get("wte") else None
+        res["vless_uuid_count"] = res.get("vless_uuid_count", 0)
+        # سلامت واقعی ورودی VPS (TCP+TLS+گواهی) — خودترمیمی لینک‌ها به این عکس واکنش نشان می‌دهند
+        res["vps"] = await _vps_health(cfg)
         return res
 
     @app.get("/api/gaming/locations")

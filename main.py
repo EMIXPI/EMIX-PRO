@@ -3927,7 +3927,7 @@ except Exception as _exc:
 # تا قبل از لاگین هم قابل بررسی باشد. (از /api/version استفاده نمی‌کنیم چون
 # آن مسیر قبلاً برای بررسی به‌روزرسانی در نظر گرفته شده است.)
 # ══════════════════════════════════════════════════════════════════════════════
-EMIX_VERSION = "10.0.0-multiloc-wte"
+EMIX_VERSION = "10.2.0-wte-live"
 EMIX_BUILD_DATE = "2026-08-30"
 
 @app.get("/api/deployment-version")

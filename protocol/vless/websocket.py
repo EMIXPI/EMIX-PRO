@@ -30,6 +30,7 @@ from protocol.vless.vless import (
     relay_ws_to_tcp,
     relay_tcp_to_ws,
 )
+from protocol.net_connect import open_connection_v4first
 
 
 def _early_data_chunk(ws: WebSocket) -> bytes:
@@ -107,10 +108,8 @@ async def websocket_tunnel(ws: WebSocket, uuid: str):
             return
         # ──────────────────────────────────────────────────────────────────
 
-        reader, writer = await asyncio.wait_for(
-            asyncio.open_connection(address, port),
-            timeout=10.0
-        )
+        # IPv4-first egress — فیکس Errno 101 روی Railway (بدون خروجی IPv6)
+        reader, writer = await open_connection_v4first(address, port, timeout=10.0)
         _tune_socket(writer)
 
         if payload:

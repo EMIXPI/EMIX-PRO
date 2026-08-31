@@ -22,7 +22,7 @@
 
 import { connect } from 'cloudflare:sockets';
 
-const GATEWAY_VERSION = '2.0.0-wte';
+const GATEWAY_VERSION = '2.1.0-wte';
 
 // ─── لوکیشن‌های پیش‌فرض (حالت تونل /loc — مثل v1) ───
 const DEFAULT_LOCATIONS = {
@@ -161,6 +161,58 @@ async function wsBytes(data) {
   try { return new Uint8Array(await data.arrayBuffer()); } catch (e) { return null; }
 }
 
+// ─── خروجی واقعی اینترنت از دید colo اجرا (چند منبع با fallback) ───
+async function fetchEgressInfo() {
+  // ۱) trace خود کلادفلر — بدون محدودیت نرخ: IP + کد کشور + colo
+  let ip = null, cc = null, trace_colo = null;
+  try {
+    const r = await fetch('https://www.cloudflare.com/cdn-cgi/trace', {
+      signal: AbortSignal.timeout(6000),
+    });
+    const txt = await r.text();
+    const m = Object.fromEntries(txt.trim().split('\n').map(l => l.split('=')));
+    ip = m.ip || null; cc = m.loc || null; trace_colo = m.colo || null;
+  } catch (e) { /* بعدی */ }
+  // ۲) ipinfo.io — شهر/ISP برای همان IP
+  let city = null, org = null, country_name = null;
+  if (ip) {
+    try {
+      const r = await fetch(`https://ipinfo.io/${ip}/json`, {
+        signal: AbortSignal.timeout(6000),
+      });
+      const j = await r.json();
+      city = j.city || null; org = j.org || null;
+      country_name = (j.country && !cc) ? j.country : (country_name || null);
+    } catch (e) { /* بعدی */ }
+  }
+  // ۳) ipapi.co (نرخ‌محدود — به‌عنوان fallback)
+  if (!ip || (!city && !org)) {
+    try {
+      const r = await fetch('https://ipapi.co/json/', {
+        headers: { 'User-Agent': 'EMIX-EgressTest/2.1' },
+        signal: AbortSignal.timeout(6000),
+      });
+      const j = await r.json();
+      if (j && typeof j.ip === 'string') {
+        ip = ip || j.ip; cc = cc || j.country || null;
+        city = city || j.city || null; org = org || j.org || null;
+        country_name = country_name || j.country_name || null;
+      }
+    } catch (e) { /* بعدی */ }
+  }
+  // ۴) آخرین راه: ipify فقط IP
+  if (!ip) {
+    try {
+      const r = await fetch('https://api.ipify.org?format=json', {
+        signal: AbortSignal.timeout(5000),
+      });
+      const j = await r.json();
+      ip = j.ip || null;
+    } catch (e) { /* پایان */ }
+  }
+  return { ip, cc, city, org, country_name, trace_colo };
+}
+
 async function handleDnsOverHttps(ws, payload) {
   // UDP فقط برای DNS (پورت 53) — روی DoH کلادفلر پاسخ داده می‌شود
   ws.send(new Uint8Array([0, 0]));
@@ -281,29 +333,25 @@ export default {
       const colo = (request.cf && request.cf.colo) || null;
       const country = (request.cf && request.cf.country) || null;
       const city = (request.cf && request.cf.city) || null;
-      try {
-        const r = await fetch('https://ipapi.co/json/', {
-          headers: { 'User-Agent': 'EMIX-EgressTest/2.0' },
-          signal: AbortSignal.timeout(8000),
-        });
-        const j = await r.json();
+      const egress = await fetchEgressInfo();
+      if (!egress.ip) {
         return json({
-          ok: true, mode: 'worker-colo-egress', wte: true,
-          colo, colo_country: country, colo_city: city,
-          exit_ip: j.ip || null,
-          exit_country: j.country_name || null,
-          exit_country_code: j.country || null,
-          exit_city: j.city || null,
-          exit_isp: j.org || null,
-          latency_ms: Date.now() - t0,
-          note: 'این IP خروجِ واقعی است که سایت‌ها از تونل /vl می‌بینند (نه IP Railway)',
-        });
-      } catch (e) {
-        return json({
-          ok: false, mode: 'worker-colo-egress', colo,
-          error: String((e && e.message) || e).slice(0, 140),
+          ok: false, mode: 'worker-colo-egress', wte: true, colo,
+          error: 'هیچ منبع IP پاسخ نداد (همه fallbackها خطا خوردند)',
         }, 502);
       }
+      return json({
+        ok: true, mode: 'worker-colo-egress', wte: true,
+        colo, colo_country: country, colo_city: city,
+        exit_ip: egress.ip,
+        exit_country: egress.country_name || egress.cc || null,
+        exit_country_code: egress.cc || null,
+        exit_city: egress.city || null,
+        exit_isp: egress.org || null,
+        trace_colo: egress.trace_colo || null,
+        latency_ms: Date.now() - t0,
+        note: 'این IP خروجِ واقعی است که سایت‌ها از تونل /vl می‌بینند (نه IP Railway)',
+      });
     }
 
     // ─── عمومی: وضعیت گیت‌وی ───
@@ -369,22 +417,17 @@ export default {
       if (via === 'worker') {
         // خروج از خود وورکر (WTE) — بدون عبور از Railway
         const t0 = Date.now();
-        try {
-          const r = await fetch('https://ipapi.co/json/', {
-            headers: { 'User-Agent': 'EMIX-ExitCheck/2.0' },
-            signal: AbortSignal.timeout(8000),
-          });
-          const j = await r.json();
-          return json({
-            ok: true, loc: locName, via: 'worker', wte: true,
-            colo: (request.cf && request.cf.colo) || null,
-            exit_ip: j.ip || null, exit_country: j.country_name || null,
-            exit_city: j.city || null, exit_isp: j.org || null,
-            latency_ms: Date.now() - t0,
-          });
-        } catch (e) {
-          return json({ ok: false, error: String((e && e.message) || e).slice(0, 120) }, 502);
+        const egress = await fetchEgressInfo();
+        if (!egress.ip) {
+          return json({ ok: false, loc: locName, via: 'worker', error: 'منبع IP پاسخ نداد' }, 502);
         }
+        return json({
+          ok: true, loc: locName, via: 'worker', wte: true,
+          colo: (request.cf && request.cf.colo) || null,
+          exit_ip: egress.ip, exit_country: egress.country_name || egress.cc || null,
+          exit_city: egress.city || null, exit_isp: egress.org || null,
+          latency_ms: Date.now() - t0,
+        });
       }
       const locs = await getLocations(env);
       const loc = locs[locName] || locs.auto;
