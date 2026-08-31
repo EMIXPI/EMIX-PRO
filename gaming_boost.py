@@ -859,8 +859,9 @@ def _load_cfg() -> dict:
         if GAMING_FILE.exists():
             data = json.loads(GAMING_FILE.read_text(encoding="utf-8"))
             merged = {**DEFAULTS, **data}
-            # مهاجرت: مقادیر خالی ذخیره‌شده نباید پیش‌فرض (وورکر دیپلوی‌شده) را خنثی کنند
-            for k in ("worker_domain", "worker_token"):
+            # مهاجرت: مقادیر خالی ذخیره‌شده نباید پیش‌فرض (وورکر دیپلوی‌شده / VPS
+            # پیش‌تنظیم‌شده) را خنثی کنند — پنل همیشه بدون تنظیم دستی کار کند
+            for k in ("worker_domain", "worker_token", "vps_ip"):
                 if not merged.get(k):
                     merged[k] = DEFAULTS.get(k, "")
             return merged
