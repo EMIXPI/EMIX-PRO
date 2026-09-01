@@ -93,6 +93,19 @@ It gives you a beautiful admin dashboard to create, monitor, and manage proxy li
 - **Node Manager + Runtime Supervisor** — heartbeats, crash detection, backoff
 - **Smart Route v3** — health-weighted ranking with `ranking_reason`
 - **IP Quality Engine** — facet-based, honest UNKNOWNs, provider abstraction
+- **Egress & Route Truth Engine (v11.2)** — `CUSTOM_IP ≠ REAL_EGRESS_IP`, `SNI ≠ ROUTING`: node roles (CONTROL_PLANE / EXIT_NODE / RELAY / EDGE), egress classification (**VERIFIED_EGRESS / CONFIGURED_ONLY / UNKNOWN**, measured IPs only), 9-step route validation (`ROUTE_MISMATCH`, `NO_EXIT_NODE_AVAILABLE`), labeled latencies (control-plane / node / route / protocol-handshake RTT)
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+### 🚪 Egress Honesty (v11.2.0-egress)
+- The panel **never** displays a configured/advertised IP as the actual egress — only measured evidence (`/api/egress/verify`)
+- Selecting a country without a real exit node returns **NO_EXIT_NODE_AVAILABLE** — the location is not faked
+- Expected ≠ observed country ⇒ **ROUTE_MISMATCH**, never a healthy verdict
+- "Custom IP" field renamed **Endpoint Address** — it only sets where the client connects; it never changes the exit IP
+- Health split into APPLICATION / NODE / ROUTE / **EGRESS** health — a healthy Railway API says nothing about VPN egress
 
 </td>
 </tr>

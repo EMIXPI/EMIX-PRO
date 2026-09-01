@@ -1,5 +1,17 @@
 # AUDIT_REPORT_FINAL.md — EMIX-PRO v11 Full Repository Audit
 
+> **UPDATE 2026-09-02 (post-audit, v11.2.0-egress): CRITICAL PRODUCTION DEFECT — FALSE EGRESS / CUSTOM IP SEMANTICS — FOUND & FIXED.**
+> Production evidence: selected node Railway–Amsterdam, "Custom IP" 185.164.73.192, **actual detected egress 208.77.244.84 (Railway, Amsterdam)**. The UI's "IP سفارشی" field only set the **client dial address (entry)** and never controlled routing — while the label "لوکیشن خروج" implied country egress. Root cause: endpoint-layer values (address/SNI/hostname) were presented as egress claims, and exit detection was a heuristic string-check (`upstream.includes('railway.app')`) in the frontend.
+> Fix (single source of truth — `egress_engine.py` + 45 regression tests, suite **687/687 green**):
+> - **Node roles** derived from physical reality: CONTROL_PLANE / EXIT_NODE / RELAY_NODE / EDGE_NODE / HYBRID (a Railway upstream is always a relay into the control plane — it can never masquerade as an arbitrary-country exit).
+> - **Egress Verification Engine**: measured evidence only (public IP, ASN, ISP, country, city, IPv4/IPv6, timestamp, measurement source), classified **VERIFIED_EGRESS / CONFIGURED_ONLY / UNKNOWN** with TTL expiry — a configured IP is NEVER reported as the actual egress.
+> - **Route model** entry→relay→exit→egress with per-route health and labeled latency (control_plane_rtt / node_rtt / route_rtt / protocol_handshake_rtt).
+> - **9-step route validation pipeline** (`POST /api/egress/validate-route`): resolve → connect → verify node → verify route → verify egress → compare expected vs observed → latency → evidence → verdict. Expected≠observed ⇒ **ROUTE_MISMATCH** (never HEALTHY); country without a real exit node ⇒ **NO_EXIT_NODE_AVAILABLE** (never a faked label).
+> - **Health layers split**: APPLICATION_HEALTH / NODE_HEALTH / ROUTE_HEALTH / EGRESS_HEALTH — a healthy Railway API says nothing about VPN egress health.
+> - **UI honesty**: "IP سفارشی" renamed to "آدرس اندپوینت (ورودی — نه IP خروج)"; exit-location options marked "بدون نود خروج — خروج: Railway (کنترل‌پلین)"; new Route & Egress truth card (CONTROL PLANE / EXIT NODE / REAL EGRESS / STATUS DIRECT·RELAY·VERIFIED·UNKNOWN); gaming remarks state the true exit per link; `gamingCheckExitIP` now renders the engine verdict with evidence, mismatch alerts, and labeled latencies.
+> - New APIs: `/api/egress/summary`, `/api/egress/verify`, `/api/egress/routes`, `/api/egress/validate-route`, `/api/egress/health`. Worker v2.2.0-egress returns ASN + ip_family + classification. Tests: tests/unit/test_egress_engine.py (28) + tests/integration/test_egress_semantics.py (17).
+
+
 > **UPDATE 2026-09-02 (same audit cycle):** every P0 fix and the P1 persistence/frontend items from §5 have now been APPLIED and regression-tested (19 new tests in tests/integration/test_audit_fixes.py; suite: **642/642 green**). Statuses below describe the FOUND state; the fix plan in §5 is executed — see MIGRATION_GUIDE_FINAL.md §3 for the change log. Two additional latent production bugs were found and fixed during fix-verification: the em-dash HTTP-header crash on /sub-all-v2, and the shipped JS syntax error that killed the Diagnostics Center UI since v11.0.0-arch.
 
 > Phase A (Recon + Audit) deliverable of the master evolution plan.

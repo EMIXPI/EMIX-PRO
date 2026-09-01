@@ -4147,6 +4147,23 @@ except Exception as _exc:
     logger.error(f"[bootstrap] multiloc بارگذاری نشد (نادیده گرفته شد): {_exc}")
 
 
+# ═════════════════════════════════════════════════════════════════════════
+# موتور حقیقت خروج و مسیر (egress_engine.py) — رفع عیب تولیدی «False Egress»:
+#   - CUSTOM_IP != REAL_EGRESS_IP · SNI/Hostname/TLS-server-name != ROUTING
+#   - نقش‌های نود: CONTROL_PLANE / EXIT_NODE / RELAY_NODE / EDGE_NODE / HYBRID
+#   - طبقه‌بندی خروج: VERIFIED_EGRESS / CONFIGURED_ONLY / UNKNOWN
+#   - اعتبارسنجی مسیر ۹ مرحله‌ای (ROUTE_MISMATCH / NO_EXIT_NODE_AVAILABLE)
+#   - تأخیرهای برچسب‌دار (control_plane_rtt / node_rtt / route_rtt / …)
+# یک منبع حقیقت برای همه‌ی ادعاهای خروج — /api/egress/*
+# ═════════════════════════════════════════════════════════════════════════
+try:
+    import egress_engine
+    egress_engine.register_routes(app)
+    logger.info(f"[bootstrap] egress_engine v{egress_engine.EGRESS_ENGINE_VERSION} routes registered (egress & route truth: roles, verification, route validation)")
+except Exception as _exc:
+    logger.error(f"[bootstrap] egress_engine بارگذاری نشد (نادیده گرفته شد): {_exc}")
+
+
 # ═════════════════════════════════════════════════════════════════════════════
 # ماژول زیرساخت ریلوی — volume خودکار + سلامت‌سنجی کل پنل (railway_infra.py)
 # اگر این ماژول حذف شود یا خطا بدهد، پنل و همه‌ی تونل‌ها بدون تغییر کار می‌کنند.
@@ -4973,7 +4990,7 @@ async def api_migrate_legacy_spoof():
 # تا قبل از لاگین هم قابل بررسی باشد. (از /api/version استفاده نمی‌کنیم چون
 # آن مسیر قبلاً برای بررسی به‌روزرسانی در نظر گرفته شده است.)
 # ══════════════════════════════════════════════════════════════════════════════
-EMIX_VERSION = "11.1.0-audit"
+EMIX_VERSION = "11.2.0-egress"
 EMIX_BUILD_DATE = "2026-09-01"
 
 @app.get("/api/deployment-version")

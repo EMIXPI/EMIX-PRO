@@ -393,38 +393,29 @@ def register_routes(app) -> None:
     @app.get("/api/exit-check")
     async def api_exit_check():
         """برای تست سلامت خروج واقعی از طریق گیت‌وی کلادفلر.
-        این اندپوینت به یک سرویس IP-check عمومی وصل می‌شود و IP خروج سرور را برمی‌گرداند.
-        کاربرد: وقتی کاربر لوکیشن «ترکیه» را در گیمینگ انتخاب می‌کند، اینجا می‌فهمیم که
-        واقعاً از ترکیه خارج می‌شود یا هنوز از Railway (آمستردام) است."""
-        import urllib.request, json as _json
-        try:
-            # استفاده از ipapi.co — رایگان، بدون rate-limit شدید، اطلاعات کامل کشور/شهر/ISP
-            req = urllib.request.Request(
-                "https://ipapi.co/json/",
-                headers={"User-Agent": "EMIX-ExitCheck/1.0"},
-            )
-            with urllib.request.urlopen(req, timeout=8) as r:
-                data = _json.loads(r.read().decode("utf-8", "replace"))
+        Facadeٔ egress_engine.probe_panel_egress — یک منبع حقیقت برای خروج.
+        کاربرد: وقتی کاربر لوکیشن «ترکیه» در گیمینگ انتخاب می‌کند، اینجا می‌فهمیم که
+        واقعاً از ترکیه خارج می‌شود یا هنوز از Railway (کنترل‌پلین) است.
+        پاسخ همیشه IP «اندازه‌گیری‌شده» است — هرگز IP تنظیم‌شده/کانفیگ را به‌عنوان
+        خروج گزارش نمی‌کند (CUSTOM_IP != REAL_EGRESS_IP)."""
+        import egress_engine as _ee
+        raw = await _ee.probe_panel_egress()
+        if raw.get("ok"):
+            fam = _ee.ip_family(raw.get("public_ip") or "")
             return JSONResponse({
                 "ok": True,
-                "exit_ip": data.get("ip"),
-                "country": data.get("country_name"),
-                "country_code": data.get("country"),
-                "city": data.get("city"),
-                "isp": data.get("org"),
-                "region": data.get("region"),
-                "timezone": data.get("timezone"),
+                "exit_ip": raw.get("public_ip"),
+                "country": raw.get("country"),
+                "country_code": raw.get("country_code"),
+                "city": raw.get("city"),
+                "isp": raw.get("isp"),
+                "asn": raw.get("asn"),
+                "ip_family": fam,
+                "region": raw.get("region"),
+                "measurement_source": raw.get("measurement_source", "panel"),
+                "classification": "VERIFIED_EGRESS",
             })
-        except Exception as exc:
-            # fallback به ipify اگر ipapi کار نکرد
-            try:
-                import urllib.request as ur
-                req2 = ur.Request("https://api.ipify.org?format=json", headers={"User-Agent": "EMIX-ExitCheck/1.0"})
-                with ur.urlopen(req2, timeout=6) as r:
-                    data2 = _json.loads(r.read().decode("utf-8", "replace"))
-                return JSONResponse({"ok": True, "exit_ip": data2.get("ip"), "country": None, "city": None, "isp": None, "fallback": "ipify"})
-            except Exception as e2:
-                return JSONResponse({"ok": False, "error": f"ipapi: {exc}; ipify: {e2}"}, 502)
+        return JSONResponse({"ok": False, "error": raw.get("error")}, 502)
 
     @app.post("/api/links/{uid}/ping")
     async def api_ping_link(uid: str, via: str = "direct", _=Depends(require_auth)):

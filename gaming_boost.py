@@ -1034,16 +1034,41 @@ async def _gaming_links(entry: str, location: str, override_ip: str = "",
     # ── قابلیت WTE وورکر را یک بار بپرس (نسخه ≥ 2 سرور VLESS دارد) ──
     wte_available = False
     worker_wte_note = None
+    worker_locations: list = []
     if entry != "panel" and worker_domain:
         try:
             wst = await _call_worker(cfg, "/gateway-status")
             wver = str(wst.get("version", "") or "")
             major = int(wver.split(".")[0]) if wver.split(".")[0].isdigit() else 0
             wte_available = bool(wst.get("wte")) or major >= 2
+            worker_locations = wst.get("locations") or []
         except Exception:
             wte_available = False
         if not wte_available:
             worker_wte_note = "وورکر v1 است — مسیر تونل /loc استفاده می‌شود (خروج Railway)"
+
+    # ── حقیقت مسیر/خروج (egress_engine — یک منبع حقیقت، بدون پروب اضافه) ──
+    # مسیر فقط وقتی «خروج کشور X» است که upstream آن مسیر یک نود خروج واقعی
+    # (غیر-ریلوی) باشد. SNI / hostname / IP اندپوینت هرگز مسیر را تغییر نمی‌دهند.
+    import egress_engine as _ee
+    loc_upstreams: dict = {}
+    for _l in worker_locations:
+        try:
+            loc_upstreams[str(_l.get("name", "")).lower()] = \
+                (_l.get("upstream") or "").strip().lower()
+        except Exception:
+            pass
+    selected_upstream = loc_upstreams.get(location, "")
+    has_real_exit = bool(selected_upstream) and not _ee.is_control_plane_address(selected_upstream)
+    route_warning = None
+    if entry != "panel" and location not in ("auto", "") and not has_real_exit:
+        route_warning = {
+            "code": "NO_EXIT_NODE_AVAILABLE",
+            "message": (f"برای لوکیشن «{location}» نود خروج واقعی ثبت نشده — ترافیک از "
+                        "Railway (کنترل‌پلین) خارج می‌شود؛ انتخاب این لوکیشن فقط نام "
+                        "مسیر (/loc/{location}) را عوض می‌کند، نه IP خروج را. "
+                        "«بررسی IP خروج واقعی» یا /api/egress/verify مدرک زنده می‌دهد."),
+        }
 
     if entry == "panel":
         # ورودی خود پنل: بدون گیت‌وی وورکر — کوتاه‌ترین مسیر اگر ریلوی مستقیم در دسترس باشد
@@ -1097,18 +1122,54 @@ async def _gaming_links(entry: str, location: str, override_ip: str = "",
                                   fp=anti.get("fp", ""), sni_override=cfg.get("custom_sni", ""),
                                   wte=wte_available and proto.startswith("vless"))
         if gaming:
-            # آپدیت remark برای تفکیک سریع در کلاینت
+            # آپدیت remark برای تفکیک سریع در کلاینت — خروجِ واقعی صادقانه:
+            # هر لینک می‌گوید ترافیک از کجا خارج می‌شود، نه اینکه ادعای کشورِ مسیر کند
             tr_short = "WS" if transport == "ws" else "XHTTP"
-            base = f"🎮 {d['label']}" if entry == "panel" else f"🎮 {d['label']} · {location}"
-            exit_tag = " · خروج CF (WTE)" if (wte_available and proto.startswith("vless")) else ""
+            base = f"🎮 {d['label']}" if entry == "panel" else f"🎮 {d['label']} · مسیر {location}"
+            if entry == "panel":
+                exit_tag = " · خروج: Railway (کنترل‌پلین)"
+            elif wte_available and proto.startswith("vless"):
+                exit_tag = " · خروج: CF colo (WTE)"
+            elif has_real_exit:
+                exit_tag = f" · خروج: {selected_upstream}"
+            else:
+                exit_tag = " · خروج: Railway (کنترل‌پلین)"
             suffix = f"{base}{exit_tag} · {tr_short} · {anti['short']}"
             gaming = gaming.split("#")[0] + "#" + quote(suffix)
+            # ── route object: entry / relay / exit / egress (from egress_engine) ──
+            if entry == "panel":
+                _exit_host, _exit_role = get_host(), "CONTROL_PLANE"
+                _cls = _ee.classify_egress("panel")
+            elif wte_available and proto.startswith("vless"):
+                _exit_host, _exit_role = worker_domain, "EDGE_NODE"
+                _cls = _ee.classify_egress("worker-wte")
+            elif has_real_exit:
+                _exit_host, _exit_role = selected_upstream, "EXIT_NODE"
+                _cls = _ee.classify_egress(f"loc:{location}",
+                                           configured={"upstream": selected_upstream})
+            else:
+                _exit_host, _exit_role = selected_upstream or get_host(), "RELAY_NODE"
+                _cls = _ee.classify_egress(f"loc:{location}",
+                                           configured={"upstream": selected_upstream or get_host()})
+            route_obj = {
+                "entry": {"kind": entry, "address": entry_host,
+                          "note": "آدرس اتصال کلاینت — IP خروج را تغییر نمی‌دهد"},
+                "relay": (None if entry == "panel" else
+                          {"kind": "cf-worker", "domain": worker_domain}),
+                "exit": {"host": _exit_host, "role": _exit_role},
+                "egress": {"classification": _cls.get("classification", "UNKNOWN"),
+                           "verified": bool(_cls.get("verified"))},
+                "route_status": _ee.route_status_for(
+                    _exit_role, bool(_cls.get("verified"))),
+            }
             out.append({
                 "uuid": uid,
                 "label": d.get("label", uid[:8]),
                 "protocol": proto,
                 "exit": ("Cloudflare colo (WTE — کم‌تاخیر)" if (wte_available and proto.startswith("vless"))
-                         else ("Railway آمستردام" if entry != "panel" else "خود پنل")),
+                         else (f"{_exit_host} (نود خروج)" if has_real_exit and entry != "panel"
+                              else ("Railway — کنترل‌پلین (خروج از همین نود)" if entry != "panel" else "پنل — کنترل‌پلین"))),
+                "route": route_obj,
                 "original": original,
                 "gaming": gaming,
             })
@@ -1128,7 +1189,16 @@ async def _gaming_links(entry: str, location: str, override_ip: str = "",
     return {"ok": True, "entry": entry_label, "location": location, "worker_domain": worker_domain,
             "mode": mode, "mode_label": anti["label"], "transport": transport,
             "transport_label": topt["label"], "wte": wte_available,
-            "vps_fallback": vps_fallback, "sync": sync_note, "links": out}
+            "vps_fallback": vps_fallback, "sync": sync_note, "links": out,
+            "egress": {
+                "control_plane": _ee.control_plane_info(),
+                "selected_upstream": selected_upstream,
+                "has_real_exit": has_real_exit,
+                "endpoint_note": ("IP سفارشی = آدرس اندپوینت (ورودی) — فقط نقطه‌ی اتصال "
+                                  "کلاینت است؛ IP خروج را تغییر نمی‌دهد. SNI/Hostname ≠ مسیر."),
+                "verify_endpoint": "/api/egress/verify",
+            },
+            "route_warning": route_warning}
 
 
 def _build_gaming_xray_json(entry: str, location: str, link_url: str, mode: str = "balanced") -> dict:
@@ -1509,6 +1579,8 @@ def register_routes(app) -> None:
             results["panel_direct"] = {
                 "ok": r1.get("ok"),
                 "total_ms": round((r1.get("ws_ms") or 0) + (r1.get("e2e_ms") or 0), 1),
+                "measure": "protocol_handshake_rtt",
+                "measure_note": "WS handshake + E2E از مسیر مستقیم پنل",
                 "detail": r1.get("detail"),
             }
         except Exception as exc:
@@ -1519,6 +1591,8 @@ def register_routes(app) -> None:
             results["cf_gateway"] = {
                 "ok": r2.get("ok"),
                 "total_ms": round((r2.get("ws_ms") or 0) + (r2.get("e2e_ms") or 0), 1),
+                "measure": "protocol_handshake_rtt",
+                "measure_note": "WS handshake + E2E از مسیر گیت‌وی کلادفلر",
                 "detail": r2.get("detail"),
             }
         except Exception as exc:

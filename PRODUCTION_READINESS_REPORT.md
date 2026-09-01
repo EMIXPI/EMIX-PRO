@@ -1,4 +1,6 @@
-# PRODUCTION_READINESS_REPORT.md — EMIX-PRO v11.1.0-audit
+# PRODUCTION_READINESS_REPORT.md — EMIX-PRO v11.2.0-egress
+
+> **UPDATE 2026-09-02:** Egress & Route Truth Engine added (egress_engine.py): node roles, VERIFIED_EGRESS/CONFIGURED_ONLY/UNKNOWN classification, 9-step route validation (ROUTE_MISMATCH / NO_EXIT_NODE_AVAILABLE), labeled latencies, health-layer split. 45 new regression tests; suite 687/687 green. The FALSE-EGRESS UI defect (Custom IP ≠ egress) is closed with evidence-backed semantics — see AUDIT_REPORT_FINAL.md header.
 
 > Final quality-gate evidence. Every claim in this report is re-runnable: `python -m pytest -q` → **642 passed, 0 failed** (2026-09-02, 16.7s).
 > Honesty contract: a passing test NEVER implies production readiness unless its TEST TYPE matches what it claims to prove. Mocked tests are labeled mocked. Real-network tests are labeled real.

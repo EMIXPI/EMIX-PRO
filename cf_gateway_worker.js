@@ -22,7 +22,7 @@
 
 import { connect } from 'cloudflare:sockets';
 
-const GATEWAY_VERSION = '2.1.0-wte';
+const GATEWAY_VERSION = '2.2.0-egress';
 
 // ─── لوکیشن‌های پیش‌فرض (حالت تونل /loc — مثل v1) ───
 const DEFAULT_LOCATIONS = {
@@ -174,7 +174,7 @@ async function fetchEgressInfo() {
     ip = m.ip || null; cc = m.loc || null; trace_colo = m.colo || null;
   } catch (e) { /* بعدی */ }
   // ۲) ipinfo.io — شهر/ISP برای همان IP
-  let city = null, org = null, country_name = null;
+  let city = null, org = null, country_name = null, asn = null;
   if (ip) {
     try {
       const r = await fetch(`https://ipinfo.io/${ip}/json`, {
@@ -182,6 +182,7 @@ async function fetchEgressInfo() {
       });
       const j = await r.json();
       city = j.city || null; org = j.org || null;
+      asn = asnFromOrg(j.org);
       country_name = (j.country && !cc) ? j.country : (country_name || null);
     } catch (e) { /* بعدی */ }
   }
@@ -196,6 +197,7 @@ async function fetchEgressInfo() {
       if (j && typeof j.ip === 'string') {
         ip = ip || j.ip; cc = cc || j.country || null;
         city = city || j.city || null; org = org || j.org || null;
+        asn = asn || j.asn || asnFromOrg(j.org) || null;
         country_name = country_name || j.country_name || null;
       }
     } catch (e) { /* بعدی */ }
@@ -210,7 +212,20 @@ async function fetchEgressInfo() {
       ip = j.ip || null;
     } catch (e) { /* پایان */ }
   }
-  return { ip, cc, city, org, country_name, trace_colo };
+  return { ip, cc, city, org, country_name, trace_colo, asn };
+}
+
+// خانواده‌ی IP (IPv4/IPv6) — برای گزارش صادقانه‌ی خروج
+function ipFamily(ip) {
+  if (!ip || typeof ip !== 'string') return null;
+  return ip.includes(':') ? 'IPv6' : 'IPv4';
+}
+
+// ASN از فیلد org پروایدر (مثل «AS13335 Cloudflare, Inc.») استخراج می‌شود
+function asnFromOrg(org) {
+  if (!org || typeof org !== 'string') return null;
+  const m = org.match(/^(AS\d+)/i);
+  return m ? m[1].toUpperCase() : null;
 }
 
 async function handleDnsOverHttps(ws, payload) {
@@ -348,9 +363,12 @@ export default {
         exit_country_code: egress.cc || null,
         exit_city: egress.city || null,
         exit_isp: egress.org || null,
+        exit_asn: egress.asn || asnFromOrg(egress.org) || null,
+        ip_family: ipFamily(egress.ip),
+        classification: 'VERIFIED_EGRESS',
         trace_colo: egress.trace_colo || null,
         latency_ms: Date.now() - t0,
-        note: 'این IP خروجِ واقعی است که سایت‌ها از تونل /vl می‌بینند (نه IP Railway)',
+        note: 'این IP خروجِ واقعی اندازه‌گیری‌شده است که سایت‌ها از تونل /vl می‌بینند (نه IP Railway)',
       });
     }
 
@@ -425,7 +443,11 @@ export default {
           ok: true, loc: locName, via: 'worker', wte: true,
           colo: (request.cf && request.cf.colo) || null,
           exit_ip: egress.ip, exit_country: egress.country_name || egress.cc || null,
+          exit_country_code: egress.cc || null,
           exit_city: egress.city || null, exit_isp: egress.org || null,
+          exit_asn: egress.asn || asnFromOrg(egress.org) || null,
+          ip_family: ipFamily(egress.ip),
+          classification: 'VERIFIED_EGRESS',
           latency_ms: Date.now() - t0,
         });
       }
@@ -448,8 +470,13 @@ export default {
           upstream: loc.upstream, pending: loc.pending || false,
           exit_ip: j.exit_ip || j.ip || null,
           exit_country: j.country || j.country_code || null,
+          exit_country_code: j.country_code || null,
           exit_city: j.city || null, exit_isp: j.isp || j.org || null,
+          exit_asn: j.asn || null,
+          ip_family: j.ip_family || ipFamily(j.exit_ip || j.ip || null) || null,
+          classification: 'VERIFIED_EGRESS',
           latency_ms: Date.now() - t0, colo: (request.cf && request.cf.colo) || null,
+          latency_measure: 'route_rtt',
         });
       } catch (e) {
         return json({ ok: false, loc: locName, label: loc.label, upstream: loc.upstream, pending: loc.pending || false, error: String((e && e.message) || e).slice(0, 120), latency_ms: Date.now() - t0 }, 502);

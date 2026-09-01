@@ -3850,6 +3850,44 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
     <div id="gaming-exit-wizard" style="margin-top:16px;display:none"></div>
   </div>
 
+  <!-- ۳.۵) حقیقت مسیر و خروج — CONTROL PLANE / EXIT NODE / REAL EGRESS -->
+  <div class="conn-toolbar" style="margin-bottom:14px">
+    <div class="conn-toolbar-title"><i class="ti ti-route"></i> حقیقت مسیر و خروج — کنترل‌پلین / نود خروج / IP خروج واقعی</div>
+  </div>
+  <div class="card" style="margin-bottom:18px">
+    <div class="card-title"><i class="ti ti-compass"></i> مسیر و IP خروج — چه چیزی واقعاً تأیید شده است؟</div>
+    <div style="font-size:11px;color:var(--t3);margin-bottom:12px;line-height:1.9">
+      <b>اندپوینت ≠ مسیر ≠ خروج.</b> آدرس/SNI/Hostname فقط تعیین می‌کنند کلاینت <b>به کجا وصل</b> شود؛ IP خروج را فقط نودی تغییر می‌دهد که ترافیک واقعاً از آن عبور می‌کند (نود خروج/ریلی).
+      <b style="color:var(--amber-t)">تغییر IP سفارشی یا SNI هرگز IP خروج را عوض نمی‌کند.</b>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:12px">
+      <div style="padding:12px;background:var(--bg);border-radius:12px;border:1px solid var(--card-b)">
+        <div style="font-size:10px;color:var(--t3);margin-bottom:4px"><i class="ti ti-server-2"></i> CONTROL PLANE — کنترل‌پلین</div>
+        <div id="eg-cp-host" style="font-size:12px;font-weight:700;direction:ltr;text-align:left;font-family:monospace">—</div>
+        <div id="eg-cp-note" style="font-size:10px;color:var(--t3);margin-top:4px">Railway = میزبان پنل و برنامه</div>
+      </div>
+      <div style="padding:12px;background:var(--bg);border-radius:12px;border:1px solid var(--card-b)">
+        <div style="font-size:10px;color:var(--t3);margin-bottom:4px"><i class="ti ti-door-exit"></i> EXIT NODE — نود خروج</div>
+        <div id="eg-exit-node" style="font-size:12px;font-weight:700">تنظیم نشده</div>
+        <div id="eg-exit-note" style="font-size:10px;color:var(--t3);margin-top:4px">بدون نود خروج، ترافیک از همین نود (کنترل‌پلین) خارج می‌شود</div>
+      </div>
+      <div style="padding:12px;background:var(--bg);border-radius:12px;border:1px solid var(--card-b)">
+        <div style="font-size:10px;color:var(--t3);margin-bottom:4px"><i class="ti ti-world"></i> REAL EGRESS — IP خروج واقعی</div>
+        <div id="eg-real-ip" style="font-size:12px;font-weight:700;direction:ltr;text-align:left;font-family:monospace">—</div>
+        <div id="eg-real-sub" style="font-size:10px;color:var(--t3);margin-top:4px">فقط با اندازه‌گیری واقعی تأیید می‌شود — نه با مقدار تنظیم‌شده</div>
+      </div>
+      <div style="padding:12px;background:var(--bg);border-radius:12px;border:1px solid var(--card-b)">
+        <div style="font-size:10px;color:var(--t3);margin-bottom:4px"><i class="ti ti-statuschange"></i> STATUS — وضعیت مسیر</div>
+        <div><span class="badge bg-blue" id="eg-status-badge">UNKNOWN</span></div>
+        <div id="eg-status-note" style="font-size:10px;color:var(--t3);margin-top:4px">DIRECT = خروج از همین نود · RELAY = عبور از ریل‌لی · VERIFIED = تأییدشده با مدرک</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <button class="btn btn-blue" onclick="verifyPanelEgress(this)"><i class="ti ti-radar-2"></i> اندازه‌گیری IP خروج پنل (با مدرک)</button>
+      <span id="eg-verify-result" style="font-size:11px;color:var(--t3)"></span>
+    </div>
+  </div>
+
   <!-- ۴) ضد ضریب (Anti-DPI) + تولید کانفیگ گیمینگ -->
   <div class="conn-toolbar" style="margin-bottom:14px">
     <div class="conn-toolbar-title"><i class="ti ti-trophy"></i> ضد ضریب + کانفیگ گیمینگ</div>
@@ -3890,10 +3928,10 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
           <option value="direct" selected>☁ مستقیم کلادفلر — ضد فیلتر</option>
           <option value="vps">🇮🇷 VPS ایران — پایدارترین (ضد قطعی)</option>
         </select></div>
-      <div><label style="font-size:11px;color:var(--t3)">لوکیشن خروج</label>
-        <select id="gaming-location" style="width:100%"><option value="auto">auto — Railway</option></select></div>
-      <div><label style="font-size:11px;color:var(--t3)">IP سفارشی (اختیاری)</label>
-        <input id="gaming-override-ip" placeholder="از نتیجه‌ی اسکن" style="width:100%;direction:ltr;text-align:left;font-family:monospace"></div>
+      <div><label style="font-size:11px;color:var(--t3)">کشور خروج (Route) — فقط با نود خروج واقعی</label>
+        <select id="gaming-location" style="width:100%"><option value="auto">auto — Railway (کنترل‌پلین)</option></select></div>
+      <div><label style="font-size:11px;color:var(--t3)">آدرس اندپوینت (ورودی — نه IP خروج)</label>
+        <input id="gaming-override-ip" placeholder="آدرس اتصال کلاینت — IP خروج را عوض نمی‌کند" style="width:100%;direction:ltr;text-align:left;font-family:monospace"></div>
     </div>
     <div style="font-size:11px;color:var(--t3);margin-bottom:10px">کانفیگ گیمینگ = بدون mux + fragment ضد DPI + tcpNoDelay + TCP Fast Open + اولویت IPv4 — همه در لینک یا JSON اعمال می‌شوند. <b>نمی‌دانید کدام مسیر برایتان سریع‌تر است؟ اول «مقایسه‌ی مسیرها» را بزنید.</b> اگر سرعت‌تان بعد از مدتی افت کرد، حالت را روی «حداکثری» و ترنسپورت را XHTTP بگذارید. <b style="color:var(--amber-t)">روی ایرانسل، حالت «ایرانسل» را امتحان کنید.</b></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -6002,9 +6040,10 @@ async function mlEgress(key,btn){
     const j=await r.json();
     box.style.display='block';
     if(j.ok){
-      box.innerHTML=`<b style="color:var(--green-t)">IP خروج: ${esc(j.exit_ip||'?')}</b> · ${esc(j.exit_country||j.colo_country||'?')} ${j.exit_city?('— '+esc(j.exit_city)):''} <span style="opacity:.6">(${esc(j.colo||'?')})</span>`;
+      // فقط IP اندازه‌گیری‌شده نمایش داده می‌شود — هرگز IP تنظیم‌شده/پین‌شده
+      box.innerHTML=`${egBadge('VERIFIED_EGRESS')} <b style="color:var(--green-t)">IP خروج (اندازه‌گیری‌شده): ${esc(j.exit_ip||'?')}</b> · ${esc(j.exit_country||j.colo_country||'?')} ${j.exit_city?('— '+esc(j.exit_city)):''} ${j.exit_asn?('<span dir="ltr">· '+esc(j.exit_asn)+'</span>'):''} <span style="opacity:.6">(${esc(j.colo||'?')})</span>`;
       document.getElementById('ml-egress-last').textContent=(j.exit_country||'?')+' · '+(j.exit_ip||'?');
-      document.getElementById('ml-egress-sub').textContent=j.note?('colo: '+j.colo):'مدرک زنده از /egress-test';
+      document.getElementById('ml-egress-sub').textContent=(j.measurement_source||j.note?('مدرک زنده از /egress-test'):'مدرک زنده از /egress-test');
     } else {
       box.innerHTML='<b style="color:var(--amber-t)">'+esc(j.error||'تست ناموفق — وورکر v2 لازم است')+'</b>';
     }
@@ -6119,6 +6158,7 @@ async function loadGamingPage(){
     gamingRenderPresets();
     gamingRenderLocTemplates();
     if(gamingCfg.ready){gamingRefreshLocations(true,false);gamingLoadInbounds(null)}
+    loadEgressSummary();
     if(gamingCfg.best_ip){document.getElementById('gaming-override-ip').value=gamingCfg.best_ip}
   }catch(e){console.error('loadGamingPage',e);toast('خطا در بارگذاری مرکز گیمینگ','err')}
 }
@@ -6253,71 +6293,135 @@ async function gamingCheckWorker(){
     toast('گیت‌وی تست شد','ok');
   }catch(e){toast('خطا','err')}
 }
+/* ══════ حقیقت مسیر و خروج — CONTROL PLANE / EXIT NODE / REAL EGRESS ══════ */
+const EG_CLASS_FA={VERIFIED_EGRESS:['bg-green','خروج تأییدشده (اندازه‌گیری واقعی)'],
+                   CONFIGURED_ONLY:['bg-amber','فقط تنظیم‌شده — بدون اندازه‌گیری'],
+                   UNKNOWN:['bg-blue','نامشخص — تأیید نشده']};
+function egBadge(cls){const b=EG_CLASS_FA[cls]||EG_CLASS_FA.UNKNOWN;return `<span class="badge ${b[0]}" style="font-size:10px">${b[1]}</span>`}
+const LAT_FA={control_plane_rtt:'RTT کنترل‌پلین (مرورگر→پنل)',node_rtt:'RTT نود (پنل→وورکر/نود)',
+              route_rtt:'RTT مسیر (وورکر→upstream→IP-check)',protocol_handshake_rtt:'RTT هندشیک پروتکل'};
+async function loadEgressSummary(){
+  try{
+    const r=await authF('/api/egress/summary');
+    if(!r.ok)return;
+    const j=await r.json();
+    if(!j.ok)return;
+    const cp=(j.control_plane||{}),pe=(cp.egress||{}),ev=(pe.egress||{});
+    const h=document.getElementById('eg-cp-host');if(h)h.textContent=cp.host||'—';
+    const en=document.getElementById('eg-exit-node');
+    if(en){
+      const exits=j.exit_nodes||[];
+      en.textContent=exits.length?(exits[0].label||exits[0].name)+' (+ '+toFa(exits.length-1)+' نود دیگر)':'تنظیم نشده';
+    }
+    const nt=document.getElementById('eg-exit-note');
+    if(nt)nt.textContent=(j.exit_nodes_count?('نودهای خروج: '+toFa(j.exit_nodes_count)+' — اتصال از مسیر ریل‌لی'):'بدون نود خروج، ترافیک از همین نود (کنترل‌پلین) خارج می‌شود');
+    const ip=document.getElementById('eg-real-ip');
+    if(ip)ip.textContent=ev.public_ip||'— (اندازه‌گیری نشده)';
+    const sb=document.getElementById('eg-real-sub');
+    if(sb)sb.textContent=ev.public_ip?((ev.country||ev.country_code||'?')+' · '+(ev.isp||'?')+' · '+(ev.ip_family||'')+' · منبع: '+(ev.measurement_source||'?')):'فقط با اندازه‌گیری واقعی تأیید می‌شود — نه با مقدار تنظیم‌شده';
+    const st=document.getElementById('eg-status-badge');
+    if(st){
+      const cls=pe.classification||'UNKNOWN';
+      st.textContent=cls==='VERIFIED_EGRESS'?'VERIFIED':'DIRECT';
+      st.className='badge '+(EG_CLASS_FA[cls]||['bg-blue',''])[0];
+    }
+    const sn=document.getElementById('eg-status-note');
+    if(sn)sn.textContent=cp.note?('کنترل‌پلین: '+cp.host):'';
+  }catch(e){console.warn('loadEgressSummary',e)}
+}
+async function verifyPanelEgress(btn){
+  const ic=btn?btn.querySelector('i'):null;
+  if(ic){ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite';if(btn)btn.disabled=true}
+  const out=document.getElementById('eg-verify-result');
+  try{
+    const r=await authF('/api/egress/verify?target=panel');
+    const j=await r.json();
+    if(j&&j.ok!==undefined&&j.classification){
+      const ev=j.egress||{};
+      if(out)out.innerHTML=ev.public_ip?('<b dir="ltr" style="font-family:monospace">'+ev.public_ip+'</b> · '+(ev.country||ev.country_code||'?')+' · '+(ev.isp||'?')+' · '+(ev.ip_family||'')+' <span style="color:var(--t3)">('+(ev.measurement_source||'?')+')</span> '+egBadge(j.classification)):(egBadge(j.classification)+(j.error?(' — '+(j.error||'').slice(0,80)):''));
+      loadEgressSummary();
+      toast('IP خروج پنل اندازه‌گیری شد','ok');
+    }
+  }catch(e){if(out)out.textContent='خطا در اندازه‌گیری';toast('خطا','err')}
+  finally{if(ic){ic.className='ti ti-radar-2';ic.style.animation='';if(btn)btn.disabled=false}}
+}
 function gamingFillLocSelect(locs){
   const sel=document.getElementById('gaming-location');
   if(!sel)return;
   const cur=sel.value;
-  // ✨ نمایش واضح: کدام لوکیشن واقعاً exit دارد vs pending
-  sel.innerHTML='<option value="auto">🌍 auto — Railway (آمستردام)</option>'+locs.filter(l=>l.name!=='auto')
+  // ✨ حقیقت مسیر: فقط لوکیشن‌هایی که upstream غیر-ریلوی دارند «نود خروج واقعی»‌اند؛
+  // بقیه فقط نام مسیر هستند — خروجشان از Railway (کنترل‌پلین) است.
+  sel.innerHTML='<option value="auto">🌍 auto — Railway (کنترل‌پلین) — خروج از همین نود</option>'+locs.filter(l=>l.name!=='auto')
     .map(l=>{
-      const pend=l.pending?' ⚠ خروج = Railway':' ✓ خروج واقعی';
-      return `<option value="${l.name}">${l.flag||''} ${l.label||l.name}${pend}</option>`;
+      const isRail=(l.upstream||'').includes('railway.app');
+      const pend=l.pending||isRail;
+      const tag=pend?' ⚠ بدون نود خروج — خروج: Railway (کنترل‌پلین)':' ✓ نود خروج واقعی (تأییدشده)';
+      return `<option value="${l.name}">${l.flag||''} ${l.label||l.name}${tag}</option>`;
     }).join('');
   if(cur)sel.value=cur;
 }
-/* ─── بررسی IP خروج واقعی برای لوکیشن انتخابی ─── */
+/* ─── بررسی IP خروج واقعی برای لوکیشن انتخابی — از موتور حقیقت خروج ─── */
+const LOC_CC={tr:'TR',de:'DE',nl:'NL',fr:'FR',ae:'AE',ru:'RU',us:'US',uk:'GB',sg:'SG',
+              fi:'FI',se:'SE',ch:'CH',at:'AT',es:'ES',it:'IT',pl:'PL',ro:'RO',
+              bg:'BG',cz:'CZ',hu:'HU',md:'MD',am:'AM',az:'AZ',kz:'KZ',uz:'UZ'};
 async function gamingCheckExitIP(btn){
   const ic=btn?btn.querySelector('i'):null;
   if(ic){ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite';if(btn)btn.disabled=true}
   const out=document.getElementById('gaming-exit-result');
-  if(out){out.style.display='block';out.innerHTML='<span style="color:var(--t3)"><i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i> در حال بررسی IP خروج واقعی...</span>'}
+  if(out){out.style.display='block';out.innerHTML='<span style="color:var(--t3)"><i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i> اعتبارسنجی ۹ مرحله‌ای مسیر: رزولو → اتصال → تأیید نود → تأیید مسیر → اندازه‌گیری خروج واقعی → مقایسه...</span>'}
   try{
-    const wd=(document.getElementById('gaming-worker-domain').value||'').trim();
     const loc=document.getElementById('gaming-location').value||'auto';
+    const wd=(document.getElementById('gaming-worker-domain').value||'').trim();
     if(!wd){toast('اول دامنه‌ی وورکر را در تنظیمات گیمینگ وارد کنید','err');return}
-    // مسیر: وورکر → upstream → ipapi.co → IP خروج سرور
-    const r=await fetch(`https://${wd}/exit-ip?loc=${encodeURIComponent(loc)}`,{cache:'no-store'});
+    // انتظار کاربر = کشورِ انتخابی (کلید ۲ حرفی لوکیشن) — موتور مقایسه می‌کند:
+    // expected != observed → ROUTE_MISMATCH (هرگز HEALTHY دروغ نمی‌زند)
+    const expC=(loc!=='auto'&&loc.length===2)?(LOC_CC[loc]||loc.toUpperCase()):null;
+    const r=await authF('/api/egress/validate-route',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:loc,expected_country:expC})});
     const j=await r.json();
     if(!out)return;
-    if(j.ok){
-      const isReal = !j.pending && j.upstream && !j.upstream.includes('railway.app');
-      const exitStr = j.exit_ip ? `<b dir="ltr" style="font-family:monospace;color:var(--accent2)">${j.exit_ip}</b>` : '<span style="color:var(--red-t)">نامشخص</span>';
-      const locStr = [j.exit_country, j.exit_city].filter(Boolean).join(' / ') || 'نامشخص';
-      const ispStr = j.exit_isp || 'نامشخص';
-      const realFake = isReal
-        ? '<span class="badge bg-green" style="font-size:10px"><i class="ti ti-check"></i> خروج واقعی</span>'
-        : '<span class="badge bg-amber" style="font-size:10px"><i class="ti ti-alert-triangle"></i> خروج از Railway</span>';
-      out.innerHTML = `
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px">
-          ${realFake}
-          <span style="font-size:11px;color:var(--t3)">لوکیشن: <b>${j.flag||''} ${j.label||j.loc}</b></span>
-        </div>
-        <div style="font-size:11.5px;line-height:1.9">
-          <div>🌐 IP خروج: ${exitStr}</div>
-          <div>📍 کشور/شهر: <b>${locStr}</b></div>
-          <div>🏢 ISP: <span dir="ltr">${ispStr}</span></div>
-          <div>⏱ تأخیر: <b>${toFa(Math.round(j.latency_ms||0))}ms</b></div>
-          <div style="font-size:10px;color:var(--t3);margin-top:6px">upstream: <code dir="ltr" style="font-size:10px">${j.upstream||'—'}</code></div>
-        </div>
-        ${!isReal ? `
-          <div style="margin-top:10px;padding:10px 12px;background:rgba(250,204,21,0.08);border:1px solid rgba(250,204,21,0.20);border-radius:10px;font-size:11px;line-height:1.7">
-            <b style="color:var(--amber-t)">⚠ این لوکیشن هنوز از Railway (آمستردام) خارج می‌شود.</b><br>
-            برای داشتن خروج واقعی از این کشور، باید یک VPS در همان کشور بگیرید (مثلاً Oracle Cloud Always Free برای دبی، یا ParsPack/اوبونتو برای ترکیه) و upstream این لوکیشن را در وورکر به آدرس آن VPS تغییر دهید.
-            <button class="btn btn-sm btn-g" style="margin-top:8px" onclick="gamingShowUpstreamGuide()"><i class="ti ti-book-2"></i> راهنمای تنظیم VPS خروج</button>
-          </div>
-        ` : ''}
-      `;
-      toast(`IP خروج: ${j.exit_ip||'نامشخص'} (${j.exit_country||'?'})`,'ok');
-    }else{
-      out.innerHTML = `<div style="color:var(--red-t)"><i class="ti ti-alert-circle"></i> خطا در بررسی IP خروج: ${(j.error||'نامشخص').slice(0,100)}</div>`;
-      toast('خطا در بررسی IP خروج','err');
-    }
+    renderRouteVerdict(out,j,wd);
+    if(j.ok){toast(`IP خروج: ${((j.egress||{}).egress||{}).public_ip||'نامشخص'} (${((j.egress||{}).egress||{}).country_code||'?'})`,'ok')}
+    else if(j.route_health==='ROUTE_MISMATCH'){toast('عدم تطابق مسیر: کشور خروج با انتظار فرق دارد','err')}
+    else if(j.route_health==='NO_EXIT_NODE_AVAILABLE'){toast('نود خروج واقعی برای این لوکیشن ثبت نشده','err')}
   }catch(e){
     if(out)out.innerHTML=`<div style="color:var(--red-t)"><i class="ti ti-alert-circle"></i> خطا: ${e.message||e}</div>`;
-    toast('خطا در ارتباط با وورکر','err');
+    toast('خطا در اعتبارسنجی مسیر','err');
   }finally{
     if(ic){ic.className='ti ti-world';ic.style.animation='';if(btn)btn.disabled=false}
   }
+}
+function renderRouteVerdict(out,j,wd){
+  const ev=((j.egress||{}).egress)||{};
+  const cls=(j.egress||{}).classification||'UNKNOWN';
+  const rh=j.route_health||'UNKNOWN';
+  const exitStr=ev.public_ip?`<b dir="ltr" style="font-family:monospace;color:var(--accent2)">${ev.public_ip}</b>`:'<span style="color:var(--red-t)">اندازه‌گیری نشد</span>';
+  const locStr=[ev.country,ev.city].filter(Boolean).join(' / ')||(ev.country_code||'نامشخص');
+  const asnStr=ev.asn||'—';
+  const famStr=ev.ip_family||'—';
+  const ispStr=ev.isp||'نامشخص';
+  const rhBadge=({HEALTHY:'bg-green',ROUTE_MISMATCH:'bg-red',NO_EXIT_NODE_AVAILABLE:'bg-amber',UNREACHABLE:'bg-red',UNKNOWN:'bg-blue'})[rh]||'bg-blue';
+  const rhFa=({HEALTHY:'مسیر سالم',ROUTE_MISMATCH:'عدم تطابق مسیر',NO_EXIT_NODE_AVAILABLE:'نود خروج موجود نیست',UNREACHABLE:'مسیر در دسترس نیست',UNKNOWN:'نامشخص'})[rh]||rh;
+  const latRows=(j.latencies||[]).map(l=>`<div>⏱ ${LAT_FA[l.measure]||l.measure}: <b>${l.ms!=null?(toFa(Math.round(l.ms))+'ms'):'—'}</b></div>`).join('');
+  const cmp=(j.comparison||{});
+  const mismatch=(rh==='ROUTE_MISMATCH'&&cmp.reasons)?`<div style="margin-top:10px;padding:10px 12px;background:rgba(251,113,133,0.08);border:1px solid rgba(251,113,133,0.30);border-radius:10px;font-size:11px;line-height:1.7"><b style="color:var(--red-t)">✗ ROUTE_MISMATCH — عدم تطابق مسیر:</b><br>${cmp.reasons.map(x=>'<span dir="ltr">'+esc(String(x))+'</span>').join('<br>')}<br><span style="color:var(--t3)">این مسیر HEALTHY گزارش نمی‌شود تا وقتی مشاهده با انتظار بخورد.</span></div>`:'';
+  const noExit=(rh==='NO_EXIT_NODE_AVAILABLE')?`<div style="margin-top:10px;padding:10px 12px;background:rgba(250,204,21,0.08);border:1px solid rgba(250,204,21,0.20);border-radius:10px;font-size:11px;line-height:1.7"><b style="color:var(--amber-t)">⚠ NO_EXIT_NODE_AVAILABLE — نود خروج واقعی ثبت نشده.</b><br>ترافیک از Railway (کنترل‌پلین) خارج می‌شود. برای خروج واقعی از این کشور، upstream این لوکیشن را در وورکر به یک VPS در همان کشور تغییر دهید.<button class="btn btn-sm btn-g" style="margin-top:8px" onclick="gamingShowUpstreamGuide()"><i class="ti ti-book-2"></i> راهنمای تنظیم VPS خروج</button></div>`:'';
+  const steps=(j.steps||[]).map(s=>`<div style="display:flex;gap:6px;align-items:center;font-size:10.5px"><i class="ti ${s.ok?'ti-circle-check':'ti-circle-x'}" style="color:${s.ok?'var(--green-t)':'var(--red-t)'}"></i><b style="font-family:monospace;direction:ltr">${s.name}</b><span style="color:var(--t3)">${esc(String(s.detail||'').slice(0,90))}</span></div>`).join('');
+  out.innerHTML=`
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+      <span class="badge ${rhBadge}" style="font-size:10px">${rhFa}</span>
+      ${egBadge(cls)}
+      <span style="font-size:11px;color:var(--t3)">لوکیشن: <b>${j.location||'auto'}</b></span>
+    </div>
+    <div style="font-size:11.5px;line-height:1.9">
+      <div>🌐 IP خروج (اندازه‌گیری‌شده): ${exitStr}</div>
+      <div>📍 کشور/شهر: <b>${locStr}</b></div>
+      <div>🏢 ISP: <span dir="ltr">${ispStr}</span> · ASN: <span dir="ltr">${asnStr}</span> · ${famStr}</div>
+      ${latRows}
+      <div style="font-size:10px;color:var(--t3);margin-top:6px">مدرک: منبع اندازه‌گیری <code dir="ltr" style="font-size:10px">${ev.measurement_source||'—'}</code>${ev.checked_at?(' · زمان: '+new Date(ev.checked_at*1000).toLocaleTimeString()):''}</div>
+    </div>
+    ${mismatch}${noExit}
+    ${steps?`<details style="margin-top:8px"><summary style="font-size:10.5px;color:var(--t3);cursor:pointer">مراحل اعتبارسنجی (۹ مرحله)</summary><div style="margin-top:6px;padding:8px;background:var(--bg);border-radius:8px">${steps}</div></details>`:''}
+  `;
 }
 function gamingShowUpstreamGuide(){
   const m=document.createElement('div');
@@ -6984,7 +7088,7 @@ async function gamingCompare(btn){
           ${recommended?'<span class="badge bg-green" style="font-size:9px;margin-right:auto">✓ پیشنهاد</span>':''}
         </div>
         <div style="font-size:19px;font-weight:800;color:${ok?'var(--green-t)':'var(--red-t)'}">${ms}</div>
-        <div style="font-size:10px;color:var(--t3);margin-top:4px">${ok?'هندشیک + رفت‌وبرگشت کامل ✓':(rr.detail||'در دسترس نیست').slice(0,80)}</div>
+        <div style="font-size:10px;color:var(--t3);margin-top:4px">${ok?'RTT هندشیک پروتکل (WS+E2E) ✓':(rr.detail||'در دسترس نیست').slice(0,80)}</div>
       </div>`};
     box.innerHTML='<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px">'+
       row('🖥 مسیر مستقیم پنل',p,j.winner==='panel')+
@@ -7012,15 +7116,23 @@ async function gamingGenLinks(){
     const box=document.getElementById('gaming-links-result');
     box.style.display='';
     if(!j.ok){box.innerHTML='<div style="padding:12px;background:var(--bg);border-radius:10px;border:1px solid var(--card-b);font-size:12px;color:var(--red-t)">✗ '+(j.error||'خطا')+'</div>';return}
+    const rw=j.route_warning?('<div style="margin-bottom:10px;padding:10px 12px;background:rgba(250,204,21,0.08);border:1px solid rgba(250,204,21,0.25);border-radius:10px;font-size:11px;line-height:1.7"><b style="color:var(--amber-t)">⚠ '+esc(j.route_warning.code||'NO_EXIT_NODE_AVAILABLE')+'</b> — '+esc(j.route_warning.message||'')+'</div>'):'';
+    const note=(j.egress&&j.egress.endpoint_note)?('<div style="margin-bottom:10px;font-size:10.5px;color:var(--t3);line-height:1.7"><i class="ti ti-info-circle"></i> '+esc(j.egress.endpoint_note)+'</div>'):'';
     box.innerHTML='<div style="padding:14px;background:var(--bg);border-radius:10px;border:1px solid var(--card-b);font-size:12px">'+
-      '<div style="margin-bottom:10px;color:var(--t3)">'+j.entry+' · لوکیشن: <b>'+j.location+'</b> · ضد ضریب: <b>'+(j.mode_label||'')+'</b> · ترنسپورت: <b>'+(j.transport_label||'')+'</b></div>'+
-      (j.links||[]).map(l=>`<div style="margin-bottom:10px;padding:10px;background:var(--card-in);border-radius:8px">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+      '<div style="margin-bottom:10px;color:var(--t3)">'+j.entry+' · مسیر: <b>'+j.location+'</b> · ضد ضریب: <b>'+(j.mode_label||'')+'</b> · ترنسپورت: <b>'+(j.transport_label||'')+'</b></div>'+
+      rw+note+
+      (j.links||[]).map(l=>{
+        const rt=l.route||{};
+        const cls=(rt.egress||{}).classification||'UNKNOWN';
+        const exitInfo='<span style="font-size:10px;color:var(--t3)">خروج: <b>'+(l.exit||'—')+'</b> '+egBadge(cls)+' <span dir="ltr" style="font-family:monospace">['+(rt.route_status||'?')+']</span></span>';
+        return `<div style="margin-bottom:10px;padding:10px;background:var(--card-in);border-radius:8px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">
           <span class="badge bg-blue" style="font-size:10px">${l.protocol}</span><b>${l.label}</b>
+          ${exitInfo}
           <button class="btn btn-sm btn-g" style="margin-right:auto" data-gl="${encodeURIComponent(l.gaming)}" onclick="gamingCopyLink(this)"><i class="ti ti-copy"></i> کپی لینک گیمینگ</button>
         </div>
         <div dir="ltr" style="font-size:10px;font-family:monospace;color:var(--t3);word-break:break-all;direction:ltr;text-align:left">${l.gaming}</div>
-      </div>`).join('')+'</div>';
+      </div>`}).join('')+'</div>';
     toast('لینک‌های گیمینگ با حالت '+(j.mode_label||'')+' ساخته شد','ok');
   }catch(e){toast('خطا','err')}
 }
