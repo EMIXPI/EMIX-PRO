@@ -81,8 +81,11 @@ class Ss2022Adapter(ProtocolAdapter):
             return LinkResult(ok=False, error=str(exc))
 
     async def health_check(self) -> HealthResult:
+        # Zero-fake-features policy (Phase 32): no real inbound exists to
+        # probe, so we return an honest NOT_TESTABLE instead of ok=True.
         return HealthResult(
-            ok=True,
+            ok=False,
+            error="NOT_TESTABLE",
             detail="link-emission only; no inbound (existing SS-AEAD inbound remains for chacha20/aes-256-gcm)",
         )
 

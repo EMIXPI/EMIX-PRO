@@ -92,10 +92,13 @@ class SshAdapter(ProtocolAdapter):
                 error="asyncssh library not installed",
                 detail="add 'asyncssh>=2.14' to requirements.txt to enable",
             )
-        # Real health check would: connect → authenticate → close
+        # Zero-fake-features policy (Phase 32): no host is configured, so
+        # nothing was actually tested — reporting ok=True would fabricate
+        # health evidence. Honest answer: NOT_TESTABLE until a host exists.
         return HealthResult(
-            ok=True,
-            detail="asyncssh installed but no host configured for health check",
+            ok=False,
+            error="NOT_TESTABLE",
+            detail="asyncssh installed but no host configured — nothing was tested",
         )
 
     async def start(self) -> bool:

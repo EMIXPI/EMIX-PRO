@@ -35,6 +35,12 @@ import time
 import traceback
 import central
 import aiofiles
+import compat
+import endpoint_profiles
+import config_compiler
+import network_health
+import diagnostics as diagnostics_mod
+from job_system import jobs as job_system
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 from urllib.parse import quote
@@ -152,6 +158,11 @@ async def load_state():
                         link["spoof_sni_enabled"] = False
             LINKS.update(data.get("links", {}))
             SUBS.update(data.get("subs", {}))
+            # Endpoint Profile Engine restore (Phase 25)
+            try:
+                endpoint_profiles.restore_snapshot(data)
+            except Exception as _ep_exc:
+                logger.warning(f"endpoint_profiles restore failed (ignored): {_ep_exc}")
             NODE_KEYS.update(data.get("node_keys", {}))
             for nid, n in (data.get("nodes") or {}).items():
                 NODES[nid] = _normalize_node(n)
@@ -185,6 +196,10 @@ async def save_state():
                 "nodes": dict(NODES),
                 "password_hash": AUTH["password_hash"],
                 "disable_logging": CONFIG.get("disable_logging", False),
+                # Endpoint & Transport Profile Engine (Phase 25) — replaces
+                # the standalone SNI-spoof store; legacy spoof fields already
+                # live inside each link record.
+                "endpoint_profiles": endpoint_profiles.persist_snapshot().get("endpoint_profiles", []),
                 "saved_at": datetime.now().isoformat(),
             }
             tmp = DATA_FILE.with_suffix(".tmp")
@@ -399,6 +414,68 @@ async def _session_cleanup_loop():
         return
 
 # ── Startup / Shutdown ────────────────────────────────────────────────────────
+# ─── Background job definitions (Phase 20) ──────────────────────────────────
+
+_HEALTH_SWEEP_ENABLED = os.environ.get("EMIX_HEALTH_SWEEP_ENABLED", "1") not in ("0", "false", "no")
+_HEALTH_SWEEP_INTERVAL = max(60, int(os.environ.get("EMIX_HEALTH_SWEEP_INTERVAL", "600")))
+_EXPIRY_SWEEP_INTERVAL = max(60, int(os.environ.get("EMIX_EXPIRY_SWEEP_INTERVAL", "300")))
+
+
+async def _job_health_sweep():
+    """Probe all allowed configs end-to-end (Network Health Engine, Phase 7)."""
+    async def _links_provider():
+        async with LINKS_LOCK:
+            return [(uid, dict(d)) for uid, d in LINKS.items() if is_link_allowed(d)]
+    return await network_health.sweep(links_provider=_links_provider, concurrency=4)
+
+
+async def _job_expiry_sweep():
+    """Mark disabled/expired/quota-exhausted configs INVALID (no probing)."""
+    async with LINKS_LOCK:
+        targets = [(uid, dict(d)) for uid, d in LINKS.items() if not is_link_allowed(d)]
+    for uid, d in targets:
+        network_health.mark_invalid(uid, d, "disabled / expired / quota exhausted")
+    return {"marked": len(targets)}
+
+
+async def _job_ip_quality_prune():
+    """Drop IP-quality cache entries older than 2× TTL."""
+    import ip_quality as _ipq
+    now = time.time()
+    stale = [ip for ip, a in list(_ipq._cache.items())
+             if now - a.checked_at > 2 * _ipq.CACHE_TTL]
+    for ip in stale:
+        _ipq._cache.pop(ip, None)
+        _ipq._history.pop(ip, None)
+    return {"pruned": len(stale)}
+
+
+def _register_default_jobs() -> None:
+    if _HEALTH_SWEEP_ENABLED:
+        job_system.register("health-sweep", _job_health_sweep,
+                            interval=_HEALTH_SWEEP_INTERVAL, timeout=180.0, retries=1)
+    job_system.register("expiry-sweep", _job_expiry_sweep,
+                        interval=_EXPIRY_SWEEP_INTERVAL, timeout=30.0, retries=1)
+    job_system.register("ip-quality-prune", _job_ip_quality_prune,
+                        interval=3600.0, timeout=30.0, retries=1)
+
+
+async def _persistence_health() -> dict:
+    """Persistence health for the Diagnostics Center."""
+    try:
+        writable = DATA_DIR.exists() and os.access(str(DATA_DIR), os.W_OK)
+        size = DATA_FILE.stat().st_size if DATA_FILE.exists() else 0
+        return {
+            "status": "OK" if writable else "ERROR",
+            "data_dir": str(DATA_DIR),
+            "writable": writable,
+            "state_file_bytes": size,
+            "links": len(LINKS), "subs": len(SUBS), "nodes": len(NODES),
+        }
+    except Exception as exc:
+        return {"status": "ERROR", "error": str(exc)[:120]}
+
+
 @app.on_event("startup")
 async def startup():
     asyncio.create_task(central.heartbeat_loop())
@@ -413,6 +490,25 @@ async def startup():
     if _session_cleanup_task is None or _session_cleanup_task.done():
         _session_cleanup_task = asyncio.create_task(_session_cleanup_loop())
         logger.info("[startup] session cleanup task started")
+    # ─── Network Health Engine wiring (Phases 6/7) ─────────────────────────
+    # Real probes come from link_health._run_link_ping (protocol-authentic
+    # end-to-end tests). Injection avoids circular imports.
+    try:
+        network_health.set_probe_fn(link_health._run_link_ping)
+        network_health.set_allowed_fn(is_link_allowed)
+    except Exception as _nh_exc:
+        logger.warning(f"[startup] network_health wiring failed: {_nh_exc}")
+
+    # ─── Background Job System (Phase 20) ─────────────────────────────────
+    try:
+        _register_default_jobs()
+        await job_system.start()
+    except Exception as _job_exc:
+        logger.warning(f"[startup] job system failed to start: {_job_exc}")
+
+    # ─── Diagnostics persistence probe (Phase 21) ─────────────────────────
+    diagnostics_mod.set_persistence_probe(_persistence_health)
+
     # اگر دیتای پایدار روی Railway Volume وصل نباشد، LINKS خالی خواهد بود.
     # سه کانفیگ پیش‌فرض (vless-ws / trojan-ws / shadowsocks) می‌سازیم تا کاربر
     # بلافاصله پس از دیپلوی بتواند پینگ بگیرد و پنل را تست کند.
@@ -619,6 +715,11 @@ async def shutdown():
         except asyncio.CancelledError:
             pass
         _session_cleanup_task = None
+    # Stop the background job system before saving state (Phase 20/26)
+    try:
+        await job_system.stop()
+    except Exception:
+        pass
     await save_state()
     await mtproto.stop_all()
     if http_client:
@@ -680,7 +781,71 @@ def generate_uuid() -> str:
 def now_ir() -> datetime:
     return datetime.now(IRAN_TZ)
 
+def _emit_mtproto_link(link: dict, host: str, remark: str) -> str:
+    """MTProto emitter — keeps mtg FakeTLS + public-proxy-host semantics
+    exactly as before (never falls back to the panel domain: the internal
+    port is unreachable from outside Railway)."""
+    secret = link.get("mtproto_secret")
+    if not secret:
+        return f"tg://proxy?server={host}&port=0&secret=not_ready#{quote(remark)}"
+    pub_host = link.get("mtproto_public_host")
+    pub_port = link.get("mtproto_public_port")
+    if not pub_host or not pub_port:
+        return f"tg://proxy?server={host}&port=0&secret=not_ready#{quote(remark)}"
+    return mtproto.generate_mtproto_link(
+        pub_host, pub_port, secret,
+        mtproto.sanitize_domain(link.get("mtproto_domain"))
+    )
+
+
 def generate_share_link(uuid: str, host: str, remark: str = "EMIX", protocol: str = DEFAULT_PROTOCOL) -> str:
+    """[Config Compiler facade — Phase 3 refactor]
+
+    THE emission path is now config_compiler.compile_from_link():
+      normalize → compat validation → endpoint resolution → deterministic
+      emit → self-check → version + checksum.
+    Output is byte-identical with the previous inline emitter (verified by
+    tests/unit/test_config_compiler.py::test_wire_compat_*).
+
+    The legacy inline body is preserved below as `_generate_share_link_legacy`
+    and is used ONLY as an emergency fallback if the compiler rejects a
+    stored record (cannot happen for records created through the API) —
+    this guarantees no existing subscription can ever break.
+    """
+    link = LINKS.get(uuid) or {}
+    if protocol == "mtproto":
+        return _emit_mtproto_link(link, host, remark)
+    eff_link = dict(link)
+    eff_link["protocol"] = protocol
+    eff_link["label"] = remark
+    compiled = config_compiler.compile_from_link(
+        eff_link, host,
+        cdn_domain=os.environ.get("EMIX_CDN_DOMAIN", "").strip().lower(),
+        credential=uuid,
+    )
+    if compiled.ok and compiled.uri is not None:
+        return compiled.uri
+    logger.warning(
+        f"[compiler] falling back to legacy emitter for {uuid[:8]} "
+        f"protocol={protocol!r}: {compiled.errors}"
+    )
+    try:
+        diagnostics_mod.record_error_sync(
+            code="CONFIG_COMPILER_FALLBACK",
+            message=f"compile failed for protocol={protocol!r}: {'; '.join(compiled.errors)[:200]}",
+            component="config-compiler",
+            severity="WARNING",
+            context={"protocol": protocol},
+        )
+    except Exception:
+        pass
+    return _generate_share_link_legacy(uuid, host, remark, protocol)
+
+
+def _generate_share_link_legacy(uuid: str, host: str, remark: str = "EMIX", protocol: str = DEFAULT_PROTOCOL) -> str:
+    """[DEPRECATED — emergency fallback only; primary path is the Config
+    Compiler. Kept verbatim so a compiler rejection can never break an
+    existing subscription.]"""
     link = LINKS.get(uuid) or {}
     alpn = link.get("alpn", "h2")
     fp = link.get("fingerprint", "chrome")
@@ -1989,8 +2154,15 @@ async def _create_link_core(body: dict) -> dict:
     note = (body.get("note") or "").strip()[:200]
     sub_id = body.get("sub_id") or None
     protocol = body.get("protocol") or DEFAULT_PROTOCOL
-    if protocol not in PROTOCOLS:
-        protocol = DEFAULT_PROTOCOL
+    # [Phase 3 — Config Compiler contract] strict validation, NO silent
+    # coercion to the default. Unknown/incompatible protocols get a 400
+    # with an actionable message (previously they silently became vless-ws).
+    _compat_check = compat.validate_fused(protocol)
+    if not _compat_check.ok:
+        raise HTTPException(
+            status_code=400,
+            detail=f"پروتکل نامعتبر: {'; '.join(_compat_check.reasons)} — پروتکل‌های معتبر: {', '.join(PROTOCOLS)}",
+        )
 
     alpn_val = str(body.get("alpn") or "h2,http/1.1").strip()[:60]
     fp_val = str(body.get("fingerprint") or "chrome").strip()[:20]
@@ -2011,6 +2183,19 @@ async def _create_link_core(body: dict) -> dict:
     # If user enabled but didn't provide a valid domain, silently disable
     spoof_enabled = spoof_enabled and bool(spoof_sni)
 
+    # ── Endpoint & Transport Profile (Phase 25 — successor of SNI Spoofing) ──
+    # New API: a link may reference a NAMED endpoint profile, strictly
+    # validated (existence + protocol compatibility). Legacy spoof_sni
+    # fields above keep working unchanged for existing clients.
+    endpoint_profile_id = (body.get("endpoint_profile_id") or "").strip() or None
+    if endpoint_profile_id:
+        profile = await endpoint_profiles.get_profile(endpoint_profile_id)
+        if profile is None:
+            raise HTTPException(status_code=400, detail=f"پروفایل اندپوینت «{endpoint_profile_id}» وجود ندارد")
+        ep_errors = endpoint_profiles.validate_profile_for_protocol(profile, protocol)
+        if ep_errors:
+            raise HTTPException(status_code=400, detail="; ".join(ep_errors))
+
     uid = generate_uuid()
     link_data = {
         "label": label,
@@ -2028,6 +2213,8 @@ async def _create_link_core(body: dict) -> dict:
         "ad_tag": None,
         "spoof_sni": spoof_sni,
         "spoof_sni_enabled": spoof_enabled,
+        # Phase 25: endpoint profile reference (None = legacy fields/standard)
+        "endpoint_profile_id": endpoint_profile_id,
     }
 
     if protocol == "mtproto":
@@ -2108,6 +2295,27 @@ async def _create_link_core(body: dict) -> dict:
 
     asyncio.create_task(save_state())
     log_activity("link", f"کانفیگ «{label}» ساخته شد", "ok")
+
+    # [Phase 7 — per-config real testing] A fresh config is born UNKNOWN and
+    # immediately gets a real protocol-level probe (non-blocking). The result
+    # lands on link_data["health"] — a config is NEVER "healthy" merely
+    # because it was generated.
+    async def _probe_new_link():
+        try:
+            await network_health.probe_config(uid, link_data)
+        except Exception as _exc:
+            try:
+                await diagnostics_mod.record_error(
+                    code="HEALTH_PROBE_FAIL",
+                    message=f"initial probe failed: {type(_exc).__name__}: {str(_exc)[:120]}",
+                    component="health",
+                    severity="WARNING",
+                    context={"protocol": protocol},
+                )
+            except Exception:
+                pass
+    asyncio.create_task(_probe_new_link())
+
     host = get_host()
     return {
         "uuid": uid,
@@ -3921,14 +4129,221 @@ except Exception as _exc:
 
 
 # ══════════════════════════════════════════════════════════════════════════════
+# [Phase 3/4/25/6/9/20/21] Config Compiler + Endpoint Profiles + Network
+# Health + IP Quality + Job System + Diagnostics Center
+# ══════════════════════════════════════════════════════════════════════════════
+
+# ── Compatibility matrix (frontend renders ONLY these combinations) ─────────
+@app.get("/api/config-matrix", dependencies=[Depends(require_auth)])
+async def api_config_matrix():
+    return {"ok": True, **compat.matrix_view()}
+
+# ── Config Compiler: compile a spec WITHOUT storing it (validation preview) ─
+@app.post("/api/configs/compile", dependencies=[Depends(require_auth)])
+async def api_compile_preview(request: Request):
+    """Compile a config spec and return the URI + xray JSON + self-check
+    result WITHOUT creating a link. Live validation for the frontend."""
+    body = await request.json()
+    spec = config_compiler.ConfigSpec(
+        protocol=body.get("protocol", "vless"),
+        transport=body.get("transport", "ws"),
+        security=body.get("security", "tls"),
+        credential=body.get("credential") or generate_uuid(),
+        remark=(body.get("remark") or "EMIX")[:80],
+        host=body.get("host") or get_host(),
+        alpn=str(body.get("alpn") or "h2,http/1.1")[:60],
+        fingerprint=str(body.get("fingerprint") or "chrome")[:20],
+        ss_cipher=body.get("ss_cipher", ""),
+        ss_password=body.get("ss_password", ""),
+        requested_formats=("uri", "json") if body.get("include_json") else ("uri",),
+    )
+    compiled = config_compiler.compile_config(spec)
+    return compiled.to_dict()
+
+# ── Endpoint & Transport Profiles (Phase 25 — SNI Spoofing successor) ───────
+@app.get("/api/endpoint-profiles", dependencies=[Depends(require_auth)])
+async def api_ep_list():
+    profiles = await endpoint_profiles.list_profiles()
+    return {
+        "ok": True,
+        "profiles": [p.to_dict() for p in profiles],
+        "count": len(profiles),
+        "note": "Endpoint & Transport Profile Engine — replaces legacy SNI Spoofing; per-link spoof_sni fields remain supported",
+    }
+
+@app.post("/api/endpoint-profiles", dependencies=[Depends(require_auth)])
+async def api_ep_create(request: Request):
+    body = await request.json()
+    profile = endpoint_profiles.EndpointProfile(
+        id=body.get("id") or endpoint_profiles.new_profile_id(),
+        name=str(body.get("name") or "")[:60],
+        address=str(body.get("address") or ""),
+        sni=body.get("sni"),
+        host_header=body.get("host_header"),
+        port=int(body.get("port") or 443),
+        path_prefix=str(body.get("path_prefix") or ""),
+        security=str(body.get("security") or "tls"),
+        alpn=body.get("alpn") or ["h2", "http/1.1"],
+        min_tls=str(body.get("min_tls") or "1.3"),
+        allow_insecure=bool(body.get("allow_insecure", False)),
+        ip_version=str(body.get("ip_version") or "auto"),
+        dns_mode=str(body.get("dns_mode") or "auto"),
+        node_id=body.get("node_id"),
+        transport=body.get("transport"),
+        description=str(body.get("description") or "")[:500],
+    )
+    try:
+        created = await endpoint_profiles.create_profile(profile)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    asyncio.create_task(save_state())
+    log_activity("system", f"Endpoint profile «{created.name}» ساخته شد", "ok")
+    return {"ok": True, "profile": created.to_dict()}
+
+@app.put("/api/endpoint-profiles/{profile_id}", dependencies=[Depends(require_auth)])
+async def api_ep_update(profile_id: str, request: Request):
+    body = await request.json()
+    try:
+        updated = await endpoint_profiles.update_profile(profile_id, body)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    if updated is None:
+        raise HTTPException(status_code=404, detail="profile not found")
+    asyncio.create_task(save_state())
+    return {"ok": True, "profile": updated.to_dict()}
+
+@app.delete("/api/endpoint-profiles/{profile_id}", dependencies=[Depends(require_auth)])
+async def api_ep_delete(profile_id: str):
+    ok = await endpoint_profiles.delete_profile(profile_id)
+    if not ok:
+        raise HTTPException(status_code=404, detail="profile not found")
+    asyncio.create_task(save_state())
+    log_activity("system", f"Endpoint profile deleted: {profile_id}", "warn")
+    return {"ok": True, "deleted": profile_id}
+
+@app.post("/api/endpoint-profiles/{profile_id}/validate", dependencies=[Depends(require_auth)])
+async def api_ep_validate(profile_id: str, request: Request):
+    """Validate a profile against a protocol/transport combo (live check)."""
+    profile = await endpoint_profiles.get_profile(profile_id)
+    if profile is None:
+        raise HTTPException(status_code=404, detail="profile not found")
+    body = await request.json()
+    fused = body.get("protocol", "vless-ws")
+    errors = endpoint_profiles.validate_profile_for_protocol(profile, fused)
+    c = compat.validate_fused(fused)
+    return {
+        "ok": not errors and c.ok,
+        "profile_errors": errors,
+        "compat": c.to_dict(),
+    }
+
+# ── Network Health Engine (Phase 6/7) ────────────────────────────────────────
+@app.get("/api/health/summary", dependencies=[Depends(require_auth)])
+async def api_health_summary():
+    return {"ok": True, **network_health.summary(),
+            "formula": "0.40*latency + 0.20*handshake + 0.20*reachability + 0.20*stability (real probes only)"}
+
+@app.get("/api/health/links", dependencies=[Depends(require_auth)])
+async def api_health_all():
+    return {"ok": True, "records": network_health.all_health()}
+
+@app.get("/api/health/links/{uid}", dependencies=[Depends(require_auth)])
+async def api_health_one(uid: str):
+    rec = network_health.get_health_dict(uid)
+    if rec is None:
+        # fall back to the link's persisted health field
+        async with LINKS_LOCK:
+            persisted = (LINKS.get(uid) or {}).get("health")
+        if persisted:
+            return {"ok": True, "record": persisted, "source": "persisted"}
+        raise HTTPException(status_code=404, detail="no health record for this config")
+    return {"ok": True, "record": rec, "source": "engine"}
+
+@app.post("/api/health/links/{uid}/probe", dependencies=[Depends(require_auth)])
+async def api_health_probe(uid: str, via: str = "direct"):
+    async with LINKS_LOCK:
+        link = LINKS.get(uid)
+    if link is None:
+        raise HTTPException(status_code=404, detail="کانفیگ یافت نشد")
+    rec = await network_health.probe_config(uid, link, via=via)
+    asyncio.create_task(schedule_save())
+    return {"ok": True, "record": rec.to_dict()}
+
+# ── Job System (Phase 20) ─────────────────────────────────────────────────────
+@app.get("/api/jobs/status", dependencies=[Depends(require_auth)])
+async def api_jobs_status():
+    return {"ok": True, **job_system.status()}
+
+@app.post("/api/jobs/{name}/run", dependencies=[Depends(require_auth)])
+async def api_jobs_run(name: str):
+    return await job_system.run_now(name)
+
+# ── Diagnostics Center (Phase 21) ─────────────────────────────────────────────
+@app.get("/api/diagnostics", dependencies=[Depends(require_auth)])
+async def api_diagnostics():
+    return await diagnostics_mod.diagnostics_overview()
+
+# request timing + slow-request + unhandled-error capture
+app.middleware("http")(diagnostics_mod.diagnostics_middleware)
+
+# ── IP Quality Engine (Phase 9/28) ────────────────────────────────────────────
+try:
+    import ip_quality
+    app.include_router(ip_quality.router)
+    logger.info("[bootstrap] ip_quality routes registered (IP Quality Engine)")
+except Exception as _exc:
+    logger.error(f"[bootstrap] ip_quality load failed (ignored): {_exc}")
+
+# ── Subscription profiles (Phase 13) on /sub-all ─────────────────────────────
+_SUB_PROFILES = ("ALL", "FASTEST", "HEALTHIEST")
+
+@app.get("/sub-all-v2")
+async def subscription_all_v2(profile: str = "ALL", _=Depends(require_auth)):
+    """Subscription with profile filtering (Phase 13).
+
+    ALL       — every allowed config (same as /sub-all)
+    FASTEST   — top 5 by latest real latency (only probed configs)
+    HEALTHIEST— only HEALTHY configs (Network Health Engine evidence)
+    """
+    profile = (profile or "ALL").upper()
+    if profile not in _SUB_PROFILES:
+        raise HTTPException(status_code=400, detail=f"profile must be one of {_SUB_PROFILES}")
+    host = get_host()
+    async with LINKS_LOCK:
+        items = [(uid, dict(d)) for uid, d in LINKS.items() if is_link_allowed(d)]
+    if profile == "FASTEST":
+        probed = [(uid, d) for uid, d in items if network_health.get_health(uid)]
+        probed.sort(key=lambda kv: (
+            network_health.get_health(kv[0]).latency_ms
+            if network_health.get_health(kv[0]).latency_ms is not None else 10**9))
+        items = probed[:5]
+    elif profile == "HEALTHIEST":
+        healthy = set(network_health.healthy_uids(min_score=60))
+        items = [(uid, d) for uid, d in items if uid in healthy]
+    lines = [
+        generate_share_link(uid, host, remark=f"EMIX-{d['label']}", protocol=d.get("protocol", DEFAULT_PROTOCOL))
+        for uid, d in items
+    ]
+    total_used = sum(d.get("used_bytes", 0) for _, d in items)
+    total_limit = sum(d.get("limit_bytes", 0) for _, d in items)
+    expiries = [d["expires_at"] for _, d in items if d.get("expires_at")]
+    nearest_exp = min(expiries) if expiries else None
+    content = base64.b64encode("\n".join(lines).encode()).decode()
+    headers = build_sub_headers(f"EMIX-{profile}", total_used, total_limit, nearest_exp)
+    return Response(content=content, media_type="text/plain", headers=headers)
+
+logger.info("[bootstrap] Config Compiler + Endpoint Profiles + Network Health + Jobs + Diagnostics ready")
+
+
+# ══════════════════════════════════════════════════════════════════════════════
 # /api/deployment-version — برای تأیید نسخه‌ی دیپلوی‌شده روی Railway
 # کاربر می‌تواند با مقایسه‌ی نسخه، تأیید کند که آیا Railway کد جدید را دیپلوی
 # کرده است یا هنوز روی نسخه‌ی قدیمی است. این اندپوینت بدون احراز هویت است
 # تا قبل از لاگین هم قابل بررسی باشد. (از /api/version استفاده نمی‌کنیم چون
 # آن مسیر قبلاً برای بررسی به‌روزرسانی در نظر گرفته شده است.)
 # ══════════════════════════════════════════════════════════════════════════════
-EMIX_VERSION = "10.2.0-wte-live"
-EMIX_BUILD_DATE = "2026-08-30"
+EMIX_VERSION = "11.0.0-arch"
+EMIX_BUILD_DATE = "2026-09-01"
 
 @app.get("/api/deployment-version")
 async def api_deployment_version():
@@ -3953,7 +4368,7 @@ async def api_deployment_version():
         "has_gaming": True,
         "has_infra": True,
         "experimental_section": exp_summary,
-        "features_summary": "ISP selector + TLS Mask + Smart Mode + Security + Clean IPs + Bridge CDN/VPS + Turbo 0-RTT + Gaming Center + CF Gateway deployed + Auto Volume + Full Health Check + Experimental Section (toggleable)",
+        "features_summary": "Config Compiler + Endpoint Profiles (SNI-Spoof successor) + Network Health Engine (per-config states+scores) + IP Quality Engine + Job System + Diagnostics Center + compat matrix + ISP/TLS Mask/Smart Mode/Security + Clean IPs + Bridge CDN/VPS + Turbo 0-RTT + Gaming Center + CF Gateway + Auto Volume + Experimental Section",
     }
 
 

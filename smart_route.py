@@ -215,3 +215,83 @@ async def mtu_discovery(request: Request):
         "reason": "MTU ping requires /bin/ping with ICMP — not available on Railway unprivileged. "
                   "Use TCP probe upstreams for latency estimation instead.",
     }
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# Smart Route v2 — health-weighted CONFIG ranking (Phase 8 refactor)
+#
+# v1 (above) ranks manually-registered upstreams. v2 ranks the panel's own
+# configs using the Network Health Engine's weighted score
+# (latency 40% + handshake 20% + reachability 20% + stability 20%) —
+# never raw ping alone, never fabricated numbers.
+# ══════════════════════════════════════════════════════════════════════════════
+
+@router.get("/api/exp/route/configs/ranked")
+async def ranked_configs(_limit: int = 20):
+    """All allowed configs ranked by health score (real probe evidence only).
+
+    Response rows:
+      uid, label, protocol, health_state, score, latency_ms, handshake_ms,
+      jitter_ms, loss_pct, samples, rank_reason
+    """
+    from main import LINKS, LINKS_LOCK, is_link_allowed  # late import — no cycle
+    import network_health
+
+    async with LINKS_LOCK:
+        targets = {uid: dict(d) for uid, d in LINKS.items()}
+
+    rows = []
+    for uid, link in targets.items():
+        allowed = is_link_allowed(link)
+        rec = network_health.get_health(uid)
+        if rec is None:
+            rows.append({
+                "uid": uid, "label": link.get("label", uid[:8]),
+                "protocol": link.get("protocol", "vless-ws"),
+                "health_state": "INVALID" if not allowed else "UNKNOWN",
+                "score": None, "latency_ms": None, "handshake_ms": None,
+                "jitter_ms": None, "loss_pct": None, "samples": 0,
+                "rank_reason": "not allowed" if not allowed else "never probed",
+            })
+            continue
+        if not allowed and rec.state != "INVALID":
+            network_health.mark_invalid(uid, link, "config not allowed")
+            rec = network_health.get_health(uid)
+        rows.append({
+            "uid": uid, "label": link.get("label", uid[:8]),
+            "protocol": link.get("protocol", "vless-ws"),
+            "health_state": rec.state,
+            "score": rec.score, "latency_ms": rec.latency_ms,
+            "handshake_ms": rec.handshake_ms, "jitter_ms": rec.jitter_ms,
+            "loss_pct": rec.loss_pct, "samples": rec.samples,
+            "rank_reason": "weighted: latency 40% + handshake 20% + reachability 20% + stability 20%",
+        })
+
+    order = {"HEALTHY": 0, "DEGRADED": 1, "UNKNOWN": 2, "UNREACHABLE": 3, "INVALID": 4}
+    rows.sort(key=lambda r: (order.get(r["health_state"], 5), -(r["score"] or 0),
+                             r["latency_ms"] if r["latency_ms"] is not None else 99999))
+    return {
+        "ok": True,
+        "total": len(rows),
+        "ranking": rows[:max(1, _limit)],
+        "formula": "0.40*latency + 0.20*handshake + 0.20*reachability + 0.20*stability (real probes only)",
+        "checked_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+    }
+
+
+@router.post("/api/exp/route/configs/probe-all")
+async def probe_all_configs():
+    """Probe every allowed config through the health engine, then rank."""
+    from main import LINKS, LINKS_LOCK, is_link_allowed
+    import network_health
+
+    async with LINKS_LOCK:
+        targets = [(uid, dict(d)) for uid, d in LINKS.items() if is_link_allowed(d)]
+    sem = asyncio.Semaphore(4)
+
+    async def _one(uid: str, link: dict):
+        async with sem:
+            return await network_health.probe_config(uid, link)
+
+    await asyncio.gather(*[_one(u, d) for u, d in targets]) if targets else None
+    return await ranked_configs()

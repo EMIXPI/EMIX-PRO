@@ -3060,6 +3060,7 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
     <div class="nav-it" data-pg="support"><i class="ti ti-headset"></i> پشتیبانی <span class="nav-badge" id="support-nb" style="display:none">●</span></div>
     <div class="nav-it" data-pg="logs"><i class="ti ti-history"></i> لاگ فعالیت‌ها</div>
     <div class="nav-it" data-pg="errors"><i class="ti ti-alert-triangle"></i> خطاها</div>
+    <div class="nav-it" data-pg="diag"><i class="ti ti-activity-heartbeat" style="color:#10B981"></i> 🩺 سلامت و تشخیص</div>
     <div class="nav-it" data-pg="settings"><i class="ti ti-settings"></i> تنظیمات</div>
     <div class="nav-it" data-pg="experimental" style="background:linear-gradient(135deg,rgba(139,92,246,.18),rgba(250,204,21,.10));border-top:1px solid rgba(139,92,246,.3);margin-top:8px"><i class="ti ti-flask" style="color:#8B5CF6"></i> 🧪 بخش آزمایشی <span class="nav-badge" id="exp-nb" style="background:#8B5CF6;color:#fff">جدید</span></div>
     <div class="nav-it" data-pg="unified-configs"><i class="ti ti-grid-dots" style="color:#FACC15"></i> 🎯 همه‌ی کانفیگ‌ها</div>
@@ -4410,6 +4411,120 @@ remote vpn.example.com 1194
   <div class="topbar"><div><div class="tb-title"><i class="ti ti-alert-triangle"></i> خطاها</div></div><div class="tb-right"><span class="badge bg-red" id="errs-badge">۰</span><button class="btn btn-p btn-sm" onclick="refreshAll()"><i class="ti ti-refresh"></i></button></div></div>
   <div class="card"><div class="card-title"><i class="ti ti-bug"></i> لاگ خطاها</div><div id="errs-full">—</div></div>
 </section>
+
+<section class="pg" id="pg-diag">
+  <div class="topbar">
+    <div><div class="tb-title"><i class="ti ti-activity-heartbeat"></i> سلامت و تشخیص (Diagnostics Center)</div>
+      <div class="tb-sub">موتور سلامت شبکه + سیستم جاب‌ها + خطاهای ساختاریافته — همه بر پایه‌ی تست واقعی، بدون عدد ساختگی</div></div>
+    <div class="tb-right"><button class="btn btn-p btn-sm" onclick="loadDiagPage()"><i class="ti ti-refresh"></i> بازخوانی</button>
+      <button class="btn btn-sm" onclick="diagProbeAll()"><i class="ti ti-bolt"></i> تست همه‌ی کانفیگ‌ها</button></div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:12px" id="diag-health-cards">—</div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px" class="diag-grid">
+    <div class="card">
+      <div class="card-title"><i class="ti ti-heart-rate-monitor"></i> وضعیت سلامت کانفیگ‌ها (تست واقعی End-to-End)</div>
+      <div id="diag-health-body">—</div>
+    </div>
+    <div class="card">
+      <div class="card-title"><i class="ti ti-list-check"></i> جاب‌های پس‌زمینه</div>
+      <div id="diag-jobs-body">—</div>
+    </div>
+    <div class="card">
+      <div class="card-title"><i class="ti ti-server-2"></i> زیرساخت (App / Persistence / Protocols)</div>
+      <div id="diag-sys-body">—</div>
+    </div>
+    <div class="card">
+      <div class="card-title"><i class="ti ti-shield-check"></i> کیفیت IP</div>
+      <div id="diag-ipq-body">—</div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:12px">
+    <div class="card-title"><i class="ti ti-bug"></i> خطاهای ساختاریافته اخیر (کد / کامپوننت / شدت)</div>
+    <div id="diag-err-body">—</div>
+  </div>
+</section>
+
+<style>
+.diag-grid{grid-template-columns:1fr 1fr}
+@media(max-width:900px){.diag-grid{grid-template-columns:1fr}}
+.diag-hc{background:var(--card);border:1px solid var(--card-b);border-radius:14px;padding:14px;text-align:center}
+.diag-hc .n{font-size:26px;font-weight:800;margin-bottom:2px}
+.diag-hc .l{font-size:10.5px;color:var(--t3);letter-spacing:.08em}
+.diag-st-HEALTHY{color:#10B981}.diag-st-DEGRADED{color:#F59E0B}.diag-st-UNREACHABLE{color:#EF4444}.diag-st-INVALID{color:#6B7280}.diag-st-UNKNOWN{color:#8B5CF6}
+.diag-tb{width:100%;border-collapse:collapse;font-size:12px}
+.diag-tb th{text-align:right;color:var(--t3);font-size:10.5px;padding:6px 8px;border-bottom:1px solid var(--card-b);white-space:nowrap}
+.diag-tb td{padding:7px 8px;border-bottom:1px solid rgba(255,255,255,.04);white-space:nowrap}
+.diag-pill{display:inline-block;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:700}
+</style>
+
+<script>
+async function loadDiagPage(){
+  try{
+    const [hs, dg, js, iq] = await Promise.all([
+      fetch('/api/health/summary').then(r=>r.json()).catch(()=>null),
+      fetch('/api/diagnostics').then(r=>r.json()).catch(()=>null),
+      fetch('/api/jobs/status').then(r=>r.json()).catch(()=>null),
+      fetch('/api/ip-quality/summary').then(r=>r.json()).catch(()=>null),
+    ]);
+    // health state cards
+    const hc = document.getElementById('diag-health-cards');
+    if(hs){
+      const states = [['HEALTHY','سالم','ti-circle-check'],['DEGRADED','ضعیف','ti-alert-triangle'],['UNREACHABLE','در دسترس نیست','ti-plug-x'],['INVALID','نامعتبر','ti-ban'],['UNKNOWN','تست نشده','ti-help']];
+      hc.innerHTML = states.map(([k,fa])=>`<div class="diag-hc"><div class="n diag-st-${k}">${hs.by_state?.[k]??0}</div><div class="l">${fa}</div></div>`).join('')
+      + `<div class="diag-hc"><div class="n">${hs.tracked??0}</div><div class="l">در مجموع</div></div>`;
+    } else { hc.textContent='موتور سلامت در دسترس نیست'; }
+    // health details + formula
+    const hb = document.getElementById('diag-health-body');
+    if(hs){
+      hb.innerHTML = `<div style="font-size:11.5px;color:var(--t3);margin-bottom:8px">فرمول امتیاز: ${hs.formula||''}</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        ${Object.entries(hs.by_state||{}).map(([k,v])=>`<span class="diag-pill diag-st-${k}" style="background:var(--accent-d)">${k}: ${v}</span>`).join('')}
+      </div>
+      <div style="margin-top:8px;font-size:11px;color:var(--t3)">هر کانفیگ با یک پروتکل‌کلاینت واقعی از مسیر عمومی تست می‌شود (WS/TLS + هدر پروتکل + خروج). کانفیگ جدید هیچ‌وقت «سالم» متولد نمی‌شود — فقط تست واقعی.</div>`;
+    } else { hb.textContent='—'; }
+    // jobs table
+    const jb = document.getElementById('diag-jobs-body');
+    if(js && js.jobs){
+      jb.innerHTML = `<div style="margin-bottom:6px;font-size:11px;color:var(--t3)">Supervisor: <b>${js.supervisor}</b>${js.uptime_s!=null?' · '+Math.round(js.uptime_s)+'s':''}</div>
+      <div style="overflow-x:auto"><table class="diag-tb"><tr><th>جاب</th><th>وضعیت</th><th>اجرا</th><th>خطا</th><th>آخرین اجرا</th><th>ms</th></tr>
+      ${js.jobs.map(j=>`<tr><td>${j.name}</td><td class="diag-st-${j.last_status==='OK'?'HEALTHY':j.last_status==='FAILED'?'UNREACHABLE':'UNKNOWN'}">${j.last_status}</td><td>${j.run_count}</td><td>${j.fail_count}</td><td>${j.last_run?new Date(j.last_run*1000).toLocaleTimeString('fa-IR'):'—'}</td><td>${j.last_duration_ms??'—'}</td></tr>`).join('')}</table></div>`;
+    } else { jb.textContent='—'; }
+    // system checks
+    const sb = document.getElementById('diag-sys-body');
+    if(dg && dg.checks){
+      const rows = [];
+      const push=(name,data)=>{ if(!data) return; const st=data.status||data.supervisor||'OK';
+        rows.push(`<tr><td>${name}</td><td>${st}</td><td style="white-space:normal;direction:ltr;text-align:left">${(data.error||data.note||'').toString().slice(0,80)}</td></tr>`); };
+      push('App',dg.checks.app); push('Persistence',dg.checks.persistence);
+      push('Protocols',dg.checks.protocols?{status:'OK',note:(dg.checks.protocols.registered||0)+' registered'}:null);
+      sb.innerHTML='<table class="diag-tb"><tr><th>بخش</th><th>وضعیت</th><th>توضیح</th></tr>'+rows.join('')+'</table>';
+    } else { sb.textContent='—'; }
+    // ip quality
+    const ib = document.getElementById('diag-ipq-body');
+    if(iq && iq.by_classification){
+      ib.innerHTML = Object.entries(iq.by_classification).filter(([,v])=>v>0).map(([k,v])=>
+        `<span class="diag-pill" style="background:var(--accent-d);color:var(--t2)">${k}: ${v}</span>`).join(' ') || '<span style="color:var(--t3);font-size:12px">هنوز IP‌ای اسکن نشده — از تب گیمینگ یا /api/ip-quality استفاده کنید</span>';
+      ib.insertAdjacentHTML('beforeend','<div style="margin-top:6px;font-size:11px;color:var(--t3)">طبقه‌بندی فقط با شواهد واقعی (TLS/ASN/Reputation) — «Clean» بدون دلیل صادر نمی‌شود.</div>');
+    } else { ib.textContent='—'; }
+    // structured errors
+    const eb = document.getElementById('diag-err-body');
+    if(dg && dg.recent_errors && dg.recent_errors.length){
+      eb.innerHTML='<div style="overflow-x:auto"><table class="diag-tb"><tr><th>زمان</th><th>کد</th><th>کامپوننت</th><th>شدت</th><th>پیام</th></tr>'
+      + dg.recent_errors.map(e=>`<tr><td>${(e.timestamp_iso||'').slice(11,19)}</td><td style="direction:ltr">${e.code}</td><td style="direction:ltr">${e.component}</td><td>${e.severity}</td><td style="white-space:normal;direction:ltr;text-align:left;max-width:420px;overflow:hidden;text-overflow:ellipsis">${(e.message||'').slice(0,110)}</td></tr>`).join('')+'</table></div>';
+    } else { eb.innerHTML='<span style="color:var(--t3)">خطای ساختاریافته‌ای ثبت نشده</span>'; }
+  }catch(e){ console.error('diag load failed', e); }
+}
+async function diagProbeAll(){
+  try{
+    const r = await fetch('/api/exp/route/configs/probe-all',{method:'POST'});
+    const j = await r.json();
+    if(j.ok!==false){ loadDiagPage(); }
+  }catch(e){ console.error(e); }
+}
+</script>
 <section class="pg" id="pg-updates">
   <div class="topbar">
     <div><div class="tb-title"><i class="ti ti-cloud-download"></i> نسخه و بروزرسانی</div><div class="tb-sub">مدیریت نسخه‌ی پنل و تاریخچه‌ی کامل بروزرسانی‌ها</div></div>
@@ -4892,7 +5007,7 @@ function navTo(name){
   document.querySelectorAll('.pg').forEach(p=>p.classList.toggle('on',p.id==='pg-'+name));
   // ورود پلکانی کارت‌ها فقط هنگام سوییچ صفحه
   if(name==='links'){document.body.classList.add('cascade');setTimeout(()=>document.body.classList.remove('cascade'),650)}
-  const loaders={links:loadLinks,bridge:loadBridgePage,connections:loadConns,errors:loadErrs,subscriptions:loadSubsPage,subgroups:loadSubs,logs:loadActivity,updates:loadVersion,support:loadSupportMsgs,nodes:loadNodesPage,zeus:loadZeusPage,gaming:loadGamingPage,multiloc:loadMultilocPage,vpn:loadVPNPage,experimental:loadExperimentalPage,'unified-configs':loadUnifiedConfigsPage};  if(loaders[name])loaders[name]();
+  const loaders={links:loadLinks,bridge:loadBridgePage,connections:loadConns,errors:loadErrs,subscriptions:loadSubsPage,subgroups:loadSubs,logs:loadActivity,updates:loadVersion,support:loadSupportMsgs,nodes:loadNodesPage,zeus:loadZeusPage,gaming:loadGamingPage,multiloc:loadMultilocPage,vpn:loadVPNPage,experimental:loadExperimentalPage,'unified-configs':loadUnifiedConfigsPage,diag:loadDiagPage};  if(loaders[name])loaders[name]();
   closeSb();window.scrollTo({top:0,behavior:'smooth'});
 }
 document.querySelectorAll('.nav-it').forEach(el=>el.addEventListener('click',()=>navTo(el.dataset.pg)));
