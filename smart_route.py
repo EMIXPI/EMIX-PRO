@@ -218,24 +218,160 @@ async def mtu_discovery(request: Request):
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# Smart Route v2 — health-weighted CONFIG ranking (Phase 8 refactor)
+# Smart Route v3 — health-weighted CONFIG ranking (Phase 8 + Phase 37.12)
 #
-# v1 (above) ranks manually-registered upstreams. v2 ranks the panel's own
-# configs using the Network Health Engine's weighted score
-# (latency 40% + handshake 20% + reachability 20% + stability 20%) —
-# never raw ping alone, never fabricated numbers.
+# v1 ranks manually-registered upstreams. v2 ranked configs by health score.
+# v3 is EXPLAINABLE and multi-factor:
+#
+#   rank = composite of
+#     health state       (HEALTHY 100 / DEGRADED 60 / UNKNOWN 30 / … 0)
+#     health score       (network_health v2 weighted formula)
+#     latency            (real probe e2e_ms, capped)
+#     jitter             (real probe stdev)
+#     loss               (real probe loss_pct)
+#     node state         (node_manager: ONLINE/DEGRADED/OFFLINE/…)
+#     node load          (0-100 when known)
+#     protocol capability(PRODUCTION protocol = full weight; others demoted)
+#     reliability        (probe sample count — more evidence = more trust)
+#
+# Every row carries `ranking_reason` with the ACTUAL numbers behind the
+# decision — never a generic string. Expired health evidence downgrades to
+# UNKNOWN (never stale-HEALTHY). Pure function rank_rows() is unit-tested.
 # ══════════════════════════════════════════════════════════════════════════════
+
+import network_health as _nh
+
+_HEALTH_WEIGHT = {"HEALTHY": 100.0, "DEGRADED": 60.0, "UNKNOWN": 30.0,
+                  "UNREACHABLE": 5.0, "INVALID": 0.0}
+_NODE_WEIGHT = {"ONLINE": 1.0, "REGISTER": 0.6, "DEGRADED": 0.5,
+                "OFFLINE": 0.0, "MAINTENANCE": 0.0}
+_LAT_CAP = 2000.0
+_JITTER_CAP = 300.0
+
+
+def _factor_health(row):
+    state = row.get("health_state") or "UNKNOWN"
+    return _HEALTH_WEIGHT.get(state, 30.0), state
+
+
+def _factor_latency(row):
+    lat = row.get("latency_ms")
+    if lat is None:
+        return 0.0, None
+    return max(0.0, 1.0 - min(lat, _LAT_CAP) / _LAT_CAP) * 100.0, lat
+
+
+def _factor_jitter(row):
+    j = row.get("jitter_ms")
+    if j is None:
+        return 0.0, None
+    return max(0.0, 1.0 - min(j, _JITTER_CAP) / _JITTER_CAP) * 100.0, j
+
+
+def _factor_loss(row):
+    l = row.get("loss_pct")
+    if l is None:
+        return 0.0, None
+    return max(0.0, 100.0 - min(l, 100.0)), l
+
+
+def _factor_reliability(row):
+    n = row.get("samples") or 0
+    return min(100.0, n * 20.0), n  # 5+ samples = full reliability weight
+
+
+def _factor_capability(row):
+    protocol = row.get("protocol", "")
+    p = protocol.split("-")[0]
+    readiness = {"vless": "PRODUCTION", "trojan": "PRODUCTION",
+                 "shadowsocks": "PRODUCTION", "mtproto": "PRODUCTION"}.get(p, "")
+    return (100.0 if readiness == "PRODUCTION" else 40.0), readiness or "UNKNOWN"
+
+
+def rank_rows(rows):
+    """PURE: compute composite score + explainable ranking_reason per row.
+
+    weights: health 0.30, score 0.20, latency 0.15, jitter 0.10, loss 0.10,
+    node 0.10, reliability 0.05, capability ×node_factor (multiplicative gate)
+    """
+    out = []
+    for row in rows:
+        health_f, state = _factor_health(row)
+        lat_f, lat = _factor_latency(row)
+        jit_f, jit = _factor_jitter(row)
+        loss_f, loss = _factor_loss(row)
+        rel_f, samples = _factor_reliability(row)
+        cap_f, readiness = _factor_capability(row)
+        node_state = row.get("node_state") or "UNKNOWN"
+        node_factor = _NODE_WEIGHT.get(node_state, 0.5)
+        node_load = row.get("node_load")
+        load_f = 100.0
+        if node_load is not None:
+            if node_load >= 85:
+                load_f = 60.0
+            elif node_load >= 70:
+                load_f = 85.0
+        score_f = row.get("score") if row.get("score") is not None else 0.0
+
+        composite = (0.30 * health_f + 0.20 * score_f + 0.15 * lat_f +
+                     0.10 * jit_f + 0.10 * loss_f + 0.10 * (load_f * node_factor) +
+                     0.05 * rel_f) * node_factor * (cap_f / 100.0)
+
+        parts = [f"Health {state}", f"score {score_f:.0f}" if row.get("score") is not None else "score n/a"]
+        if lat is not None:
+            parts.append(f"latency {lat:.0f}ms")
+        if loss is not None:
+            parts.append(f"loss {loss:.0f}%")
+        if jit is not None:
+            parts.append(f"jitter {jit:.0f}ms")
+        if node_state != "UNKNOWN":
+            parts.append(f"node {node_state}")
+        if node_load is not None:
+            parts.append(f"load {node_load:.0f}%")
+        parts.append(f"{samples} samples" if samples else "never probed")
+        reason = " · ".join(parts) + (f" — {readiness}" if readiness != "PRODUCTION" else "")
+        base_reason = (row.get("rank_reason") or "").strip()
+        if base_reason:
+            reason = f"{base_reason} — {reason}"
+
+        r = dict(row)
+        r["composite_score"] = round(composite, 1)
+        r["ranking_reason"] = reason
+        out.append(r)
+
+    order = {"HEALTHY": 0, "DEGRADED": 1, "UNKNOWN": 2, "UNREACHABLE": 3, "INVALID": 4}
+    out.sort(key=lambda r: (
+        -r["composite_score"],
+        order.get(r.get("health_state"), 5),
+        r["latency_ms"] if r.get("latency_ms") is not None else 99999,
+    ))
+    return out
+
+
+def _node_context(uid: str, link: dict) -> tuple[str, Optional[float]]:
+    """Node state + load for a link's serving node (defaults to the panel node)."""
+    try:
+        import node_manager
+        node_id = link.get("node_id") or "panel"
+        rec = node_manager.get_node(node_id)
+        if rec is None:
+            return "UNKNOWN", None
+        state, _ = node_manager.derive_state(rec)
+        return state, rec.load
+    except Exception:
+        return "UNKNOWN", None
+
 
 @router.get("/api/exp/route/configs/ranked")
 async def ranked_configs(_limit: int = 20):
-    """All allowed configs ranked by health score (real probe evidence only).
+    """All allowed configs ranked by composite health factors (v3, explainable).
 
     Response rows:
       uid, label, protocol, health_state, score, latency_ms, handshake_ms,
-      jitter_ms, loss_pct, samples, rank_reason
+      jitter_ms, loss_pct, samples, node_state, node_load,
+      composite_score, rank_reason
     """
     from main import LINKS, LINKS_LOCK, is_link_allowed  # late import — no cycle
-    import network_health
 
     async with LINKS_LOCK:
         targets = {uid: dict(d) for uid, d in LINKS.items()}
@@ -243,7 +379,8 @@ async def ranked_configs(_limit: int = 20):
     rows = []
     for uid, link in targets.items():
         allowed = is_link_allowed(link)
-        rec = network_health.get_health(uid)
+        rec = _nh.get_health(uid)
+        node_state, node_load = _node_context(uid, link)
         if rec is None:
             rows.append({
                 "uid": uid, "label": link.get("label", uid[:8]),
@@ -251,30 +388,32 @@ async def ranked_configs(_limit: int = 20):
                 "health_state": "INVALID" if not allowed else "UNKNOWN",
                 "score": None, "latency_ms": None, "handshake_ms": None,
                 "jitter_ms": None, "loss_pct": None, "samples": 0,
+                "node_state": node_state, "node_load": node_load,
                 "rank_reason": "not allowed" if not allowed else "never probed",
             })
             continue
         if not allowed and rec.state != "INVALID":
-            network_health.mark_invalid(uid, link, "config not allowed")
-            rec = network_health.get_health(uid)
+            _nh.mark_invalid(uid, link, "config not allowed")
+            rec = _nh.get_health(uid)
         rows.append({
             "uid": uid, "label": link.get("label", uid[:8]),
             "protocol": link.get("protocol", "vless-ws"),
-            "health_state": rec.state,
+            "health_state": rec.effective_state(),
             "score": rec.score, "latency_ms": rec.latency_ms,
             "handshake_ms": rec.handshake_ms, "jitter_ms": rec.jitter_ms,
             "loss_pct": rec.loss_pct, "samples": rec.samples,
-            "rank_reason": "weighted: latency 40% + handshake 20% + reachability 20% + stability 20%",
+            "node_state": node_state, "node_load": node_load,
+            "rank_reason": "",
         })
 
-    order = {"HEALTHY": 0, "DEGRADED": 1, "UNKNOWN": 2, "UNREACHABLE": 3, "INVALID": 4}
-    rows.sort(key=lambda r: (order.get(r["health_state"], 5), -(r["score"] or 0),
-                             r["latency_ms"] if r["latency_ms"] is not None else 99999))
+    rows = rank_rows(rows)
     return {
         "ok": True,
         "total": len(rows),
         "ranking": rows[:max(1, _limit)],
-        "formula": "0.40*latency + 0.20*handshake + 0.20*reachability + 0.20*stability (real probes only)",
+        "formula": ("composite = 0.30·health + 0.20·score + 0.15·latency + "
+                    "0.10·jitter + 0.10·loss + 0.10·node(load×state) + "
+                    "0.05·reliability, ×node_factor ×capability (real probes only)"),
         "checked_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
     }
 

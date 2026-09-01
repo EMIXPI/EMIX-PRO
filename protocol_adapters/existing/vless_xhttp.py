@@ -1,8 +1,10 @@
 # protocol_adapters/existing/vless_xhttp.py — wraps protocol/vless/xhttp_*.py
 #
-# The existing XHTTP implementation has 4 modes (stream-up, packet-up,
-# stream-on, packet-up-on). All are real and functional. This adapter
-# exposes them through the ProtocolAdapter interface.
+# Phase 37 honest description: the panel implements TWO validated XHTTP
+# modes — packet-up (POST + seq / reordering buffer) and stream-up
+# (single continuous POST). The GET downlink route serves both. Earlier
+# docs mentioned 4 modes; "stream-on" was folded into the shared GET
+# downlink and "packet-up-on" never had a server implementation.
 
 import logging
 from protocol_engine import (
@@ -17,8 +19,9 @@ logger = logging.getLogger("EMIX.adapter.vless_xhttp")
 
 class VlessXhttpAdapter(ExistingAdapterBase):
     name = "vless-xhttp"
-    version = "1.0.0"
-    description = "VLESS over XHTTP (4 modes: stream-up, packet-up, stream-on, packet-up-on)"
+    version = "1.1.0"
+    description = ("VLESS over XHTTP (2 validated modes: stream-up, packet-up; "
+                   "shared GET downlink)")
 
     def capabilities(self) -> Capabilities:
         return Capabilities(

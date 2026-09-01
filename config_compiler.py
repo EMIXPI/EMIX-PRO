@@ -20,15 +20,21 @@ from __future__ import annotations
 import base64
 import hashlib
 import json
+import re
 import time
 from dataclasses import dataclass, field
 from typing import Optional, Callable, List
-from urllib.parse import quote
+from urllib.parse import quote, urlparse
 
 import compat
 import endpoint_profiles
 
 CONFIG_VERSION = 1
+
+# Phase 37.4 — semantic validation tables
+_UUID_RE = re.compile(r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
+_SS_CIPHER_WHITELIST = frozenset({"chacha20-ietf-poly1305", "aes-256-gcm"})
+_MTPROTO_SECRET_RE = re.compile(r"^(?:ee|dd)?[0-9a-fA-F]{16,64}$")
 
 
 # ── Input spec ──────────────────────────────────────────────────────────────
@@ -114,6 +120,107 @@ def normalize_spec(spec: ConfigSpec) -> ConfigSpec:
         spec.security = "none"
         spec.transport = "tcp"
     return spec
+
+
+# ── Semantic validation (Phase 37.4) ─────────────────────────────────────────
+
+def validate_credentials(spec: ConfigSpec) -> List[str]:
+    """Credential FORMAT validation — fail with an exact explanation.
+
+    strict (new-spec) path validates everything; the legacy stored-link path
+    (spec.link set) validates the minimum that guarantees a parseable URI
+    (UUID shape for vless/trojan) so byte-compatible re-emission of stored
+    configs cannot be blocked by newly added rules.
+    """
+    errors: List[str] = []
+    strict = spec.link is None
+    cred = (spec.credential or "").strip()
+    if spec.protocol in ("vless", "trojan"):
+        if not cred:
+            errors.append("credential (uuid/password) required")
+        elif not _UUID_RE.fullmatch(cred):
+            errors.append(
+                f"invalid credential format for {spec.protocol}: "
+                f"expected UUID 8-4-4-4-12 hex, got {cred[:24]!r}"
+                + ("" if len(cred) <= 24 else "…"))
+    elif spec.protocol == "shadowsocks":
+        if not spec.ss_cipher:
+            errors.append("ss_cipher required for shadowsocks")
+        elif spec.ss_cipher not in _SS_CIPHER_WHITELIST and strict:
+            errors.append(
+                f"unsupported ss_cipher {spec.ss_cipher!r} — AEAD server supports "
+                f"{sorted(_SS_CIPHER_WHITELIST)}")
+        if not spec.ss_password:
+            errors.append("ss_password required for shadowsocks")
+        elif strict and len(spec.ss_password) < 4:
+            errors.append("ss_password too short (min 4 chars for AEAD key derivation)")
+    elif spec.protocol == "mtproto":
+        if not cred:
+            errors.append("credential (mtproto secret) required")
+        elif strict and not _MTPROTO_SECRET_RE.fullmatch(cred):
+            errors.append(
+                f"invalid mtproto secret format: expected hex (optionally ee/dd "
+                f"prefixed FakeTLS/plain), got {cred[:20]!r}")
+    return errors
+
+
+def validate_endpoint_semantics(ep: endpoint_profiles.ResolvedEndpoint) -> List[str]:
+    """Endpoint-level semantic validation (port / address / TLS fields)."""
+    errors: List[str] = []
+    if not ep.address or not ep.address.strip():
+        errors.append("endpoint address is empty")
+    else:
+        ok, _ = endpoint_profiles.validate_hostname(ep.address, allow_ip=True)
+        if not ok:
+            errors.append(f"invalid endpoint address: {ep.address!r}")
+    ok_p, port = endpoint_profiles.validate_port(ep.port)
+    if not ok_p:
+        errors.append(f"invalid endpoint port: {ep.port!r} (must be 1-65535)")
+    else:
+        ep.port = port
+    if ep.security == "tls":
+        ok_s, _ = endpoint_profiles.validate_hostname(ep.sni) if ep.sni else (True, None)
+        if not ok_s:
+            errors.append(f"invalid TLS SNI: {ep.sni!r} (must be a hostname, not an IP)")
+    return errors
+
+
+def parse_and_validate_uri(uri: str, spec: ConfigSpec,
+                           ep: endpoint_profiles.ResolvedEndpoint) -> List[str]:
+    """Phase 37.4 parse-back validation: schema, userinfo, port, params.
+
+    Runs on every successfully emitted URI — the generated artifact is
+    re-parsed and must satisfy the same contract we ask of imported ones.
+    """
+    problems: List[str] = []
+    try:
+        parts = urlparse(uri)
+    except Exception as exc:
+        return [f"emitted URI is malformed: {exc}"]
+    if not parts.scheme:
+        problems.append("emitted URI has no scheme")
+    expected = {"vless": "vless", "trojan": "trojan",
+                "shadowsocks": "ss", "mtproto": "tg"}.get(spec.protocol, "")
+    if expected and parts.scheme != expected:
+        problems.append(f"scheme mismatch: got {parts.scheme!r}, expected {expected!r}")
+    if parts.scheme in ("vless", "trojan"):
+        if not parts.username:
+            problems.append("missing credential in userinfo")
+        elif not _UUID_RE.fullmatch(parts.username):
+            problems.append(f"credential in userinfo is not a valid UUID: {parts.username[:20]!r}")
+        try:
+            port = parts.port
+            if port is None or not (1 <= port <= 65535):
+                problems.append(f"invalid port in authority: {parts.netloc!r}")
+        except ValueError:
+            problems.append(f"port in authority is not numeric: {parts.netloc!r}")
+    if parts.scheme == "ss":
+        if not parts.username:
+            problems.append("ss userinfo (base64 method:password) missing")
+    if parts.scheme == "tg":
+        if "server=" not in (parts.query or "") or "port=" not in (parts.query or ""):
+            problems.append("tg link missing server/port query parameters")
+    return problems
 
 
 # ── Deterministic checksum ──────────────────────────────────────────────────
@@ -299,11 +406,8 @@ def compile_config(spec: ConfigSpec) -> CompiledConfig:
     if not c.ok:
         return CompiledConfig(ok=False, errors=[f"incompatible combination: {'; '.join(c.reasons)}"])
 
-    # 2. completeness
-    if spec.protocol in ("vless", "trojan") and not spec.credential:
-        errors.append("credential (uuid/password) required")
-    if spec.protocol == "shadowsocks" and not (spec.ss_cipher and spec.ss_password):
-        errors.append("ss_cipher and ss_password required for shadowsocks")
+    # 2. completeness + credential format (Phase 37.4 — fail with exact reason)
+    errors.extend(validate_credentials(spec))
     if spec.protocol == "mtproto" and not (spec.mtproto_public_host and spec.mtproto_public_port):
         errors.append("mtproto requires public host/port (Railway TCP proxy)")
     if not spec.host and spec.endpoint is None:
@@ -334,6 +438,11 @@ def compile_config(spec: ConfigSpec) -> CompiledConfig:
             f"the link format carries no sni parameter"
         ])
 
+    # 4b. endpoint semantics (Phase 37.4: address / port / TLS SNI shape)
+    ep_errors = validate_endpoint_semantics(ep)
+    if ep_errors:
+        return CompiledConfig(ok=False, errors=ep_errors)
+
     # 5. emit URI
     uri: Optional[str] = None
     if spec.protocol == "mtproto":
@@ -356,8 +465,9 @@ def compile_config(spec: ConfigSpec) -> CompiledConfig:
             else _emit_vless_xhttp(spec, ep, spec.credential, spec.transport.replace("xhttp-", ""))
         )
 
-    # 6. self-check
+    # 6. self-check (structural) + parse-back validation (Phase 37.4)
     errors.extend(_self_check(uri or "", spec, ep))
+    errors.extend(parse_and_validate_uri(uri or "", spec, ep))
     if errors:
         return CompiledConfig(ok=False, errors=errors, uri=uri)
 

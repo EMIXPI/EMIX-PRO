@@ -38,9 +38,13 @@ import aiofiles
 import compat
 import endpoint_profiles
 import config_compiler
+import config_lifecycle
+import node_manager
+import runtime_supervisor
 import network_health
 import diagnostics as diagnostics_mod
 from job_system import jobs as job_system
+from config_layer import CONFIG as _EMIX_RUNTIME_CFG  # audit fix: env knobs are now real
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 from urllib.parse import quote
@@ -163,6 +167,37 @@ async def load_state():
                 endpoint_profiles.restore_snapshot(data)
             except Exception as _ep_exc:
                 logger.warning(f"endpoint_profiles restore failed (ignored): {_ep_exc}")
+            # Node Manager restore (Phase 37.9)
+            try:
+                node_manager.restore_snapshot(data)
+            except Exception as _nm_exc:
+                logger.warning(f"node_manager restore failed (ignored): {_nm_exc}")
+            # ── Audit fix 2026-09 (P1 persistence restore) ─────────────────────
+            try:
+                import sni_management
+                n_sni = sni_management.restore_snapshot(data)
+                if n_sni:
+                    logger.info(f"sni_management: {n_sni} profiles restored")
+            except Exception as _sni_exc:
+                logger.warning(f"sni_profiles restore failed (ignored): {_sni_exc}")
+            try:
+                import vpn_pro
+                n_vpn = vpn_pro.restore_snapshot(data)
+                if n_vpn:
+                    logger.info(f"vpn_pro: {n_vpn} VPN nodes restored (keys intact)")
+            except Exception as _vpn_exc:
+                logger.warning(f"vpn_nodes restore failed (ignored): {_vpn_exc}")
+            # Sessions: restore non-expired tokens (survive redeploy)
+            now_ts = time.time()
+            for tok, exp in (data.get("sessions") or {}).items():
+                if isinstance(tok, str) and isinstance(exp, (int, float)) and exp > now_ts:
+                    SESSIONS[tok] = exp
+            # Lifetime traffic totals
+            totals = data.get("stats_totals") or {}
+            if isinstance(totals, dict):
+                stats["total_bytes"] = int(totals.get("total_bytes") or 0)
+                stats["total_requests"] = int(totals.get("total_requests") or 0)
+                stats["total_errors"] = int(totals.get("total_errors") or 0)
             NODE_KEYS.update(data.get("node_keys", {}))
             for nid, n in (data.get("nodes") or {}).items():
                 NODES[nid] = _normalize_node(n)
@@ -200,6 +235,22 @@ async def save_state():
                 # the standalone SNI-spoof store; legacy spoof fields already
                 # live inside each link record.
                 "endpoint_profiles": endpoint_profiles.persist_snapshot().get("endpoint_profiles", []),
+                # Node Manager (Phase 37.9) — node registry + heartbeat history
+                "managed_nodes": node_manager.persist_snapshot(),
+                # ── Audit fix 2026-09 (P1 persistence): این‌ها قبلاً فقط
+                # در-memory بودند و بعد از هر restart از بین می‌رفتند.
+                # (importها defensive هستند چون این ماژول‌ها در try/except
+                # دیرهنگام bootstrap می‌شوند.)
+                **_persist_optional_engines(),
+                # Sessions survive restarts (Railway redeploy خروج اجباری نمی‌دهد)
+                "sessions": {t: exp for t, exp in SESSIONS.items() if exp > time.time()},
+                # Lifetime traffic totals (per-link used_bytes قبلاً هم ذخیره
+                # می‌شد؛ این مجموع‌های session-bound بودند که ریست می‌شدند)
+                "stats_totals": {
+                    "total_bytes": stats.get("total_bytes", 0),
+                    "total_requests": stats.get("total_requests", 0),
+                    "total_errors": stats.get("total_errors", 0),
+                },
                 "saved_at": datetime.now().isoformat(),
             }
             tmp = DATA_FILE.with_suffix(".tmp")
@@ -210,6 +261,22 @@ async def save_state():
             logger.warning(f"Could not save state: {e}")
 
 
+def _persist_optional_engines() -> dict:
+    """Snapshots of engines whose bootstrap import may have been skipped."""
+    out: dict = {}
+    try:
+        import sni_management
+        out["sni_profiles"] = sni_management.persist_snapshot().get("sni_profiles", [])
+    except Exception:
+        out["sni_profiles"] = []
+    try:
+        import vpn_pro
+        out["vpn_nodes"] = vpn_pro.persist_snapshot().get("vpn_nodes", [])
+    except Exception:
+        out["vpn_nodes"] = []
+    return out
+
+
 # ── Debounced save ─────────────────────────────────────────────────────────────
 # هر بار که یک کانکشن (trojan/vless/shadowsocks/xhttp) بسته میشه، schedule_save()
 # صدا زده میشه به‌جای save_state() مستقیم. اگه صدها کانکشن در ثانیه باز و بسته بشن
@@ -217,7 +284,9 @@ async def save_state():
 # تعداد، کل state سریالایز و روی دیسک نوشته بشه و event loop تک‌هسته‌ای رو مسدود کنه.
 # اینجا چندین درخواست ذخیره‌سازی که در بازه‌ی SAVE_DEBOUNCE_SECONDS اتفاق بیفتن،
 # در یک نوشتن واحد روی دیسک ادغام میشن.
-SAVE_DEBOUNCE_SECONDS = 2.0
+# Audit fix: EMIX_SAVE_DEBOUNCE قبلاً در ۵ مستند ذکر شده بود ولی هرگز خوانده
+# نمی‌شد (hardcoded 2.0). حالا واقعاً از config_layer خوانده می‌شود.
+SAVE_DEBOUNCE_SECONDS = float(_EMIX_RUNTIME_CFG.save_debounce_seconds)
 _save_pending = False
 _save_dirty_again = False
 
@@ -340,7 +409,9 @@ def log_activity(kind: str, message: str, level: str = "info"):
 
 # ── Auth ──────────────────────────────────────────────────────────────────────
 SESSION_COOKIE = "rvg_session"
-SESSION_TTL = 60 * 60 * 24 * 7
+# Audit fix: EMIX_SESSION_TTL قبلاً در مستندات ذکر شده بود ولی هرگز خوانده
+# نمی‌شد (hardcoded 7d). حالا واقعاً از config_layer خوانده می‌شود.
+SESSION_TTL = int(_EMIX_RUNTIME_CFG.session_ttl_seconds)
 
 def hash_password(pw: str) -> str:
     return hashlib.sha256(f"{pw}{CONFIG['secret']}".encode()).hexdigest()
@@ -426,7 +497,23 @@ async def _job_health_sweep():
     async def _links_provider():
         async with LINKS_LOCK:
             return [(uid, dict(d)) for uid, d in LINKS.items() if is_link_allowed(d)]
-    return await network_health.sweep(links_provider=_links_provider, concurrency=4)
+    result = await network_health.sweep(links_provider=_links_provider, concurrency=4)
+    # Audit fix (P0): sweep probes COPIES of link dicts (the lock must not be
+    # held across network I/O), so the engine's link["health"] side-effect
+    # wrote to throwaway dicts and background sweep results were NEVER
+    # persisted. Write the engine's records back into the live LINKS here.
+    if result.get("ok"):
+        persisted = 0
+        async with LINKS_LOCK:
+            for uid in list(LINKS.keys()):
+                rec = network_health.get_health_dict(uid)
+                if rec is not None and LINKS[uid].get("health") != rec:
+                    LINKS[uid]["health"] = rec
+                    persisted += 1
+        if persisted:
+            asyncio.create_task(schedule_save())
+        result["persisted"] = persisted
+    return result
 
 
 async def _job_expiry_sweep():
@@ -450,6 +537,217 @@ async def _job_ip_quality_prune():
     return {"pruned": len(stale)}
 
 
+# ─── Phase 37 jobs: node heartbeat / runtime supervision / mtproto stats ────
+
+async def _job_node_heartbeat():
+    """Node Manager sweep (37.9): evaluate runtime health + expire stale states."""
+    for rec in list(node_manager.list_nodes()):
+        nid = rec.get("id")
+        if nid and rec.get("kind") in ("panel", "worker", "vps"):
+            await node_manager.evaluate_runtime_health(nid)
+    states = await node_manager.check_all()
+    return {"nodes": len(states),
+            "online": sum(1 for s in states.values() if s["state"] == "ONLINE")}
+
+
+async def _job_runtime_supervision():
+    """Runtime supervisor pass (37.10): crash detection + backoff restarts."""
+    results = await runtime_supervisor.supervisor.monitor_once()
+    acted = {rid: r for rid, r in results.items() if r.get("action") not in ("none", "error")}
+    if acted:
+        log_activity("system", f"runtime supervision acted on {len(acted)} runtime(s)", "warn")
+    return {"checked": len(results), "acted": len(acted)}
+
+
+async def _job_mtproto_stats():
+    """Poll MTProto binary stats (37.10): honest activity accounting."""
+    try:
+        from protocol.mtproto import mtproto_native as _mtp
+        return await _mtp.poll_all_stats()
+    except Exception as exc:
+        return {"error": str(exc)[:120]}
+
+
+async def _job_lifecycle_reconcile():
+    """Config lifecycle reconciliation (37.11): refresh derived states on links."""
+    async with LINKS_LOCK:
+        targets = {uid: dict(d) for uid, d in LINKS.items()}
+    updated = 0
+    for uid, link in targets.items():
+        ann = config_lifecycle.lifecycle_annotation(uid, link, network_health.get_health_dict(uid))
+        async with LINKS_LOCK:
+            live = LINKS.get(uid)
+            if live is not None and live.get("lifecycle_state") != ann["lifecycle_state"]:
+                live["lifecycle_state"] = ann["lifecycle_state"]
+                live["lifecycle_reason"] = ann["lifecycle_reason"]
+                updated += 1
+    if updated:
+        asyncio.create_task(schedule_save())
+    return {"reconciled": len(targets), "changed": updated}
+
+
+# ─── Node registration + runtime health evaluators (Phase 37.9) ────────────
+
+async def _panel_runtime_health(rec):
+    """Panel node: healthy only when its in-panel relays actually serve.
+
+    Evidence = Network Health Engine results for configs served by this node
+    (NOT an HTTP ping of the panel). DEGRADED when >1/3 tracked configs are
+    UNREACHABLE; DOWN when every tracked config is UNREACHABLE with evidence.
+    """
+    summary = network_health.summary()
+    by = summary.get("by_state", {})
+    tracked = summary.get("tracked", 0)
+    if tracked == 0:
+        return {"runtime_health": "UNKNOWN",
+                "load": None, "clients": None}
+    unreachable = by.get("UNREACHABLE", 0)
+    healthy = by.get("HEALTHY", 0)
+    if unreachable >= tracked:
+        return {"runtime_health": "DOWN", "load": 100.0, "clients": None}
+    if unreachable / tracked > 0.34:
+        return {"runtime_health": "DEGRADED",
+                "load": round(100.0 * unreachable / tracked, 1), "clients": None}
+    load = 100.0 * (tracked - healthy) / tracked if tracked else 0.0
+    # Audit fix: قبلاً `'connections' in dir()` بود که در scope تابع همیشه False
+    # است (dir() فقط local names را می‌دهد) → clients همیشه None بود.
+    try:
+        clients = len(connections)
+    except NameError:
+        clients = None
+    return {"runtime_health": "OK", "load": round(load, 1), "clients": clients}
+
+
+async def _worker_runtime_health(rec):
+    """Cloudflare Worker node: probed via the gaming/worker health path."""
+    try:
+        import gaming_boost
+        # worker health is validated through the WTE path when configured;
+        # without a worker token the honest answer is UNKNOWN.
+        token = getattr(gaming_boost, "WORKER_TOKEN", "") or ""
+        if not token:
+            return {"runtime_health": "UNKNOWN", "load": None, "clients": None}
+        res = await gaming_boost._call_worker("gateway-status")
+        ok = bool(res and res.get("ok"))
+        return {"runtime_health": "OK" if ok else "DEGRADED",
+                "load": None, "clients": None}
+    except Exception:
+        return {"runtime_health": "UNKNOWN", "load": None, "clients": None}
+
+
+async def _vps_runtime_health(rec):
+    """Gaming VPS node: real TCP+TLS+certificate probe of the bridge."""
+    try:
+        import gaming_boost
+        vps_ip = (gaming_boost._gaming_state().get("vps_ip") or "").strip()
+        if not vps_ip:
+            return {"runtime_health": "UNKNOWN", "load": None, "clients": None}
+        res = await gaming_boost._vps_health(vps_ip)
+        ok = bool(res and res.get("tls_ok"))
+        return {"runtime_health": "OK" if ok else "DEGRADED",
+                "load": None, "clients": None}
+    except Exception:
+        return {"runtime_health": "UNKNOWN", "load": None, "clients": None}
+
+
+def _register_managed_nodes() -> None:
+    """Register the traffic-carrying nodes of this deployment (37.9)."""
+    async def _reg():
+        await node_manager.register_node(node_manager.NodeRecord(
+            id="panel", name="EMIX Panel (in-panel relays)", kind="panel",
+            runtime="in-panel-relays",
+            capabilities=list(compat.SERVER_RUNTIME.keys()) and
+            [f"{p}-{t}" if t != "tcp" else p for (p, t) in compat.SERVER_RUNTIME],
+            region="", address="",
+        ))
+    node_manager.register_runtime_health_fn("panel", _panel_runtime_health)
+    node_manager.register_runtime_health_fn("worker", _worker_runtime_health)
+    node_manager.register_runtime_health_fn("vps", _vps_runtime_health)
+    asyncio.create_task(_reg())
+
+
+def _supervise_mtproto_instance(uuid: str) -> None:
+    """(Re)attach the runtime supervisor to ONE MTProto instance.
+
+    Audit fix (37.10 gap): instances created AFTER boot (link-create path,
+    ad_tag update) were never registered with the Runtime Supervisor —
+    crash detection/backoff only covered boot-time instances. Idempotent:
+    safe to call repeatedly (supervisor.register keeps existing counters).
+    """
+    try:
+        from protocol.mtproto import mtproto_native as _mtp
+        info = _mtp.instance_runtime_status(uuid)
+        if not info.get("exists"):
+            return
+        link = LINKS.get(uuid) or {}
+        runtime_supervisor.supervisor.register(
+            runtime_supervisor.SupervisedRuntime(
+                id=f"mtproto-{uuid[:8]}",
+                name=f"MTProto instance {link.get('label', uuid[:8])}",
+                kind="mtproto-subprocess",
+                node_id="panel",
+                is_alive_fn=(lambda u=uuid: _mtp.instance_runtime_status(u).get("alive", False)),
+                restart_fn=(lambda u=uuid, l=dict(link):
+                            _restart_mtproto_instance(u, l)),
+            )
+        )
+    except Exception as exc:
+        logger.warning(f"[supervisor] MTProto[{uuid[:8]}] attach failed: {exc}")
+
+
+async def _register_mtproto_runtimes() -> None:
+    """Attach the runtime supervisor to live MTProto instances (37.10)."""
+    try:
+        from protocol.mtproto import mtproto_native as _mtp
+    except Exception:
+        return
+    for uuid in _mtp.list_instance_uuids():
+        _supervise_mtproto_instance(uuid)
+
+
+async def _restart_mtproto_instance(uuid: str, link: dict) -> bool:
+    """Restart one MTProto instance (supervisor callback, 37.10)."""
+    try:
+        from protocol.mtproto import mtproto_native as _mtp
+        await _mtp.stop_instance(uuid)
+        await _mtp.start_instance(
+            uuid,
+            secret=link.get("mtproto_secret"),
+            domain=link.get("mtproto_domain"),
+            preferred_port=link.get("mtproto_port"),
+            ad_tag=link.get("mtproto_ad_tag"),
+        )
+        return True
+    except Exception as exc:
+        logger.warning(f"supervisor: mtproto restart {uuid[:8]} failed: {exc}")
+        return False
+
+
+async def _mtproto_activity_callback(uuid: str, stats: dict) -> None:
+    """Record honest MTProto activity evidence on the link record (37.10)."""
+    async with LINKS_LOCK:
+        link = LINKS.get(uuid)
+        if link is None:
+            return
+        link["mtproto_stats"] = {
+            "active_connections": stats.get("active_connections"),
+            "connections_total": stats.get("connections_total"),
+            "queries_total": stats.get("queries_total"),
+        }
+        link["mtproto_last_activity_ts"] = stats.get("ts")
+
+
+def _register_phase37_jobs() -> None:
+    job_system.register("node-heartbeat", _job_node_heartbeat,
+                        interval=120.0, timeout=60.0, retries=1)
+    job_system.register("runtime-supervision", _job_runtime_supervision,
+                        interval=60.0, timeout=60.0, retries=1)
+    job_system.register("mtproto-stats", _job_mtproto_stats,
+                        interval=120.0, timeout=30.0, retries=1)
+    job_system.register("lifecycle-reconcile", _job_lifecycle_reconcile,
+                        interval=300.0, timeout=30.0, retries=1)
+
+
 def _register_default_jobs() -> None:
     if _HEALTH_SWEEP_ENABLED:
         job_system.register("health-sweep", _job_health_sweep,
@@ -458,6 +756,7 @@ def _register_default_jobs() -> None:
                         interval=_EXPIRY_SWEEP_INTERVAL, timeout=30.0, retries=1)
     job_system.register("ip-quality-prune", _job_ip_quality_prune,
                         interval=3600.0, timeout=30.0, retries=1)
+    _register_phase37_jobs()
 
 
 async def _persistence_health() -> dict:
@@ -499,12 +798,22 @@ async def startup():
     except Exception as _nh_exc:
         logger.warning(f"[startup] network_health wiring failed: {_nh_exc}")
 
-    # ─── Background Job System (Phase 20) ─────────────────────────────────
+    # ─── Background Job System (Phase 20 + Phase 37) ─────────────────────
     try:
         _register_default_jobs()
         await job_system.start()
     except Exception as _job_exc:
         logger.warning(f"[startup] job system failed to start: {_job_exc}")
+
+    # ─── Node Manager + MTProto activity wiring (Phase 37.9/37.10) ────────
+    try:
+        _register_managed_nodes()
+    except Exception as _nm_exc:
+        logger.warning(f"[startup] node manager registration failed: {_nm_exc}")
+    try:
+        mtproto.set_activity_callback(_mtproto_activity_callback)
+    except Exception as _cb_exc:
+        logger.warning(f"[startup] mtproto activity callback wiring failed: {_cb_exc}")
 
     # ─── Diagnostics persistence probe (Phase 21) ─────────────────────────
     diagnostics_mod.set_persistence_probe(_persistence_health)
@@ -517,6 +826,11 @@ async def startup():
     except Exception as _e:
         logger.warning(f"[startup] ensure_default_link ناموفق بود: {_e}")
     await _restart_mtproto_instances()
+    # attach the runtime supervisor to live MTProto subprocesses (37.10)
+    try:
+        await _register_mtproto_runtimes()
+    except Exception as _rs_exc:
+        logger.warning(f"[startup] runtime supervisor registration failed: {_rs_exc}")
     log_activity("system", "سرور راه‌اندازی شد", "ok")
     logger.info(f"EMIX v{EMIX_VERSION} started on port {CONFIG['port']}")
     # ─── هشدار پایداری دیتا روی Railway ────────────────────────────────────
@@ -682,6 +996,7 @@ async def _update_mtproto_ad_tag(uuid: str, ad_tag: str):
             link["ad_tag_link"] = generate_share_link(
                 uuid, get_host(), remark=f"EMIX-{link.get('label','')}", protocol="mtproto"
             )
+        _supervise_mtproto_instance(uuid)  # audit fix: re-supervise after ad_tag restart
 
         if inst["port"] != old_port and old_proxy_id and not manual_port:
             asyncio.create_task(_reattach_mtproto_public_proxy(
@@ -1569,9 +1884,16 @@ async def sub_group_subscription(uuid_key: str, request: Request):
 async def api_login(request: Request):
     body = await request.json()
     ip = client_ip(request)
+    # Brute-force guard (audit fix): همیشه فعال؛ فقط شکست‌ها شمرده می‌شوند.
+    from security_exp import login_rate_limited, record_login_failure, clear_login_failures
+    if login_rate_limited(ip):
+        log_activity("auth", f"ورود مسدود (rate-limit) از {ip}", "err")
+        raise HTTPException(status_code=429, detail="تعداد تلاش‌های ناموفق بیش از حد. ۱۵ دقیقه صبر کنید.")
     if hash_password(str(body.get("password", ""))) != AUTH["password_hash"]:
+        record_login_failure(ip)
         log_activity("auth", f"تلاش ورود ناموفق از {ip}", "err")
         raise HTTPException(status_code=401, detail="رمز عبور اشتباه است")
+    clear_login_failures(ip)
     token = await create_session()
     log_activity("auth", f"ورود موفق به پنل از {ip}", "ok")
     resp = JSONResponse({"ok": True})
@@ -2002,6 +2324,7 @@ async def api_bot_tcp_proxy_attach(request: Request, _=Depends(require_auth)):
         except Exception as exc:
             logger.error(f"راه‌اندازی mtproto ناموفق بود: {exc}")
             raise HTTPException(status_code=502, detail=f"راه‌اندازی MTProto ناموفق بود: {exc}")
+        _supervise_mtproto_instance(uid)  # audit fix: supervise post-boot instances
         async with LINKS_LOCK:
             LINKS[uid]["mtproto_port"] = inst["port"]
             LINKS[uid]["mtproto_secret"] = inst["secret"]
@@ -2138,6 +2461,38 @@ async def get_connections(_=Depends(require_auth)):
     }
 
 # ── Link Management ───────────────────────────────────────────────────────────
+# ── Idempotency-Key store (Phase 37.15) ────────────────────────────────────
+# Bounded in-memory map: key → (uid, expires_at). 10-minute TTL, max 500
+# entries (oldest evicted). Prevents duplicate configs from network retries.
+_IDEMPOTENCY_TTL = 600.0
+_IDEMPOTENCY_MAX = 500
+_idempotency_map: dict = {}
+
+
+def _idempotency_lookup(key: str):
+    entry = _idempotency_map.get(key)
+    if not entry:
+        return None
+    uid, exp = entry
+    if time.time() > exp:
+        _idempotency_map.pop(key, None)
+        return None
+    return uid
+
+
+def _idempotency_store(key: str, uid: str) -> None:
+    if not key or not uid:
+        return
+    if len(_idempotency_map) >= _IDEMPOTENCY_MAX:
+        now = time.time()
+        stale = [k for k, (_, exp) in _idempotency_map.items() if now > exp]
+        for k in stale:
+            _idempotency_map.pop(k, None)
+        if len(_idempotency_map) >= _IDEMPOTENCY_MAX:
+            _idempotency_map.pop(next(iter(_idempotency_map)))
+    _idempotency_map[key] = (uid, time.time() + _IDEMPOTENCY_TTL)
+
+
 async def _create_link_core(body: dict) -> dict:
     label = (body.get("label") or "لینک جدید").strip()[:60]
     try:
@@ -2215,6 +2570,9 @@ async def _create_link_core(body: dict) -> dict:
         "spoof_sni_enabled": spoof_enabled,
         # Phase 25: endpoint profile reference (None = legacy fields/standard)
         "endpoint_profile_id": endpoint_profile_id,
+        # Phase 37.11: config lifecycle — born CREATED, never born HEALTHY
+        "lifecycle_state": "CREATED",
+        "lifecycle_reason": "compiled + stored, awaiting first probe",
     }
 
     if protocol == "mtproto":
@@ -2242,6 +2600,7 @@ async def _create_link_core(body: dict) -> dict:
         link_data["mtproto_secret"] = inst["secret"]
         link_data["mtproto_domain"] = inst["domain"]
         link_data["mtproto_manual_port"] = manual_port is not None
+        _supervise_mtproto_instance(uid)  # audit fix: supervise post-boot instances
 
         # ── آدرس عمومی دستی ──────────────────────────────────────────────────
         # اگه کاربر TCP Proxy رو خودش از داشبورد Railway ساخته باشه، دامنه و پورت
@@ -2328,6 +2687,30 @@ async def _create_link_core(body: dict) -> dict:
 @app.post("/api/links")
 async def create_link(request: Request, _=Depends(require_auth)):
     body = await request.json()
+    # Phase 37.15 idempotency: a retried POST (network timeout / double-click
+    # with the same client key) returns the ORIGINAL config instead of a
+    # duplicate. Keys live in memory with a 10-minute TTL and are bounded.
+    idem_key = (request.headers.get("Idempotency-Key") or "").strip()[:128]
+    if idem_key:
+        existing_uid = _idempotency_lookup(idem_key)
+        if existing_uid is not None:
+            async with LINKS_LOCK:
+                link = LINKS.get(existing_uid)
+            if link is not None:
+                host = get_host()
+                return {
+                    "uuid": existing_uid,
+                    **link,
+                    "expired": False,
+                    "idempotent_replay": True,
+                    "vless_link": generate_share_link(existing_uid, host,
+                                                       remark=f"EMIX-{link.get('label','EMIX')}",
+                                                       protocol=link.get("protocol", DEFAULT_PROTOCOL)),
+                    "sub_url": f"https://{host}/sub/{existing_uid}",
+                }
+        result = await _create_link_core(body)
+        _idempotency_store(idem_key, result.get("uuid", ""))
+        return result
     return await _create_link_core(body)
 
 @app.post("/api/node/links")
@@ -2500,6 +2883,7 @@ async def update_link(uid: str, request: Request, _=Depends(require_auth)):
                     if uid in LINKS:
                         LINKS[uid]["mtproto_port"] = inst["port"]
                         LINKS[uid]["mtproto_secret"] = inst["secret"]
+                _supervise_mtproto_instance(uid)  # audit fix: supervise post-boot instances
                 if (snap.get("mtproto_proxy_id") and inst["port"] != old_port
                         and not snap.get("mtproto_manual_port", False)):
                     asyncio.create_task(_reattach_mtproto_public_proxy(
@@ -4294,16 +4678,100 @@ try:
 except Exception as _exc:
     logger.error(f"[bootstrap] ip_quality load failed (ignored): {_exc}")
 
-# ── Subscription profiles (Phase 13) on /sub-all ─────────────────────────────
-_SUB_PROFILES = ("ALL", "FASTEST", "HEALTHIEST")
+# ── Subscription profiles (Phase 13 + Phase 37.13) on /sub-all ───────────────
+_SUB_PROFILES = ("ALL", "HEALTHY", "HEALTHIEST", "FASTEST", "REGION", "PROTOCOL", "CUSTOM")
+
+async def _subscription_filter(items: list, profile: str, region: str = "",
+                               protocol: str = "", uids: str = "") -> tuple[list, list]:
+    """Phase 37.13 filter chain. Input/output: [(uid, link)] + notes.
+
+    Respects: expiry / quota / disabled (already applied via is_link_allowed
+    upstream), REVOKED (active=False → also is_link_allowed), node health
+    (links whose serving node is OFFLINE are excluded with a note), and the
+    requested profile. Never fabricates inclusion of unhealthy configs.
+    """
+    notes: list = []
+    # node-health gate: serving node OFFLINE → exclude (37.13)
+    def _node_ok(link: dict) -> bool:
+        try:
+            node_id = link.get("node_id") or "panel"
+            rec = node_manager.get_node(node_id)
+            if rec is None:
+                return True  # unknown node — do not fabricate a verdict
+            state, _reason = node_manager.derive_state(rec)
+            return state != "OFFLINE"
+        except Exception:
+            return True
+
+    gated = [(uid, d) for uid, d in items if _node_ok(d)]
+    if len(gated) < len(items):
+        notes.append(f"{len(items) - len(gated)} config(s) excluded — serving node OFFLINE")
+
+    if profile in ("HEALTHY", "HEALTHIEST"):
+        healthy = set(network_health.healthy_uids(min_score=60))
+        kept = [(uid, d) for uid, d in gated if uid in healthy]
+        notes.append(f"HEALTHY filter: {len(kept)}/{len(gated)} configs with fresh HEALTHY evidence")
+        return kept, notes
+    if profile == "FASTEST":
+        probed = [(uid, d) for uid, d in gated if network_health.get_health(uid)]
+        probed.sort(key=lambda kv: (
+            network_health.get_health(kv[0]).latency_ms
+            if network_health.get_health(kv[0]).latency_ms is not None else 10**9))
+        notes.append(f"FASTEST: top 5 of {len(probed)} probed configs by real latency")
+        return probed[:5], notes
+    if profile == "REGION":
+        region = (region or "").strip().upper()
+        if not region:
+            raise HTTPException(status_code=400, detail="profile=REGION requires ?region=")
+        kept = []
+        for uid, d in gated:
+            link_region = (d.get("region") or "").upper()
+            if not link_region:
+                pid = d.get("endpoint_profile_id")
+                if pid:
+                    prof = await endpoint_profiles.get_profile(pid)
+                    link_region = ((prof.region or "") if prof else "").upper()
+            if link_region == region:
+                kept.append((uid, d))
+        notes.append(f"REGION {region}: {len(kept)}/{len(gated)} configs match "
+                     f"(links without region metadata are excluded — honest)")
+        return kept, notes
+    if profile == "PROTOCOL":
+        protocol = (protocol or "").strip().lower()
+        if not protocol:
+            raise HTTPException(status_code=400, detail="profile=PROTOCOL requires ?protocol=")
+        kept = [(uid, d) for uid, d in gated
+                if (d.get("protocol") or "").lower().startswith(protocol)]
+        notes.append(f"PROTOCOL {protocol}: {len(kept)}/{len(gated)} configs match")
+        return kept, notes
+    if profile == "CUSTOM":
+        wanted = [u.strip() for u in (uids or "").split(",") if u.strip()]
+        if not wanted:
+            raise HTTPException(status_code=400, detail="profile=CUSTOM requires ?uids=uid1,uid2")
+        kept = [(uid, d) for uid, d in gated if uid in set(wanted)]
+        missing = [u for u in wanted if u not in {uid for uid, _ in kept}]
+        if missing:
+            notes.append(f"CUSTOM: {len(missing)} requested uid(s) not allowed/present — excluded")
+        return kept, notes
+    return gated, notes
+
 
 @app.get("/sub-all-v2")
-async def subscription_all_v2(profile: str = "ALL", _=Depends(require_auth)):
-    """Subscription with profile filtering (Phase 13).
+async def subscription_all_v2(profile: str = "ALL", region: str = "",
+                              protocol: str = "", uids: str = "",
+                              _=Depends(require_auth)):
+    """Subscription with profile filtering (Phase 13 + 37.13).
 
-    ALL       — every allowed config (same as /sub-all)
-    FASTEST   — top 5 by latest real latency (only probed configs)
-    HEALTHIEST— only HEALTHY configs (Network Health Engine evidence)
+    ALL        — every allowed config (same as /sub-all)
+    HEALTHY    — only configs with fresh HEALTHY evidence (alias: HEALTHIEST)
+    FASTEST    — top 5 by latest real latency (only probed configs)
+    REGION     — configs whose region metadata matches ?region= (honest: links
+                 without region metadata are excluded, never guessed)
+    PROTOCOL   — configs whose protocol starts with ?protocol=
+    CUSTOM     — explicit ?uids=uid1,uid2 list (intersected with allowed)
+
+    Respects: expiry, quota, disabled accounts, revoked configs, node health.
+    Legacy /sub-all output format unchanged (base64 of newline-joined URIs).
     """
     profile = (profile or "ALL").upper()
     if profile not in _SUB_PROFILES:
@@ -4311,15 +4779,8 @@ async def subscription_all_v2(profile: str = "ALL", _=Depends(require_auth)):
     host = get_host()
     async with LINKS_LOCK:
         items = [(uid, dict(d)) for uid, d in LINKS.items() if is_link_allowed(d)]
-    if profile == "FASTEST":
-        probed = [(uid, d) for uid, d in items if network_health.get_health(uid)]
-        probed.sort(key=lambda kv: (
-            network_health.get_health(kv[0]).latency_ms
-            if network_health.get_health(kv[0]).latency_ms is not None else 10**9))
-        items = probed[:5]
-    elif profile == "HEALTHIEST":
-        healthy = set(network_health.healthy_uids(min_score=60))
-        items = [(uid, d) for uid, d in items if uid in healthy]
+    items, notes = await _subscription_filter(items, profile, region=region,
+                                              protocol=protocol, uids=uids)
     lines = [
         generate_share_link(uid, host, remark=f"EMIX-{d['label']}", protocol=d.get("protocol", DEFAULT_PROTOCOL))
         for uid, d in items
@@ -4330,9 +4791,179 @@ async def subscription_all_v2(profile: str = "ALL", _=Depends(require_auth)):
     nearest_exp = min(expiries) if expiries else None
     content = base64.b64encode("\n".join(lines).encode()).decode()
     headers = build_sub_headers(f"EMIX-{profile}", total_used, total_limit, nearest_exp)
+    if notes:
+        # Audit fix: هدرهای HTTP فقط latin-1 هستند — em-dash و کاراکترهای
+        # غیر ASCII در notes (مثل «—») باعث UnicodeEncodeError/500 می‌شدند.
+        raw_notes = "; ".join(notes)[:300]
+        headers["X-Emix-Filter-Notes"] = raw_notes.encode("latin-1", "replace").decode("latin-1")
     return Response(content=content, media_type="text/plain", headers=headers)
 
 logger.info("[bootstrap] Config Compiler + Endpoint Profiles + Network Health + Jobs + Diagnostics ready")
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# Phase 37 — Node Manager / Runtime Supervisor / Config Lifecycle APIs
+# NOTE (audit fix 2026-09): این روت‌ها از /api/nodes به /api/managed-nodes منتقل
+# شدند چون /api/nodes (outbound panels, main.py:3224) آن‌را shadow می‌کرد و
+# endpoint رجیستری گره‌ها در production هرگز پاسخ داده نمی‌شد.
+# ══════════════════════════════════════════════════════════════════════════════
+
+@app.get("/api/managed-nodes", dependencies=[Depends(require_auth)])
+async def api_nodes():
+    """Node registry with runtime-gated health (37.9). No secrets.
+
+    Audit fix: summary() هم کلید «nodes» دارد (count) — قبلاً با dict-spread
+    لیست را بازنویسی می‌کرد و کلاینت به‌جای آرایه عدد می‌گرفت.
+    """
+    return {"ok": True, **node_manager.summary(),
+            "nodes": node_manager.list_nodes()}
+
+
+@app.post("/api/managed-nodes/{node_id}/heartbeat", dependencies=[Depends(require_auth)])
+async def api_node_heartbeat(node_id: str, request: Request):
+    """Record manual/external heartbeat evidence for a node (37.9)."""
+    body = await request.json() if request.headers.get("content-type", "").startswith("application/json") else {}
+    rec = await node_manager.heartbeat(
+        node_id, kind=body.get("kind", "manual"),
+        runtime_health=body.get("runtime_health", "UNKNOWN"),
+        load=body.get("load"), clients=body.get("clients"))
+    if rec is None:
+        raise HTTPException(status_code=404, detail=f"node {node_id!r} not registered")
+    return {"ok": True, "node": rec.to_dict()}
+
+
+@app.post("/api/managed-nodes/{node_id}/maintenance", dependencies=[Depends(require_auth)])
+async def api_node_maintenance(node_id: str, request: Request):
+    """Operator override: MAINTENANCE on/off (37.9)."""
+    body = await request.json()
+    on = bool(body.get("on", True))
+    rec = await node_manager.set_maintenance(node_id, on, reason=body.get("reason", ""))
+    if rec is None:
+        raise HTTPException(status_code=404, detail=f"node {node_id!r} not registered")
+    asyncio.create_task(schedule_save())
+    return {"ok": True, "node": rec.to_dict()}
+
+
+@app.get("/api/runtime/status", dependencies=[Depends(require_auth)])
+async def api_runtime_status():
+    """Supervised runtimes: state, restart counts, backoff windows (37.10)."""
+    return {"ok": True, **runtime_supervisor.supervisor.status()}
+
+
+@app.post("/api/runtime/{runtime_id}/restart", dependencies=[Depends(require_auth)])
+async def api_runtime_restart(runtime_id: str):
+    """Manual restart of a supervised runtime (counts toward the budget)."""
+    result = await runtime_supervisor.supervisor.restart(runtime_id, manual=True)
+    if not result.get("ok"):
+        raise HTTPException(status_code=400, detail=result.get("error", "restart failed"))
+    return result
+
+
+@app.get("/api/lifecycle/{uid}", dependencies=[Depends(require_auth)])
+async def api_config_lifecycle(uid: str):
+    """Config lifecycle state + expiry bookkeeping (37.11)."""
+    async with LINKS_LOCK:
+        link = LINKS.get(uid)
+    if link is None:
+        raise HTTPException(status_code=404, detail=f"config {uid[:8]} not found")
+    ann = config_lifecycle.lifecycle_annotation(uid, link, network_health.get_health_dict(uid))
+    return {"ok": True, **ann, "health": network_health.get_health_dict(uid)}
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# Local QR generation (audit fix 2026-09 — privacy)
+# قبلاً QR از api.qrserver.com (سرویس شخص ثالث) ساخته می‌شد و کل لینک
+# (شامل credential) و حتی کلید خصوصی WireGuard به بیرون می‌رفت. حالا QR
+# به‌صورت محلی (SVG، بدون Pillow) تولید می‌شود.
+# ══════════════════════════════════════════════════════════════════════════════
+
+_QR_SCHEME_ALLOWLIST = (
+    "vless://", "trojan://", "ss://", "vmess://", "tg://", "ssh://",
+    "https://", "http://", "hy2://", "tuic://", "wireguard://",
+)
+_QR_MAX_DATA = 2048
+_QR_RATE_LIMIT = 30          # requests/min/IP
+_QR_HITS: dict = {}          # (ip, minute) → count
+
+
+@app.get("/api/qr")
+async def api_qr(request: Request, data: str = "", size: int = 260):
+    """Generate a QR code LOCALLY as SVG (no third-party service, no leak).
+
+    Public (no auth) because the public subscription page uses it.
+    Guards: scheme allowlist, 2048-char cap, 30 req/min/IP.
+    """
+    import io as _io
+    ip = client_ip(request)
+    minute = int(time.time()) // 60
+    key = (ip, minute)
+    hits = _QR_HITS.get(key, 0)
+    _QR_HITS[key] = hits + 1
+    if len(_QR_HITS) > 4096:  # bounded cleanup
+        _QR_HITS.clear()
+    if hits >= _QR_RATE_LIMIT:
+        raise HTTPException(status_code=429, detail="QR rate limit exceeded")
+    data = (data or "").strip()
+    if not data:
+        raise HTTPException(status_code=400, detail="missing data parameter")
+    if len(data) > _QR_MAX_DATA:
+        raise HTTPException(status_code=413, detail="data too long (max 2048 chars)")
+    # Allowlist: link schemes, subscription URLs, or an inline WireGuard config
+    if not (data.startswith(_QR_SCHEME_ALLOWLIST) or data.startswith("BEGIN ")):
+        raise HTTPException(status_code=400,
+                            detail="unsupported content for QR generation")
+    try:
+        import qrcode
+        import qrcode.image.svg
+        qr = qrcode.QRCode(error_correction=qrcode.constants.ERROR_CORRECT_M,
+                           border=2, box_size=10)
+        qr.add_data(data)
+        qr.make(fit=True)
+        img = qr.make_image(image_factory=qrcode.image.svg.SvgPathImage)
+        buf = _io.BytesIO()
+        img.save(buf)
+        svg = buf.getvalue()
+    except ImportError:
+        raise HTTPException(status_code=503,
+                            detail="qrcode library not installed (pip install qrcode)")
+    except Exception as e:
+        diagnostics.record_error_sync("QR_GENERATION", str(e), "api:qr", "ERROR")
+        raise HTTPException(status_code=500, detail="QR generation failed")
+    return Response(content=svg, media_type="image/svg+xml",
+                    headers={"Cache-Control": "no-store"})
+
+
+@app.post("/api/endpoint-profiles/migrate-legacy", dependencies=[Depends(require_auth)])
+async def api_migrate_legacy_spoof():
+    """Phase 37.8: build normalized profiles from legacy spoof_sni fields.
+
+    Does NOT delete or alter legacy fields — backward compatibility is kept;
+    the returned profiles are stored and can be attached to links explicitly.
+    """
+    host = get_host()
+    cdn = CONFIG.get("cdn_domain", "")
+    created, skipped = [], []
+    async with LINKS_LOCK:
+        targets = [(uid, dict(d)) for uid, d in LINKS.items()
+                   if d.get("spoof_sni_enabled") and d.get("spoof_sni")]
+    for uid, link in targets:
+        profile = endpoint_profiles.migrate_legacy_link(link, host, cdn_domain=cdn)
+        if profile is None:
+            skipped.append(uid)
+            continue
+        try:
+            await endpoint_profiles.create_profile(profile)
+            created.append({"uid": uid, "profile_id": profile.id, "mode": "legacy-migration"})
+        except ValueError:
+            skipped.append(uid)  # name collision → already migrated
+    if created:
+        asyncio.create_task(schedule_save())
+    return {
+        "ok": True, "migrated": len(created), "skipped": len(skipped),
+        "details": created,
+        "note": "legacy spoof_sni fields remain untouched (wire compat preserved)",
+        "legacy_stats": endpoint_profiles.legacy_spoof_stats(LINKS),
+    }
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -4342,7 +4973,7 @@ logger.info("[bootstrap] Config Compiler + Endpoint Profiles + Network Health + 
 # تا قبل از لاگین هم قابل بررسی باشد. (از /api/version استفاده نمی‌کنیم چون
 # آن مسیر قبلاً برای بررسی به‌روزرسانی در نظر گرفته شده است.)
 # ══════════════════════════════════════════════════════════════════════════════
-EMIX_VERSION = "11.0.0-arch"
+EMIX_VERSION = "11.1.0-audit"
 EMIX_BUILD_DATE = "2026-09-01"
 
 @app.get("/api/deployment-version")

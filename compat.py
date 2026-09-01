@@ -60,6 +60,65 @@ SNI_APPLICABLE = {
     ("mtproto", "tcp"): False,     # FakeTLS domain lives in the secret
 }
 
+# ── Transport × Security matrix states (Phase 37.3) ─────────────────────────
+# ONE source of truth for "which combination is legitimate". The UI renders
+# from matrix_view(); the compiler enforces validate(); both read these tables.
+# States: VALID (full server+client path real) | EXPERIMENTAL (link emission
+# only / mimicry — no server runtime here) | NOT_IMPLEMENTED (advertised
+# nowhere) | INVALID (protocol-theoretically or practically impossible).
+TRANSPORT_MATRIX = {
+    # VLESS transport/security combos
+    ("vless", "ws", "tls"):        "VALID",
+    ("vless", "ws", "none"):       "INVALID",        # plain WS is blocked on CDN/Railway ingress
+    ("vless", "ws", "reality"):    "INVALID",        # Reality requires raw TCP/TLS inbound — impossible over WS relay
+    ("vless", "xhttp-packet-up", "tls"): "VALID",
+    ("vless", "xhttp-packet-up", "none"): "INVALID",
+    ("vless", "xhttp-packet-up", "reality"): "INVALID",
+    ("vless", "xhttp-stream-up", "tls"): "VALID",
+    ("vless", "xhttp-stream-up", "none"): "INVALID",
+    ("vless", "xhttp-stream-up", "reality"): "INVALID",
+    ("vless", "tcp", "tls"):       "EXPERIMENTAL",   # link emission works; no TCP inbound in this panel
+    ("vless", "tcp", "reality"):   "EXPERIMENTAL",   # vless-reality emitter exists; needs xray-core server
+    ("vless", "grpc", "tls"):      "EXPERIMENTAL",   # gRPC transport: XHTTP mimics the envelope only
+    ("vless", "httpupgrade", "tls"): "NOT_IMPLEMENTED",
+    # Trojan
+    ("trojan", "ws", "tls"):       "VALID",
+    ("trojan", "ws", "none"):      "INVALID",
+    ("trojan", "ws", "reality"):   "INVALID",
+    ("trojan", "xhttp-packet-up", "tls"): "VALID",
+    ("trojan", "xhttp-packet-up", "none"): "INVALID",
+    ("trojan", "xhttp-packet-up", "reality"): "INVALID",
+    ("trojan", "xhttp-stream-up", "tls"): "VALID",
+    ("trojan", "xhttp-stream-up", "none"): "INVALID",
+    ("trojan", "xhttp-stream-up", "reality"): "INVALID",
+    ("trojan", "tcp", "tls"):      "EXPERIMENTAL",   # link emission works; no raw-TCP inbound here
+    ("trojan", "tcp", "reality"):  "EXPERIMENTAL",   # trojan-reality emitter exists; needs xray-core
+    ("trojan", "grpc", "tls"):     "NOT_IMPLEMENTED",
+    ("trojan", "httpupgrade", "tls"): "NOT_IMPLEMENTED",
+    # Shadowsocks (AEAD over WS with v2ray-plugin; plugin carries the TLS)
+    ("shadowsocks", "ws", "tls"):  "VALID",
+    ("shadowsocks", "ws", "none"): "EXPERIMENTAL",   # plugin without tls — plausible client-side, no server path here
+    ("shadowsocks", "tcp", "none"): "EXPERIMENTAL",  # ss over raw TCP: client link possible, no inbound here
+    ("shadowsocks", "grpc", "tls"): "NOT_IMPLEMENTED",
+    ("shadowsocks", "httpupgrade", "tls"): "NOT_IMPLEMENTED",
+    # MTProto (transport is fixed: TCP; security is inside the secret)
+    ("mtproto", "tcp", "none"):    "VALID",
+    ("mtproto", "tcp", "tls"):     "INVALID",        # FakeTLS is in-secret, not a TLS layer we control
+    ("mtproto", "ws", "tls"):      "INVALID",        # MTProto does not ride WS in this panel
+}
+
+MATRIX_STATES = ("VALID", "EXPERIMENTAL", "NOT_IMPLEMENTED", "INVALID")
+
+_MATRIX_NOTES = {
+    ("vless", "grpc", "tls"): "XHTTP already mimics the gRPC envelope (content-type application/grpc) — no real gRPC transport",
+    ("vless", "tcp", "reality"): "vless-reality link emitter exists (BETA) — requires an external xray-core server",
+    ("trojan", "tcp", "reality"): "trojan-reality link emitter exists (BETA) — requires an external xray-core server",
+    ("vless", "httpupgrade", "tls"): "transport not implemented in panel or emitters",
+    ("trojan", "httpupgrade", "tls"): "transport not implemented in panel or emitters",
+    ("vless", "ws", "reality"): "Reality cannot ride the WS relay path (needs raw TCP inbound)",
+    ("mtproto", "tcp", "tls"): "MTProto FakeTLS is encoded inside the secret, not a TLS layer",
+}
+
 # Ready classification per the Zero-Fake-Features policy (Phase 32).
 READINESS = {
     "vless": "PRODUCTION",
@@ -145,11 +204,14 @@ def compose(protocol: str, transport: str) -> str:
         return "mtproto"
     if p == "shadowsocks":
         return "shadowsocks"
-    if p == "vless" and t in ("xhttp-packet-up", "xhttp-stream-up"):
-        return t
     if t == "ws":
         return f"{p}-ws"
-    return f"{p}-xhttp-{t.replace('xhttp-', '')}" if p == "trojan" else f"{p}-{t}"
+    if t.startswith("xhttp-"):
+        # legacy storage: bare for vless, prefixed for trojan
+        return t if p == "vless" else f"{p}-{t}"
+    if t == "tcp":
+        return p
+    return f"{p}-{t}"
 
 
 # ── The validator ───────────────────────────────────────────────────────────
@@ -225,24 +287,55 @@ def sni_override_supported(fused: str) -> bool:
 
 
 def matrix_view() -> dict:
-    """Declarative matrix for the frontend: render ONLY valid combinations."""
+    """Declarative matrix for the frontend: render ONLY valid combinations.
+
+    Phase 37.3: includes EVERY transport × security combo with its state
+    (VALID / EXPERIMENTAL / NOT_IMPLEMENTED / INVALID) — the same table the
+    compiler enforces, so UI and backend share ONE source of truth.
+    """
     combos = []
+    # runtime-backed combos (the VALID core)
     for (p, t), runtime in sorted(SERVER_RUNTIME.items()):
         sec = sorted(_ALLOWED_SECURITY.get((p, t), set()))
+        for s in sec:
+            combos.append({
+                "protocol": p, "transport": t, "security": s,
+                "state": "VALID", "runtime": runtime,
+                "fused": compose(p, t),
+                "sni_override": SNI_APPLICABLE.get((p, t), False),
+                "readiness": READINESS.get(p, "UNKNOWN"),
+                "note": "",
+            })
+    # non-VALID combos from the transport matrix (complete coverage)
+    for (p, t, s), state in sorted(TRANSPORT_MATRIX.items()):
+        if (p, t) in SERVER_RUNTIME and s in _ALLOWED_SECURITY.get((p, t), set()):
+            continue  # already emitted as VALID above
         combos.append({
-            "protocol": p,
-            "transport": t,
-            "security": sec,
+            "protocol": p, "transport": t, "security": s,
+            "state": state,
+            "runtime": None,
             "fused": compose(p, t),
-            "runtime": runtime,
             "sni_override": SNI_APPLICABLE.get((p, t), False),
             "readiness": READINESS.get(p, "UNKNOWN"),
+            "note": _MATRIX_NOTES.get((p, t, s), ""),
         })
     return {
         "protocols": sorted(PROTOCOLS),
-        "transports": sorted(TRANSPORTS),
+        "transports": sorted(TRANSPORTS | {"tcp", "grpc", "httpupgrade"}),
         "security": sorted(SECURITY),
         "production": list(PRODUCTION_PROTOCOLS),
         "readiness": dict(READINESS),
+        "states": list(MATRIX_STATES),
         "combinations": combos,
+        "source": "compat.py/TRANSPORT_MATRIX (single source of truth)",
     }
+
+
+def matrix_state(protocol: str, transport: str, security: str) -> str:
+    """State of one combination from the single-source-of-truth matrix."""
+    p, t, s = _s(protocol), _s(transport), _s(security)
+    if TRANSPORT_MATRIX.get((p, t, s)) == "VALID":
+        # VALID requires the runtime too — matrix and runtime tables agree
+        # for every VALID entry by construction.
+        return "VALID"
+    return TRANSPORT_MATRIX.get((p, t, s), "NOT_IMPLEMENTED")

@@ -19,7 +19,7 @@ LOGIN_HTML = r"""<!DOCTYPE html>
   --glow:rgba(139,92,246,.28);--glow-signal:rgba(250,204,21,.20);
   --danger:#EF4444;
 }
-:[data-theme="light"]{
+[data-theme="light"]{
   --bg:#F5F5F7;--bg2:#FFFFFF;--card:rgba(255,255,255,0.92);--card-in:rgba(139,92,246,0.04);
   --accent:#7C3AED;--accent2:#CA8A04;--signal:#9333EA;
   --text:#0A0A0F;--dim:#6B7280;--mid:#4B5563;--border:rgba(124,58,237,0.18);
@@ -235,7 +235,7 @@ input:focus~.ic-lock{color:var(--accent2);animation:wiggle .4s ease}
   <div class="card" id="card">
     <div class="brand">
       <div class="brand-img"><svg viewBox="0 0 100 100" width="100%" height="100%" role="img" aria-label="EMIX logo"><rect width="100" height="100" fill="#030303"/><circle cx="50" cy="48" r="45" fill="#0B0B0B" stroke="#5A160E" stroke-width="2"/><circle cx="50" cy="48" r="42" fill="none" stroke="#FF3B24" stroke-width="1" opacity=".7"/><path d="M72 24H39C29 24 23 30 23 40V61C23 71 29 77 39 77H73M39 50H64C72 50 76 46 80 39" fill="none" stroke="#7A170F" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" opacity=".6"/><path d="M72 24H39C29 24 23 30 23 40V61C23 71 29 77 39 77H73M39 50H64C72 50 76 46 80 39" fill="none" stroke="#FF4028" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/><text x="50" y="91" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" font-weight="800" letter-spacing="3" fill="#FF3B24">EMIX</text></svg></div>
-      <div><div class="brand-name">EMIX <span style="background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">PRO</span></div><div class="brand-sub">Multi-Protocol Gateway <span class="mono">· v9.5</span></div></div>
+      <div><div class="brand-name">EMIX <span style="background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">PRO</span></div><div class="brand-sub">Multi-Protocol Gateway <span class="mono" id="login-ver-chip">· v11</span></div></div>
     </div>
     <h1>ورود به مرکز مدیریت</h1>
 
@@ -315,6 +315,14 @@ document.getElementById('pw').addEventListener('blur', () => {
     p.style.animationDelay = (Math.random()*14)+'s';
     box.appendChild(p);
   }
+})();
+
+/* Audit fix: نسخه‌ی واقعی روی صفحه‌ی ورود (بدون احراز هویت) — قبلاً «v9.5» hardcoded بود */
+(function(){
+  fetch('/api/deployment-version',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(dv=>{
+    const chip=document.getElementById('login-ver-chip');
+    if(chip&&dv&&dv.version)chip.textContent='· v'+dv.version;
+  }).catch(()=>{});
 })();
 
 /* افکت تیلت سه‌بعدی روی کارت با موس */
@@ -412,7 +420,7 @@ DASHBOARD_HTML = r"""<!DOCTYPE html>
   --dot-on:var(--accent-violet);
   --dot-off:rgba(139,92,246,0.18);
 }
-:[data-theme="light"]{
+[data-theme="light"]{
   --bg:#F5F5F7;--bg2:#FFFFFF;--bg3:#E8EAF0;
   --card:rgba(255,255,255,0.80);
   --card-b:rgba(124,58,237,0.12);
@@ -2207,14 +2215,9 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
       </div>
 
       <div class="cm-section" id="mtproto-port-field" style="display:none;margin-bottom:0">
-        <div id="auto-domain-box" style="margin-top:10px, display: none">
-          <div id="auto-domain-token-wrap" style="display:none;margin-top:9px">
-            <div class="cm-row2">
-              <input class="cm-input" id="auto-domain-token" type="password" placeholder="Railway API Token">
-              <button type="button" class="btn btn-p btn-sm" onclick="submitAutoDomainToken()"><i class="ti ti-check"></i> تایید و دریافت</button>
-            </div>
-          </div>
-        </div>
+        <!-- Audit fix: ویجت auto-domain حذف شد — استایل ناقص (کاما به‌جای سمی‌کالن) داشت،
+             عناصر دکمه/وضعیتش وجود نداشتند و JS آن (autoGetMtprotoDomain و…) به‌هم می‌ریخت.
+             مسیر واقعی دریافت دامنه عمومی: توکن Railway را در تنظیمات TCP Proxy وارد کنید. -->
         <div class="cm-row2">
           <div class="cm-field">
             <label><i class="ti ti-route" style="color:var(--accent);margin-left:4px"></i>پورت TCP</label>
@@ -3036,7 +3039,7 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
   <button class="sb-close" id="close-sb"><i class="ti ti-x"></i></button>
   <div class="logo">
     <div class="logo-img"><svg viewBox="0 0 100 100" width="100%" height="100%" role="img" aria-label="EMIX logo"><rect width="100" height="100" fill="#030303"/><circle cx="50" cy="48" r="45" fill="#0B0B0B" stroke="#5A160E" stroke-width="2"/><circle cx="50" cy="48" r="42" fill="none" stroke="#FF3B24" stroke-width="1" opacity=".7"/><path d="M72 24H39C29 24 23 30 23 40V61C23 71 29 77 39 77H73M39 50H64C72 50 76 46 80 39" fill="none" stroke="#7A170F" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" opacity=".6"/><path d="M72 24H39C29 24 23 30 23 40V61C23 71 29 77 39 77H73M39 50H64C72 50 76 46 80 39" fill="none" stroke="#FF4028" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/><text x="50" y="91" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" font-weight="800" letter-spacing="3" fill="#FF3B24">EMIX</text></svg></div>
-    <div><div class="logo-name">EMIX</div><div class="logo-sub">Gateway · v9.5</div></div>
+    <div><div class="logo-name">EMIX</div><div class="logo-sub" id="logo-ver-chip">Gateway · v11</div></div>
   </div>
   <div class="nav-wrap">
     <div class="nav-sec">پنل</div>
@@ -3046,9 +3049,10 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
     <div class="nav-it" data-pg="zeus"><i class="ti ti-bolt" style="color:var(--amber-t)"></i> ⚡ ZEUS Pro <span class="nav-badge" id="zeus-nb" style="background:var(--amber-t);color:#fff">جدید</span></div>
     <div class="nav-it" data-pg="gaming"><i class="ti ti-device-gamepad-2" style="color:#4cc9f0"></i> 🎮 گیمینگ <span class="nav-badge" id="gaming-nb" style="background:#4cc9f0;color:#08131f">پینگ</span></div>
     <div class="nav-it" data-pg="multiloc" style="background:linear-gradient(135deg,rgba(16,185,129,.15),rgba(76,201,240,.08))"><i class="ti ti-world" style="color:#10B981"></i> 🌐 پل چندلوکیشن <span class="nav-badge" id="ml-nb" style="background:#10B981;color:#fff">v2</span></div>
-    <!-- VPN Pro section removed — WireGuard/OpenVPN don't ping on Railway (control-plane only).
-         The vpn_pro.py module stays in the backend for API access but the UI section is hidden. -->
-    <!-- <div class="nav-it" data-pg="vpn"><i class="ti ti-shield-lock" style="color:#4ADE80"></i> 🛡 VPN Pro <span class="nav-badge" id="vpn-nb" style="background:#4ADE80;color:#14141C">WG+OVPN</span></div> -->
+    <!-- Audit fix: VPN Pro بازگردانده شد با برچسب صادقانه — پنل فقط control-plane
+         است (روی Railway امکان میزبانی WG/OpenVPN runtime نیست؛ مدیریت نود VPS
+         و تولید کانفیگ کلاینت واقعی است). تولید کلیدها حالا در restart هم می‌ماند. -->
+    <div class="nav-it" data-pg="vpn"><i class="ti ti-shield-lock" style="color:#4ADE80"></i> 🛡 VPN Pro <span class="nav-badge" id="vpn-nb" style="background:#4ADE80;color:#14141C">WG+OVPN · کنترل-پلن</span></div>
     <div class="nav-it" data-pg="subgroups"><i class="ti ti-folders"></i> گروه‌های ساب <span class="nav-badge" id="subs-nb">0</span></div>
     <div class="nav-it" data-pg="subscriptions"><i class="ti ti-rss"></i> سابسکریپشن</div>
     <div class="nav-it" data-pg="traffic"><i class="ti ti-chart-area"></i> ترافیک</div>
@@ -3154,13 +3158,16 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
   </div>
   <div class="g2">
     <div class="card">
-      <div class="card-title"><i class="ti ti-activity"></i> وضعیت سرویس</div>
-      <div class="sr"><span class="sr-k"><i class="ti ti-shield-check"></i> UUID Auth</span><span class="sr-v" style="color:var(--green-t)">● فعال · سخت‌گیرانه</span></div>
-      <div class="sr"><span class="sr-k"><i class="ti ti-circle-check"></i> VLESS / WS Tunnel</span><span class="sr-v" style="color:var(--green-t)">● فعال</span></div>
-      <div class="sr"><span class="sr-k"><i class="ti ti-bolt"></i> Siz10a XHTTP Ultra</span><span class="sr-v" style="color:var(--green-t)">● فعال · 3 mode</span></div>
-      <div class="sr"><span class="sr-k"><i class="ti ti-folders"></i> Sub Groups</span><span class="sr-v" style="color:var(--green-t)">● فعال v9</span></div>
-      <div class="sr"><span class="sr-k"><i class="ti ti-rss"></i> Subscription API</span><span class="sr-v" style="color:var(--green-t)">● فعال</span></div>
-      <div class="sr"><span class="sr-k"><i class="ti ti-bolt" style="color:var(--amber-t)"></i> ⚡ ZEUS Pro</span><span class="sr-v" style="color:var(--amber-t)">● فعال · ISP+TLS+Smart+Sec</span></div>
+      <div class="card-title"><i class="ti ti-activity"></i> وضعیت سرویس <span class="ml-auto" style="font-size:9.5px;color:var(--t3)">زنده از Diagnostics</span></div>
+      <!-- Audit fix: قبلاً ۶ ردیف «فعال» hardcoded بود (بدون هیچ API).
+           حالا همه‌ی مقادیر از /api/diagnostics (واقعی) می‌آیند. -->
+      <div class="sr"><span class="sr-k"><i class="ti ti-shield-check"></i> UUID Auth</span><span class="sr-v" style="color:var(--green-t)">● فعال · لایه‌ی relay</span></div>
+      <div class="sr"><span class="sr-k"><i class="ti ti-keyframe"></i> موتور سلامت شبکه</span><span class="sr-v" id="svc-health">—</span></div>
+      <div class="sr"><span class="sr-k"><i class="ti ti-route"></i> گره‌های تحت مدیریت</span><span class="sr-v" id="svc-nodes">—</span></div>
+      <div class="sr"><span class="sr-k"><i class="ti ti-cpu"></i> ران‌تایم‌های تحت نظارت</span><span class="sr-v" id="svc-runtimes">—</span></div>
+      <div class="sr"><span class="sr-k"><i class="ti ti-clock-play"></i> جاب‌های پس‌زمینه</span><span class="sr-v" id="svc-jobs">—</span></div>
+      <div class="sr"><span class="sr-k"><i class="ti ti-database"></i> پایداری داده</span><span class="sr-v" id="svc-persist">—</span></div>
+      <div class="sr"><span class="sr-k"><i class="ti ti-list-tree"></i> ترکیب‌های معتبر پروتکل×حمل‌ونقل</span><span class="sr-v" id="svc-transports">—</span></div>
       <div class="sr"><span class="sr-k"><i class="ti ti-clock"></i> آپتایم</span><span class="sr-v" id="uptime-inline">—</span></div>
       <div class="sr" style="flex-direction:column;align-items:flex-start;gap:4px">
         <div style="width:100%;display:flex;justify-content:space-between"><span class="sr-k"><i class="ti ti-gauge"></i> بار نسبی</span><span class="sr-v" id="bw-pct">—%</span></div>
@@ -3176,7 +3183,7 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
     </div>
   </div>
   <div class="dash-footer">
-    <span class="df-text">EMIX PRO v9.7.0 · Railway · 2026 · ZEUS + گیمینگ + ضدد ضریب + چندلوکیشن</span>
+    <span class="df-text">EMIX PRO · <span id="footer-ver">v11</span> · Railway · ZEUS + گیمینگ + ضدد ضریب + چندلوکیشن</span>
     <a class="df-link" href="https://t.me/emixpi" target="_blank"><i class="ti ti-brand-telegram"></i> t.me/emixpi</a>
   </div>
 </section>
@@ -3215,11 +3222,12 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
 
   <div class="info-strip">
     <div class="info-item">
-      <span class="info-item-label">ارسال / دریافت لحظه‌ای</span>
-      <span class="info-item-val"><i class="ti ti-arrows-exchange"></i> <span id="info-sent-recv">0 B / 0 B</span></span>
+      <!-- Audit fix: split up/down در stats وجود ندارد؛ برچسب به داده‌ی واقعی (ترافیک این ساعت) تغییر کرد -->
+      <span class="info-item-label">ترافیک این ساعت</span>
+      <span class="info-item-val"><i class="ti ti-clock-bolt"></i> <span id="info-sent-recv">0 B</span></span>
     </div>
     <div class="info-item">
-      <span class="info-item-label">مصرف دوره فعلی</span>
+      <span class="info-item-label">مصرف ۲۴ ساعت اخیر</span>
       <span class="info-item-val"><i class="ti ti-chart-pie"></i> <span id="info-usage">0 B</span></span>
     </div>
     <div class="info-item">
@@ -3538,7 +3546,7 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
       <div class="node-metric">
         <div class="node-metric-top"><i class="ti ti-shield-lock"></i><span class="node-metric-label">TLS Mask</span></div>
         <div class="node-metric-val" id="zeus-tls-status">—</div>
-        <div class="node-metric-sub" id="zeus-tls-sni">SNI: —</div>
+        <div class="node-metric-sub" id="zeus-tls-sni-metric">SNI: —</div>
       </div>
       <div class="node-metric">
         <div class="node-metric-top"><i class="ti ti-brain"></i><span class="node-metric-label">حالت هوشمند</span></div>
@@ -4463,11 +4471,15 @@ remote vpn.example.com 1194
 <script>
 async function loadDiagPage(){
   try{
+    // Audit fix (CRITICAL): این خط در v11.0.0-arch با خطای syntax واقعی
+    // (const s, dg, js, iq] — بدون bracket باز) کل script block را
+    // می‌کشت و Diagnostics Center در production هرگز لود نمی‌شد.
+    // + fetch خام → authF تا انقضای session به login redirect شود.
     const [hs, dg, js, iq] = await Promise.all([
-      fetch('/api/health/summary').then(r=>r.json()).catch(()=>null),
-      fetch('/api/diagnostics').then(r=>r.json()).catch(()=>null),
-      fetch('/api/jobs/status').then(r=>r.json()).catch(()=>null),
-      fetch('/api/ip-quality/summary').then(r=>r.json()).catch(()=>null),
+      authF('/api/health/summary').then(r=>r.ok?r.json():null).catch(()=>null),
+      authF('/api/diagnostics').then(r=>r.ok?r.json():null).catch(()=>null),
+      authF('/api/jobs/status').then(r=>r.ok?r.json():null).catch(()=>null),
+      authF('/api/ip-quality/summary').then(r=>r.ok?r.json():null).catch(()=>null),
     ]);
     // health state cards
     const hc = document.getElementById('diag-health-cards');
@@ -4519,7 +4531,7 @@ async function loadDiagPage(){
 }
 async function diagProbeAll(){
   try{
-    const r = await fetch('/api/exp/route/configs/probe-all',{method:'POST'});
+    const r = await authF('/api/exp/route/configs/probe-all',{method:'POST'});
     const j = await r.json();
     if(j.ok!==false){ loadDiagPage(); }
   }catch(e){ console.error(e); }
@@ -4873,6 +4885,18 @@ function applyTheme(dark){
 
 function toggleTheme(){isDark=!isDark;localStorage.setItem('rvg-theme',isDark?'dark':'light');applyTheme(isDark)}
 applyTheme(isDark);
+// ── Audit fix (§50 frontend error handling): هیچ catch ای بی‌صدا نیست ──
+// netErr: خطای شبکه/لودر را throttled به کاربر نشان می‌دهد (هر ۳۰s یک‌بار
+// برای هر context — تا pollingهای ۲/۵ ثانیه‌ای spam نکنند).
+const _netErrShown = {};
+function netErr(e, ctx){
+  console.error('['+ctx+']', e);
+  const now = Date.now();
+  if(_netErrShown[ctx] && now - _netErrShown[ctx] < 30000) return;
+  _netErrShown[ctx] = now;
+  try{ toast('⚠ خطا در دریافت «'+ctx+'» — اتصال یا نشست را بررسی کنید','err'); }catch(_e){}
+}
+
 function toast(msg,type=''){
   const t=document.getElementById('toast');
   t.textContent=msg;t.className='toast show'+(type?' '+type:'');
@@ -5068,6 +5092,14 @@ async function fetchStats(){
       if(ch3){ch3.data.labels=labels;ch3.data.datasets[0].data=vals;ch3.data.datasets[1].data=avgLine;ch3.update();}
       if(vals.length){
         const peak=Math.max(...vals),low=Math.min(...vals),peakIdx=vals.indexOf(peak);
+        // Audit fix: info-strip — ترافیک این ساعت و ۲۴ ساعت اخیر (داده‌ی واقعی
+        // از /stats.hourly؛ قبلاً این دو عنصر هرگز آپدیت نمی‌شدند و «0 B» فیک می‌ماندند)
+        try{
+          const curHour=labels[labels.length-1],lastMB=vals[vals.length-1]||0;
+          document.getElementById('info-sent-recv').textContent=fmtB(lastMB*1024**2);
+          const last24=vals.slice(-24).reduce((a,b)=>a+b,0);
+          document.getElementById('info-usage').textContent=fmtB(last24*1024**2);
+        }catch(_e){}
         document.getElementById('t-avg').innerHTML=avgAll.toFixed(2)+'<span class="m-unit">MB</span>';
         document.getElementById('t-peak').innerHTML=peak.toFixed(2)+'<span class="m-unit">MB</span>';
         document.getElementById('t-peak-time').textContent=labels[peakIdx]?('ساعت '+labels[peakIdx]):'بالاترین ساعت';
@@ -5093,6 +5125,75 @@ async function fetchStats(){
     renderErrs(d.recent_errors||[]);
   }catch(e){console.error(e)}
 }
+
+// ── Audit fix (zero-fake-features): وضعیت سرویس + نمودار توزیع، از داده‌ی واقعی ──
+// قبلاً: کارت وضعیت ۶ ردیف «فعال» hardcoded داشت و نمودار توزیع [55,35,10] ثابت بود.
+// حالا: /api/diagnostics (موتور سلامت/گره‌ها/ران‌تایم/جاب/پایداری/ترکیب‌ها) + /api/links (توزیع پروتکل).
+async function loadOverviewReal(){
+  try{
+    const r=await authF('/api/diagnostics');
+    if(r.status===401){return}
+    const d=await r.json();
+    const c=d.checks||{};
+    const set=(id,txt,color)=>{const el=document.getElementById(id);if(el){el.textContent=txt;if(color)el.style.color=color}};
+    const G='var(--green-t)',A='var(--amber-t)',R='var(--red-t)';
+    // Network Health
+    try{
+      const h=(c.network_health&&c.network_health.summary)||c.network_health||{};
+      const tracked=h.tracked??0, by=h.by_state||{};
+      const healthy=(by.HEALTHY||0), unk=(by.UNKNOWN||0);
+      set('svc-health', tracked?`${healthy} سالم / ${tracked} ردیابی‌شده`:'— (هنوز پروب نشده)', tracked?G:'var(--t3)');
+    }catch(_e){set('svc-health','—','var(--t3)')}
+    // Nodes
+    try{
+      const n=c.nodes||{};
+      set('svc-nodes', `${n.nodes??0} گره · ${((n.by_state||{}).ONLINE||0)} آنلاین`, G);
+    }catch(_e){set('svc-nodes','—','var(--t3)')}
+    // Runtimes
+    try{
+      const rt=c.runtimes||{}; const list=rt.runtimes||[];
+      const failed=list.filter(x=>(x.state||'')==='FAILED').length;
+      set('svc-runtimes', `${list.length} ران‌تایم${failed?` · ${failed} FAILED`:''}`, failed?R:G);
+    }catch(_e){set('svc-runtimes','—','var(--t3)')}
+    // Jobs
+    try{
+      const j=c.jobs||{}; const sup=j.supervisor==='RUNNING'?G:R;
+      set('svc-jobs', `${j.supervisor==='RUNNING'?'فعال':'متوقف'} · ${(j.jobs||[]).length} جاب`, sup);
+    }catch(_e){set('svc-jobs','—','var(--t3)')}
+    // Persistence
+    try{
+      const p=c.persistence||{};
+      const ok=p.writable!==false;
+      set('svc-persist', ok?`قابل نوشتن · ${p.links??0} کانفیگ`:'⚠ Volume قابل نوشتن نیست', ok?G:A);
+    }catch(_e){set('svc-persist','—','var(--t3)')}
+    // Transports
+    try{
+      const t=c.transports||{};
+      set('svc-transports', `${t.valid_combos??0} معتبر · ${t.experimental??0} آزمایشی`, G);
+    }catch(_e){set('svc-transports','—','var(--t3)')}
+  }catch(e){console.error('loadOverviewReal failed:',e)}
+  // توزیع واقعی پروتکل‌ها از /api/links
+  try{
+    const r=await authF('/api/links');
+    if(r.status===401){return}
+    const j=await r.json();
+    const links=(j.links||j)||[];
+    const byProto={};
+    for(const l of links){const p=l.protocol||'other';byProto[p]=(byProto[p]||0)+1}
+    const labels=Object.keys(byProto),vals=labels.map(k=>byProto[k]);
+    if(ch2&&vals.length){
+      const palette=['#8B5CF6','#10B981','#FACC15','#38BDF8','#FB7185','#A3E635','#F97316','#22D3EE'];
+      ch2.data.labels=labels;
+      ch2.data.datasets[0].data=vals;
+      ch2.data.datasets[0].backgroundColor=labels.map((_,i)=>palette[i%palette.length]);
+      ch2.update();
+    }else if(ch2){
+      ch2.data.labels=['کانفیگی موجود نیست'];
+      ch2.data.datasets[0].data=[1];
+      ch2.update();
+    }
+  }catch(e){console.error('distribution failed:',e)}
+}
 function renderErrs(errs){
   const el=document.getElementById('errs-full');if(!el)return;
   if(!errs.length){el.innerHTML='<div style="color:var(--green-t);padding:10px;font-size:12px;display:flex;align-items:center;gap:5px"><i class="ti ti-circle-check"></i> هیچ خطایی نیست</div>';return}
@@ -5116,7 +5217,7 @@ async function loadActivity(){
         </div>
       </div>
     `).join('');
-  }catch(e){console.error(e)}
+  }catch(e){netErr(e,'لاگ فعالیت‌ها')}
 }
 let allSubsList=[],allLinksList=[],onlineNodesList=[];
 /* ══════ تست پینگ و سلامت کانفیگ‌ها ══════ */
@@ -5548,7 +5649,7 @@ async function loadZeusPage(){
     document.getElementById('zeus-tls-frag-len').value=tm.fragment_length||'';
     document.getElementById('zeus-tls-frag-dly').value=tm.fragment_delay||'';
     document.getElementById('zeus-tls-status').textContent=tm.enabled?'فعال':'غیرفعال';
-    document.getElementById('zeus-tls-sni').textContent='SNI: '+(tm.custom_sni||'—');
+    document.getElementById('zeus-tls-sni-metric').textContent='SNI: '+(tm.custom_sni||'—');
     document.getElementById('zeus-tls-badge').style.display=tm.enabled?'inline-block':'none';
     // ۳) Smart Mode
     const sm=cfg.smart_mode||{};
@@ -5635,7 +5736,7 @@ async function zeusSaveTlsMask(){
     const j=await r.json();
     zeusToggleSet('zeus-tls-toggle',j.tls_mask.enabled);
     document.getElementById('zeus-tls-status').textContent=j.tls_mask.enabled?'فعال':'غیرفعال';
-    document.getElementById('zeus-tls-sni').textContent='SNI: '+(j.tls_mask.custom_sni||'—');
+    document.getElementById('zeus-tls-sni-metric').textContent='SNI: '+(j.tls_mask.custom_sni||'—');
     document.getElementById('zeus-tls-badge').style.display=j.tls_mask.enabled?'inline-block':'none';
     toast('تنظیمات TLS Mask ذخیره شد','ok');
   }catch(e){toast('خطا در ارتباط','err')}
@@ -6242,10 +6343,13 @@ function gamingShowUpstreamGuide(){
         <b>۲) EMIX backend را روی VPS دیپلوی کنید:</b><br>
         <code dir="ltr" style="display:block;background:var(--bg);padding:8px;border-radius:8px;margin:6px 0;font-size:10.5px">git clone https://github.com/EMIXPI/EMIX-PRO.git<br>cd EMIX-PRO<br>pip install -r requirements.txt<br>python -m main</code>
         <b>۳) upstream آن لوکیشن را در وورکر به‌روز کنید:</b><br>
-        <code dir="ltr" style="display:block;background:var(--bg);padding:8px;border-radius:8px;margin:6px 0;font-size:10.5px">curl -X POST https://emix-gateway.personalemixone.workers.dev/admin/locations \\
-  -H "X-EMIX-Token: emix-gw-7f3a9c2e5b1d84f6a0c9e3d7b5f21h8k4" \\
+        <code dir="ltr" style="display:block;background:var(--bg);padding:8px;border-radius:8px;margin:6px 0;font-size:10.5px">curl -X POST https://YOUR-WORKER.workers.dev/admin/locations \\
+  -H "X-EMIX-Token: YOUR-WORKER-ADMIN-TOKEN" \\
   -H "Content-Type: application/json" \\
   -d '{"name":"tr","label":"ترکیه — استانبول","flag":"🇹🇷","upstream":"your-vps.example.com","note":"VPS ترک واقعی"}'</code>
+        <div style="margin:8px 0 12px;padding:10px 12px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:10px;font-size:11px">
+          <b style="color:#f59e0b">امنیت:</b> توکن ادمین وورکر را هرگز در پنل یا کد embed نکنید — فقط از Secrets وورکر (wrangler secret) بخوانید و curl را در ترمینال خودتان اجرا کنید.
+        </div>
         <b>۴) دوباره «بررسی IP خروج» را بزنید — حالا باید کشور ترکیه را ببینید.</b>
         <div style="margin-top:14px;padding:10px 12px;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.20);border-radius:10px;font-size:11px">
           <b style="color:var(--green-t)">نکته:</b> اگر فقط می‌خواهید نزدیک‌تر به ایران باشید (نه خروج واقعی)، می‌توانید روی «auto» بگذارید و PoP کلادفلر استانبول کار می‌کند — ولی IP خروج هنوز Railway است.
@@ -6709,8 +6813,8 @@ async function vpnGenerateWGQR(btn){
     const j=await r.json();
     if(j.ok&&j.config){
       box.style.display='';
-      // استفاده از سرویس QR API (مرورگر سمت کلاینت)
-      const qrUrl='https://api.qrserver.com/v1/create-qr-code/?size=300x300&data='+encodeURIComponent(j.config);
+      // QR محلی (backend خود پنل) — قبلاً api.qrserver.com شخص ثالث بود که credential می‌فرستاد
+      const qrUrl='/api/qr?data='+encodeURIComponent(j.config);
       box.innerHTML=`<div style="padding:14px;background:var(--bg);border-radius:10px;border:1px solid var(--card-b);text-align:center">
         <div style="font-weight:700;margin-bottom:10px">📷 QR کد کانفیگ WireGuard</div>
         <img src="${qrUrl}" alt="QR Code" style="border-radius:8px;border:1px solid var(--card-b);max-width:300px">
@@ -7216,7 +7320,7 @@ async function loadLinks(){
       window.__autoPingScheduled = true;
       setTimeout(()=>{ autoPingAll(localLinks.map(l=>l.uuid)); }, 1500);
     }
-  }catch(e){console.error(e)}
+  }catch(e){netErr(e,'لیست کانفیگ‌ها')}
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -7315,6 +7419,38 @@ function qcTab(name, el){
 }
 
 let cmBase = 'vless', cmTransport = 'ws';
+// ── Phase 37.18: frontend consumes the BACKEND compatibility matrix ──────
+// ONE source of truth: /api/config-matrix (compat.py TRANSPORT_MATRIX).
+// The create modal gates every (protocol, transport) choice against it —
+// impossible combinations are blocked BEFORE the request, with the reason.
+let EMIX_COMPAT = null;
+async function cmLoadMatrix(){
+  // Audit fix: قبلاً اگر ماتریس گرفته نمی‌شد gating بی‌صدا به «همه‌چیز مجاز»
+  // تنزل می‌کرد. حالا افت gating به کاربر اعلام می‌شود (سرور همچنان 400
+  // می‌دهد؛ این فقط لایه‌ی UX است — رفتار امنیتی تغییر نکرده).
+  try {
+    const r = await fetch('/api/config-matrix', {credentials:'same-origin'});
+    if (!r.ok) { netErr(r, 'ماتریس سازگاری'); return; }
+    const j = await r.json();
+    if (j && j.ok && Array.isArray(j.combinations)) EMIX_COMPAT = j.combinations;
+    else netErr(new Error('bad matrix payload'), 'ماتریس سازگاری');
+  } catch(e) { netErr(e, 'ماتریس سازگاری'); }
+}
+function cmMatrixState(proto, transport){
+  if (!EMIX_COMPAT) return 'VALID'; // matrix unavailable → legacy behavior
+  const key = (proto === 'vless' && transport !== 'ws') ? transport : `${proto}-${transport}`;
+  const row = EMIX_COMPAT.find(c => c.fused === key || (c.protocol === proto && c.transport === transport));
+  return row ? row.state : 'NOT_IMPLEMENTED';
+}
+function cmGateCombo(proto, transport){
+  const state = cmMatrixState(proto, transport);
+  if (state === 'VALID') return true;
+  const label = state === 'EXPERIMENTAL' ? 'ترکیب آزمایشی' :
+                state === 'NOT_IMPLEMENTED' ? 'پیاده‌سازی نشده' : 'ترکیب نامعتبر';
+  toast(`این ترکیب پروتکل/ترابرد ${label} است — ماتریس سازگاری سرور`, 'err');
+  return false;
+}
+cmLoadMatrix();
 
 function cmToggleDD(id){
   const el = document.getElementById(id);
@@ -7426,6 +7562,11 @@ function cmSelectBase(val, el){
   cmApplyProto();
 }
 function cmSelectTransport(val, el){
+  // Phase 37.18: gate against the backend compatibility matrix FIRST —
+  // an impossible combination never reaches the API.
+  const gateProto = (cmBase === 'telproxy') ? 'mtproto'
+    : (cmBase === 'shadowsocks') ? 'shadowsocks' : cmBase;
+  if (!cmGateCombo(gateProto, val)) return;
   cmTransport = val;
   document.querySelectorAll('#dd-transport .cm-opt').forEach(o => o.classList.remove('sel'));
   el.classList.add('sel');
@@ -7495,14 +7636,18 @@ function cmSpoofPreset(sel){
 function cmCheckSpoofCdnWarning(isOn){
   // Check if the link list response had cdn_domain=null — if so, show warning
   // when SNI spoof is toggled ON. We read from the first link's cdn_domain field.
+  // Audit fix: `window.allLinksList` همیشه undefined بود (let در scope اسکریپت
+  // propertyی window نمی‌شود) → وارنینگ همیشه نمایش داده می‌شد. حالا مستقیم
+  // از متغیر scope با typeof ایمن خوانده می‌شود.
   const warn = document.getElementById('nl-spoof-cdn-warn');
   if(!warn) return;
   if(!isOn){ warn.style.display = 'none'; return; }
   // Try to read CDN domain from the first link in allLinksList
   let hasCdn = false;
-  if(window.allLinksList && allLinksList.length > 0){
-    hasCdn = !!allLinksList[0].cdn_domain;
-  }
+  try{
+    const lst = (typeof allLinksList !== 'undefined') ? allLinksList : [];
+    if(lst && lst.length > 0){ hasCdn = !!lst[0].cdn_domain; }
+  }catch(_e){}
   warn.style.display = hasCdn ? 'none' : 'block';
 }
 // ── ALPN preset helper ─────────────────────────────────────────────────
@@ -7731,7 +7876,7 @@ async function deleteLink(uuid,nodeId){
   if(!confirm('حذف این کانفیگ؟'))return;
   try{const r=await authF(linkApiBase(nodeId)+uuid,{method:'DELETE'});if(!r.ok)throw new Error((await r.json().catch(()=>({}))).detail||'');toast('حذف شد ✓','ok');loadLinks();}catch(e){toast(e.message||'خطا (شاید کلید این نود اجازه‌ی حذف ندارد)','err')}
 }
-function showQR(link){window.open('https://api.qrserver.com/v1/create-qr-code/?size=300x300&data='+encodeURIComponent(link),'_blank')}
+function showQR(link){window.open('/api/qr?data='+encodeURIComponent(link),'_blank')}
 let allSubsRaw=[];
 async function loadSubs(){
   try{
@@ -8017,7 +8162,7 @@ async function loadSubsPage(){
         </div>
       </div>
     `;}).join('');
-  }catch(e){}
+  }catch(e){netErr(e,'سابسکریپشن‌ها')}
 }
 function cpSubAll(){navigator.clipboard.writeText(location.protocol+'//'+location.host+'/sub-all').then(()=>toast('کپی شد ✓','ok'))}
 function parseBytesFmt(s){
@@ -8093,9 +8238,9 @@ async function loadConns(){
     }).join('');
   }catch(e){console.error(e)}
 }
-async function loadErrs(){try{const r=await authF('/stats'),d=await r.json();renderErrs(d.recent_errors||[]);}catch(e){}}
+async function loadErrs(){try{const r=await authF('/stats'),d=await r.json();renderErrs(d.recent_errors||[]);}catch(e){netErr(e,'آخرین خطاها')}}
 async function fetchDefaultVless(){
-  try{const r=await authF('/api/links'),d=await r.json();const links=d.links||[];const def=links.find(l=>l.limit_bytes===0&&l.active&&!l.expired)||links.find(l=>l.active&&!l.expired)||links[0];document.getElementById('vless-main').textContent=def?def.vless_link:'هنوز کانفیگی وجود ندارد';}catch(e){}
+  try{const r=await authF('/api/links'),d=await r.json();const links=d.links||[];const def=links.find(l=>l.limit_bytes===0&&l.active&&!l.expired)||links.find(l=>l.active&&!l.expired)||links[0];document.getElementById('vless-main').textContent=def?def.vless_link:'هنوز کانفیگی وجود ندارد';}catch(e){netErr(e,'کانفیگ پیش‌فرض')}
 }
 function cpText(id){navigator.clipboard.writeText(document.getElementById(id).textContent).then(()=>toast('کپی شد ✓','ok'))}
 function qrFor(id){showQR(document.getElementById(id).textContent)}
@@ -8241,7 +8386,7 @@ async function loadAnnouncements(){
         body: JSON.stringify({ ids: list.map(a => a.id) })
       }).catch(() => {});
     }
-  }catch(e){}
+  }catch(e){netErr(e,'اطلاعیه‌ها')}
 }
 function dismissAnn(id){
   const seen=JSON.parse(localStorage.getItem('rvg-seen-ann')||'[]');
@@ -8331,7 +8476,7 @@ async function loadSupportMsgs() {
         localStorage.setItem('rvg-last-seen-support-msg', lastAdmin.id);
     }
   } catch (e) {
-    // silent fail
+    netErr(e, 'پیام‌های پشتیبانی');
   }
 }
  
@@ -8341,7 +8486,7 @@ async function loadLoggingSetting(){
     if(!r.ok)return;
     const d=await r.json();
     document.getElementById('disable-logging-tog')?.classList.toggle('on', !!d.disabled);
-  }catch(e){}
+  }catch(e){netErr(e,'تنظیم لاگ')}
 }
 async function toggleLoggingSetting(){
   const btn=document.getElementById('disable-logging-tog');
@@ -8411,6 +8556,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   loadSupportMsgs();
 
   setInterval(fetchStats, 2000);
+  // Audit fix: وضعیت سرویس + توزیع پروتکل از داده‌ی واقعی (هر ۳۰s + بلافاصله)
+  loadOverviewReal();
+  setInterval(loadOverviewReal, 30000);
   setInterval(() => {
     if (document.getElementById('pg-links').classList.contains('on')) loadLinks();
     if (document.getElementById('pg-subgroups').classList.contains('on')) loadSubs();
@@ -8440,6 +8588,9 @@ async function loadVersion(){
       const dv=await dr.json();
       const el=document.getElementById('srv-version-val');
       if(el&&dv.version)el.textContent='v'+dv.version;
+      // Audit fix: چیپ‌های نسخه‌ی hardcoded (sidebar/footer) حالا واقعی‌اند
+      const fv=document.getElementById('footer-ver');if(fv&&dv.version)fv.textContent='v'+dv.version;
+      const lv=document.getElementById('logo-ver-chip');if(lv&&dv.version)lv.textContent='Gateway · v'+dv.version;
     }
   }catch(e){}
   try{
@@ -9206,84 +9357,7 @@ async function loadUpdateHistory(){
     }).join('');
   }catch(e){console.error(e)}
 }
-let autoDomainPolling = null;
-
-async function autoGetMtprotoDomain(){
-  // اول چک کن توکن ذخیره شده یا نه
-  try{
-    const r = await authF('/api/bot-tcp-proxy/status'), d = await r.json();
-    if(!d.has_token){
-      document.getElementById('auto-domain-token-wrap').style.display = 'block';
-      document.getElementById('auto-domain-status').innerHTML = '<i class="ti ti-key"></i> برای دریافت خودکار دامنه، ابتدا توکن Railway را وارد کن.';
-      return;
-    }
-    startAutoDomainFetch();
-  }catch(e){
-    toast('خطا در بررسی وضعیت توکن','err');
-  }
-}
-
-async function submitAutoDomainToken(){
-  const token = document.getElementById('auto-domain-token').value.trim();
-  if(!token){ toast('توکن را وارد کن','err'); return; }
-  document.getElementById('auto-domain-token-wrap').style.display = 'none';
-  startAutoDomainFetch(token);
-}
-
-async function startAutoDomainFetch(token){
-  const btn = document.getElementById('auto-domain-btn');
-  const statusEl = document.getElementById('auto-domain-status');
-  btn.disabled = true;
-  btn.innerHTML = '<i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i> در حال دریافت...';
-  statusEl.innerHTML = '<i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i> در حال دریافت دامنه از Railway...';
-
-  try{
-    const body = { mode: 'blacklist' };
-    if(token) body.token = token;
-    const r = await authF('/api/bot-tcp-proxy/start', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify(body)
-    });
-    if(!r.ok){
-      const d = await r.json().catch(()=>({}));
-      throw new Error(d.detail || 'خطا در شروع فرآیند');
-    }
-    autoDomainPolling = setInterval(pollAutoDomain, 1000);
-  }catch(e){
-    statusEl.innerHTML = '<i class="ti ti-alert-circle" style="color:var(--red-t)"></i> ✗ '+esc(e.message);
-    btn.disabled = false;
-    btn.innerHTML = '<i class="ti ti-bolt"></i> دریافت دامنه';
-  }
-}
-
-async function pollAutoDomain(){
-  try{
-    const r = await authF('/api/bot-tcp-proxy/status'), d = await r.json();
-    const btn = document.getElementById('auto-domain-btn');
-    const statusEl = document.getElementById('auto-domain-status');
-
-    if(d.running){
-      statusEl.innerHTML = `<i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i> در حال جستجوی دامنه... (${d.attempts} تلاش)`;
-      return;
-    }
-
-    clearInterval(autoDomainPolling);
-    btn.disabled = false;
-    btn.innerHTML = '<i class="ti ti-bolt"></i> دریافت خودکار دامنه';
-
-    if(d.result){
-      // پر کردن خودکار فیلدها بدون دخالت کاربر
-      document.getElementById('nl-mtproto-domain').value = d.result.domain;
-      document.getElementById('nl-mtproto-port').value = ''; // پورت داخلی همان پیش‌فرض می‌ماند؛ این پورت، پورت عمومی TCP است
-      statusEl.innerHTML = `<i class="ti ti-circle-check" style="color:var(--green-t)"></i> دامنه دریافت شد: <b>${esc(d.result.domain)}:${d.result.port}</b>`;
-      toast('دامنه و پورت خودکار دریافت شد ✓','ok');
-    } else if(d.error){
-      statusEl.innerHTML = '<i class="ti ti-alert-circle" style="color:var(--red-t)"></i> ✗ '+esc(d.error);
-      toast('✗ '+d.error,'err');
-    }
-  }catch(e){}
-}
-
+// Audit fix: auto-domain widget JS حذف شد — عناصر HTML آن وجود نداشتند (موتور TCP-Proxy واقعی از /api/bot-tcp-proxy قابل استفاده است)
 function openDomainScanModal(){
   dsDomains = [];
   dsRenderChips();
@@ -9292,29 +9366,6 @@ function openDomainScanModal(){
   authF('/api/bot-tcp-proxy/status').then(r=>r.json()).then(d=>{
     if(d.has_token) document.getElementById('ds-token-section').style.display = 'none';
   }).catch(()=>{});
-}
-async function autoAssignMtprotoDomain(){
-  const btn = document.getElementById('auto-domain-btn');
-  const statusEl = document.getElementById('auto-domain-status');
-  btn.disabled = true;
-  btn.innerHTML = '<i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i> در حال دریافت...';
-  statusEl.innerHTML = '<i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i> در حال اتصال به Railway و دریافت دامنه...';
-
-  try{
-    const r = await authF('/api/bot-tcp-proxy/start', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ mode:'blacklist' }) // توکن ذخیره‌شده خودکار استفاده می‌شود
-    });
-    if(!r.ok){
-      const d = await r.json().catch(()=>({}));
-      throw new Error(d.detail || 'خطا در شروع فرآیند');
-    }
-    autoDomainPolling = setInterval(pollAutoDomain, 1200);
-  }catch(e){
-    statusEl.innerHTML = '<i class="ti ti-alert-circle" style="color:var(--red-t)"></i> ✗ '+e.message;
-    btn.disabled = false;
-    btn.innerHTML = '<i class="ti ti-bolt"></i> دریافت خودکار دامنه';
-  }
 }
 
 
@@ -9728,7 +9779,7 @@ async function loadNodes(fresh){
     const r=await authF('/api/nodes/aggregate'+(fresh?'?fresh=1':''));
     const d=await r.json();
     renderNodes(d);
-  }catch(e){}
+  }catch(e){netErr(e,'نودها')}
 }
 
 function loadNodesPage(){ loadNodeKeys(); loadNodes(); }
@@ -10283,7 +10334,7 @@ function protoChip(p){{
 
 function showQR(label,link){{
   document.getElementById('qr-label').textContent=label;
-  document.getElementById('qr-img').src='https://api.qrserver.com/v1/create-qr-code/?size=260x260&data='+encodeURIComponent(link);
+  document.getElementById('qr-img').src='/api/qr?data='+encodeURIComponent(link);
   document.getElementById('qr-modal').classList.add('open');
 }}
 

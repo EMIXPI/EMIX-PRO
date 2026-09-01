@@ -99,8 +99,16 @@ class TestSNIApplicability:
 
 class TestMatrixView:
     def test_matrix_lists_all_combinations(self):
+        # Phase 37.3: the matrix is the FULL transport×security table (34
+        # combos), not just the 8 runtime-backed ones. Every VALID entry
+        # must still correspond to a real SERVER_RUNTIME entry.
         m = compat.matrix_view()
-        assert len(m["combinations"]) == len(compat.SERVER_RUNTIME)
+        valid = [c for c in m["combinations"] if c["state"] == "VALID"]
+        assert len(valid) == len(compat.SERVER_RUNTIME)
+        for c in valid:
+            assert (c["protocol"], c["transport"]) in compat.SERVER_RUNTIME
+            assert c["runtime"] in ("relay", "subprocess")
+        assert len(m["combinations"]) >= 30  # complete coverage incl. INVALID/EXPERIMENTAL
         assert set(m["protocols"]) == compat.PROTOCOLS
         assert "vless" in m["production"]
         assert "vmess" not in m["production"]
@@ -110,7 +118,24 @@ class TestMatrixView:
         assert m["readiness"]["wireguard"] == "BETA"
         assert m["readiness"]["hysteria2"] == "EXPERIMENTAL"
 
-    def test_every_combo_carries_fused_string(self):
+    def test_every_valid_combo_carries_fused_string(self):
+        # round-trip is only guaranteed for VALID (runtime-backed) combos —
+        # the legacy fused storage format only models those.
         for c in compat.matrix_view()["combinations"]:
+            if c["state"] != "VALID":
+                continue
             p, t = compat.decompose(c["fused"])
             assert (p, t) in compat.SERVER_RUNTIME
+
+    def test_matrix_states_present(self):
+        # Phase 37.3: every declared state appears, incl. honest
+        # NOT_IMPLEMENTED / EXPERIMENTAL entries
+        m = compat.matrix_view()
+        states = {c["state"] for c in m["combinations"]}
+        assert states == {"VALID", "INVALID", "EXPERIMENTAL", "NOT_IMPLEMENTED"}
+        # httpupgrade is honestly NOT_IMPLEMENTED
+        assert compat.matrix_state("vless", "httpupgrade", "tls") == "NOT_IMPLEMENTED"
+        # reality over WS is impossible over the relay path
+        assert compat.matrix_state("vless", "ws", "reality") == "INVALID"
+        # reality over raw TCP is EXPERIMENTAL (link emission only)
+        assert compat.matrix_state("vless", "tcp", "reality") == "EXPERIMENTAL"

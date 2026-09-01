@@ -13,8 +13,9 @@ logger = logging.getLogger("EMIX.adapter.trojan_xhttp")
 
 class TrojanXhttpAdapter(ExistingAdapterBase):
     name = "trojan-xhttp"
-    version = "1.0.0"
-    description = "Trojan over XHTTP (4 modes)"
+    version = "1.1.0"
+    description = ("Trojan over XHTTP (2 validated modes: stream-up, packet-up; "
+                   "shared GET downlink)")
 
     def capabilities(self) -> Capabilities:
         return Capabilities(

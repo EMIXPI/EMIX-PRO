@@ -107,8 +107,9 @@ def test_reject_mtproto_without_public_host():
 
 def test_new_spec_sni_rejected_for_ss():
     # a NEW spec (no legacy link record) with SNI override on SS → rejected
+    # (Phase 37.4: valid credentials pass first, so the SNI rule is the blocker)
     spec = CC.ConfigSpec(protocol="shadowsocks", transport="ws", security="tls",
-                         ss_cipher="chacha20-ietf-poly1305", ss_password="pw",
+                         ss_cipher="chacha20-ietf-poly1305", ss_password="password1234",
                          host="h.example.com",
                          endpoint=None)
     spec.link = None
@@ -170,7 +171,7 @@ def test_xray_json_for_vless_ws():
 def test_xray_json_none_for_ss_and_mtproto():
     cc = CC.compile_config(CC.ConfigSpec(
         protocol="shadowsocks", transport="ws", security="tls",
-        ss_cipher="chacha20-ietf-poly1305", ss_password="pw",
+        ss_cipher="chacha20-ietf-poly1305", ss_password="password1234",
         host="h.example.com", credential="x"))
     assert cc.ok and cc.xray_json is None
 

@@ -584,3 +584,62 @@ async def all_nodes_dict() -> dict:
 
 def all_providers_dict() -> dict:
     return {"providers": list_providers(), "count": len(_PROVIDERS)}
+
+
+# ─── Persistence snapshot (audit fix 2026-09) ──────────────────────────────
+# کلیدهای WireGuard سرور قبلاً فقط در-memory بودند — بعد از هر redeploy،
+# کلید خصوصی سرور گم می‌شد و همه‌ی peerها بی‌اعتبار می‌شدند.
+# NOTE: wg_server_private_key عمداً در snapshot می‌ماند (state file خودش
+# حاوی credentialهای لینک است و روی volume خصوصی پنل می‌نشیند).
+
+def persist_snapshot() -> dict:
+    """Serialize nodes INCLUDING wg_server_private_key (needed to survive restart)."""
+    out = []
+    for n in _nodes.values():
+        d = asdict(n)
+        d["protocol"] = n.protocol.value if isinstance(n.protocol, VPNProtocol) else n.protocol
+        d["status"] = n.status.value if isinstance(n.status, VPNNodeStatus) else n.status
+        d["health_status"] = n.health_status.value if isinstance(n.health_status, VPNHealthStatus) else n.health_status
+        out.append(d)
+    return {"vpn_nodes": out}
+
+
+def restore_snapshot(data: dict) -> int:
+    raw = data.get("vpn_nodes") or []
+    restored = 0
+    for item in raw:
+        try:
+            if not isinstance(item, dict) or not item.get("id"):
+                continue
+            proto = item.get("protocol")
+            if isinstance(proto, str):
+                try:
+                    proto = VPNProtocol(proto)
+                except ValueError:
+                    proto = VPNProtocol.WIREGUARD
+            item["protocol"] = proto
+            status = item.get("status")
+            if isinstance(status, str):
+                try:
+                    status = VPNNodeStatus(status)
+                except ValueError:
+                    status = VPNNodeStatus.PENDING
+            item["status"] = status
+            hs = item.get("health_status")
+            if isinstance(hs, str):
+                try:
+                    hs = VPNHealthStatus(hs)
+                except ValueError:
+                    hs = VPNHealthStatus.UNKNOWN
+            item["health_status"] = hs
+            node = VPNNode(**{k: v for k, v in item.items()
+                              if k in VPNNode.__dataclass_fields__})
+            _nodes[node.id] = node
+            restored += 1
+        except Exception:
+            continue
+    return restored
+
+
+def reset_for_tests() -> None:
+    _nodes.clear()

@@ -396,3 +396,44 @@ async def all_profiles_dict() -> dict:
             "profiles": [p.to_dict() for p in _profiles.values()],
             "count": len(_profiles),
         }
+
+
+# ─── Persistence snapshot (audit fix 2026-09) ──────────────────────────────
+# docstring این ماژول مدعی persistence بود ولی save_state هرگز شاملش نبود —
+# پس از هر restart همه‌ی پروفایل‌های SNI پاک می‌شدند. این snapshot توسط
+# main.save_state/load_state فراخوانی می‌شود.
+
+def persist_snapshot() -> dict:
+    """Serialize all SNI profiles for the state file (no private keys involved)."""
+    return {
+        "sni_profiles": [p.to_dict() for p in _profiles.values()],
+    }
+
+
+def restore_snapshot(data: dict) -> int:
+    """Restore profiles from a state snapshot. Defensive: corrupt records are
+    skipped (counted), never crash the boot. Returns restored count."""
+    raw = data.get("sni_profiles") or []
+    restored = 0
+    for item in raw:
+        try:
+            if not isinstance(item, dict) or not item.get("id") or not item.get("server_name"):
+                continue
+            status = item.get("last_health_status")
+            if isinstance(status, str):
+                try:
+                    status = SNIProfileStatus(status)
+                except ValueError:
+                    status = SNIProfileStatus.UNKNOWN
+            item["last_health_status"] = status
+            prof = SNIProfile(**{k: v for k, v in item.items()
+                                 if k in SNIProfile.__dataclass_fields__})
+            _profiles[prof.id] = prof
+            restored += 1
+        except Exception:
+            continue
+    return restored
+
+
+def reset_for_tests() -> None:
+    _profiles.clear()

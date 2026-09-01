@@ -1,10 +1,24 @@
-# ip_quality.py — IP Quality Engine (Phase 9 / Phase 28)
+# ip_quality.py — IP Quality Engine v2 (Phase 9 / 28 / 37.7)
 #
 # Measures endpoint quality with EVIDENCE. Never labels an IP "clean"
 # without data: every classification carries the signals it was based on
 # plus a confidence score.
 #
-# Classification:
+# Phase 37.7 — FACET SEPARATION:
+#   "Clean IP" must NEVER mean "IP responded to ping". The assessment now
+#   carries independent facets, each with its own state and its own UNKNOWN:
+#
+#     network_reachability  — TCP probes answered?      (PASS/DEGRADED/FAIL)
+#     ip_reputation         — providers report abuse?   (PASS/DEGRADED/FAIL/UNKNOWN)
+#     proxy_classification  — is it a proxy/VPN/hosting (PASS/DEGRADED/FAIL/UNKNOWN)
+#     stability             — loss/jitter over history  (PASS/DEGRADED/UNKNOWN)
+#     latency               — RTT quality               (PASS/DEGRADED/FAIL/UNKNOWN)
+#
+#   UNKNOWN is returned whenever evidence is unavailable — it is NEVER
+#   silently converted to PASS. The legacy single `classification` field
+#   remains (derived from the facets) for backward compatibility.
+#
+# Classification (legacy view, now derived from facets):
 #   CLEAN        — reachable, TLS ok, no negative reputation signal, ≥1
 #                  provider that explicitly reports proxy/VPN fields and
 #                  reported them negative, providers agree.
@@ -16,13 +30,18 @@
 #   BLOCKED      — unreachable, or abuse signal reported.
 #   UNKNOWN      — no evidence yet.
 #
-# Provider abstraction: IPQualityProvider ABC; providers are registered in
-# order and all consulted in parallel. Third-party reputation providers can
-# be added later without touching the classification logic.
+# Provider abstraction (Phase 37.7): IPQualityProvider ABC with the full
+# interface lookup(ip) / reputation(ip) / classification(ip) / asn(ip) /
+# geo(ip). Subclasses implement lookup() only; the other methods are
+# default facade implementations so providers stay trivial to add.
+# Providers are registered in order and all consulted in parallel — no
+# provider is hardcoded into the classification logic. Results are cached
+# with expiration (CACHE_TTL) and history is bounded.
 
 from __future__ import annotations
 import abc
 import asyncio
+import os
 import socket
 import ssl
 import time
@@ -34,9 +53,18 @@ from collections import deque
 import httpx
 from fastapi import APIRouter, Request, HTTPException, Depends
 
-# Imported at main.py bootstrap time (after require_auth is defined) —
-# same pattern as gaming_boost / link_health.
-from main import require_auth
+# NOTE (audit fix 2026-09): این ماژول قبلاً در سطح module از main ایمپورت
+# می‌کرد (`from main import require_auth`) که import دایره‌ای می‌ساخت؛ اگر
+# هر ماژول دیگری (مثل تست‌ها) ip_quality را قبل از اتمام import ای main
+# ایمپورت می‌کرد، روت‌های این engine هرگز رجیستر نمی‌شدند (خطای ساکتِ
+# «partially initialized module»). حالا auth به‌صورت lazy حل می‌شود.
+
+
+async def require_auth_dep(request: Request):
+    """Lazy auth dependency — breaks the main↔ip_quality import cycle."""
+    from main import require_auth
+    return await require_auth(request)
+
 
 router = APIRouter()
 
@@ -49,6 +77,9 @@ TLS_TIMEOUT = 6.0
 HISTORY = 6                 # checks kept per IP
 
 CLASSIFICATIONS = ("CLEAN", "GOOD", "QUESTIONABLE", "DEGRADED", "BLOCKED", "UNKNOWN")
+FACETS = ("network_reachability", "ip_reputation", "proxy_classification",
+          "stability", "latency")
+FACET_STATES = ("PASS", "DEGRADED", "FAIL", "UNKNOWN")
 
 
 # ── Provider abstraction ────────────────────────────────────────────────────
@@ -78,12 +109,58 @@ class ProviderResult:
 
 
 class IPQualityProvider(abc.ABC):
-    """Third-party IP intelligence provider. Add providers by subclassing."""
+    """Third-party IP intelligence provider. Add providers by subclassing.
+
+    Phase 37.7 interface — subclasses implement lookup() only; the rest are
+    default facade methods so every provider satisfies the full contract:
+        lookup(ip)          → ProviderResult (geo + ASN + flags)
+        reputation(ip)      → "CLEAN"|"NEGATIVE"|"UNKNOWN"
+        classification(ip)  → "RESIDENTIAL"|"HOSTING"|"PROXY"|"VPN"|"UNKNOWN"
+        asn(ip)             → "AS13335" | None
+        geo(ip)             → {country, country_code, region, city} | None
+    """
     name: str = "base"
 
     @abc.abstractmethod
     async def lookup(self, ip: str) -> ProviderResult:
         ...
+
+    async def reputation(self, ip: str) -> str:
+        res = await self.lookup(ip)
+        if not res.ok:
+            return "UNKNOWN"
+        if res.abuse_confidence is not None and res.abuse_confidence >= 50:
+            return "NEGATIVE"
+        if res.is_proxy or res.is_vpn:
+            return "NEGATIVE"
+        if res.is_proxy is False and res.abuse_confidence in (None, 0):
+            return "CLEAN"
+        return "UNKNOWN"
+
+    async def classification(self, ip: str) -> str:
+        res = await self.lookup(ip)
+        if not res.ok:
+            return "UNKNOWN"
+        if res.is_vpn:
+            return "VPN"
+        if res.is_proxy:
+            return "PROXY"
+        if res.is_hosting:
+            return "HOSTING"
+        if res.is_proxy is False and res.is_hosting is False:
+            return "RESIDENTIAL"
+        return "UNKNOWN"
+
+    async def asn(self, ip: str) -> Optional[str]:
+        res = await self.lookup(ip)
+        return res.asn if res.ok else None
+
+    async def geo(self, ip: str) -> Optional[dict]:
+        res = await self.lookup(ip)
+        if not res.ok:
+            return None
+        return {k: getattr(res, k) for k in ("country", "country_code", "region", "city")
+                if getattr(res, k) is not None}
 
 
 class IpApiCoProvider(IPQualityProvider):
@@ -116,11 +193,22 @@ class IpApiCoProvider(IPQualityProvider):
 
 class IpApiComProvider(IPQualityProvider):
     """ip-api.com — free, no key. Reports proxy/hosting flags + reverse DNS.
-    The only built-in provider that justifies CLEAN vs GOOD distinction."""
+
+    SECURITY (audit fix 2026-09): free tier of ip-api.com only answers over
+    plain HTTP, which leaks every queried IP to on-path observers. The
+    provider is therefore DISABLED by default and only used when the
+    operator explicitly opts in with EMIX_IP_API_HTTP=1 (privacy trade-off
+    documented in SECURITY_AUDIT_FINAL.md).
+    The only built-in provider that justifies CLEAN vs GOOD distinction.
+    """
     name = "ip-api.com"
+    enabled = os.environ.get("EMIX_IP_API_HTTP", "0").strip().lower() in ("1", "true", "yes", "on")
 
     async def lookup(self, ip: str) -> ProviderResult:
         res = ProviderResult(provider=self.name)
+        if not self.enabled:
+            res.error = "disabled: plaintext-HTTP provider (opt in with EMIX_IP_API_HTTP=1)"
+            return res
         try:
             fields = ("status,message,continent,country,countryCode,regionName,city,"
                       "as,org,reverse,proxy,hosting")
@@ -236,6 +324,7 @@ class IPAssessment:
     ip: str
     classification: str = "UNKNOWN"
     confidence: float = 0.0            # 0..1 — how much evidence backs the label
+    facets: dict = field(default_factory=dict)   # Phase 37.7 facet states
     providers: List[dict] = field(default_factory=list)
     tcp: dict = field(default_factory=dict)
     tls: dict = field(default_factory=dict)
@@ -255,6 +344,77 @@ class IPAssessment:
         d = asdict(self)
         d["checked_at_iso"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(self.checked_at))
         return d
+
+
+def derive_facets(answered: List[ProviderResult], tcp: dict,
+                  negative_keys: List[str], abuse_keys: List[str],
+                  history_loss: Optional[float] = None,
+                  history_jitter: Optional[float] = None) -> dict:
+    """PURE facet derivation (Phase 37.7). Each facet independent, honest UNKNOWN.
+
+      network_reachability — from live TCP probes only
+      ip_reputation        — from provider answers (abuse / negative signals)
+      proxy_classification — proxy/vpn/hosting flags
+      stability            — from check history (loss / jitter)
+      latency              — from TCP RTT
+    """
+    probes = tcp.get("probes") or 0
+    ok_n = tcp.get("ok") or 0
+    loss = tcp.get("loss_pct")
+    lat = tcp.get("latency_ms")
+
+    if probes:
+        if ok_n == 0:
+            reach = "FAIL"
+        elif loss is not None and loss > 0:
+            reach = "DEGRADED"
+        else:
+            reach = "PASS"
+    else:
+        reach = "UNKNOWN"
+
+    if not answered:
+        reputation = "UNKNOWN"
+        proxy_cls = "UNKNOWN"
+    else:
+        reputation = "FAIL" if abuse_keys else ("DEGRADED" if negative_keys else "PASS")
+        vpn_flags = [p for p in answered if p.is_vpn]
+        proxy_flags = [p for p in answered if p.is_proxy]
+        hosting_flags = [p for p in answered if p.is_hosting]
+        if vpn_flags or proxy_flags:
+            proxy_cls = "FAIL"
+        elif hosting_flags:
+            proxy_cls = "DEGRADED"
+        elif any(p.is_proxy is False for p in answered):
+            proxy_cls = "PASS"
+        else:
+            proxy_cls = "UNKNOWN"
+
+    if history_loss is None:
+        stability = "UNKNOWN"
+    elif history_loss > 0:
+        stability = "DEGRADED"
+    else:
+        stability = "PASS"
+
+    if lat is None:
+        latency = "UNKNOWN"
+    elif ok_n == 0:
+        latency = "UNKNOWN"
+    elif lat > 400:
+        latency = "FAIL"
+    elif lat > 150:
+        latency = "DEGRADED"
+    else:
+        latency = "PASS"
+
+    return {
+        "network_reachability": reach,
+        "ip_reputation": reputation,
+        "proxy_classification": proxy_cls,
+        "stability": stability,
+        "latency": latency,
+    }
 
 
 def assess(ip: str, providers: List[ProviderResult], tcp: dict,
@@ -295,6 +455,15 @@ def assess(ip: str, providers: List[ProviderResult], tcp: dict,
                 (isinstance(v, int) and v >= 50)]
     abuse = [k for k, v in a.reputation_signals.items()
              if k.endswith("abuse_confidence") and isinstance(v, int) and v >= 50]
+
+    # Phase 37.7: independent facets (before the legacy label logic —
+    # the facets stay even when the legacy classification short-circuits)
+    hist_loss = None
+    if _history.get(ip):
+        losses = [h.get("loss_pct") for h in _history.get(ip, []) if h.get("loss_pct") is not None]
+        if losses:
+            hist_loss = statistics.mean(losses)
+    a.facets = derive_facets(answered, tcp, negative, abuse, history_loss=hist_loss)
 
     if not reachable and (loss or 0) >= 100.0:
         a.classification, a.notes = "BLOCKED", ["TCP unreachable on all probes"]
@@ -403,14 +572,14 @@ def _validate_ip(ip: str) -> str:
 
 
 @router.get("/api/ip-quality/summary")
-async def ip_quality_summary(_=Depends(require_auth)):
+async def ip_quality_summary(_=Depends(require_auth_dep)):
     return {"ok": True, **summary()}
 
 
 @router.get("/api/ip-quality/{ip}")
 async def ip_quality_check(ip: str, sni: str = "", port: int = 443,
                            force: bool = False, hostname: str = "",
-                           _=Depends(require_auth)):
+                           _=Depends(require_auth_dep)):
     """Quality check for one IP. `sni` enables the real TLS handshake probe."""
     ip = _validate_ip(ip)
     a = await check_ip(ip, sni=sni, port=port, force=force, hostname=hostname)
@@ -418,7 +587,7 @@ async def ip_quality_check(ip: str, sni: str = "", port: int = 443,
 
 
 @router.post("/api/ip-quality/scan")
-async def ip_quality_scan(request: Request, _=Depends(require_auth)):
+async def ip_quality_scan(request: Request, _=Depends(require_auth_dep)):
     """Batch scan: {ips: [...], sni?, port?}. Bounded to 25 IPs per call."""
     body = await request.json()
     ips = body.get("ips") or []
@@ -449,7 +618,7 @@ async def ip_quality_scan(request: Request, _=Depends(require_auth)):
 
 
 @router.post("/api/ip-quality/compare")
-async def ip_quality_compare(request: Request, _=Depends(require_auth)):
+async def ip_quality_compare(request: Request, _=Depends(require_auth_dep)):
     """Compare cached assessments for a set of IPs (no new probes)."""
     body = await request.json()
     ips = body.get("ips") or []

@@ -86,6 +86,11 @@ class EndpointProfile:
       dns_mode      — auto | system | doh
       node_id       — optional association to a managed node
       transport     — optional transport hint validated against compat
+      cert_expectation — Phase 37.8: what certificate the client should accept:
+                      "sni"    — chain must match the SNI value (normal)
+                      "any"     — accept any cert (allowInsecure legacy; no MITM protection)
+                      "pinned"  — expect a pinned certificate (spki recorded externally)
+      region        — optional geographic/colo hint (subscription REGION filter)
     """
     id: str
     name: str
@@ -102,6 +107,8 @@ class EndpointProfile:
     dns_mode: str = "auto"
     node_id: Optional[str] = None
     transport: Optional[str] = None
+    cert_expectation: str = "sni"
+    region: str = ""
     description: str = ""
     created_at: float = field(default_factory=time.time)
 
@@ -168,7 +175,8 @@ async def update_profile(profile_id: str, updates: dict) -> Optional[EndpointPro
         snapshot.update({k: v for k, v in updates.items() if k in (
             "name", "address", "sni", "host_header", "port", "path_prefix",
             "security", "alpn", "min_tls", "allow_insecure", "ip_version",
-            "dns_mode", "node_id", "transport", "description",
+            "dns_mode", "node_id", "transport", "cert_expectation",
+            "region", "description",
         )})
         candidate = EndpointProfile(**snapshot)
         errors = validate_profile(candidate)
@@ -227,6 +235,15 @@ def validate_profile(p: EndpointProfile) -> List[str]:
         errors.append(f"ip_version must be one of {sorted(_VALID_IP_VERSIONS)}")
     if p.dns_mode not in _VALID_DNS_MODES:
         errors.append(f"dns_mode must be one of {sorted(_VALID_DNS_MODES)}")
+    # Phase 37.8: certificate expectation must be a known value and must
+    # stay consistent with allow_insecure ("any" ⇒ allowInsecure semantics)
+    if p.cert_expectation not in ("sni", "any", "pinned"):
+        errors.append("cert_expectation must be sni|any|pinned")
+    if p.cert_expectation == "any" and not p.allow_insecure:
+        errors.append("cert_expectation='any' requires allow_insecure=true "
+                      "(client would otherwise reject the mismatched chain)")
+    if p.region and len(p.region) > 24:
+        errors.append("region must be ≤ 24 chars (e.g. 'AMS', 'CF-HKG', 'DE')")
     # Cross-compat: if the profile declares a transport hint, validate it.
     if p.transport:
         c = compat.validate("vless", p.transport, p.security)
@@ -373,3 +390,69 @@ def resolve(link: dict, host: str, cdn_domain: str = "") -> ResolvedEndpoint:
         security="tls", alpn=["h2", "http/1.1"], allow_insecure=False,
         mode="standard", notes=notes,
     )
+
+
+# ── Legacy migration (Phase 37.8) ──────────────────────────────────────────
+# spoof_sni / spoof_sni_enabled keep working (wire compat, never deleted).
+# migrate_legacy_link() converts a legacy link into the equivalent normalized
+# EndpointProfile WITHOUT touching the stored link — the operator can then
+# switch the link to endpoint_profile_id explicitly when ready.
+
+def migrate_legacy_link(link: dict, host: str, cdn_domain: str = "",
+                        profile_id: Optional[str] = None,
+                        name_prefix: str = "migrated") -> Optional[EndpointProfile]:
+    """Build the normalized profile equivalent of a legacy spoof link.
+
+    Mode A (CDN + spoof) → address=cdn, sni=spoof, cert_expectation="sni"
+    Mode B (direct + spoof) → address=host, sni=spoof, allow_insecure=True,
+                              cert_expectation="any" (honest legacy semantics)
+    Non-spoof links → None (nothing to migrate).
+
+    NEVER claims SNI changes the network route: Mode A changes the address
+    (routes via CDN edge), Mode B only changes the ClientHello value.
+    """
+    spoof_enabled = bool(link.get("spoof_sni_enabled"))
+    spoof_value = link.get("spoof_sni")
+    ok, spoof = validate_hostname(spoof_value) if (spoof_enabled and spoof_value) else (False, None)
+    if not spoof:
+        return None
+    label = str(link.get("label", "") or "link")[:30] or "link"
+    pid = profile_id or f"{new_profile_id()}"
+    if spoof and cdn_domain:
+        return EndpointProfile(
+            id=pid, name=f"{name_prefix}-cdn-{label}"[:60],
+            address=cdn_domain.strip().lower(), sni=spoof,
+            host_header=cdn_domain.strip().lower(), port=443,
+            security="tls", allow_insecure=False,
+            cert_expectation="sni",
+            description=("Migrated from legacy spoof_sni (Mode A: client connects "
+                         "to the CDN edge; SNI carries the profile domain; certificate "
+                         "is the CDN's and must match)"),
+        )
+    return EndpointProfile(
+        id=pid, name=f"{name_prefix}-direct-{label}"[:60],
+        address=host, sni=spoof, host_header=host, port=443,
+        security="tls", allow_insecure=True,
+        cert_expectation="any",
+        description=("Migrated from legacy spoof_sni (Mode B: address unchanged, "
+                     "only the ClientHello SNI value changes; allowInsecure=1 means "
+                     "the client skips certificate verification — no MITM protection)"),
+    )
+
+
+def legacy_spoof_stats(links: Optional[dict] = None) -> dict:
+    """Audit helper: how many stored links still carry legacy spoof fields."""
+    if links is None:
+        return {"total": 0, "spoof_mode_a": 0, "spoof_mode_b": 0}
+    total = spoof_a = spoof_b = 0
+    for link in (links or {}).values():
+        if not isinstance(link, dict):
+            continue
+        total += 1
+        if not link.get("spoof_sni_enabled"):
+            continue
+        ok, _ = validate_hostname(link.get("spoof_sni"))
+        if ok:
+            spoof_b += 1  # refined below by cdn presence at migration time
+    return {"total": total, "spoof_links": spoof_b,
+            "note": "Mode A/B split depends on EMIX_CDN_DOMAIN at resolve time"}

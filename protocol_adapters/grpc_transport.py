@@ -78,16 +78,21 @@ class GrpcTransportAdapter(ProtocolAdapter):
         )
 
     async def health_check(self) -> HealthResult:
+        # Phase 37 honest-gap fix: this adapter has NO runtime to probe — the
+        # previous `ok=True` was a fake-healthy result (the only one in the
+        # codebase). Envelope mimicry inside XHTTP is not gRPC health.
         return HealthResult(
-            ok=True,
-            detail="XHTTP already mimics gRPC envelope; real gRPC needs grpcio",
+            ok=False,
+            detail="NOT_TESTABLE — no gRPC server runtime; XHTTP only mimics "
+                   "the gRPC envelope (content-type), which is not probeable "
+                   "as a transport",
         )
 
     async def start(self) -> bool:
-        return True
+        return False
 
     async def stop(self) -> bool:
-        return True
+        return False
 
 
 register_protocol(GrpcTransportAdapter())

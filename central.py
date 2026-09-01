@@ -1,26 +1,48 @@
 # central.py — ارتباط با سرویس مرکزی روی Cloudflare Worker
+# SECURITY (audit fix 2026-09):
+#   * این module دیگر password_hash را به بیرون نمی‌فرستد — هرگز.
+#   * با EMIX_CENTRAL_ENABLED=0 می‌توان کل ارتباط را خاموش کرد.
+#   * خطاها به Diagnostics Center گزارش می‌شوند (نه silent pass).
 import os
 import asyncio
 import httpx
 
-CENTRAL_URL = os.environ.get("CENTRAL_URL", "https://panel-rvg.arvin341az.workers.dev").rstrip("/")
+# Kill switch: با "0" کل ارتباط با سرویس مرکزی غیرفعال می‌شود (fail-closed).
+_CENTRAL_ENABLED = os.environ.get("EMIX_CENTRAL_ENABLED", "1").strip().lower() not in ("0", "false", "off", "no")
+CENTRAL_URL = (os.environ.get("CENTRAL_URL", "https://panel-rvg.arvin341az.workers.dev").rstrip("/")
+               if _CENTRAL_ENABLED else "")
+
+
+def _report(component: str, error) -> None:
+    """ثبت خطای ارتباط مرکزی در Diagnostics Center (به‌جای silent pass)."""
+    try:
+        import diagnostics
+        diagnostics.record_error_sync(
+            code=f"CENTRAL_{component.upper().replace('-', '_')}",
+            message=str(error)[:300],
+            component=f"central:{component}",
+            severity="warning",
+            context={"url": CENTRAL_URL},
+        )
+    except Exception:
+        pass  # خود diagnostics هم نباید پنل را زمین بزند
 
 
 async def register_instance():
     if not CENTRAL_URL:
         return
-    from main import AUTH, get_host
+    from main import get_host
     from updater import get_current_version
     try:
         async with httpx.AsyncClient(timeout=10) as c:
+            # SECURITY: domain/version/description فقط — هیچ credential ای ارسال نمی‌شود.
             await c.post(f"{CENTRAL_URL}/api/register", json={
                 "domain": get_host(),
                 "version": get_current_version(),
-                "panel_password_hash": AUTH["password_hash"],
                 "description": "EMIX instance",
             })
-    except Exception:
-        pass
+    except Exception as e:
+        _report("register", e)
 
 
 async def heartbeat_loop():
@@ -38,7 +60,8 @@ async def fetch_announcements():
             r = await c.get(f"{CENTRAL_URL}/api/announcements", params={"domain": get_host()})
             r.raise_for_status()
             return r.json().get("announcements", [])
-    except Exception:
+    except Exception as e:
+        _report("announcements", e)
         return []
 
 
@@ -53,8 +76,8 @@ async def report_announcement_views(ids: list[str]):
                 "domain": get_host(),
                 "ids": ids,
             })
-    except Exception:
-        pass
+    except Exception as e:
+        _report("announcement-views", e)
 
 
 async def fetch_support_messages():

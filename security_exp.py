@@ -25,6 +25,46 @@ def _get_logger():
     return logger
 
 
+# ─── Login Brute-Force Guard (ALWAYS-ON, audit fix 2026-09) ────────────────
+# سیاست: فقط تلاش‌های «ناموفق» شمرده می‌شوند (لاگین موفق شمارنده را صفر می‌کند)
+# تا UX عادی خراب نشود و تست‌ها سبز بمانند. خاموش‌کردن: EMIX_LOGIN_RATE_LIMIT=0
+# (غیرتوصیه‌شده — در SECURITY_AUDIT_FINAL.md مستند شده).
+
+_LOGIN_FAIL_WINDOW = 900   # 15 دقیقه
+_LOGIN_FAIL_LIMIT = 5      # بیشینه شکست قبل از قفل موقت
+
+_LOGIN_FAILURES: dict = {}  # ip → [timestamps]
+
+
+def login_rate_limit_enabled() -> bool:
+    return os.environ.get("EMIX_LOGIN_RATE_LIMIT", "1").strip().lower() not in ("0", "false", "off", "no")
+
+
+def login_rate_limited(ip: str) -> bool:
+    """آیا این IP به‌خاطر شکست‌های مکرر موقتاً قفل شده؟"""
+    if not login_rate_limit_enabled():
+        return False
+    now = time.time()
+    attempts = [t for t in _LOGIN_FAILURES.get(ip, []) if now - t < _LOGIN_FAIL_WINDOW]
+    _LOGIN_FAILURES[ip] = attempts
+    return len(attempts) >= _LOGIN_FAIL_LIMIT
+
+
+def record_login_failure(ip: str) -> None:
+    if not login_rate_limit_enabled():
+        return
+    now = time.time()
+    attempts = [t for t in _LOGIN_FAILURES.get(ip, []) if now - t < _LOGIN_FAIL_WINDOW]
+    attempts.append(now)
+    _LOGIN_FAILURES[ip] = attempts
+    _get_logger().warning(f"[security] failed login from {ip} "
+                          f"({len(attempts)}/{_LOGIN_FAIL_LIMIT} in window)")
+
+
+def clear_login_failures(ip: str) -> None:
+    _LOGIN_FAILURES.pop(ip, None)
+
+
 # ─── Rate Limiting ────────────────────────────────────────────────────────
 # ساده: در-memory counter به ازای IP+endpoint.
 # محدودیت‌ها:

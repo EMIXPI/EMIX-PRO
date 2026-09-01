@@ -208,6 +208,71 @@ async def diagnostics_overview() -> dict:
     except Exception as exc:
         checks["protocols"] = {"status": "UNKNOWN", "error": str(exc)[:120]}
 
+    # Phase 37.19 — full component coverage: nodes, runtimes, lifecycle
+    try:
+        import node_manager
+        checks["nodes"] = node_manager.summary()
+    except Exception as exc:
+        checks["nodes"] = {"status": "UNKNOWN", "error": str(exc)[:120]}
+    try:
+        import runtime_supervisor
+        st = runtime_supervisor.supervisor.status()
+        checks["runtimes"] = {
+            "runtimes": [
+                {k: v for k, v in rt.items()
+                 if k in ("id", "name", "kind", "state", "restart_count", "last_error")}
+                for rt in st.get("runtimes", [])
+            ]
+        }
+    except Exception as exc:
+        checks["runtimes"] = {"status": "UNKNOWN", "error": str(exc)[:120]}
+    try:
+        import compat
+        m = compat.matrix_view()
+        checks["transports"] = {
+            "valid_combos": sum(1 for c in m["combinations"] if c["state"] == "VALID"),
+            "experimental": sum(1 for c in m["combinations"] if c["state"] == "EXPERIMENTAL"),
+            "not_implemented": sum(1 for c in m["combinations"] if c["state"] == "NOT_IMPLEMENTED"),
+            "invalid": sum(1 for c in m["combinations"] if c["state"] == "INVALID"),
+        }
+    except Exception as exc:
+        checks["transports"] = {"status": "UNKNOWN", "error": str(exc)[:120]}
+    try:
+        import config_lifecycle
+        import network_health as _nh
+        by_life = {}
+        try:
+            # main is imported lazily to avoid cycles in standalone use
+            from main import LINKS, LINKS_LOCK
+            import asyncio as _aio
+            # non-async snapshot: LINKS may mutate during iteration; copy keys
+            for uid in list(LINKS.keys()):
+                link = LINKS.get(uid)
+                if not isinstance(link, dict):
+                    continue
+                state, _ = config_lifecycle.derive_lifecycle(
+                    link, _nh.get_health_dict(uid))
+                by_life[state] = by_life.get(state, 0) + 1
+        except Exception:
+            pass
+        checks["configs"] = {"lifecycle": by_life}
+    except Exception as exc:
+        checks["configs"] = {"status": "UNKNOWN", "error": str(exc)[:120]}
+    try:
+        import ip_quality as _ipq2
+        ip_summary = _ipq2.summary()
+        # subscriptions view: allowed link count via main (best effort)
+        sub_info = {}
+        try:
+            from main import LINKS as _L, is_link_allowed as _allowed
+            allowed = sum(1 for d in _L.values() if _allowed(d))
+            sub_info = {"allowed_configs": allowed, "total_configs": len(_L)}
+        except Exception:
+            pass
+        checks["subscriptions"] = {**ip_summary, **sub_info} if sub_info else ip_summary
+    except Exception as exc:
+        checks["subscriptions"] = {"status": "UNKNOWN", "error": str(exc)[:120]}
+
     return {
         "ok": True,
         "checks": checks,

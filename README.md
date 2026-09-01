@@ -63,7 +63,9 @@
 
 It gives you a beautiful admin dashboard to create, monitor, and manage proxy links across multiple protocols — with per-link traffic quotas, live connection stats, and QR code generation — all from a single lightweight service.
 
-> 💡 Originally built around a simple VLESS-over-WebSocket relay, EMIX has evolved into a full multi-protocol gateway with authentication, quota tracking, and a polished management UI.
+> 💡 Originally built around a simple VLESS-over-WebSocket relay, EMIX has evolved into a **self-diagnosing network orchestration platform**: what it claims is backed by evidence.
+
+> ✅ **Verification status (v11.1.0-audit):** 642/642 tests green, honest 7-level test classification, full audit trail in [`AUDIT_REPORT_FINAL.md`](./AUDIT_REPORT_FINAL.md), [`PRODUCTION_READINESS_REPORT.md`](./PRODUCTION_READINESS_REPORT.md), [`PROTOCOL_MATRIX_FINAL.md`](./PROTOCOL_MATRIX_FINAL.md), [`TRANSPORT_MATRIX_FINAL.md`](./TRANSPORT_MATRIX_FINAL.md), [`SECURITY_AUDIT_FINAL.md`](./SECURITY_AUDIT_FINAL.md), [`PERFORMANCE_AUDIT_FINAL.md`](./PERFORMANCE_AUDIT_FINAL.md), [`ARCHITECTURE_FINAL.md`](./ARCHITECTURE_FINAL.md), [`MIGRATION_GUIDE_FINAL.md`](./MIGRATION_GUIDE_FINAL.md). This README describes **verified functionality only**.
 
 <br/>
 
@@ -73,53 +75,68 @@ It gives you a beautiful admin dashboard to create, monitor, and manage proxy li
 <tr>
 <td width="50%">
 
-### 🔌 Core Gateway
-- VLESS over WebSocket (TLS 443)
-- Trojan, Shadowsocks (AEAD / aes-256-gcm)
-- MTProto proxy via `mtg` binary
-- Internal HTTP Proxy
-- xHTTP / gRPC / HTTPUpgrade transports
+### 🔌 Core Gateway (verified)
+- VLESS over WebSocket (TLS 443) — in-process relay, 0-RTT early-data
+- Trojan (SHA224 auth), Shadowsocks AEAD (aes-256-gcm / chacha20)
+- XHTTP with 2 uplink modes (packet-up / stream-up), AIMD flow control
+- MTProto via the **official MTProxy binary** (compiled, supervised, auto-restart with backoff)
+- Internal HTTP Proxy + SOCKS5 (Zeus)
+- gRPC = experimental envelope only; HTTPUpgrade = not implemented (honest — see TRANSPORT_MATRIX_FINAL.md)
 
 </td>
+<td width="50%">
+
+### 🧠 Network Intelligence (v11 engines)
+- **Config Compiler** — self-verifying emission (parse-back + checksum)
+- **Network Health Engine** — 10-layer, evidence-only, expiring (UNKNOWN ≠ PASS)
+- **Diagnostics Center** — request IDs, structured errors, job telemetry
+- **Node Manager + Runtime Supervisor** — heartbeats, crash detection, backoff
+- **Smart Route v3** — health-weighted ranking with `ranking_reason`
+- **IP Quality Engine** — facet-based, honest UNKNOWNs, provider abstraction
+
+</td>
+</tr>
+<tr>
 <td width="50%">
 
 ### 📊 Management Dashboard
-- Real-time traffic charts & trend indicators
-- Live connection monitoring
+- Real-time traffic charts, trend indicators, live connection monitoring
 - Unlimited link creation with per-link quotas (MB/GB)
 - Instant enable / disable per link
-- QR Code export for every link
+- **Local QR generation** — links/private keys never leave your panel
+- Impossible protocol combinations blocked at the UI (compat matrix API)
+- Live service status from real diagnostics (no fake widgets)
+
+</td>
+<td width="50%">
+
+### 🛡️ Security (tested)
+- Session auth + login brute-force guard (5 fails / 15 min / IP)
+- SSRF-guarded proxy (private ranges + metadata IP + redirect re-check)
+- Atomic state persistence — survives Railway redeploys (sessions included)
+- No credential phone-home; no third-party QR; plaintext IP provider off by default
+- Backup export/import with validate → stage → rollback → commit
 
 </td>
 </tr>
 <tr>
 <td width="50%">
 
-### 🛡️ Security & Reliability
-- Strict UUID validation
-- Session-based authentication
-- TLS fingerprint spoofing (Chrome)
-- Optimized relay buffers (512KB, `TCP_NODELAY`, `SO_KEEPALIVE`)
-
-</td>
-<td width="50%">
-
-### 🤖 Automation
-- Telegram-bot-integrated proxy management
-- Domain suggestion via Cloudflare Worker
+### 🤖 Automation & Resilience
+- 7 bounded background jobs (health sweep, expiry, node heartbeat, runtime supervision, stats, lifecycle reconcile)
 - Automated TCP proxy dispatch with blacklist targeting
+- Self-healing gaming bridge (VPS down → auto fallback to CF edge)
 - One-click Railway deployment
 
 </td>
-</tr>
-<tr>
 <td width="50%">
 
-### 🚀 EMIX Turbo & Health
+### 🚀 Turbo & Health (real probes)
 - Real end-to-end config testing (edge → TLS → auth → target → HTTP reply)
 - Per-config ping button + live color-coded badges
 - **0-RTT Turbo links** (early-data `ed=2048`) with automatic A/B testing
-- "Test all" with live progress
+- Health score 0–100 with documented formula; results expire after 15 min
+- Config lifecycle states (CREATED → HEALTHY/DEGRADED → EXPIRED/REVOKED)
 
 </td>
 <td width="50%">
@@ -140,11 +157,18 @@ It gives you a beautiful admin dashboard to create, monitor, and manage proxy li
 
 | Protocol | Transport | Status |
 |---|---|:---:|
-| VLESS | WebSocket / xHTTP / gRPC | ✅ |
-| Trojan | WebSocket / HTTPUpgrade | ✅ |
-| Shadowsocks | AEAD (aes-256-gcm) | ✅ |
-| MTProto | `mtg` v2.1.7 | ✅ |
-| HTTP Proxy | Internal | ✅ |
+| VLESS | WebSocket / xHTTP (packet-up, stream-up) | ✅ PRODUCTION |
+| VLESS | TCP / gRPC | 🟡 EXPERIMENTAL (link emission only) |
+| Trojan | WebSocket / xHTTP (packet-up, stream-up) | ✅ PRODUCTION |
+| Trojan | TCP | 🟡 EXPERIMENTAL |
+| Shadowsocks | WebSocket (AEAD aes-256-gcm / chacha20) | ✅ PRODUCTION |
+| MTProto | TCP (official MTProxy binary, supervised) | ✅ PRODUCTION |
+| VMess / VLESS-Reality / SS-2022 | link emission | 🟡 BETA (config-gen only) |
+| WireGuard / OpenVPN | control-plane (keys, configs, QR) | 🟡 BETA — no runtime on Railway |
+| SOCKS5 (Zeus) / HTTP Proxy | in-process | ✅ PRODUCTION |
+| Hysteria2 / TUIC / NaiveProxy / SSH | — | ⛔ honestly deferred (refuses to fake) |
+
+Full machine-readable matrix: `GET /api/config-matrix` — one source of truth (compat.py), consumed by backend, frontend and tests. Details: [TRANSPORT_MATRIX_FINAL.md](./TRANSPORT_MATRIX_FINAL.md).
 
 <br/>
 
@@ -453,11 +477,16 @@ If this project helped you, consider supporting its development:
 
 | پروتکل | ترنسپورت | وضعیت |
 |---|---|:---:|
-| VLESS | WebSocket / xHTTP / gRPC | ✅ |
-| Trojan | WebSocket / HTTPUpgrade | ✅ |
-| Shadowsocks | AEAD (aes-256-gcm) | ✅ |
-| MTProto | `mtg` v2.1.7 | ✅ |
-| HTTP Proxy | داخلی | ✅ |
+| VLESS | WebSocket / xHTTP (دو مود) | ✅ PRODUCTION |
+| Trojan | WebSocket / xHTTP (دو مود) | ✅ PRODUCTION |
+| Shadowsocks | WebSocket (AEAD) | ✅ PRODUCTION |
+| MTProto | TCP (باینری رسمی MTProxy، تحت نظارت) | ✅ PRODUCTION |
+| VMess / Reality / SS-2022 | تولید لینک | 🟡 BETA (فقط config-gen) |
+| WireGuard / OpenVPN | control-plane (کلید + کانفیگ + QR) | 🟡 BETA — روی Railway ران‌تایم ندارد |
+| SOCKS5 / HTTP Proxy | درون-پروسه | ✅ PRODUCTION |
+| Hysteria2 / TUIC / NaiveProxy / SSH | — | ⛔ صادقانه deferred (فیک نمی‌سازد) |
+
+ماتریس کامل ماشین‌خوان: `GET /api/config-matrix` — تک‌منبع حقیقت (compat.py).
 
 <br/>
 

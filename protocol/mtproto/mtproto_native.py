@@ -601,3 +601,98 @@ async def stop_all():
             await stop_instance(uid)
         except Exception as exc:
             logger.error(f"MTP[{uid[:8]}]: خطا حین shutdown: {exc}")
+
+
+# ── Stats poller (Phase 37.10/37.19) ─────────────────────────────────────────
+# Honest traffic accounting for MTProto:
+#   The official mtproto-proxy binary reports CONNECTION and QUERY counters
+#   via --http-stats — it does NOT report bytes. We therefore:
+#     * poll /stats periodically per instance
+#     * expose activity evidence (connections, forwarded queries, deltas)
+#     * record it on the link record via the activity callback
+#   and we do NOT fabricate byte counts. Quota enforcement for MTProto is
+#   therefore PARTIAL (see PROTOCOL_MATRIX_V2.md).
+#
+# The stats poll also doubles as runtime-supervision evidence: a stats fetch
+# failing on an alive process is a health signal, not just an observability
+# one.
+
+_activity_callback: Optional[Callable[[str, dict], Awaitable[None]]] = None
+
+
+def set_activity_callback(cb: Callable[[str, dict], Awaitable[None]]) -> None:
+    global _activity_callback
+    _activity_callback = cb
+
+
+def instance_runtime_status(uuid: str) -> dict:
+    """Alive-check + identity info for the runtime supervisor (37.10)."""
+    inst = _instances.get(uuid)
+    if inst is None:
+        return {"exists": False}
+    return {
+        "exists": True,
+        "alive": inst["proc"].returncode is None,
+        "pid": inst["proc"].pid,
+        "port": inst.get("port"),
+        "started_at": inst.get("started_at"),
+    }
+
+
+def list_instance_uuids() -> list:
+    return list(_instances.keys())
+
+
+async def poll_all_stats() -> dict:
+    """One pass over all instances: fetch /stats, compute deltas, notify.
+
+    Delta semantics (pure counters, monotonic):
+      queries_delta   — increase in tot_forwarded_queries since last poll
+      conns_delta     — increase in total_special_connections since last poll
+    """
+    results = {}
+    for uuid in list(_instances.keys()):
+        inst = _instances.get(uuid)
+        if inst is None:
+            continue
+        if inst["proc"].returncode is not None:
+            results[uuid] = {"alive": False}
+            continue
+        try:
+            async with httpx.AsyncClient(timeout=4.0) as client:
+                r = await client.get("http://127.0.0.1:2398/stats")
+                raw = r.text
+            parsed = {}
+            for line in raw.splitlines():
+                line = line.strip()
+                if not line or line.startswith("#"):
+                    continue
+                for sep in ("\t", " "):
+                    if sep in line:
+                        k, _, v = line.partition(sep)
+                        parsed[k.strip()] = v.strip()
+                        break
+            total_q = int(parsed.get("tot_forwarded_queries", "0") or 0)
+            total_c = int(parsed.get("total_special_connections", "0") or 0)
+            prev_q = inst.get("last_total_queries", 0)
+            prev_c = inst.get("last_total_connections", 0)
+            inst["last_total_queries"] = total_q
+            inst["last_total_connections"] = total_c
+            entry = {
+                "alive": True,
+                "queries_total": total_q,
+                "queries_delta": max(0, total_q - prev_q),
+                "connections_total": total_c,
+                "connections_delta": max(0, total_c - prev_c),
+                "active_connections": int(parsed.get("active_special_connections", "0") or 0),
+                "ts": time.time(),
+            }
+            results[uuid] = entry
+            if _activity_callback is not None and (entry["queries_delta"] or entry["connections_delta"]):
+                try:
+                    await _activity_callback(uuid, dict(entry))
+                except Exception as exc:
+                    logger.debug(f"MTP[{uuid[:8]}]: activity callback failed: {exc}")
+        except Exception as exc:
+            results[uuid] = {"alive": True, "stats_error": str(exc)[:120]}
+    return results

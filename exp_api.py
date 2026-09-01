@@ -161,6 +161,13 @@ async def exp_emit_utls(request: Request):
     return {"ok": True, "link": link}
 
 
+# Audit fix: مسیرهای FastAPI case-sensitive هستند؛ فرانت‌اند (expEmitLink)
+# «utls» می‌فرستاد و روت اصلی «uTLS» بود → همیشه 404. alias کوچک اضافه شد.
+@router.post("/api/exp/link/utls", include_in_schema=False)
+async def exp_emit_utls_alias(request: Request):
+    return await exp_emit_utls(request)
+
+
 # ─── Subscription Format Endpoints ──────────────────────────────────────
 
 @router.post("/api/exp/subscription")

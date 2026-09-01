@@ -195,7 +195,7 @@ def test_compile_preview_rejects_invalid(authed):
     assert not j["ok"] and j["errors"]
 
 
-# ── Smart route v2 (config ranking through the health engine) ──────────────
+# ── Smart route v3 (config ranking through the health engine) ──────────────
 
 def test_smart_route_ranked_configs(authed):
     _uuid_link(authed, "vless-ws", "IT-SR")
@@ -205,7 +205,13 @@ def test_smart_route_ranked_configs(authed):
     assert r.status_code == 200
     j = r.json()
     assert j["total"] >= 1
-    assert j["formula"].startswith("0.40*latency")
+    # Phase 37.12: v3 explainable multi-factor ranking
+    assert j["formula"].startswith("composite")
+    assert "ranking" in j
+    for row in j["ranking"]:
+        assert "ranking_reason" in row and row["ranking_reason"]
+        assert "composite_score" in row
+        assert "node_state" in row
 
 
 # ── Request-ID / timing middleware ──────────────────────────────────────────
