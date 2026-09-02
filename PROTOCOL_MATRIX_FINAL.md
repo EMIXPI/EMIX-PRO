@@ -1,7 +1,24 @@
-# PROTOCOL_MATRIX_FINAL.md — EMIX-PRO v11.1.0-audit
+# PROTOCOL_MATRIX_FINAL.md — EMIX-PRO v11.3.0-network
 
 > Per-protocol capability truth. Source of truth: adapters themselves (protocol_adapters/ + protocol/ runtimes) as introspected by /api/protocols and the protocol registry; statuses cross-checked against compat.READINESS.
 > Client-compatibility notes included (a protocol is not production because the server starts — §34 of the master spec).
+
+## 0. Phase 38 / P4 — public status vocabulary
+
+Every protocol/transport/security combination now declares a PUBLIC status
+exactly as the spec requires:
+
+| Internal (since Phase 37) | Public (Phase 38) | Selectable in UI? |
+|---|---|---|
+| VALID | **SUPPORTED** | yes (`compat.selectable_combinations()`) |
+| EXPERIMENTAL | EXPERIMENTAL | only behind explicit opt-in |
+| INVALID | INVALID | never |
+| NOT_IMPLEMENTED | NOT_IMPLEMENTED | never |
+
+`compat.matrix_view()` now emits `status` (public) alongside `state`
+(internal) for every combination, plus `public_states`. The rule "never
+expose unsupported transports as selectable" is enforced by
+`compat.selectable_combinations()` which returns only VALID/SUPPORTED combos.
 
 ## 1. Matrix
 

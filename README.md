@@ -93,19 +93,24 @@ It gives you a beautiful admin dashboard to create, monitor, and manage proxy li
 - **Node Manager + Runtime Supervisor** — heartbeats, crash detection, backoff
 - **Smart Route v3** — health-weighted ranking with `ranking_reason`
 - **IP Quality Engine** — facet-based, honest UNKNOWNs, provider abstraction
-- **Egress & Route Truth Engine (v11.2)** — `CUSTOM_IP ≠ REAL_EGRESS_IP`, `SNI ≠ ROUTING`: node roles (CONTROL_PLANE / EXIT_NODE / RELAY / EDGE), egress classification (**VERIFIED_EGRESS / CONFIGURED_ONLY / UNKNOWN**, measured IPs only), 9-step route validation (`ROUTE_MISMATCH`, `NO_EXIT_NODE_AVAILABLE`), labeled latencies (control-plane / node / route / protocol-handshake RTT)
+- **Egress & Route Truth Engine (v11.2+)** — `CUSTOM_IP ≠ REAL_EGRESS_IP`, `SNI ≠ ROUTING`: node roles (CONTROL_PLANE / EXIT_NODE / RELAY / EDGE), egress classification (**VERIFIED_EGRESS / CONFIGURED_ONLY / UNKNOWN**, measured IPs only), 9-step route validation (`ROUTE_MISMATCH`, `NO_EXIT_NODE_AVAILABLE`), labeled latencies (control-plane / node / route / protocol-handshake RTT)
+- **Route / Failover Engines (v11.3)** — first-class route objects (entry→relay→exit, expected-vs-observed) and **never-blind failover** (drain → explainable replacement scoring → verify health → verify route → verify egress → re-point; verdicts `FAILOVER_SUCCESS / FAILED / NO_REPLACEMENT`)
+- **Accounts / Devices / Subscriptions (v11.3)** — PBKDF2-hashed accounts, one-time device tokens, backend-enforced device/session/quota limits, subscription lifecycle (`ACTIVE/EXPIRED/REVOKED/SUSPENDED/DRAINING`) with a single connection gate
+- **🇮🇷 Iran Domestic Direct Routing (v11.3)** — split tunneling with a real **RIPEstat prefix dataset (2,528 prefixes, checksummed, daily atomic updates)**: Iranian destinations go DIRECT via the user's ISP (`USER_ISP`), international via the EMIX route; Cloudflare/Railway are never classified as Iranian egress; clients that cannot enforce split tunneling get an honest `SPLIT_TUNNEL_NOT_SUPPORTED`
 
 </td>
 </tr>
 <tr>
 <td width="50%">
 
-### 🚪 Egress Honesty (v11.2.0-egress)
+### 🚪 Egress & Routing Honesty (v11.3.0-network)
 - The panel **never** displays a configured/advertised IP as the actual egress — only measured evidence (`/api/egress/verify`)
 - Selecting a country without a real exit node returns **NO_EXIT_NODE_AVAILABLE** — the location is not faked
 - Expected ≠ observed country ⇒ **ROUTE_MISMATCH**, never a healthy verdict
 - "Custom IP" field renamed **Endpoint Address** — it only sets where the client connects; it never changes the exit IP
-- Health split into APPLICATION / NODE / ROUTE / **EGRESS** health — a healthy Railway API says nothing about VPN egress
+- Health split into APPLICATION / NODE / ROUTE / **PROTOCOL** / EGRESS health — a healthy Railway API says nothing about VPN egress
+- Node states include **DRAINING / QUARANTINED**; drained nodes stop taking new assignments
+- Domestic DIRECT traffic is labeled **USER_ISP** — never Railway, never Cloudflare, never an EMIX node
 
 </td>
 </tr>

@@ -1,6 +1,30 @@
-# MIGRATION_GUIDE_FINAL.md — EMIX-PRO v11.1.0-audit
+# MIGRATION_GUIDE_FINAL.md — EMIX-PRO v11.3.0-network
 
 > This release is **additive and non-destructive**. No existing link, subscription, node key, or legacy field is removed. Every change below was verified by round-trip tests (tests/integration/test_audit_fixes.py).
+
+## 0. Upgrade path (v11.2.0-egress → v11.3.0-network)
+
+Standard git pull + redeploy. **Additive and non-destructive.**
+
+New state keys in `rvg_state.json` (both defensive — absent keys are fine):
+- `account_manager` — accounts/subscriptions/devices/sessions snapshots.
+  Old state files without this key simply start with zero accounts.
+- `domestic_routing` — `{"active_policy": "ALL_VPN"}`. Absent ⇒ ALL_VPN
+  (previous behavior — traffic policy unchanged by the upgrade itself).
+
+New bundled asset: `configs/iran_prefixes_seed.json` (RIPEstat snapshot,
+2,528 prefixes, checksummed). Loaded at boot when no dataset is present;
+never modifies links or subscriptions.
+
+What is NOT touched by this upgrade:
+- links / subscription groups / node keys / SNI profiles / WG keys — untouched.
+- `spoof_sni` legacy fields — still read/migrated by endpoint_profiles (P13).
+- deployed CF worker — no worker change required in v11.3.0 (v2.2.0-egress
+  or later recommended; v1 workers keep working as before).
+- exit-node blueprints — unchanged.
+
+New background jobs: `domestic-rules-update` (daily, atomic, rollback-safe)
+and `account-sweep` (5 min). Both bounded; failures log + keep previous state.
 
 ## 1. Upgrade path (v11.0.0-arch → v11.1.0-audit)
 

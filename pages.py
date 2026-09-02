@@ -813,6 +813,15 @@ select option{background:#0A0A0F;color:var(--t1)}
 .conn-live-badge{display:flex;align-items:center;gap:6px;font-size:10.5px;font-weight:700;color:var(--green-t);background:var(--green-bg);padding:5px 12px;border-radius:20px;border:1px solid rgba(16,185,129,.2)}
 .conn-live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 1.6s infinite}
 
+.rt-mode-card{padding:14px 16px;border-radius:14px;border:1.5px solid var(--card-b);background:var(--bg);cursor:pointer;transition:all .18s ease;position:relative}
+.rt-mode-card:hover{transform:translateY(-2px);border-color:var(--accent)}
+.rt-mode-card.sel{border-color:var(--accent);background:linear-gradient(135deg,rgba(249,115,22,.12),rgba(76,201,240,.06));box-shadow:0 0 0 1px var(--accent)}
+.rt-mode-title{font-size:13px;font-weight:800;margin-bottom:6px}
+.rt-mode-sub{font-size:11.5px;color:var(--t3);line-height:1.8}
+.rt-mode-tag{position:absolute;top:10px;left:12px;font-size:10px;font-family:monospace;color:var(--t3);opacity:.8}
+.ac-card{padding:16px;border-radius:14px;border:1px solid var(--card-b);background:var(--bg)}
+.ac-dev-row{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;background:var(--card);margin-bottom:6px;font-size:12px}
+.ac-status-chip{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:700}
 .conn-grid-v2{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
 .conn-card-v2{background:var(--card);border:1px solid var(--card-b);border-radius:18px;padding:0;overflow:hidden;transition:all .22s cubic-bezier(.4,0,.2,1);position:relative}
 .conn-card-v2:hover{border-color:var(--card-bh);transform:translateY(-3px);box-shadow:0 14px 32px rgba(0,0,0,.22)}
@@ -847,7 +856,16 @@ select option{background:#0A0A0F;color:var(--t1)}
 .conn-empty-v2-sub{font-size:11px;color:var(--t3)}
 
 @media(max-width:760px){.conn-hero{grid-template-columns:1fr 1fr}}
-@media(max-width:500px){.conn-grid-v2{grid-template-columns:1fr}}
+@media(max-width:500px){.rt-mode-card{padding:14px 16px;border-radius:14px;border:1.5px solid var(--card-b);background:var(--bg);cursor:pointer;transition:all .18s ease;position:relative}
+.rt-mode-card:hover{transform:translateY(-2px);border-color:var(--accent)}
+.rt-mode-card.sel{border-color:var(--accent);background:linear-gradient(135deg,rgba(249,115,22,.12),rgba(76,201,240,.06));box-shadow:0 0 0 1px var(--accent)}
+.rt-mode-title{font-size:13px;font-weight:800;margin-bottom:6px}
+.rt-mode-sub{font-size:11.5px;color:var(--t3);line-height:1.8}
+.rt-mode-tag{position:absolute;top:10px;left:12px;font-size:10px;font-family:monospace;color:var(--t3);opacity:.8}
+.ac-card{padding:16px;border-radius:14px;border:1px solid var(--card-b);background:var(--bg)}
+.ac-dev-row{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;background:var(--card);margin-bottom:6px;font-size:12px}
+.ac-status-chip{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:700}
+.conn-grid-v2{grid-template-columns:1fr}}
 
 @media(max-width:560px){.srv-tiles{grid-template-columns:1fr}}
 .cl.amber i{color:var(--amber)}
@@ -3053,6 +3071,8 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
          است (روی Railway امکان میزبانی WG/OpenVPN runtime نیست؛ مدیریت نود VPS
          و تولید کانفیگ کلاینت واقعی است). تولید کلیدها حالا در restart هم می‌ماند. -->
     <div class="nav-it" data-pg="vpn"><i class="ti ti-shield-lock" style="color:#4ADE80"></i> 🛡 VPN Pro <span class="nav-badge" id="vpn-nb" style="background:#4ADE80;color:#14141C">WG+OVPN · کنترل-پلن</span></div>
+    <div class="nav-it" data-pg="routing"><i class="ti ti-route" style="color:#F97316"></i> 🇮🇷 مسیریابی هوشمند <span class="nav-badge" id="routing-nb" style="background:#F97316;color:#fff">Direct</span></div>
+    <div class="nav-it" data-pg="accounts"><i class="ti ti-users" style="color:#38BDF8"></i> 👤 حساب‌ها <span class="nav-badge" id="accounts-nb">0</span></div>
     <div class="nav-it" data-pg="subgroups"><i class="ti ti-folders"></i> گروه‌های ساب <span class="nav-badge" id="subs-nb">0</span></div>
     <div class="nav-it" data-pg="subscriptions"><i class="ti ti-rss"></i> سابسکریپشن</div>
     <div class="nav-it" data-pg="traffic"><i class="ti ti-chart-area"></i> ترافیک</div>
@@ -3955,6 +3975,101 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
     <div id="gaming-presets-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px">
       <!-- توسط JS پر می‌شود -->
     </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════════════════
+     🇮🇷 PHASE 38 / P17 — مسیریابی هوشمند (Split Tunneling صادقانه)
+     مقصدهای ایرانی → DIRECT از ISP خود کاربر (USER_ISP)
+     مقصدهای بین‌المللی → VPN از نود خروج EMIX
+     هیچ برچسب/ادعایی بدون شواهد واقعی نمایش داده نمی‌شود.
+     ════════════════════════════════════════════════════════════════════════════ -->
+<section class="pg" id="pg-routing">
+  <div class="topbar">
+    <div><div class="tb-title"><i class="ti ti-route" style="color:#F97316"></i> مسیریابی هوشمند — عبور مستقیم ترافیک داخلی</div><div class="tb-sub">ترافیک ایرانی از ISP خودت · ترافیک بین‌المللی از تونل EMIX</div></div>
+    <div class="tb-right"><span class="badge bg-amber" id="routing-mode-badge">—</span><button class="btn btn-o btn-sm" onclick="loadRoutingPage()"><i class="ti ti-refresh"></i> رفرش</button></div>
+  </div>
+
+  <div class="card" style="margin-bottom:18px">
+    <div class="card-title"><i class="ti ti-split-route"></i> حالت مسیریابی شبکه (Network Routing Mode)</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin:12px 0">
+      <div id="rt-mode-allvpn" class="rt-mode-card" onclick="routingSetMode('ALL_VPN')">
+        <div class="rt-mode-title">🌍 همه‌ی ترافیک از VPN</div>
+        <div class="rt-mode-sub">همه‌ی مقصدها (داخلی و بین‌المللی) از تونل EMIX عبور می‌کنند</div>
+        <div class="rt-mode-tag" id="rt-tag-allvpn">ALL_VPN</div>
+      </div>
+      <div id="rt-mode-irandirect" class="rt-mode-card" onclick="routingSetMode('IRAN_DIRECT')">
+        <div class="rt-mode-title">🇮🇷 ترافیک ایرانی مستقیم</div>
+        <div class="rt-mode-sub">مقصدهای ایرانی مستقیم از ISP خودت (بدون VPN) · مقاصدهای بین‌المللی از نود EMIX</div>
+        <div class="rt-mode-tag" id="rt-tag-irandirect">IRAN_DIRECT</div>
+      </div>
+    </div>
+    <div id="rt-mode-detail" style="font-size:12px;line-height:2;padding:12px 14px;background:var(--bg);border-radius:10px;border:1px solid var(--card-b)"></div>
+    <div style="font-size:11px;color:var(--t3);margin-top:10px;line-height:1.9">
+      <b>چطور کار می‌کند؟</b> موتور مسیریابی، IP مقصد را با پایگاه پیشوندهای ایران (RIPEstat — <span id="rt-prefix-count">—</span> پیشوند) تطبیق می‌دهد؛ تطابق ⇒ مسیر DIRECT و خروج از ISP خود کاربر (<b>USER_ISP</b>)؛ عدم تطابق ⇒ تونل VPN.
+      تصمیم بر اساس <b>IP نهایی بعد از DNS</b> است — نه پسوند دامنه. کلادفلر و ریلی هرگز به‌عنوان خروج ایرانی طبقه‌بندی نمی‌شوند.
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:18px">
+    <div class="card-title"><i class="ti ti-flask"></i> ابزار تشخیص مسیر (Test Route)</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0">
+      <input id="rt-test-input" placeholder="دامنه یا IP — مثلاً example.ir یا 5.10.0.1" style="flex:1;min-width:220px;direction:ltr;text-align:left;font-family:monospace">
+      <button class="btn btn-g" onclick="routingTestRoute()"><i class="ti ti-radar-2"></i> تست مسیر</button>
+    </div>
+    <div id="rt-test-result" style="display:none"></div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px">
+    <div class="card">
+      <div class="card-title"><i class="ti ti-database"></i> پایگاه پیشوندهای ایران</div>
+      <div id="rt-dataset-body" style="font-size:12px;line-height:2.1">در حال بارگذاری…</div>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button class="btn btn-blue btn-sm" onclick="routingUpdateRules(this)"><i class="ti ti-cloud-download"></i> به‌روزرسانی اتمی از RIPEstat</button>
+      </div>
+      <div id="rt-rules-result" style="display:none;margin-top:10px;font-size:11.5px"></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><i class="ti ti-chart-pie"></i> حسابداری ترافیک (تفکیک واقعی)</div>
+      <div id="rt-traffic-body" style="font-size:12px;line-height:2.1">در حال بارگذاری…</div>
+      <div style="font-size:11px;color:var(--t3);margin-top:8px;line-height:1.8">دسته‌بندی بر اساس منطق مسیر/مقصد است — <b>نه</b> پسوند دامنه (.ir).</div>
+    </div>
+    <div class="card">
+      <div class="card-title"><i class="ti ti-plug-connected"></i> پشتیبانی Split Tunnel در کلاینت‌ها</div>
+      <div id="rt-split-body" style="font-size:12px;line-height:2.1">در حال بارگذاری…</div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════════════════
+     👤 PHASE 38 / P2+P3 — حساب‌ها، دستگاه‌ها و سابسکریپشن‌ها
+     Account → Subscription → Config → Route → Node → Verified Egress
+     محدودیت‌ها backend-side اعمال می‌شوند (نه فقط UI).
+     ════════════════════════════════════════════════════════════════════════════ -->
+<section class="pg" id="pg-accounts">
+  <div class="topbar">
+    <div><div class="tb-title"><i class="ti ti-users" style="color:#38BDF8"></i> حساب‌ها، دستگاه‌ها و اشتراک‌ها</div><div class="tb-sub">مدیریت کاربران با محدودیت‌های واقعی سمت سرور</div></div>
+    <div class="tb-right"><span class="badge bg-blue" id="accounts-count">—</span><button class="btn btn-o btn-sm" onclick="loadAccountsPage()"><i class="ti ti-refresh"></i> رفرش</button></div>
+  </div>
+
+  <div class="card" style="margin-bottom:18px">
+    <div class="card-title"><i class="ti ti-user-plus"></i> ساخت حساب جدید</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin:10px 0">
+      <div><label style="font-size:11px;color:var(--t3)">نام کاربری</label><input id="ac-username" placeholder="username" style="width:100%;direction:ltr"></div>
+      <div><label style="font-size:11px;color:var(--t3)">رمز عبور (حداقل ۸ کاراکتر)</label><input id="ac-password" type="password" placeholder="••••••••" style="width:100%;direction:ltr"></div>
+      <div><label style="font-size:11px;color:var(--t3)">سهمیه ترافیک (GB — خالی = نامحدود)</label><input id="ac-quota" type="number" placeholder="" style="width:100%;direction:ltr"></div>
+      <div><label style="font-size:11px;color:var(--t3)">انقضا (روز — خالی = بی‌نهایت)</label><input id="ac-expiry" type="number" placeholder="" style="width:100%;direction:ltr"></div>
+      <div><label style="font-size:11px;color:var(--t3)">حداکثر دستگاه</label><input id="ac-maxdev" type="number" value="5" style="width:100%;direction:ltr"></div>
+      <div><label style="font-size:11px;color:var(--t3)">حداکثر سشن همزمان</label><input id="ac-maxses" type="number" value="3" style="width:100%;direction:ltr"></div>
+    </div>
+    <button class="btn btn-g" onclick="accountsCreate()"><i class="ti ti-user-plus"></i> ایجاد حساب</button>
+    <div style="font-size:11px;color:var(--t3);margin-top:8px;line-height:1.8">رمزها با PBKDF2-SHA256 هش می‌شوند · توکن دستگاه فقط یک‌بار نمایش داده می‌شود و لاگ نمی‌شود.</div>
+  </div>
+
+  <div id="ac-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px"></div>
+  <div id="ac-empty" style="display:none;text-align:center;padding:40px 0;color:var(--t3)">
+    <i class="ti ti-users" style="font-size:40px;opacity:.4"></i>
+    <div style="margin-top:8px;font-size:13px">هنوز حسابی ساخته نشده — اولین حساب را از فرم بالا بسازید</div>
   </div>
 </section>
 
@@ -5069,7 +5184,7 @@ function navTo(name){
   document.querySelectorAll('.pg').forEach(p=>p.classList.toggle('on',p.id==='pg-'+name));
   // ورود پلکانی کارت‌ها فقط هنگام سوییچ صفحه
   if(name==='links'){document.body.classList.add('cascade');setTimeout(()=>document.body.classList.remove('cascade'),650)}
-  const loaders={links:loadLinks,bridge:loadBridgePage,connections:loadConns,errors:loadErrs,subscriptions:loadSubsPage,subgroups:loadSubs,logs:loadActivity,updates:loadVersion,support:loadSupportMsgs,nodes:loadNodesPage,zeus:loadZeusPage,gaming:loadGamingPage,multiloc:loadMultilocPage,vpn:loadVPNPage,experimental:loadExperimentalPage,'unified-configs':loadUnifiedConfigsPage,diag:loadDiagPage};  if(loaders[name])loaders[name]();
+  const loaders={links:loadLinks,bridge:loadBridgePage,connections:loadConns,errors:loadErrs,subscriptions:loadSubsPage,subgroups:loadSubs,logs:loadActivity,updates:loadVersion,support:loadSupportMsgs,nodes:loadNodesPage,zeus:loadZeusPage,gaming:loadGamingPage,multiloc:loadMultilocPage,vpn:loadVPNPage,experimental:loadExperimentalPage,'unified-configs':loadUnifiedConfigsPage,diag:loadDiagPage,routing:loadRoutingPage,accounts:loadAccountsPage};  if(loaders[name])loaders[name]();
   closeSb();window.scrollTo({top:0,behavior:'smooth'});
 }
 document.querySelectorAll('.nav-it').forEach(el=>el.addEventListener('click',()=>navTo(el.dataset.pg)));
@@ -6162,6 +6277,236 @@ async function loadGamingPage(){
     if(gamingCfg.best_ip){document.getElementById('gaming-override-ip').value=gamingCfg.best_ip}
   }catch(e){console.error('loadGamingPage',e);toast('خطا در بارگذاری مرکز گیمینگ','err')}
 }
+/* ══════════════════════════════════════════════════════════════════════════
+   PHASE 38 — مسیریابی هوشمند (pg-routing) + حساب‌ها (pg-accounts)
+   همه‌ی ادعاها از API واقعی می‌آیند؛ هیچ چیز hardcode نیست.
+   ══════════════════════════════════════════════════════════════════════════ */
+let rtPolicy='ALL_VPN';
+async function loadRoutingPage(){
+  try{
+    const [pol, st] = await Promise.all([
+      authF('/api/domestic/policy').then(r=>r.ok?r.json():null),
+      authF('/api/domestic/status').then(r=>r.ok?r.json():null)
+    ]);
+    if(pol){
+      rtPolicy=pol.active_policy;
+      routingRenderMode();
+      const d=document.getElementById('rt-mode-detail');
+      if(d){
+        const iran = pol.active_policy==='IRAN_DIRECT';
+        d.innerHTML = iran
+          ? '<b style="color:#F97316">🇮🇷 مقصدهای ایرانی:</b> DIRECT از ISP خود کاربر (خروج: USER_ISP — VPN دور زده می‌شود)<br><b style="color:#38BDF8">🌍 مقصدهای بین‌المللی:</b> VPN از نود خروج EMIX انتخاب‌شده<br><b style="color:var(--t3)">مجهول:</b> طبق سیاست پیش‌فرض (VPN)'
+          : '<b style="color:#38BDF8">🌍 همه‌ی ترافیک:</b> از تونل EMIX عبور می‌کند (داخلی و بین‌المللی)<br><b style="color:var(--t3)">حالت «مستقیم ایرانی» برای عبور ترافیک داخلی از ISP خودتان در دسترس است.</b>';
+        if(pol.dns&&pol.dns.recommended){d.innerHTML+='<div style="font-size:11px;color:var(--t3);margin-top:6px">DNS توصیه‌شده: '+esc(pol.dns.recommended)+'</div>'}
+      }
+    }
+    if(st){
+      const ds=st.dataset||{};
+      document.getElementById('rt-prefix-count').textContent=toFa(ds.prefix_count||0);
+      document.getElementById('rt-dataset-body').innerHTML=
+        '<div>پیشوندها: <b>'+toFa(ds.prefix_count||0)+'</b> (IPv4+IPv6)</div>'+
+        '<div>منبع: <b style="direction:ltr;display:inline-block">'+esc(ds.source_name||ds.source||'—')+'</b></div>'+
+        '<div>نسخه: <b>'+(ds.version?toFa(new Date(ds.version*1000).toLocaleDateString('fa-IR')):'—')+'</b></div>'+
+        '<div>آخرین دریافت: <b>'+(ds.fetched_at?toFa(new Date(ds.fetched_at*1000).toLocaleString('fa-IR')):'—')+'</b></div>'+
+        '<div>checksum: <b style="font-family:monospace;font-size:10px;direction:ltr;display:inline-block">'+esc((ds.checksum||'—').slice(0,16))+'…</b></div>'+
+        '<div>اعتماد: <b>'+esc(ds.confidence||'UNKNOWN')+'</b></div>';
+      const ta=st.traffic_accounting||{};
+      document.getElementById('rt-traffic-body').innerHTML=
+        '<div>🇮🇷 DOMESTIC_DIRECT: <b>'+fmtB(ta.DOMESTIC_DIRECT?tva(ta.DOMESTIC_DIRECT):0)+'</b> · '+toFa((ta.DOMESTIC_DIRECT&&ta.DOMESTIC_DIRECT.connections)||0)+' اتصال</div>'+
+        '<div>🌍 INTERNATIONAL_VPN: <b>'+fmtB(ta.INTERNATIONAL_VPN?tva(ta.INTERNATIONAL_VPN):0)+'</b> · '+toFa((ta.INTERNATIONAL_VPN&&ta.INTERNATIONAL_VPN.connections)||0)+' اتصال</div>'+
+        '<div>❓ UNKNOWN: <b>'+fmtB(ta.UNKNOWN?tva(ta.UNKNOWN):0)+'</b></div>';
+      const sm=st.split_tunnel_clients||{};
+      let rows='';
+      for(const [c,v] of Object.entries(sm)){
+        rows+='<div>'+esc(c)+': <span class="badge '+(v==='SPLIT_TUNNEL_SUPPORTED'?'bg-green':'bg-amber')+'">'+(v==='SPLIT_TUNNEL_SUPPORTED'?'پشتیبانی می‌شود':'SPLIT_TUNNEL_NOT_SUPPORTED')+'</span></div>';
+      }
+      document.getElementById('rt-split-body').innerHTML=rows+'<div style="font-size:10.5px;color:var(--t3);margin-top:6px">تنها کلاینت‌هایی که واقعاً قادر به اعمال قواعد مسیر در سطح route هستند پشتیبانی می‌شوند — بقیه صادقانه NOT_SUPPORTED گزارش می‌شوند.</div>';
+    }
+  }catch(e){netErr(e,'loadRoutingPage')}
+}
+function tva(row){return (row.bytes_sent||0)+(row.bytes_received||0)}
+function routingRenderMode(){
+  document.getElementById('rt-mode-allvpn').classList.toggle('sel',rtPolicy==='ALL_VPN');
+  document.getElementById('rt-mode-irandirect').classList.toggle('sel',rtPolicy==='IRAN_DIRECT');
+  const b=document.getElementById('routing-mode-badge');
+  b.textContent=rtPolicy==='IRAN_DIRECT'?'IRAN_DIRECT':'ALL_VPN';
+  b.className='badge '+(rtPolicy==='IRAN_DIRECT'?'bg-amber':'bg-blue');
+}
+async function routingSetMode(mode){
+  if(mode!=='ALL_VPN'&&mode!=='IRAN_DIRECT')return;
+  try{
+    const r=await authF('/api/domestic/policy',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({policy:mode})});
+    if(!r.ok){const j=await r.json().catch(()=>({}));toast(j.error||('خطا در تغییر حالت'),'err');return}
+    rtPolicy=mode;routingRenderMode();loadRoutingPage();
+    toast('حالت مسیریابی: '+mode,'ok');
+  }catch(e){netErr(e,'routingSetMode')}
+}
+async function routingTestRoute(){
+  const inp=document.getElementById('rt-test-input');
+  const dest=(inp.value||'').trim();
+  const out=document.getElementById('rt-test-result');
+  if(!dest){toast('یک دامنه یا IP وارد کنید','err');return}
+  out.style.display='block';out.innerHTML='<div style="font-size:12px;color:var(--t3)">در حال تست مسیر…</div>';
+  try{
+    const r=await authF('/api/domestic/test-route',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({destination:dest})});
+    if(!r.ok){out.innerHTML='<div class="badge bg-red">خطا در تست مسیر</div>';return}
+    const v=await r.json();
+    const clsColor={'IRAN_DOMESTIC':'bg-amber','NON_IRAN':'bg-blue','UNKNOWN':'bg-gray'}[v.classification]||'bg-gray';
+    const decColor={'DIRECT':'bg-green','VPN':'bg-blue','BLOCK':'bg-red'}[v.decision]||'bg-gray';
+    out.innerHTML=
+      '<div style="padding:14px;background:var(--bg);border-radius:12px;border:1px solid var(--card-b);font-size:12px;line-height:2.2">'+
+      '<div>مقصد: <b style="direction:ltr;display:inline-block">'+esc(v.destination)+'</b></div>'+
+      '<div>IP حل‌شده: <b style="direction:ltr;font-family:monospace">'+esc(v.resolved_ip||'—')+'</b> <span style="color:var(--t3)">('+esc(v.resolved_by||'')+')</span></div>'+
+      '<div>طبقه‌بندی: <span class="badge '+clsColor+'">'+esc(v.classification)+'</span>'+(v.matched_prefix?' <span style="font-family:monospace;font-size:10.5px;color:var(--t3);direction:ltr;display:inline-block">'+esc(v.matched_prefix)+'</span>':'')+'</div>'+
+      '<div>قاعده اعمال‌شده: <b>'+esc(v.policy_name||'')+'</b> <span style="color:var(--t3);font-size:11px">{iran:'+esc((v.policy||{}).iran)+', intl:'+esc((v.policy||{}).international)+', unknown:'+esc((v.policy||{}).unknown)+'}</span></div>'+
+      '<div>تصمیم مسیر: <span class="badge '+decColor+'">'+esc(v.decision)+'</span></div>'+
+      '<div>VPN دور زده شد؟ <b>'+(v.vpn_bypassed?'بله (BYPASSED)':'نه (از تونل)')+'</b></div>'+
+      '<div>خروج واقعی: <b style="color:'+(v.egress==='USER_ISP'?'#F97316':'#38BDF8')+'">'+esc(v.egress)+'</b> <span style="color:var(--t3);font-size:11px">'+esc(v.egress_note||'')+'</span></div>'+
+      (v.domestic_status?'<div>وضعیت داخلی: <b>'+esc(v.domestic_status)+'</b></div>':'')+
+      (v.notes&&v.notes.length?('<div style="color:var(--amber-t);font-size:11px">'+v.notes.map(esc).join(' · ')+'</div>'):'')+
+      '</div>';
+  }catch(e){netErr(e,'routingTestRoute')}
+}
+async function routingUpdateRules(btn){
+  const out=document.getElementById('rt-rules-result');
+  if(btn){btn.disabled=true;btn.innerHTML='در حال به‌روزرسانی…'}
+  try{
+    const r=await authF('/api/domestic/rules/update',{method:'POST'});
+    const j=await r.json().catch(()=>({}));
+    out.style.display='block';
+    if(j.ok){out.innerHTML='<span class="badge bg-green">موفق</span> '+toFa(j.applied||0)+' پیشوند اعمال شد (نسخه '+toFa(j.version||'')+')';loadRoutingPage()}
+    else{out.innerHTML='<span class="badge bg-amber">ناموفق</span> '+esc(j.error||'')+' — <b>دیتاست قبلی حفظ شد</b>'}
+  }catch(e){netErr(e,'routingUpdateRules')}
+  finally{if(btn){btn.disabled=false;btn.innerHTML='<i class="ti ti-cloud-download"></i> به‌روزرسانی اتمی از RIPEstat'}}
+}
+
+/* ── حساب‌ها ─────────────────────────────────────────────────────────────── */
+async function loadAccountsPage(){
+  try{
+    const r=await authF('/api/accounts');
+    if(!r.ok){toast('خطا در بارگذاری حساب‌ها','err');return}
+    const j=await r.json();
+    const list=j.accounts||[];
+    document.getElementById('accounts-count').textContent=toFa(list.length)+' حساب';
+    document.getElementById('accounts-nb').textContent=toFa(list.length);
+    const wrap=document.getElementById('ac-list');const empty=document.getElementById('ac-empty');
+    if(!list.length){wrap.innerHTML='';empty.style.display='block';return}
+    empty.style.display='none';
+    wrap.innerHTML=list.map(a=>accountsRenderCard(a)).join('');
+    list.forEach(a=>accountLoadDetail(a.id));
+  }catch(e){netErr(e,'loadAccountsPage')}
+}
+function accountsRenderCard(a){
+  const statusChip=a.status==='ACTIVE'?'<span class="ac-status-chip" style="background:rgba(74,222,128,.15);color:#4ADE80">ACTIVE</span>':'<span class="ac-status-chip" style="background:rgba(239,68,68,.15);color:#F87171">DISABLED</span>';
+  const quota=a.traffic_quota_bytes
+    ?'<div>مصرف: <b>'+fmtB(a.used_bytes)+'</b> از '+fmtB(a.traffic_quota_bytes)+(a.quota_used_pct!=null?' ('+toFa(a.quota_used_pct)+'٪)':'')+(a.over_quota?' <span class="badge bg-red">QUOTA_EXCEEDED</span>':'')+'</div>'
+    :'<div>مصرف: <b>'+fmtB(a.used_bytes)+'</b> (نامحدود)</div>';
+  const expiry=a.expires_at_iso?'<div>انقضا: <b>'+toFa(a.expires_at_iso)+'</b>'+(a.expired?' <span class="badge bg-red">EXPIRED</span>':'')+'</div>':'<div>انقضا: بی‌نهایت</div>';
+  return '<div class="ac-card" id="ac-'+esc(a.id)+'">'+
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'+
+      '<div style="font-weight:800;font-size:14px"><i class="ti ti-user"></i> '+esc(a.username)+'</div>'+statusChip+
+    '</div>'+
+    '<div style="font-size:12px;line-height:2;color:var(--t2)">'+
+      '<div style="font-family:monospace;font-size:10px;color:var(--t3);direction:ltr">'+esc(a.id)+'</div>'+
+      quota+expiry+
+      '<div>سقف دستگاه: <b>'+toFa(a.max_devices)+'</b> · سقف سشن: <b>'+toFa(a.max_concurrent_sessions)+'</b></div>'+
+    '</div>'+
+    '<div id="ac-dev-'+esc(a.id)+'" style="margin-top:10px"><div style="font-size:11px;color:var(--t3)">در حال بارگذاری دستگاه‌ها…</div></div>'+
+    '<div id="ac-sub-'+esc(a.id)+'" style="margin-top:8px"></div>'+
+    '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:12px">'+
+      (a.status==='ACTIVE'
+        ?'<button class="btn btn-o btn-sm" onclick="accountSetStatus(\''+a.id+'\',\'DISABLED\')"><i class="ti ti-ban"></i> غیرفعال</button>'
+        :'<button class="btn btn-o btn-sm" onclick="accountSetStatus(\''+a.id+'\',\'ACTIVE\')"><i class="ti ti-check"></i> فعال</button>')+
+      '<button class="btn btn-blue btn-sm" onclick="accountAddDevice(\''+a.id+'\')"><i class="ti ti-device-mobile-plus"></i> دستگاه جدید</button>'+
+      '<button class="btn btn-g btn-sm" onclick="accountAddSub(\''+a.id+'\')"><i class="ti ti-rss"></i> اشتراک جدید</button>'+
+    '</div></div>';
+}
+async function accountsCreate(){
+  const u=document.getElementById('ac-username').value.trim();
+  const p=document.getElementById('ac-password').value;
+  const q=parseFloat(document.getElementById('ac-quota').value)||null;
+  const e=parseFloat(document.getElementById('ac-expiry').value)||null;
+  const md=parseInt(document.getElementById('ac-maxdev').value)||5;
+  const ms=parseInt(document.getElementById('ac-maxses').value)||3;
+  if(!u||!p||p.length<8){toast('نام کاربری و رمز (حداقل ۸ کاراکتر) الزامی است','err');return}
+  try{
+    const r=await authF('/api/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p,traffic_quota_gb:q,expires_in_days:e,max_devices:md,max_concurrent_sessions:ms})});
+    if(!r.ok){const j=await r.json().catch(()=>({}));toast(j.error||'خطا در ایجاد حساب','err');return}
+    toast('حساب ساخته شد','ok');
+    document.getElementById('ac-username').value='';document.getElementById('ac-password').value='';
+    loadAccountsPage();
+  }catch(err){netErr(err,'accountsCreate')}
+}
+async function accountSetStatus(id,status){
+  try{
+    const r=await authF('/api/accounts/'+id+'/status?status='+status,{method:'POST'});
+    if(!r.ok){toast('خطا در تغییر وضعیت','err');return}
+    toast('وضعیت: '+status,'ok');loadAccountsPage();
+  }catch(e){netErr(e,'accountSetStatus')}
+}
+async function accountAddDevice(id){
+  const name=prompt('نام دستگاه:','my-phone');if(name===null)return;
+  const platform=prompt('پلتفرم (android/ios/windows/…):','android')||'unknown';
+  try{
+    const r=await authF('/api/accounts/'+id+'/devices',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,platform})});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok){toast(j.error||'خطا در ثبت دستگاه','err');return}
+    if(j.access_token){
+      const box=document.getElementById('ac-dev-'+id);
+      box.insertAdjacentHTML('afterbegin','<div style="padding:10px;border:1px dashed var(--accent);border-radius:10px;margin-bottom:8px;font-size:12px"><b>توکن دستگاه (فقط همین یک‌بار نمایش داده می‌شود):</b><div style="font-family:monospace;direction:ltr;margin-top:6px;user-select:all">'+esc(j.access_token)+'</div><div style="font-size:10.5px;color:var(--t3);margin-top:4px">این توکن در لاگ‌ها ذخیره نمی‌شود — الان کپی کنید.</div></div>');
+    }
+    toast('دستگاه ثبت شد','ok');
+  }catch(e){netErr(e,'accountAddDevice')}
+}
+async function deviceRevoke(id,accId){
+  if(!confirm('این دستگاه باطل (revoke) شود؟'))return;
+  try{
+    const r=await authF('/api/devices/'+id+'/revoke',{method:'POST'});
+    if(!r.ok){toast('خطا در ابطال دستگاه','err');return}
+    toast('دستگاه باطل شد','ok');accountLoadDetail(accId);
+  }catch(e){netErr(e,'deviceRevoke')}
+}
+async function accountAddSub(id){
+  const days=parseFloat(prompt('مدت اشتراک (روز — خالی = بی‌نهایت):','30'));if(days===null&&days!==null)0;
+  const routePolicy=confirm('سیاست مسیر: IRAN_DIRECT؟\n(OK = ایرانی مستقیم · Cancel = ALL_VPN)')?'IRAN_DIRECT':'ALL_VPN';
+  try{
+    const r=await authF('/api/accounts/'+id+'/subscriptions',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({expires_in_days:isNaN(days)?null:days,route_policy:routePolicy})});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok){toast(j.error||'خطا در ایجاد اشتراک','err');return}
+    toast('اشتراک ساخته شد','ok');accountLoadDetail(id);
+  }catch(e){netErr(e,'accountAddSub')}
+}
+async function accountLoadDetail(id){
+  try{
+    const r=await authF('/api/accounts/'+id);
+    if(!r.ok)return;
+    const a=await r.json();
+    const devBox=document.getElementById('ac-dev-'+id);
+    if(devBox&&a.devices){
+      devBox.innerHTML='<div style="font-size:12px;font-weight:700;margin-bottom:6px"><i class="ti ti-devices"></i> دستگاه‌ها ('+toFa(a.devices.length)+')</div>'+
+        (a.devices.length?a.devices.map(d=>
+          '<div class="ac-dev-row">'+
+          '<i class="ti ti-device-mobile" style="color:'+(d.revoked?'var(--t3)':'#38BDF8')+'"></i>'+
+          '<b>'+esc(d.name)+'</b><span style="color:var(--t3);font-size:10.5px">'+esc(d.platform)+'</span>'+
+          '<span style="flex:1"></span>'+
+          (d.revoked?'<span class="badge bg-red">REVOKED</span>':(d.connection_state==='CONNECTED'?'<span class="badge bg-green">CONNECTED</span>':'<span style="font-size:10.5px;color:var(--t3)">'+(d.last_seen_iso?('آخرین اتصال: '+toFa(d.last_seen_iso)):'بدون اتصال')+'</span>'))+
+          (d.revoked?'':'<button class="btn btn-o btn-sm" style="padding:2px 8px" onclick="deviceRevoke(\''+d.device_id+'\',\''+id+'\')"><i class="ti ti-ban"></i></button>')+
+          '</div>').join(''):'<div style="font-size:11px;color:var(--t3)">بدون دستگاه</div>');
+    }
+    const subBox=document.getElementById('ac-sub-'+id);
+    if(subBox&&a.subscriptions){
+      subBox.innerHTML='<div style="font-size:12px;font-weight:700;margin-bottom:6px"><i class="ti ti-rss"></i> اشتراک‌ها ('+toFa(a.subscriptions.length)+')</div>'+
+        (a.subscriptions.length?a.subscriptions.map(s=>{
+          const c={'ACTIVE':'bg-green','EXPIRED':'bg-amber','REVOKED':'bg-red','SUSPENDED':'bg-amber','DRAINING':'bg-blue'}[s.status]||'bg-gray';
+          return '<div class="ac-dev-row" style="font-size:11px"><span class="badge '+c+'">'+esc(s.status)+'</span>'+
+          '<span style="font-family:monospace;direction:ltr;font-size:10px">'+esc(s.subscription_id)+'</span>'+
+          '<span style="flex:1"></span><span style="color:var(--t3)">'+esc(s.route_policy)+' · '+esc(s.protocol)+'</span>'+
+          (s.expires_at_iso?('<span style="color:var(--t3)">تا '+toFa(s.expires_at_iso)+'</span>'):'')+'</div>';
+        }).join(''):'<div style="font-size:11px;color:var(--t3)">بدون اشتراک</div>');
+    }
+  }catch(e){netErr(e,'accountLoadDetail')}
+}
+
 /* توضیح داینامیک حالت ضد ضریب */
 function gamingUpdateAntiDesc(){
   const box=document.getElementById('gaming-anti-desc');

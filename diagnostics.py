@@ -273,6 +273,42 @@ async def diagnostics_overview() -> dict:
     except Exception as exc:
         checks["subscriptions"] = {"status": "UNKNOWN", "error": str(exc)[:120]}
 
+    # ── Phase 38 / P7 — routes, egress truth, accounts, domestic routing ──
+    try:
+        import route_engine
+        checks["routes"] = route_engine.summary()
+    except Exception as exc:
+        checks["routes"] = {"status": "UNKNOWN", "error": str(exc)[:120]}
+    try:
+        import egress_engine
+        checks["egress"] = {
+            "health_layers": egress_engine.egress_health_layers(),
+            "route_history_tail": egress_engine.route_history()[-5:],
+        }
+    except Exception as exc:
+        checks["egress"] = {"status": "UNKNOWN", "error": str(exc)[:120]}
+    try:
+        import account_manager
+        checks["accounts"] = account_manager.summary()
+    except Exception as exc:
+        checks["accounts"] = {"status": "UNKNOWN", "error": str(exc)[:120]}
+    try:
+        import domestic_route_engine as _dre
+        ds = _dre.summary()
+        checks["domestic_routing"] = {
+            "active_policy": ds.get("active_policy"),
+            "dataset": ds.get("dataset"),
+            "traffic_accounting": ds.get("traffic_accounting"),
+            "decisions_recorded": ds.get("decisions_recorded"),
+        }
+    except Exception as exc:
+        checks["domestic_routing"] = {"status": "UNKNOWN", "error": str(exc)[:120]}
+    try:
+        import failover_engine
+        checks["failover"] = failover_engine.summary()
+    except Exception as exc:
+        checks["failover"] = {"status": "UNKNOWN", "error": str(exc)[:120]}
+
     return {
         "ok": True,
         "checks": checks,

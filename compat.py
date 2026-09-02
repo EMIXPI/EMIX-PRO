@@ -109,6 +109,39 @@ TRANSPORT_MATRIX = {
 
 MATRIX_STATES = ("VALID", "EXPERIMENTAL", "NOT_IMPLEMENTED", "INVALID")
 
+# Phase 38 / P4 — public status vocabulary (spec: every combination must
+# declare SUPPORTED / EXPERIMENTAL / INVALID / NOT_IMPLEMENTED). "VALID" is
+# the internal term used since Phase 37; its public label is SUPPORTED.
+MATRIX_STATE_PUBLIC = {
+    "VALID": "SUPPORTED",
+    "EXPERIMENTAL": "EXPERIMENTAL",
+    "INVALID": "INVALID",
+    "NOT_IMPLEMENTED": "NOT_IMPLEMENTED",
+}
+
+
+def public_status(state: str) -> str:
+    """Public status label for a matrix state (VALID → SUPPORTED)."""
+    return MATRIX_STATE_PUBLIC.get(state, "NOT_IMPLEMENTED")
+
+
+def selectable_combinations(protocol: str = "") -> list:
+    """Combos that may be exposed as SELECTABLE in UI.
+    Rule: only SUPPORTED combos are selectable by default; EXPERIMENTAL only
+    behind explicit opt-in. INVALID / NOT_IMPLEMENTED are NEVER selectable."""
+    out = []
+    for combo in matrix_view()["combinations"]:
+        if combo["state"] != "VALID":
+            continue
+        if protocol and combo["protocol"] != protocol:
+            continue
+        out.append({"fused": combo["fused"], "protocol": combo["protocol"],
+                    "transport": combo["transport"],
+                    "security": combo["security"],
+                    "readiness": combo["readiness"],
+                    "status": "SUPPORTED"})
+    return out
+
 _MATRIX_NOTES = {
     ("vless", "grpc", "tls"): "XHTTP already mimics the gRPC envelope (content-type application/grpc) — no real gRPC transport",
     ("vless", "tcp", "reality"): "vless-reality link emitter exists (BETA) — requires an external xray-core server",
@@ -300,7 +333,7 @@ def matrix_view() -> dict:
         for s in sec:
             combos.append({
                 "protocol": p, "transport": t, "security": s,
-                "state": "VALID", "runtime": runtime,
+                "state": "VALID", "status": "SUPPORTED", "runtime": runtime,
                 "fused": compose(p, t),
                 "sni_override": SNI_APPLICABLE.get((p, t), False),
                 "readiness": READINESS.get(p, "UNKNOWN"),
@@ -312,7 +345,7 @@ def matrix_view() -> dict:
             continue  # already emitted as VALID above
         combos.append({
             "protocol": p, "transport": t, "security": s,
-            "state": state,
+            "state": state, "status": MATRIX_STATE_PUBLIC.get(state, state),
             "runtime": None,
             "fused": compose(p, t),
             "sni_override": SNI_APPLICABLE.get((p, t), False),
@@ -326,6 +359,7 @@ def matrix_view() -> dict:
         "production": list(PRODUCTION_PROTOCOLS),
         "readiness": dict(READINESS),
         "states": list(MATRIX_STATES),
+        "public_states": sorted(set(MATRIX_STATE_PUBLIC.values())),
         "combinations": combos,
         "source": "compat.py/TRANSPORT_MATRIX (single source of truth)",
     }

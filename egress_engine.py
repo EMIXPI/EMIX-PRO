@@ -67,7 +67,8 @@ EGRESS_CLASSIFICATIONS = ("VERIFIED_EGRESS", "CONFIGURED_ONLY", "UNKNOWN")
 ROUTE_STATUSES = ("DIRECT", "RELAY", "VERIFIED", "UNKNOWN")
 ROUTE_HEALTH_STATES = ("HEALTHY", "ROUTE_MISMATCH", "NO_EXIT_NODE_AVAILABLE",
                        "DEGRADED", "UNREACHABLE", "UNKNOWN")
-HEALTH_LAYERS = ("APPLICATION_HEALTH", "NODE_HEALTH", "ROUTE_HEALTH", "EGRESS_HEALTH")
+HEALTH_LAYERS = ("APPLICATION_HEALTH", "NODE_HEALTH", "ROUTE_HEALTH",
+                 "PROTOCOL_HEALTH", "EGRESS_HEALTH")
 LATENCY_MEASURES = ("control_plane_rtt", "node_rtt", "route_rtt",
                     "protocol_handshake_rtt")
 
@@ -735,6 +736,26 @@ def egress_health_layers() -> dict:
     if panel_ev and panel_ev.ok and time.time() - panel_ev.timestamp <= EGRESS_EVIDENCE_TTL:
         if layers["EGRESS_HEALTH"] == "UNKNOWN":
             layers["EGRESS_HEALTH"] = "HEALTHY"   # panel egress measured & fresh
+    # PROTOCOL_HEALTH — are protocol engines actually registered & serving?
+    # (a healthy API says nothing about VPN traffic; this layer reports the
+    #  protocol serving layer itself, from registry evidence — not vibes.)
+    try:
+        import protocol_engine
+        import compat as _compat
+        enabled = protocol_engine.get_enabled_protocols()
+        names = set()
+        for item in enabled:
+            names.add(getattr(item, "name", item) if not isinstance(item, str)
+                      else item)
+        prod = {p for p, r in _compat.READINESS.items() if r == "PRODUCTION"}
+        if names & prod:
+            layers["PROTOCOL_HEALTH"] = "HEALTHY"
+        elif names:
+            layers["PROTOCOL_HEALTH"] = "DEGRADED"     # only BETA serving
+        else:
+            layers["PROTOCOL_HEALTH"] = "UNKNOWN"
+    except Exception:
+        pass
     return layers
 
 

@@ -6,7 +6,8 @@
 #   runtime      — what actually serves traffic on this node and HOW
 #                  (in-panel relays, subprocess binaries, worker JS, …)
 #   capabilities — protocol/transport combos this node can serve (compat truth)
-#   health       — REGISTER → ONLINE → DEGRADED → OFFLINE (+ MAINTENANCE)
+#   health       — REGISTER → ONLINE → DEGRADED → OFFLINE (+ MAINTENANCE /
+#                  DRAINING / QUARANTINED / UNKNOWN — Phase 38 / P1)
 #   load         — 0-100 estimate from active connections / quota pressure
 #   traffic      — bytes served through this node
 #   clients      — active client connections
@@ -26,7 +27,10 @@ import time
 from dataclasses import dataclass, field
 from typing import Optional, Callable, Awaitable, Dict, List
 
-NODE_STATES = ("REGISTER", "ONLINE", "DEGRADED", "OFFLINE", "MAINTENANCE")
+NODE_STATES = ("REGISTER", "ONLINE", "DEGRADED", "DRAINING", "MAINTENANCE",
+               "OFFLINE", "QUARANTINED", "UNKNOWN")
+# Phase 38 note: REGISTER (never heartbeated) is the concrete sub-case of
+# spec state UNKNOWN; kept for backward compatibility with v11 snapshots.
 KINDS = ("panel", "worker", "vps", "exit", "external")
 
 HEARTBEAT_TTL = 180.0        # seconds — evidence older than this = OFFLINE
@@ -51,6 +55,7 @@ class NodeRecord:
     traffic_bytes: int = 0
     clients: int = 0
     restart_count: int = 0
+    draining: bool = False                   # Phase 38: no NEW assignments
     notes: List[str] = field(default_factory=list)
 
     def to_dict(self) -> dict:
@@ -72,7 +77,11 @@ def derive_state(rec: NodeRecord, now: Optional[float] = None,
                  heartbeat_ttl: float = HEARTBEAT_TTL,
                  heartbeat_degraded: float = HEARTBEAT_DEGRADED
                  ) -> tuple[str, str]:
-    """(state, reason). MAINTENANCE override > runtime health > heartbeat age."""
+    """(state, reason). QUARANTINED/MAINTENANCE override > drain > runtime
+    health > heartbeat age. DRAINING keeps existing traffic but blocks new
+    assignments (failover_engine drives it)."""
+    if rec.state == "QUARANTINED":
+        return "QUARANTINED", "operator quarantine — egress/behavior under investigation"
     if rec.state == "MAINTENANCE":
         return "MAINTENANCE", "operator override"
     now = time.time() if now is None else now
@@ -90,6 +99,8 @@ def derive_state(rec: NodeRecord, now: Optional[float] = None,
         return "DEGRADED", "runtime health reported DEGRADED"
     if rec.runtime_health in ("UNKNOWN",):
         return "REGISTER", "heartbeat fresh but runtime health unknown"
+    if rec.draining:
+        return "DRAINING", "draining — existing traffic continues, no new assignments"
     return "ONLINE", "runtime healthy + fresh heartbeat"
 
 
@@ -158,6 +169,45 @@ async def set_maintenance(node_id: str, on: bool, reason: str = "") -> Optional[
         else:
             rec.state = "REGISTER"
             rec.notes = [n for n in rec.notes if not n.startswith("maintenance:")]
+        return rec
+
+
+async def set_draining(node_id: str, on: bool,
+                       reason: str = "") -> Optional[NodeRecord]:
+    """Phase 38: DRAINING — existing traffic continues, NEW assignments stop.
+    Driven by failover_engine (step 1+2 of the failover pipeline)."""
+    async with _lock:
+        rec = _nodes.get(node_id)
+        if rec is None:
+            return None
+        rec.draining = on
+        if on:
+            rec.notes = [n for n in rec.notes if not n.startswith("drain:")]
+            rec.notes.append(f"drain:{reason or 'operator'}")
+        else:
+            rec.notes = [n for n in rec.notes if not n.startswith("drain:")]
+        state, _reason = derive_state(rec)
+        rec.state = state
+        return rec
+
+
+async def set_quarantine(node_id: str, on: bool,
+                         reason: str = "") -> Optional[NodeRecord]:
+    """Phase 38: QUARANTINED — traffic fully excluded while egress/behavior
+    is under investigation (e.g. ROUTE_MISMATCH evidence)."""
+    async with _lock:
+        rec = _nodes.get(node_id)
+        if rec is None:
+            return None
+        if on:
+            rec.state = "QUARANTINED"
+            rec.notes = [n for n in rec.notes if not n.startswith("quarantine:")]
+            rec.notes.append(f"quarantine:{reason or 'operator'}")
+        else:
+            rec.state = "REGISTER"
+            rec.notes = [n for n in rec.notes if not n.startswith("quarantine:")]
+            state, _r = derive_state(rec)
+            rec.state = state
         return rec
 
 
@@ -230,11 +280,14 @@ def node_load(node_id: str) -> Optional[float]:
 
 
 def online_nodes(capability: Optional[str] = None) -> List[str]:
-    """Node ids ONLINE (runtime-gated). Optional capability (fused protocol) filter."""
+    """Node ids ONLINE (runtime-gated). Optional capability (fused protocol) filter.
+    DRAINING / QUARANTINED / MAINTENANCE / OFFLINE nodes are NEVER returned —
+    they do not accept new assignments."""
     out = []
     for nid, rec in _nodes.items():
         state, _ = derive_state(rec)
-        if state == "ONLINE" and (capability is None or capability in rec.capabilities):
+        if state == "ONLINE" and not rec.draining \
+                and (capability is None or capability in rec.capabilities):
             out.append(nid)
     return out
 

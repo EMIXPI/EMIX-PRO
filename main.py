@@ -187,6 +187,24 @@ async def load_state():
                     logger.info(f"vpn_pro: {n_vpn} VPN nodes restored (keys intact)")
             except Exception as _vpn_exc:
                 logger.warning(f"vpn_nodes restore failed (ignored): {_vpn_exc}")
+            # Phase 38 — Accounts + domestic routing restore
+            try:
+                import account_manager
+                account_manager.restore_snapshot(data.get("account_manager") or {})
+                n_acc = len(account_manager.list_accounts())
+                if n_acc:
+                    logger.info(f"account_manager: {n_acc} accounts restored")
+            except Exception as _am_exc:
+                logger.warning(f"account_manager restore failed (ignored): {_am_exc}")
+            try:
+                import domestic_route_engine as _dre
+                _dre.restore_policy_snapshot(data.get("domestic_routing") or {})
+                n_ir = _dre.load_seed()
+                logger.info(
+                    f"domestic_route_engine: seed dataset loaded "
+                    f"({n_ir} IR prefixes, policy={_dre.get_active_policy_name()})")
+            except Exception as _dre_exc:
+                logger.warning(f"domestic_route_engine restore failed (ignored): {_dre_exc}")
             # Sessions: restore non-expired tokens (survive redeploy)
             now_ts = time.time()
             for tok, exp in (data.get("sessions") or {}).items():
@@ -242,6 +260,8 @@ async def save_state():
                 # (importها defensive هستند چون این ماژول‌ها در try/except
                 # دیرهنگام bootstrap می‌شوند.)
                 **_persist_optional_engines(),
+                # Phase 38 — Accounts/Devices/Subscriptions engine snapshot
+                **_persist_phase38_engines(),
                 # Sessions survive restarts (Railway redeploy خروج اجباری نمی‌دهد)
                 "sessions": {t: exp for t, exp in SESSIONS.items() if exp > time.time()},
                 # Lifetime traffic totals (per-link used_bytes قبلاً هم ذخیره
@@ -259,6 +279,22 @@ async def save_state():
             tmp.replace(DATA_FILE)
         except Exception as e:
             logger.warning(f"Could not save state: {e}")
+
+
+def _persist_phase38_engines() -> dict:
+    """Phase 38 snapshots (defensive — engines may be absent in degraded boots)."""
+    out: dict = {}
+    try:
+        import account_manager
+        out["account_manager"] = account_manager.persist_snapshot()
+    except Exception:
+        out["account_manager"] = {}
+    try:
+        import domestic_route_engine
+        out["domestic_routing"] = domestic_route_engine.persist_policy_snapshot()
+    except Exception:
+        out["domestic_routing"] = {"active_policy": "ALL_VPN"}
+    return out
 
 
 def _persist_optional_engines() -> dict:
@@ -759,6 +795,92 @@ def _register_default_jobs() -> None:
     _register_phase37_jobs()
 
 
+def _wire_phase38_engines() -> None:
+    """Phase 38 runtime wiring (all defensive; failures never block boot):
+
+    * account_manager compiles subscription configs THROUGH the unified
+      Config Compiler — no duplicate URI logic anywhere.
+    * route_engine gets a real control-plane RTT provider (egress_engine).
+    * failover_engine gets a real route re-point function (route registry).
+    * domestic engine gets a REAL DNS resolver (getaddrinfo) so the
+      Test-Route diagnostic follows actual destination IPs.
+    * default Iranian prefix dataset loads if the seed was not yet applied.
+    """
+    import account_manager
+    import config_compiler
+    import route_engine
+    import failover_engine
+    import egress_engine
+    import domestic_route_engine as dre
+
+    account_manager.set_compile_fn(config_compiler.compile_from_link)
+
+    route_engine.set_metrics_provider("control_plane_rtt",
+                                      egress_engine.measure_control_plane_rtt)
+
+    async def _repoint_routes(old_node: str, new_node: str) -> None:
+        """Re-point registered routes from a failed node to its replacement."""
+        repointed = 0
+        for r in list(route_engine._routes.values()):
+            if r.exit_node == old_node:
+                r.exit_node = new_node
+                r.notes.append(f"re-pointed {old_node}→{new_node} (failover)")
+                repointed += 1
+        if repointed:
+            logger.info(f"[failover] {repointed} routes re-pointed "
+                        f"{old_node} → {new_node}")
+    failover_engine.set_route_repoint_fn(_repoint_routes)
+
+    # Real (but timeout-bounded) resolver for the Test Route diagnostics
+    async def _resolve_domain(domain: str):
+        loop = asyncio.get_running_loop()
+        try:
+            infos = await asyncio.wait_for(
+                loop.getaddrinfo(domain, None, family=0, proto=IPPROTO_TCP), 5.0)
+            for info in infos:
+                sockaddr = info[4]
+                if sockaddr and sockaddr[0]:
+                    return sockaddr[0]
+        except Exception:
+            return None
+        return None
+    dre.set_resolver(_resolve_domain)
+
+    if dre.dataset_status().get("prefix_count", 0) == 0:
+        dre.load_seed()
+    logger.info("[phase38] route/failover/account/domestic engines wired")
+
+
+async def _job_domestic_rules_update() -> None:
+    """Daily atomic refresh of the IR prefix dataset (rollback-safe)."""
+    import domestic_rules_updater as dru
+    report = await dru.update_rules()
+    if report.get("ok"):
+        logger.info(f"[domestic-rules] dataset updated: {report.get('applied')} prefixes")
+    else:
+        logger.warning(f"[domestic-rules] update failed (kept previous): "
+                       f"{report.get('error')}")
+
+
+async def _job_account_sweep() -> None:
+    """Expire subscriptions, close stale sessions (backend-enforced limits)."""
+    import account_manager as am
+    changed = await am.reconcile_subscription_statuses()
+    if changed:
+        logger.info(f"[accounts] subscription status changes: {changed}")
+        asyncio.create_task(schedule_save())
+    closed = await am.sweep_stale_sessions()
+    if closed:
+        logger.info(f"[accounts] closed {closed} stale sessions")
+
+
+def _register_phase38_jobs() -> None:
+    job_system.register("domestic-rules-update", _job_domestic_rules_update,
+                        interval=86400.0, timeout=60.0, retries=0)
+    job_system.register("account-sweep", _job_account_sweep,
+                        interval=300.0, timeout=30.0, retries=1)
+
+
 async def _persistence_health() -> dict:
     """Persistence health for the Diagnostics Center."""
     try:
@@ -831,6 +953,15 @@ async def startup():
         await _register_mtproto_runtimes()
     except Exception as _rs_exc:
         logger.warning(f"[startup] runtime supervisor registration failed: {_rs_exc}")
+    # ─── Phase 38 wiring — route/failover/accounts/domestic ────────────────
+    try:
+        _wire_phase38_engines()
+    except Exception as _p38_exc:
+        logger.warning(f"[startup] phase38 wiring failed: {_p38_exc}")
+    try:
+        _register_phase38_jobs()
+    except Exception as _p38j_exc:
+        logger.warning(f"[startup] phase38 jobs failed: {_p38j_exc}")
     log_activity("system", "سرور راه‌اندازی شد", "ok")
     logger.info(f"EMIX v{EMIX_VERSION} started on port {CONFIG['port']}")
     # ─── هشدار پایداری دیتا روی Railway ────────────────────────────────────
@@ -4165,6 +4296,58 @@ except Exception as _exc:
 
 
 # ═════════════════════════════════════════════════════════════════════════════
+# Phase 38 / P0 — Route Engine: مسیرها به‌عنوان موجودیت درجه‌یک
+# (route_id / entry / relay / exit / expected-vs-observed / health / latency)
+# ═════════════════════════════════════════════════════════════════════════════
+try:
+    import route_engine
+    route_engine.register_routes(app, require_auth)
+    logger.info(f"[bootstrap] route_engine v{route_engine.ROUTE_ENGINE_VERSION} routes registered (first-class routes)")
+except Exception as _exc:
+    logger.error(f"[bootstrap] route_engine بارگذاری نشد (نادیده گرفته شد): {_exc}")
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# Phase 38 / P1 — Failover Engine: drain → explainable replacement → verify
+# health → verify route → verify egress → re-point → resume
+# ═════════════════════════════════════════════════════════════════════════════
+try:
+    import failover_engine
+    failover_engine.register_routes(app, require_auth)
+    logger.info(f"[bootstrap] failover_engine v{failover_engine.FAILOVER_ENGINE_VERSION} routes registered (real failover, never blind)")
+except Exception as _exc:
+    logger.error(f"[bootstrap] failover_engine بارگذاری نشد (نادیده گرفته شد): {_exc}")
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# Phase 38 / P2+P3 — Accounts / Devices / Subscriptions / Sessions
+# (backend-enforced limits, PBKDF2 hashes, one-time device tokens)
+# ═════════════════════════════════════════════════════════════════════════════
+try:
+    import account_manager
+    account_manager.register_routes(app, require_auth)
+    logger.info(f"[bootstrap] account_manager v{account_manager.ACCOUNT_ENGINE_VERSION} routes registered (accounts/devices/subscriptions)")
+except Exception as _exc:
+    logger.error(f"[bootstrap] account_manager بارگذاری نشد (نادیده گرفته شد): {_exc}")
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# Phase 38 / P17 — Iran Domestic Direct Routing (split tunneling)
+# پیشوندهای ایرانی از RIPEstat (seed واقعی + به‌روزرسانی اتمی روزانه)
+# ═════════════════════════════════════════════════════════════════════════════
+try:
+    import domestic_route_engine
+    import domestic_rules_updater
+    domestic_route_engine.register_routes(app, require_auth)
+    logger.info(
+        f"[bootstrap] domestic_route_engine v{domestic_route_engine.DOMESTIC_ENGINE_VERSION} "
+        f"+ rules_updater registered (IR split-tunneling, {domestic_route_engine.dataset_status().get('prefix_count', 0)} prefixes)"
+    )
+except Exception as _exc:
+    logger.error(f"[bootstrap] domestic_route_engine بارگذاری نشد (نادیده گرفته شد): {_exc}")
+
+
+# ═════════════════════════════════════════════════════════════════════════════
 # ماژول زیرساخت ریلوی — volume خودکار + سلامت‌سنجی کل پنل (railway_infra.py)
 # اگر این ماژول حذف شود یا خطا بدهد، پنل و همه‌ی تونل‌ها بدون تغییر کار می‌کنند.
 # ═════════════════════════════════════════════════════════════════════════════
@@ -4990,7 +5173,7 @@ async def api_migrate_legacy_spoof():
 # تا قبل از لاگین هم قابل بررسی باشد. (از /api/version استفاده نمی‌کنیم چون
 # آن مسیر قبلاً برای بررسی به‌روزرسانی در نظر گرفته شده است.)
 # ══════════════════════════════════════════════════════════════════════════════
-EMIX_VERSION = "11.2.0-egress"
+EMIX_VERSION = "11.3.0-network"
 EMIX_BUILD_DATE = "2026-09-01"
 
 @app.get("/api/deployment-version")
