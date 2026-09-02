@@ -180,11 +180,28 @@ def score_node(candidate: dict, requirements: Optional[dict] = None,
     proto = requirements.get("protocol")
     if proto:
         caps = candidate.get("capabilities") or []
-        if proto in caps:
+        if proto in caps or any(c.startswith(proto) for c in caps):
             score += SCORE_WEIGHTS["protocol_compatibility"]
             reasons.append(f"+ compatible with {proto}")
         else:
             reasons.append(f"- no capability {proto}")
+
+    # Phase 38+ §15: transport compatibility — never silently switch to a node
+    # that cannot carry the required transport (explicit UNSUPPORTED reason).
+    want_transport = (requirements.get("transport") or "").strip()
+    if want_transport:
+        import compat as _compat
+        served_transports = set()
+        for fused in (candidate.get("capabilities") or []):
+            _p, _t = _compat.decompose(fused)
+            if _t:
+                served_transports.add(_t)
+        if want_transport in served_transports:
+            reasons.append(f"+ serves transport {want_transport}")
+        else:
+            reasons.append(f"UNSUPPORTED_NODE_TRANSPORT: node carries "
+                           f"{sorted(served_transports) or 'no relevant capability'} — "
+                           f"required {want_transport}")
 
     stab = metrics.get("stability_0_100")
     if stab is None:
@@ -210,6 +227,28 @@ async def select_replacement(exclude_node: str,
         state = cand.get("effective_state") or cand.get("state")
         if state not in ("ONLINE", "DEGRADED"):
             continue
+        # Phase 38+ §15 hard gates — incompatible nodes are NEVER selected
+        # (no amount of health/latency score can override capability reality)
+        want_proto = (requirements.get("protocol") or "").strip()
+        caps = cand.get("capabilities") or []
+        if want_proto and not any(
+                c == want_proto or c.startswith(want_proto + "-")
+                or want_proto in c for c in caps):
+            continue        # UNSUPPORTED_NODE_PROTOCOL — silently incompatible
+        want_transport = (requirements.get("transport") or "").strip()
+        if want_transport:
+            import compat as _compat
+            served = {_compat.decompose(c)[1] for c in caps}
+            served.discard("")
+            if want_transport not in served:
+                continue    # UNSUPPORTED_NODE_TRANSPORT
+        want_role = (requirements.get("role") or "").strip()
+        if want_role and want_role == "EXIT_NODE":
+            # only nodes with verified egress may serve as exit replacements
+            _nid = cand.get("id")
+            _ev = ee.evidence_for(f"node:{_nid}") or ee.evidence_for(f"loc:{_nid}")
+            if not (_ev and _ev.get("valid")):
+                continue    # NO_VERIFIED_EGRESS
         node_id = cand.get("id")
         metrics: Dict[str, object] = {}
         ev = ee.evidence_for(f"node:{node_id}") or ee.evidence_for(f"loc:{node_id}")
@@ -236,6 +275,14 @@ async def failover(node_id: str, reason: str = "unhealthy",
     rec = FailoverRecord(failed_node=node_id, reason=reason)
     step = lambda n, ok, detail: rec.steps.append(
         {"step": n, "ok": ok, "detail": detail, "at": time.time()})
+    try:
+        import structured_events as events
+        events.log_event("FAILOVER_TRIGGERED", severity="WARNING",
+                         node=node_id, reason=reason,
+                         protocol=requirements.get("protocol", ""),
+                         transport=requirements.get("transport", ""))
+    except Exception:
+        pass
 
     # 1+2. stop NEW assignments → DRAINING
     drained = await nm.set_draining(node_id, True, reason=f"failover: {reason}")

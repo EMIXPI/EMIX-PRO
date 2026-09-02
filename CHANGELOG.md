@@ -1,5 +1,97 @@
 # CHANGELOG — EMIX-PRO
 
+## v11.4.0-builder (2026-09-02) — Phase 38+: Unified Config Builder, Capability Engine, IRAN_PROXY & Iran Gateway
+
+**Master Network Platform Upgrade: Unified Routing, Egress, Iran Network,
+Multi-Node, Protocol Engine & Config Builder.**
+
+Baseline: v11.3.0-network (808 tests) → **904/904 tests, 3× consecutive clean
+runs, real uvicorn boot 0 errors, 17/17 API smoke + 5 auth-401 gates,
+7/7 UI markers, secret scan clean.** This phase adds **96 tests.**
+
+### NEW ENGINES
+- **capability_engine.py (§3-§5, §25)** — the protocol × transport × security
+  × node × deployment × client capability engine. Railway compatibility model
+  with FOUR distinct layers (RAILWAY_EDGE / RAILWAY_DEPLOYMENT /
+  RAILWAY_OUTBOUND / ACTUAL_EGRESS — never conflated). Railway priority order
+  (VLESS+XHTTP+TLS first; MTProto TCP via Railway TCP proxy). UDP-dependent
+  protocols (WireGuard/Hysteria/TUIC/…) are NEVER exposed as Railway-native.
+  Honest Railway validation matrix: CONFIG_VALID (real compile at request
+  time) / RUNTIME_STARTED / LISTENER_REACHABLE (live app routes) —
+  CLIENT_CONNECTED+ honestly NOT_TESTABLE_WITHOUT_REAL_CLIENT.
+  API: GET /api/config-builder/capabilities, GET /api/railway/validation-matrix.
+- **config_builder.py (§6-§7, §18-§21)** — the ONE canonical ConfigRequest →
+  validation-before-generation (stage-labeled rejections: capability / node /
+  endpoint / routing / compiler) → CANONICAL COMPILER (zero new emitters) →
+  outputs (URI / Xray JSON / subscription / split-tunnel rules) → bounded
+  history (کانفیگ‌های ساخته‌شده: view-masked / reveal-authed / deterministic
+  regenerate / delete). IRAN_DIRECT with a non-split client is refused with
+  SPLIT_TUNNEL_NOT_SUPPORTED; IRAN_PROXY without a gateway is refused.
+  API: POST /api/config-builder/preview|generate, GET history, POST
+  history/{id}/regenerate, DELETE history/{id}.
+- **iran_gateway.py (§13)** — 🇮🇷 پروکسی ایران: real Iranian gateway registry
+  with evidence-based state machine (UNCONFIGURED → CONFIGURED → REACHABLE →
+  HEALTHY / VERIFIED_IRAN_EGRESS / ROUTE_MISMATCH / DEGRADED / UNREACHABLE /
+  UNSUPPORTED). Real probes: TCP reachability + egress measurement through
+  HTTP-proxy / SOCKS5 (minimal in-house CONNECT client) / emix-worker
+  endpoints. A manually entered Iranian IP is CONFIGURED, never VERIFIED.
+  API: /api/iran-gateway* (all admin-auth).
+- **structured_events.py (§29)** — CONFIG_GENERATED / ROUTE_SELECTED /
+  EGRESS_VERIFIED / ROUTE_MISMATCH / NODE_QUARANTINED / FAILOVER_TRIGGERED /
+  IRAN_GATEWAY_CHECK / PROTOCOL_VALIDATION_FAILED / SPLIT_TUNNEL_COMPILED —
+  bounded ring buffer with central secret-scrubbing (passwords/tokens/keys
+  field blocklist + UUID redaction). API: GET /api/events.
+
+### ROUTING POLICIES (§11-§13)
+- domestic_route_engine: + IRAN_PROXY (Iranian destinations via a REAL
+  gateway; honest IRAN_GATEWAY egress attribution with the live verdict
+  embedded — warning when unverified, never a fake Iranian exit) and
+  INTERNATIONAL_VVPN (BLOCK leg: domestic traffic never enters the tunnel;
+  blackhole split rules for capable clients). POLICY_PRESETS now five.
+- route_engine.ROUTE_POLICIES extended accordingly.
+
+### FAILOVER CAPABILITY GATES (§15)
+- select_replacement: HARD gates — protocol requirement, transport
+  requirement (compat-decomposed capabilities) and EXIT_NODE role
+  (valid-egress-evidence only). An incompatible node can NEVER be selected,
+  regardless of health/latency score. FAILOVER_TRIGGERED structured event.
+
+### UI (§6, §21, §23-§24)
+- ✨ ساخت کانفیگ (pg-builder): 9-step capability-driven builder (protocol →
+  node → transport → security → Endpoint Profile → routing → client/output →
+  validation preview → generate); desktop two-column, mobile single-column;
+  EVERY option renders from /api/config-builder/capabilities — zero
+  protocol-support hardcoding in JS (source-level test enforced). Smart field
+  visibility per protocol. Preview from the canonical compiler only.
+- کانفیگ‌های ساخته‌شده: history cards (مشاهده/کپی، بازسازی، حذف) with
+  masked credentials in list view.
+- 🇮🇷 پروکسی ایران (pg-iranproxy): IRAN_DIRECT vs IRAN_PROXY explainer,
+  gateway add form, gateway cards with state badges + evidence +
+  بررسی-و-اثبات-خروج button.
+- Isolated <script> block + scoped bld-/igw- CSS; all blocks node --check OK.
+
+### FIXES
+- network_health.ensure_record(): fresh configs get a born-UNKNOWN record
+  SYNCHRONOUSLY (race fix — /api/health/links/{uid} could 404 in the window
+  before the background initial probe landed; found via a rare full-suite
+  flake after this phase's changes shifted timing; root-caused and fixed,
+  6/6 clean runs after).
+
+### WIRING / PERSISTENCE / JOBS
+- main: fault-isolated registration of the four new engines; _wire_phase38
+  extended (host/worker-domain/CDN providers; gateway status fn → domestic
+  engine; live listener-path evidence for the validation matrix). Additive
+  persistence keys iran_gateway + config_builder (defensive restores).
+  New job: iran-gateway-check (6h). Diagnostics: +config_builder /
+  iran_gateway / events / iran_routing sections. EMIX_VERSION=11.4.0-builder.
+
+### DOCS (§32)
+- MASTER_NETWORK_ARCHITECTURE_AUDIT.md (Phase A — pre-change recon),
+  MASTER_NETWORK_ARCHITECTURE_FINAL.md, RAILWAY_PROTOCOL_COMPATIBILITY.md,
+  ROUTE_EGRESS_ARCHITECTURE_FINAL.md, IRAN_NETWORK_ARCHITECTURE.md,
+  UNIFIED_CONFIG_BUILDER_FINAL.md + updates (failover/accounts/readiness/
+  competitive/README).
+
 ## v11.3.0-network (2026-09-02) — Phase 38: Real Network Architecture
 
 **Production Network Architecture, Routing, Egress, Multi-Node Failover,

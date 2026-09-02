@@ -3063,6 +3063,7 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
     <div class="nav-sec">پنل</div>
     <div class="nav-it on" data-pg="overview"><i class="ti ti-layout-dashboard"></i> داشبورد</div>
     <div class="nav-it" data-pg="links"><i class="ti ti-link-plus"></i> کانفیگ‌ها <span class="nav-badge" id="links-nb">0</span></div>
+    <div class="nav-it" data-pg="builder" style="background:linear-gradient(135deg,rgba(167,139,250,.16),rgba(139,92,246,.08))"><i class="ti ti-wand" style="color:#A78BFA"></i> ✨ ساخت کانفیگ <span class="nav-badge" style="background:#A78BFA;color:#fff">یکپارچه</span></div>
     <div class="nav-it" data-pg="bridge"><i class="ti ti-flag"></i> پل ایران <span class="nav-badge" id="bridge-nb" style="display:none">فعال</span></div>
     <div class="nav-it" data-pg="zeus"><i class="ti ti-bolt" style="color:var(--amber-t)"></i> ⚡ ZEUS Pro <span class="nav-badge" id="zeus-nb" style="background:var(--amber-t);color:#fff">جدید</span></div>
     <div class="nav-it" data-pg="gaming"><i class="ti ti-device-gamepad-2" style="color:#4cc9f0"></i> 🎮 گیمینگ <span class="nav-badge" id="gaming-nb" style="background:#4cc9f0;color:#08131f">پینگ</span></div>
@@ -3072,6 +3073,7 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
          و تولید کانفیگ کلاینت واقعی است). تولید کلیدها حالا در restart هم می‌ماند. -->
     <div class="nav-it" data-pg="vpn"><i class="ti ti-shield-lock" style="color:#4ADE80"></i> 🛡 VPN Pro <span class="nav-badge" id="vpn-nb" style="background:#4ADE80;color:#14141C">WG+OVPN · کنترل-پلن</span></div>
     <div class="nav-it" data-pg="routing"><i class="ti ti-route" style="color:#F97316"></i> 🇮🇷 مسیریابی هوشمند <span class="nav-badge" id="routing-nb" style="background:#F97316;color:#fff">Direct</span></div>
+    <div class="nav-it" data-pg="iranproxy"><i class="ti ti-flag" style="color:#EF4444"></i> 🇮🇷 پروکسی ایران <span class="nav-badge" id="iranproxy-nb" style="display:none">—</span></div>
     <div class="nav-it" data-pg="accounts"><i class="ti ti-users" style="color:#38BDF8"></i> 👤 حساب‌ها <span class="nav-badge" id="accounts-nb">0</span></div>
     <div class="nav-it" data-pg="subgroups"><i class="ti ti-folders"></i> گروه‌های ساب <span class="nav-badge" id="subs-nb">0</span></div>
     <div class="nav-it" data-pg="subscriptions"><i class="ti ti-rss"></i> سابسکریپشن</div>
@@ -3977,6 +3979,465 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
     </div>
   </div>
 </section>
+
+<!-- ════════════════════════════════════════════════════════════════════════════
+     ✨ PHASE 38+ — Unified Config Builder (ساخت کانفیگ)
+     تنها صفحه‌ی واحد ساخت کانفیگ — همه‌ی گزینه‌ها از
+     /api/config-builder/capabilities می‌آیند (قابلیت‌محور؛ هیچ فرضی در JS هاردکد
+     نشده). پیش‌نمایش از همان کامپایلر کانونی است؛ ترکیب نامعتبر ساخته نمی‌شود.
+     ════════════════════════════════════════════════════════════════════════════ -->
+<section class="pg" id="pg-builder">
+  <div class="topbar">
+    <div><div class="tb-title"><i class="ti ti-wand" style="color:#A78BFA"></i> ساخت کانفیگ — سازنده‌ی یکپارچه</div><div class="tb-sub">قابلیت‌ها از بک‌اند · ترکیب‌های نامعتبر رد می‌شوند · خروجی فقط از کامپایلر کانونی</div></div>
+    <div class="tb-right"><span class="badge bg-purple" id="bld-caps-badge">…</span><button class="btn btn-o btn-sm" onclick="loadBuilderPage()"><i class="ti ti-refresh"></i> رفرش</button></div>
+  </div>
+
+  <div class="g2 bld-grid" style="align-items:start">
+    <div class="card" style="margin-bottom:18px">
+      <div class="card-title"><i class="ti ti-list-check"></i> مراحل ساخت</div>
+
+      <div class="bld-step"><div class="bld-step-label">۱ · پروتکل</div><div id="bld-protocols" class="bld-chips"></div><div id="bld-proto-hint" class="bld-hint"></div></div>
+      <div class="bld-step"><div class="bld-step-label">۲ · نود</div><div id="bld-nodes" class="bld-nodes"></div><div id="bld-node-detail" class="bld-hint"></div></div>
+      <div class="bld-step"><div class="bld-step-label">۳ · ترنسپورت</div><div id="bld-transports" class="bld-chips"></div><div id="bld-tr-hint" class="bld-hint"></div></div>
+      <div class="bld-step"><div class="bld-step-label">۴ · امنیت (Security)</div><div id="bld-security" class="bld-chips"></div></div>
+      <div class="bld-step"><div class="bld-step-label">۵ · Endpoint Profile (TLS/اندپوینت — نه مسیریابی)</div>
+        <select id="bld-ep" class="cm-input" onchange="builderOnEpChange()"></select>
+        <div id="bld-ep-custom" style="display:none;gap:8px;margin-top:8px">
+          <input id="bld-ep-address" class="cm-input" placeholder="آدرس اندپوینت (ورودی)" style="direction:ltr;text-align:left;font-family:monospace">
+          <input id="bld-ep-sni" class="cm-input" placeholder="SNI (اختیاری — معنای TLS، نه جغرافیا)" style="direction:ltr;text-align:left;font-family:monospace">
+          <input id="bld-ep-port" class="cm-input" type="number" value="443" placeholder="پورت" style="direction:ltr">
+        </div>
+        <div class="bld-hint">SNI فقط معنای TLS/اندپوینت دارد — هرگز مسیریابی، هرگز خروج جغرافیایی، هرگز «IP ایران» نیست.</div>
+      </div>
+      <div class="bld-step"><div class="bld-step-label">۶ · مسیریابی (Routing Policy)</div><div id="bld-routing" class="bld-modes"></div><div id="bld-routing-hint" class="bld-hint"></div></div>
+      <div class="bld-step"><div class="bld-step-label">۷ · خروجی کلاینت</div><div id="bld-clients" class="bld-chips"></div><div id="bld-client-hint" class="bld-hint"></div></div>
+      <div class="bld-step"><div class="bld-step-label">نام و برچسب</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <input id="bld-name" class="cm-input" placeholder="نام کانفیگ (تاریخچه)">
+          <input id="bld-remark" class="cm-input" placeholder="remark" style="direction:ltr;text-align:left;font-family:monospace">
+        </div>
+      </div>
+      <div class="bld-actions">
+        <button class="btn btn-o" id="bld-preview-btn" onclick="builderPreview(this)"><i class="ti ti-eye"></i> پیش‌نمایش و اعتبارسنجی</button>
+        <button class="btn btn-p" id="bld-gen-btn" onclick="builderGenerate(this)"><i class="ti ti-wand"></i> ساخت نهایی</button>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:18px">
+      <div class="card-title"><i class="ti ti-eye"></i> پیش‌نمایش و خروجی (از کامپایلر کانونی)</div>
+      <div id="bld-validation"></div>
+      <div id="bld-outputs"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><i class="ti ti-history"></i> کانفیگ‌های ساخته‌شده</div>
+    <div id="bld-history"><div class="bld-hint">—</div></div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════════════════
+     🇮🇷 PHASE 38+ §13 — پروکسی ایران (IRAN_PROXY / Iran Gateway)
+     متفاوت از IRAN_DIRECT: خروج واقعی از یک گیت‌وی ایرانیِ اثبات‌شده.
+     IP دستی = فقط CONFIGURED؛ فقط شواهد شبکه‌ای = VERIFIED_IRAN_EGRESS.
+     ════════════════════════════════════════════════════════════════════════════ -->
+<section class="pg" id="pg-iranproxy">
+  <div class="topbar">
+    <div><div class="tb-title"><i class="ti ti-flag" style="color:#EF4444"></i> 🇮🇷 پروکسی ایران — گیت‌وی ایرانی واقعی</div><div class="tb-sub">ترافیک مقاصد ایرانی از گیت‌وی اثبات‌شده · مقاصد بین‌المللی از نود خروج</div></div>
+    <div class="tb-right"><span class="badge bg-amber" id="igw-state-badge">—</span><button class="btn btn-o btn-sm" onclick="loadIranProxyPage()"><i class="ti ti-refresh"></i> رفرش</button></div>
+  </div>
+
+  <div class="card" style="margin-bottom:18px">
+    <div class="card-title"><i class="ti ti-info-circle"></i> IRAN_PROXY چیست؟ (و چه نیست)</div>
+    <div class="bld-hint" style="margin:10px 0">
+      <b>IRAN_DIRECT</b>: سرور ایرانی لازم ندارد — ترافیک ایرانی مستقیم از ISP خود کاربر (USER_ISP) خارج می‌شود.<br>
+      <b>IRAN_PROXY</b>: مسیر <span style="direction:ltr;display:inline-block;font-family:monospace">Client → EMIX Entry/Relay → گیت‌وی ایران → اینترنت ایران</span> — به یک گیت‌وی ایرانی <b>واقعی و اثبات‌شده</b> نیاز دارد.<br>
+      ⛔ IP دستی، SNI، hostname، Cloudflare و لوکیشن Railway <b>هیچ‌کدام</b> خروج ایرانی را اثبات نمی‌کنند — فقط اندازه‌گیری شبکه‌ای (VERIFIED_IRAN_EGRESS).
+    </div>
+  </div>
+
+  <div class="g2" style="align-items:start">
+    <div class="card" style="margin-bottom:18px">
+      <div class="card-title"><i class="ti ti-plus"></i> افزودن / ویرایش گیت‌وی</div>
+      <div class="bld-form2">
+        <input id="igw-name" class="cm-input" placeholder="نام گیت‌وی (مثلاً Tehran-GW)">
+        <input id="igw-endpoint" class="cm-input" placeholder="آدرس (hostname/IP)" style="direction:ltr;text-align:left;font-family:monospace">
+        <input id="igw-port" class="cm-input" type="number" value="443" placeholder="پورت" style="direction:ltr">
+        <select id="igw-protocol" class="cm-input">
+          <option value="http">HTTP Forward Proxy (قابل اثبات)</option>
+          <option value="socks5">SOCKS5 (قابل اثبات)</option>
+          <option value="emix-worker">EMIX Worker (/exit-check)</option>
+          <option value="custom">سایر / بدون پروب (egress مجهول می‌ماند)</option>
+        </select>
+        <input id="igw-user" class="cm-input" placeholder="نام کاربری (اختیاری)" style="direction:ltr;text-align:left;font-family:monospace">
+        <input id="igw-pass" class="cm-input" placeholder="رمز گیت‌وی (اختیاری — هرگز لاگ نمی‌شود)" style="direction:ltr;text-align:left;font-family:monospace">
+        <input id="igw-notes" class="cm-input" placeholder="توضیح (اختیاری)">
+        <button class="btn btn-p" onclick="iranGwSave(this)"><i class="ti ti-device-floppy"></i> ذخیره گیت‌وی</button>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:18px">
+      <div class="card-title"><i class="ti ti-flag-check"></i> گیت‌وی‌ها و وضعیت اثبات</div>
+      <div id="igw-list"><div class="bld-hint">—</div></div>
+    </div>
+  </div>
+</section>
+
+<style>
+/* ── Config Builder + Iran Gateway (scoped prefixes bld-/igw-) ─────────── */
+.bld-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media(max-width:1080px){.bld-grid{grid-template-columns:1fr}}
+.bld-step{margin:14px 0;padding-bottom:6px;border-bottom:1px dashed var(--card-b)}
+.bld-step-label{font-size:12px;color:var(--t3);margin-bottom:8px;font-weight:700}
+.bld-chips{display:flex;flex-wrap:wrap;gap:8px}
+.bld-chip{padding:8px 14px;border-radius:12px;border:1px solid var(--card-b);background:rgba(139,92,246,.06);cursor:pointer;font-size:13px;transition:.15s}
+.bld-chip:hover{border-color:var(--accent)}
+.bld-chip.sel{border-color:var(--accent);background:rgba(139,92,246,.18);box-shadow:0 0 0 1px var(--accent)}
+.bld-chip.off{opacity:.4;cursor:not-allowed}
+.bld-chip .st{font-size:10px;opacity:.8}
+.bld-hint{font-size:11.5px;color:var(--t3);margin-top:8px;line-height:1.9}
+.bld-nodes{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.bld-node{padding:10px 12px;border-radius:12px;border:1px solid var(--card-b);cursor:pointer;transition:.15s}
+.bld-node:hover{border-color:var(--accent)}
+.bld-node.sel{border-color:var(--accent);background:rgba(139,92,246,.15)}
+.bld-node .nm{font-weight:700;font-size:13px}
+.bld-node .meta{font-size:11px;color:var(--t3);margin-top:4px;line-height:1.8}
+.bld-modes{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.bld-mode{padding:10px 12px;border-radius:12px;border:1px solid var(--card-b);cursor:pointer;transition:.15s}
+.bld-mode:hover{border-color:var(--accent)}
+.bld-mode.sel{border-color:var(--accent);background:rgba(139,92,246,.15)}
+.bld-mode .nm{font-weight:700;font-size:13px}
+.bld-mode .meta{font-size:11px;color:var(--t3);margin-top:4px;line-height:1.8}
+.bld-actions{display:flex;gap:10px;margin-top:16px}
+.bld-out{margin:12px 0;padding:10px;border-radius:10px;background:rgba(0,0,0,.25);border:1px solid var(--card-b)}
+.bld-out code{display:block;direction:ltr;text-align:left;font-family:'JetBrains Mono',monospace;font-size:11px;word-break:break-all;color:var(--t2);white-space:pre-wrap}
+.bld-valid-ok{padding:10px 12px;border-radius:10px;background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.4);font-size:12.5px}
+.bld-valid-bad{padding:10px 12px;border-radius:10px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.4);font-size:12.5px;line-height:2}
+.bld-hist{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;margin-top:10px}
+.bld-hcard{padding:12px;border-radius:12px;border:1px solid var(--card-b);background:var(--card)}
+.bld-hcard .nm{font-weight:700}
+.bld-hcard .meta{font-size:11px;color:var(--t3);margin:6px 0;line-height:1.9}
+.igw-state{display:inline-block;padding:2px 10px;border-radius:8px;font-size:11px;font-weight:700}
+.igw-ok{background:rgba(16,185,129,.2);color:#34d399}
+.igw-warn{background:rgba(245,158,11,.2);color:#fbbf24}
+.igw-bad{background:rgba(239,68,68,.2);color:#f87171}
+.igw-info{background:rgba(59,130,246,.2);color:#60a5fa}
+.bld-form2{display:grid;gap:10px;margin-top:10px}
+</style>
+
+<script>
+/* ════════════════════════════════════════════════════════════════════════
+   Config Builder + Iran Gateway page logic (isolated script block — a syntax
+   error in one block must never kill the dashboard; see pages.py:4627 note).
+   Rendering is 100% capability-driven: /api/config-builder/capabilities.
+   No protocol-support assumptions are hardcoded in JavaScript.
+   ════════════════════════════════════════════════════════════════════════ */
+var BLD_CAPS=null, BLD_EPS=[], BLD_SEL={protocol:'',transport:'',security:'',node:'panel',ep:'',routing:'ALL_VPN',client:'xray-json'};
+
+async function loadBuilderPage(){
+  try{
+    var r=await authF('/api/config-builder/capabilities');
+    if(!r.ok){netErr(r,'سازنده‌ی کانفیگ');return}
+    BLD_CAPS=await r.json();
+    document.getElementById('bld-caps-badge').textContent=BLD_CAPS.nodes.length+' نود · '+Object.keys(BLD_CAPS.clients).length+' خروجی';
+    bldRenderProtocols(); bldRenderNodes(); bldRenderRouting(); bldRenderClients();
+    bldLoadEndpointProfiles(); bldLoadHistory();
+  }catch(e){netErr(e,'سازنده‌ی کانفیگ')}
+}
+
+function bldRenderProtocols(){
+  var host=document.getElementById('bld-protocols'); if(!host)return;
+  host.innerHTML='';
+  (BLD_CAPS.protocols||[]).forEach(function(p){
+    var d=document.createElement('div');
+    d.className='bld-chip'+(p.selectable?'':' off')+(BLD_SEL.protocol===p.protocol?' sel':'');
+    d.innerHTML=p.protocol+(p.selectable?'':' <span class="st">('+p.readiness+')</span>');
+    if(p.selectable){d.onclick=function(){BLD_SEL.protocol=p.protocol;BLD_SEL.transport='';bldRenderProtocols();bldRenderTransports()}}
+    host.appendChild(d);
+  });
+  var hint=document.getElementById('bld-proto-hint');
+  if(hint){var bp=(BLD_CAPS.protocols||[]).filter(function(p){return !p.selectable});
+    hint.textContent=bp.length?('پروتکل‌های دیگر فقط تولید لینک/کانفیگ هستند (BETA — بدون ران‌تایم در پنل): '+bp.map(function(p){return p.protocol}).join(', ')):'';}
+  bldRenderTransports();
+}
+
+function bldNodeProtocols(){
+  var node=(BLD_CAPS.nodes||[]).filter(function(n){return n.node_id===BLD_SEL.node})[0];
+  return (node&&node.protocols)||[];
+}
+
+function bldRenderTransports(){
+  var host=document.getElementById('bld-transports'); if(!host)return;
+  host.innerHTML='';
+  var list=bldNodeProtocols().filter(function(x){return !BLD_SEL.protocol||x.protocol===BLD_SEL.protocol});
+  var seen={};
+  list.forEach(function(x){
+    if(seen[x.transport])return; seen[x.transport]=1;
+    var d=document.createElement('div');
+    var ok=(x.status==='SUPPORTED');
+    d.className='bld-chip'+(ok?'':' off')+(BLD_SEL.transport===x.transport?' sel':'');
+    d.innerHTML=x.transport+' <span class="st">'+(ok?'':'('+x.status+')</span>');
+    if(ok){d.onclick=function(){BLD_SEL.transport=x.transport;BLD_SEL.security=x.security;bldRenderTransports();bldRenderSecurity()}}
+    host.appendChild(d);
+  });
+  var hint=document.getElementById('bld-tr-hint');
+  if(hint){
+    var bad=list.filter(function(x){return x.status!=='SUPPORTED'}).map(function(x){return x.transport+' ('+x.status+(x.reason?': '+x.reason:'')+')'});
+    hint.textContent=bad.length?('ناموجود روی این نود/دیپلوی: '+bad.join(' · ')):'';
+  }
+  bldRenderSecurity();
+}
+
+function bldRenderSecurity(){
+  var host=document.getElementById('bld-security'); if(!host)return;
+  host.innerHTML='';
+  var list=bldNodeProtocols().filter(function(x){return (!BLD_SEL.protocol||x.protocol===BLD_SEL.protocol)&&(!BLD_SEL.transport||x.transport===BLD_SEL.transport)});
+  var seen={};
+  list.forEach(function(x){
+    if(seen[x.security])return; seen[x.security]=1;
+    var d=document.createElement('div');
+    d.className='bld-chip'+(BLD_SEL.security===x.security?' sel':'');
+    d.textContent=x.security;
+    d.onclick=function(){BLD_SEL.security=x.security;bldRenderSecurity()};
+    host.appendChild(d);
+  });
+}
+
+function bldRenderNodes(){
+  var host=document.getElementById('bld-nodes'); if(!host)return;
+  host.innerHTML='';
+  (BLD_CAPS.nodes||[]).forEach(function(n){
+    var d=document.createElement('div');
+    d.className='bld-node'+(BLD_SEL.node===n.node_id?' sel':'');
+    var eg=n.egress||{};
+    var egBadge=eg.classification==='VERIFIED_EGRESS'?'<span class="igw-state igw-ok">EGRESS ✓</span>':(eg.classification==='CONFIGURED_ONLY'?'<span class="igw-state igw-warn">CONFIGURED</span>':'<span class="igw-state igw-info">UNKNOWN</span>');
+    d.innerHTML='<div class="nm">'+esc(n.name||n.node_id)+'</div><div class="meta">'+esc(n.role||'')+' · '+esc(n.state||'')+'<br>UDP: '+esc(String(n.udp))+' '+egBadge+'</div>';
+    d.onclick=function(){BLD_SEL.node=n.node_id;BLD_SEL.transport='';bldRenderNodes()};
+    host.appendChild(d);
+    var det=document.getElementById('bld-node-detail');
+    if(det&&BLD_SEL.node===n.node_id){
+      det.innerHTML='نود انتخابی: <b>'+esc(n.name||n.node_id)+'</b> — '+esc(n.deployment_label||'')+'<br>'+
+        'TCP: '+esc(String(n.tcp))+' · UDP: '+esc(String(n.udp))+' · TLS: '+esc(String(n.tls))+' — '+esc(n.state_note||'')+
+        (eg.classification==='VERIFIED_EGRESS'?('<br>خروج اثبات‌شده: '+esc(eg.public_ip||'?')+' → '+esc(eg.country||'')):'');
+    }
+  });
+}
+
+function bldRenderRouting(){
+  var host=document.getElementById('bld-routing'); if(!host)return;
+  host.innerHTML='';
+  (BLD_CAPS.routing_policies||[]).forEach(function(p){
+    var d=document.createElement('div');
+    d.className='bld-mode'+(BLD_SEL.routing===p.policy?' sel':'');
+    var legs=p.legs&&p.legs.iran?('<span style="direction:ltr;display:inline-block">🇮🇷→'+esc(p.legs.iran)+' · 🌍→'+esc(p.legs.international)+'</span>'):'admin-defined';
+    d.innerHTML='<div class="nm">'+esc(p.policy)+'</div><div class="meta">'+legs+'<br>'+esc(p.egress||'')+'</div>';
+    d.onclick=function(){BLD_SEL.routing=p.policy;bldRenderRouting()};
+    host.appendChild(d);
+  });
+  var hint=document.getElementById('bld-routing-hint');
+  var gw=BLD_CAPS.iran_gateway||{};
+  if(hint){hint.innerHTML='گیت‌وی ایران: <b>'+esc(gw.state||'UNCONFIGURED')+'</b>'+(gw.verified_count?(' ('+gw.verified_count+' اثبات‌شده)'):'')+' — IRAN_PROXY بدون گیت‌وی اثبات‌شده ساخته نمی‌شود.'}
+}
+
+function bldRenderClients(){
+  var host=document.getElementById('bld-clients'); if(!host)return;
+  host.innerHTML='';
+  Object.keys(BLD_CAPS.clients||{}).forEach(function(k){
+    var c=BLD_CAPS.clients[k];
+    var d=document.createElement('div');
+    d.className='bld-chip'+(BLD_SEL.client===k?' sel':'');
+    d.innerHTML=k+' <span class="st">('+(c.split_tunnel==='SPLIT_TUNNEL_SUPPORTED'?'split ✓':'بدون split')+')</span>';
+    d.onclick=function(){BLD_SEL.client=k;bldRenderClients()};
+    host.appendChild(d);
+  });
+  var hint=document.getElementById('bld-client-hint');
+  if(hint){var c=BLD_CAPS.clients[BLD_SEL.client]||{};
+    hint.textContent=c.routing_rules?String(c.routing_rules):''}
+}
+
+async function bldLoadEndpointProfiles(){
+  try{
+    var r=await authF('/api/endpoint-profiles');
+    if(!r.ok){netErr(r,'Endpoint Profiles');return}
+    var j=await r.json();
+    BLD_EPS=j.profiles||j||[];
+    var sel=document.getElementById('bld-ep'); if(!sel)return;
+    sel.innerHTML='<option value="">استاندارد (panel host)</option><option value="__custom__">اندپوینت سفارشی…</option>';
+    BLD_EPS.forEach(function(p){var o=document.createElement('option');o.value=p.id;o.textContent=p.name+' — '+(p.address||'')+(p.sni?(' / SNI:'+p.sni):'');sel.appendChild(o)});
+  }catch(e){netErr(e,'Endpoint Profiles')}
+}
+
+function builderOnEpChange(){
+  var sel=document.getElementById('bld-ep');
+  BLD_SEL.ep=sel.value;
+  document.getElementById('bld-ep-custom').style.display=(sel.value==='__custom__')?'grid':'none';
+}
+
+function bldPayload(){
+  var custom=(BLD_SEL.ep==='__custom__');
+  return {
+    name:document.getElementById('bld-name').value||'',
+    remark:document.getElementById('bld-remark').value||'EMIX',
+    protocol:BLD_SEL.protocol, transport:BLD_SEL.transport, security:BLD_SEL.security,
+    node_id:BLD_SEL.node,
+    endpoint_profile_id:(custom?'':BLD_SEL.ep),
+    custom_address:custom?document.getElementById('bld-ep-address').value:'',
+    custom_sni:custom?document.getElementById('bld-ep-sni').value:'',
+    custom_port:custom?(parseInt(document.getElementById('bld-ep-port').value)||443):443,
+    routing_policy:BLD_SEL.routing, client_format:BLD_SEL.client
+  };
+}
+
+function bldBusy(btn,on){if(!btn)return;btn.disabled=on;var i=btn.querySelector('i');if(i){i.className=on?'ti ti-loader-2 spin':'ti '+(btn.id==='bld-gen-btn'?'ti-wand':'ti-eye')}}
+
+function bldRenderResult(j){
+  var v=document.getElementById('bld-validation'), o=document.getElementById('bld-outputs');
+  if(!j.ok){
+    v.innerHTML='<div class="bld-valid-bad">⛔ <b>INVALID</b> — مرحله: '+esc(j.stage||'?')+'<br>'+ (j.errors||[]).map(esc).join('<br>') +'</div>';
+    o.innerHTML=''; return;
+  }
+  v.innerHTML='<div class="bld-valid-ok">✓ <b>VALID</b> — '+esc(j.preview.protocol)+' / '+esc(j.preview.transport)+' / '+esc(j.preview.security)+' · نود: '+esc(j.preview.node.label||j.preview.node.node_id)+' · مسیریابی: '+esc(j.preview.routing)+(j.credential_placeholder?' · (credential پیش‌نمایش: جای‌نگهدار)':'')+'</div>';
+  var out=j.outputs||{}; var h='';
+  if(out.uri){h+='<div class="bld-out"><b>URI</b> <button class="btn btn-sm btn-o" onclick="bldCopy(this)">کپی</button> <button class="btn btn-sm btn-o" onclick="showQR(window.__bldUri)">QR</button><code>'+esc(out.uri)+'</code></div>';window.__bldUri=out.uri}
+  if(out.xray_json){h+='<div class="bld-out"><b>Xray JSON</b><code>'+esc(JSON.stringify(out.xray_json,null,1))+'</code></div>'}
+  if(out.subscription){h+='<div class="bld-out"><b>Subscription (base64)</b><code>'+esc(out.subscription)+'</code></div>'}
+  var rd=j.preview&&j.preview.routing_detail;
+  if(rd&&rd.legs){
+    h+='<div class="bld-out"><b>مسیریابی (explainable)</b><br>';
+    Object.keys(rd.legs).forEach(function(k){h+=esc(k)+' → '+esc(rd.legs[k].decision)+' · خروج: '+esc(rd.legs[k].egress)+'<br>'});
+    if(rd.iran_gateway){h+='گیت‌وی ایران: '+esc(rd.iran_gateway.verdict||'')+'<br>'}
+    if(rd.split_rules){h+='قواعد split-tunnel: '+rd.split_rules.rules.length+' قاعده ('+esc(rd.split_rules.mechanism||'')+')'}
+    h+='</div>';
+  }
+  if(out.split_rules){h+='<div class="bld-hint">قواعد split-tunnel در JSON خروجی گنجانده شد (GEOIP:ir + CIDR از دیتاست اثبات‌شده)</div>'}
+  o.innerHTML=h;
+}
+
+function bldCopy(btn){if(window.__bldUri){navigator.clipboard.writeText(window.__bldUri).then(function(){toast('کپی شد ✓','ok')})}}
+
+async function builderPreview(btn){
+  bldBusy(btn,true);
+  try{
+    var r=await authF('/api/config-builder/preview',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(bldPayload())});
+    var j=await r.json(); bldRenderResult(j);
+    if(!j.ok)toast('ترکیب نامعتبر — ساخته نشد','err');
+  }catch(e){netErr(e,'پیش‌نمایش کانفیگ')}finally{bldBusy(btn,false)}
+}
+
+async function builderGenerate(btn){
+  bldBusy(btn,true);
+  try{
+    var r=await authF('/api/config-builder/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(bldPayload())});
+    var j=await r.json(); bldRenderResult(j);
+    if(j.ok){toast('کانفیگ ساخته شد ✓','ok');bldLoadHistory()}else{toast('ساخت ناموفق — '+((j.errors||[''])[0]).slice(0,60),'err')}
+  }catch(e){netErr(e,'ساخت کانفیگ')}finally{bldBusy(btn,false)}
+}
+
+async function bldLoadHistory(){
+  try{
+    var r=await authF('/api/config-builder/history');
+    if(!r.ok)return;
+    var j=await r.json();
+    var host=document.getElementById('bld-history'); if(!host)return;
+    if(!(j.history||[]).length){host.innerHTML='<div class="bld-hint">هنوز کانفیگی ساخته نشده — اولین را با «ساخت نهایی» بسازید.</div>';return}
+    host.className='bld-hist';
+    host.innerHTML=j.history.map(function(h){
+      return '<div class="bld-hcard"><div class="nm">'+esc(h.name)+' <span class="igw-state igw-ok">'+esc(h.status)+'</span></div>'+
+      '<div class="meta">'+esc(h.protocol)+' / '+esc(h.transport)+' / '+esc(h.security)+' · نود: '+esc(h.node)+' · مسیریابی: '+esc(h.routing)+'<br>'+esc(h.created_at_iso||'')+' · checksum: '+esc((h.checksum||'').slice(0,10))+'</div>'+
+      '<button class="btn btn-sm btn-o" onclick="bldHistView(\''+h.history_id+'\')">مشاهده/کپی</button> '+
+      '<button class="btn btn-sm btn-o" onclick="bldHistRegen(\''+h.history_id+'\')">بازسازی</button> '+
+      '<button class="btn btn-sm btn-d" onclick="bldHistDel(\''+h.history_id+'\')">حذف</button></div>';
+    }).join('');
+  }catch(e){netErr(e,'تاریخچه‌ی کانفیگ')}
+}
+
+async function bldHistView(id){
+  try{
+    var r=await authF('/api/config-builder/history/'+id+'?reveal=1');
+    if(!r.ok){toast('یافت نشد','err');return}
+    var j=await r.json(); var e=j.entry||{};
+    window.__bldUri=e.uri||'';
+    var v=document.getElementById('bld-validation'), o=document.getElementById('bld-outputs');
+    v.innerHTML='<div class="bld-valid-ok">✓ کانفیگ: <b>'+esc(e.name)+'</b> — '+esc((e.outputs_summary||{}).protocol||'')+' · '+esc((e.outputs_summary||{}).transport||'')+'</div>';
+    o.innerHTML=e.uri?('<div class="bld-out"><b>URI</b> <button class="btn btn-sm btn-o" onclick="bldCopy(this)">کپی</button> <button class="btn btn-sm btn-o" onclick="showQR(window.__bldUri)">QR</button><code>'+esc(e.uri)+'</code></div>'):'<div class="bld-hint">URI در تاریخچه ذخیره نشده — از «بازسازی» استفاده کنید</div>';
+  }catch(err){netErr(err,'مشاهده‌ی کانفیگ')}
+}
+
+async function bldHistRegen(id){
+  try{
+    var r=await authF('/api/config-builder/history/'+id+'/regenerate',{method:'POST'});
+    var j=await r.json();
+    if(j.ok){bldRenderResult(j);toast('بازسازی شد'+(j.deterministic_match?' (checksum یکسان ✓)':''),'ok');bldLoadHistory()}else{toast('بازسازی ناموفق','err')}
+  }catch(e){netErr(e,'بازسازی کانفیگ')}
+}
+
+async function bldHistDel(id){
+  if(!confirm('این کانفیگ از تاریخچه حذف شود؟'))return;
+  try{
+    var r=await authF('/api/config-builder/history/'+id,{method:'DELETE'});
+    if(r.ok){toast('حذف شد','ok');bldLoadHistory()}else{toast('حذف ناموفق','err')}
+  }catch(e){netErr(e,'حذف کانفیگ')}
+}
+
+/* ── Iran Gateway (پروکسی ایران) ───────────────────────────────────────── */
+var IGW_STATES_FA={UNCONFIGURED:'پیکربندی‌نشده',CONFIGURED:'ثبت‌شده (غیراثباتی)',REACHABLE:'در دسترس',HEALTHY:'سلامت',DEGRADED:'کهنه',UNREACHABLE:'غیرقابل‌دسترس',VERIFIED_IRAN_EGRESS:'خروج ایران اثبات‌شده ✓',ROUTE_MISMATCH:'عدم‌تطابق مسیر',UNSUPPORTED:'غیرقابل‌اثبات',UNKNOWN:'مجهول'};
+function igwBadge(st){
+  var cls=(st==='VERIFIED_IRAN_EGRESS')?'igw-ok':(st==='ROUTE_MISMATCH'||st==='UNREACHABLE'||st==='DEGRADED')?'igw-bad':(st==='REACHABLE'||st==='HEALTHY')?'igw-warn':'igw-info';
+  return '<span class="igw-state '+cls+'">'+esc(IGW_STATES_FA[st]||st)+'</span>';
+}
+
+async function loadIranProxyPage(){
+  try{
+    var r=await authF('/api/iran-gateway');
+    if(!r.ok){netErr(r,'پروکسی ایران');return}
+    var j=await r.json();
+    var b=document.getElementById('igw-state-badge');
+    if(b){b.textContent=IGW_STATES_FA[j.state]||j.state; b.className='badge '+(j.state==='VERIFIED_IRAN_EGRESS'?'bg-green':(j.state==='UNCONFIGURED'?'bg-amber':'bg-blue'))}
+    var host=document.getElementById('igw-list'); if(!host)return;
+    if(!(j.gateways||[]).length){host.innerHTML='<div class="bld-hint">گیت‌وی‌ای ثبت نشده — IRAN_PROXY بدون گیت‌وی واقعی ساخته نمی‌شود (IRAN_DIRECT نیازی به سرور ایران ندارد).</div>';return}
+    host.innerHTML=j.gateways.map(function(g){
+      return '<div class="bld-hcard" style="margin:8px 0"><div class="nm">'+esc(g.name)+' '+igwBadge(g.state)+'</div>'+
+      '<div class="meta" style="direction:ltr;text-align:left;font-family:monospace">'+esc(g.endpoint)+':'+esc(String(g.port))+' · '+esc(g.protocol)+(g.auth_configured?' · 🔑':'')+'</div>'+
+      '<div class="bld-hint">'+esc(g.state_reason||'')+(g.last_egress&&g.last_egress.public_ip?('<br>آخرین خروج اندازه‌گیری‌شده: '+esc(g.last_egress.public_ip)+' → '+esc(g.last_egress.country_code||'?')):'')+'</div>'+
+      '<button class="btn btn-sm btn-p" onclick="iranGwCheck(\''+g.gateway_id+'\',this)">بررسی و اثبات خروج</button> '+
+      '<button class="btn btn-sm btn-d" onclick="iranGwDel(\''+g.gateway_id+'\')">حذف</button></div>';
+    }).join('');
+  }catch(e){netErr(e,'پروکسی ایران')}
+}
+
+async function iranGwSave(btn){
+  bldBusy(btn,true);
+  try{
+    var body={name:document.getElementById('igw-name').value,endpoint:document.getElementById('igw-endpoint').value,
+      port:parseInt(document.getElementById('igw-port').value)||443,protocol:document.getElementById('igw-protocol').value,
+      auth_username:document.getElementById('igw-user').value,auth_password:document.getElementById('igw-pass').value,
+      notes:document.getElementById('igw-notes').value};
+    var r=await authF('/api/iran-gateway',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    var j=await r.json();
+    if(j.ok){toast('گیت‌وی ذخیره شد — وضعیت: CONFIGURED (هنوز اثبات‌نشده) ✓','ok');loadIranProxyPage()}
+    else{toast((j.errors||['خطا'])[0],'err')}
+  }catch(e){netErr(e,'ذخیره‌ی گیت‌وی')}finally{bldBusy(btn,false)}
+}
+
+async function iranGwCheck(id,btn){
+  if(btn){btn.disabled=true;btn.innerHTML='<i class="ti ti-loader-2 spin"></i> در حال اثبات…'}
+  try{
+    var r=await authF('/api/iran-gateway/'+id+'/check',{method:'POST'});
+    var j=await r.json();
+    if(j.state==='VERIFIED_IRAN_EGRESS')toast('خروج ایرانی اثبات شد ✓ ('+(j.egress&&j.egress.public_ip)+')','ok');
+    else if(j.state==='ROUTE_MISMATCH')toast('ROUTE_MISMATCH — خروج اندازه‌گیری‌شده ایران نیست!','err');
+    else toast('وضعیت: '+(IGW_STATES_FA[j.state]||j.state),'warn');
+    loadIranProxyPage();
+  }catch(e){netErr(e,'بررسی گیت‌وی');if(btn){btn.disabled=false;btn.textContent='بررسی'}}
+}
+
+async function iranGwDel(id){
+  if(!confirm('گیت‌وی حذف شود؟'))return;
+  try{
+    var r=await authF('/api/iran-gateway/'+id,{method:'DELETE'});
+    if(r.ok){toast('حذف شد','ok');loadIranProxyPage()}
+  }catch(e){netErr(e,'حذف گیت‌وی')}
+}
+</script>
 
 <!-- ════════════════════════════════════════════════════════════════════════════
      🇮🇷 PHASE 38 / P17 — مسیریابی هوشمند (Split Tunneling صادقانه)
@@ -5184,7 +5645,7 @@ function navTo(name){
   document.querySelectorAll('.pg').forEach(p=>p.classList.toggle('on',p.id==='pg-'+name));
   // ورود پلکانی کارت‌ها فقط هنگام سوییچ صفحه
   if(name==='links'){document.body.classList.add('cascade');setTimeout(()=>document.body.classList.remove('cascade'),650)}
-  const loaders={links:loadLinks,bridge:loadBridgePage,connections:loadConns,errors:loadErrs,subscriptions:loadSubsPage,subgroups:loadSubs,logs:loadActivity,updates:loadVersion,support:loadSupportMsgs,nodes:loadNodesPage,zeus:loadZeusPage,gaming:loadGamingPage,multiloc:loadMultilocPage,vpn:loadVPNPage,experimental:loadExperimentalPage,'unified-configs':loadUnifiedConfigsPage,diag:loadDiagPage,routing:loadRoutingPage,accounts:loadAccountsPage};  if(loaders[name])loaders[name]();
+  const loaders={links:loadLinks,bridge:loadBridgePage,connections:loadConns,errors:loadErrs,subscriptions:loadSubsPage,subgroups:loadSubs,logs:loadActivity,updates:loadVersion,support:loadSupportMsgs,nodes:loadNodesPage,zeus:loadZeusPage,gaming:loadGamingPage,multiloc:loadMultilocPage,vpn:loadVPNPage,experimental:loadExperimentalPage,'unified-configs':loadUnifiedConfigsPage,diag:loadDiagPage,routing:loadRoutingPage,accounts:loadAccountsPage,builder:loadBuilderPage,iranproxy:loadIranProxyPage};  if(loaders[name])loaders[name]();
   closeSb();window.scrollTo({top:0,behavior:'smooth'});
 }
 document.querySelectorAll('.nav-it').forEach(el=>el.addEventListener('click',()=>navTo(el.dataset.pg)));

@@ -9,11 +9,18 @@
 # CLASSIFICATION  : IRAN_DOMESTIC | NON_IRAN | UNKNOWN
 #                   (based on the ACTUAL resolved destination IP — never on
 #                    domain suffix like ".ir" alone: domains change IPs)
-# ROUTE POLICY    : {"iran": DIRECT|VPN, "international": VPN,
+# ROUTE POLICY    : {"iran": DIRECT|VPN|BLOCK, "international": VPN,
 #                    "unknown": VPN}   — user's default is never silently changed
-# DECISION        : DIRECT | VPN (| BLOCK reserved for future policy use)
+# POLICY PRESETS  : ALL_VPN | IRAN_DIRECT | IRAN_PROXY | INTERNATIONAL_VPN
+#   IRAN_PROXY     : Iranian destinations → EMIX route → REAL Iran Gateway
+#                    (iran_gateway registry; VERIFIED_IRAN_EGRESS only from
+#                    measured evidence — a configured IP is never proof)
+#   INTERNATIONAL_VPN : Iranian destinations → BLOCK (never enter the tunnel)
+# DECISION        : DIRECT | VPN | BLOCK
 # EGRESS TRUTH    : DIRECT traffic egresses from USER_ISP — never Railway,
 #                   never Cloudflare, never an EMIX exit node.
+#                   IRAN_PROXY traffic to Iranian destinations egresses via
+#                   IRAN_GATEWAY (expected; verified only with evidence).
 # STATUS          : DOMESTIC_ROUTE_VERIFIED only with prefix evidence.
 #
 # CRITICAL RULES:
@@ -46,7 +53,8 @@ DOMESTIC_ENGINE_VERSION = "1.0.0"
 # Classifications / decisions / policies (public contract)
 DESTINATION_CLASSES = ("IRAN_DOMESTIC", "NON_IRAN", "UNKNOWN")
 ROUTE_DECISIONS = ("DIRECT", "VPN", "BLOCK")
-POLICY_PRESETS = ("ALL_VPN", "IRAN_DIRECT", "CUSTOM")
+POLICY_PRESETS = ("ALL_VPN", "IRAN_DIRECT", "IRAN_PROXY", "INTERNATIONAL_VPN",
+                  "CUSTOM")
 
 # Traffic accounting categories
 TRAFFIC_CATEGORIES = ("DOMESTIC_DIRECT", "INTERNATIONAL_VPN", "UNKNOWN")
@@ -271,7 +279,7 @@ def dataset_status() -> dict:
 
 @dataclass
 class RoutePolicy:
-    iran: str = "DIRECT"                     # DIRECT | VPN
+    iran: str = "DIRECT"                     # DIRECT | VPN | BLOCK
     international: str = "VPN"               # VPN
     unknown: str = "VPN"                     # user-selected default for UNKNOWN
     name: str = "CUSTOM"
@@ -285,7 +293,40 @@ PRESET_POLICIES: Dict[str, RoutePolicy] = {
                            name="ALL_VPN"),
     "IRAN_DIRECT": RoutePolicy(iran="DIRECT", international="VPN", unknown="VPN",
                                name="IRAN_DIRECT"),
+    # Phase 38+ §13: Iranian destinations ride the EMIX route through a REAL
+    # Iran Gateway. Requires iran_gateway (no gateway → explicit verdict, the
+    # route is never silently degraded to a fake "Iranian exit").
+    "IRAN_PROXY": RoutePolicy(iran="VPN", international="VPN", unknown="VPN",
+                              name="IRAN_PROXY"),
+    # Phase 38+ §11: international-only tunnel — Iranian destinations are
+    # refused (BLOCK) so domestic traffic never enters the VPN.
+    "INTERNATIONAL_VPN": RoutePolicy(iran="BLOCK", international="VPN",
+                                     unknown="VPN", name="INTERNATIONAL_VPN"),
 }
+
+# DI seam: iran_gateway.iran_proxy_egress_status (injected by main to avoid
+# an import cycle). Returns the honest gateway egress verdict.
+_gateway_status_fn: Optional[Callable] = None
+
+
+def set_gateway_status_fn(fn) -> None:
+    global _gateway_status_fn
+    _gateway_status_fn = fn
+
+
+def gateway_egress_status() -> dict:
+    """IRAN_PROXY gateway verdict (honest: UNCONFIGURED/UNVERIFIED/VERIFIED
+    with evidence — never invented)."""
+    if _gateway_status_fn is None:
+        return {"configured": False, "state": "UNKNOWN",
+                "egress": "iran_gateway module not wired",
+                "verdict": "IRAN_GATEWAY_UNCONFIGURED"}
+    try:
+        return _gateway_status_fn()
+    except Exception as exc:
+        return {"configured": False, "state": "UNKNOWN",
+                "egress": f"gateway status error: {exc}",
+                "verdict": "IRAN_GATEWAY_UNCONFIGURED"}
 
 
 def get_policy(name: str) -> RoutePolicy:
@@ -341,15 +382,32 @@ async def decide_route(destination: str, policy: Optional[RoutePolicy] = None,
     leg = {"IRAN_DOMESTIC": policy.iran,
            "NON_IRAN": policy.international,
            "UNKNOWN": policy.unknown}[classification]
-    decision = "VPN" if leg == "VPN" else "DIRECT"
+    decision = leg if leg in ("DIRECT", "VPN", "BLOCK") else "VPN"
 
     # 4. egress attribution — honest, never invented
     cf_note = _cf_note(ip) if ip else None
     railway_note = ("railway-control-plane: never an Iranian exit"
                     if ee.is_control_plane_address(dest) else None)
+    iran_gateway_status = None
     if decision == "DIRECT":
         egress = "USER_ISP"
         egress_note = "traffic exits from the user's local ISP — VPN BYPASSED"
+    elif decision == "BLOCK":
+        egress = "NONE"
+        egress_note = ("destination refused by policy (INTERNATIONAL_VPN) — "
+                       "domestic traffic never enters the tunnel")
+    elif (policy.name == "IRAN_PROXY" and classification == "IRAN_DOMESTIC"):
+        egress = "IRAN_GATEWAY"
+        iran_gateway_status = gateway_egress_status()
+        verdict = iran_gateway_status.get("verdict", "IRAN_GATEWAY_UNCONFIGURED")
+        egress_note = (
+            "Iranian destination rides the EMIX route through the Iran Gateway "
+            f"({verdict}) — expected egress, VERIFIED only with measured evidence")
+        if verdict != "VERIFIED_IRAN_EGRESS":
+            iran_gateway_status.setdefault(
+                "warning",
+                "IRAN_PROXY without a verified gateway does NOT provide "
+                "Iranian egress — configure and check a real gateway")
     else:
         egress = "EMIX_ROUTE"
         egress_note = "traffic exits via the selected EMIX exit node (verified separately)"
@@ -358,8 +416,8 @@ async def decide_route(destination: str, policy: Optional[RoutePolicy] = None,
     if classification == "IRAN_DOMESTIC" and decision == "DIRECT":
         domestic_status = ("DOMESTIC_ROUTE_VERIFIED" if matched
                             else "UNKNOWN")
-    elif classification == "IRAN_DOMESTIC" and decision == "VPN":
-        domestic_status = "DOMESTIC_ELIGIBLE"   # eligible but policy chose VPN
+    elif classification == "IRAN_DOMESTIC" and decision in ("VPN", "BLOCK"):
+        domestic_status = "DOMESTIC_ELIGIBLE"   # eligible but policy chose VPN/BLOCK
 
     verdict = {
         "destination": dest,
@@ -371,9 +429,10 @@ async def decide_route(destination: str, policy: Optional[RoutePolicy] = None,
         "policy": policy.to_dict(),
         "policy_name": policy.name,
         "decision": decision,
-        "vpn_bypassed": decision == "DIRECT",
+        "vpn_bypassed": decision != "VPN",
         "egress": egress,
         "egress_note": egress_note,
+        "iran_gateway": iran_gateway_status,
         "domestic_status": domestic_status,
         "notes": [n for n in (cf_note, railway_note) if n],
         "at": _now(),
@@ -439,21 +498,73 @@ def compile_split_tunnel_rules(policy: RoutePolicy,
 
     xray/xray-json/sing-box → real routing rules (GEOIP:IR when the client
     ships geoip data; otherwise the verified IR CIDR dataset).
+    IRAN_PROXY → not applicable client-side (all traffic enters the tunnel;
+    the Iran routing happens in the EMIX route — server-side).
+    INTERNATIONAL_VVPN → BLOCK rules for Iranian prefixes (blackhole outbound).
     Everything else → SPLIT_TUNNEL_NOT_SUPPORTED (never a look-alike config).
     """
     support = split_tunnel_support(client_type)
-    if support != "SPLIT_TUNNEL_SUPPORTED" or policy.iran != "DIRECT":
+    if support != "SPLIT_TUNNEL_SUPPORTED":
         return {
             "client": client_type,
-            "verdict": ("SPLIT_TUNNEL_NOT_SUPPORTED" if support !=
-                        "SPLIT_TUNNEL_SUPPORTED" else "SPLIT_TUNNEL_NOT_APPLICABLE"),
-            "reason": (f"{client_type} cannot enforce route-level split tunneling"
-                       if support != "SPLIT_TUNNEL_SUPPORTED"
-                       else "policy does not request direct domestic routing"),
+            "verdict": "SPLIT_TUNNEL_NOT_SUPPORTED",
+            "reason": f"{client_type} cannot enforce route-level split tunneling",
+            "policy": policy.to_dict(),
+        }
+    if policy.name == "IRAN_PROXY" or (policy.iran == "VPN" and policy.name == "IRAN_PROXY"):
+        return {
+            "client": client_type,
+            "verdict": "SPLIT_TUNNEL_NOT_APPLICABLE",
+            "reason": "IRAN_PROXY routes inside the EMIX network (server-side) — "
+                      "the client config carries no domestic routing rules; "
+                      "egress via IRAN_GATEWAY (verified separately)",
+            "policy": policy.to_dict(),
+        }
+    if policy.iran == "VPN" and policy.name not in ("IRAN_PROXY",):
+        return {
+            "client": client_type,
+            "verdict": "SPLIT_TUNNEL_NOT_APPLICABLE",
+            "reason": "policy does not request direct domestic routing",
+            "policy": policy.to_dict(),
+        }
+    if policy.iran == "BLOCK":
+        # INTERNATIONAL_VVPN: Iranian prefixes → blackhole (refused client-side)
+        rules: List[dict] = []
+        if use_geoip:
+            rules.append({"type": "GEOIP", "value": "ir",
+                          "outbound": "blackhole",
+                          "note": "GEOIP:IR → refused (INTERNATIONAL_VVPN)"})
+        v4_prefixes, v6_prefixes = [], []
+        for plen_bucket in _db._v4.values():
+            v4_prefixes.extend(m["prefix"] for m in plen_bucket.values())
+        for plen_bucket in _db._v6.values():
+            v6_prefixes.extend(m["prefix"] for m in plen_bucket.values())
+        rules.append({"type": "CIDR", "value": v4_prefixes[:2000],
+                      "ip_version": 4, "outbound": "blackhole",
+                      "dataset_version": _db.meta.get("version")})
+        if v6_prefixes:
+            rules.append({"type": "CIDR", "value": v6_prefixes[:1000],
+                          "ip_version": 6, "outbound": "blackhole"})
+        return {
+            "client": client_type,
+            "verdict": "SPLIT_TUNNEL_SUPPORTED",
+            "policy": policy.to_dict(),
+            "rules": rules,
+            "route_types": ["DOMAIN", "IP", "CIDR", "GEOIP"],
+            "mechanism": "xray routing section: ip rules → outbound blackhole "
+                          "(Iranian destinations refused); international → proxy",
+            "dataset_version": _db.meta.get("version"),
+            "dataset_prefix_count": _db.prefix_count(),
+        }
+    if policy.iran != "DIRECT":
+        return {
+            "client": client_type,
+            "verdict": "SPLIT_TUNNEL_NOT_APPLICABLE",
+            "reason": "policy does not request direct domestic routing",
             "policy": policy.to_dict(),
         }
 
-    rules: List[dict] = []
+    rules = []
     if use_geoip:
         rules.append({"type": "GEOIP", "value": "ir",
                       "outbound": "direct",
@@ -549,13 +660,14 @@ def summary() -> dict:
 
 
 def reset_for_tests() -> None:
-    global _resolver, _active_policy_name
+    global _resolver, _active_policy_name, _gateway_status_fn
     _active_policy_name = "ALL_VPN"
     _decision_history.clear()
     for row in _accounting.values():
         for k in row:
             row[k] = 0 if k != "duration_s" else 0.0
     _resolver = None
+    _gateway_status_fn = None
 
 
 # ── API surface (admin-auth; registered from main) ─────────────────────────

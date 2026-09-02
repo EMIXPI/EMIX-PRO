@@ -309,6 +309,50 @@ async def diagnostics_overview() -> dict:
     except Exception as exc:
         checks["failover"] = {"status": "UNKNOWN", "error": str(exc)[:120]}
 
+    # ── Phase 38+ — capability/config-builder/iran-gateway/events/ir-egress ──
+    try:
+        import capability_engine
+        checks["config_builder"] = {
+            "capability_engine": capability_engine.ENGINE_VERSION,
+            "protocols": len(capability_engine.compat.PROTOCOLS),
+            "deployment_models": list(capability_engine.DEPLOYMENT_MODEL),
+            "udp_rule": capability_engine.DEPLOYMENT_MODEL["panel"]["udp"],
+        }
+    except Exception as exc:
+        checks["config_builder"] = {"status": "UNKNOWN", "error": str(exc)[:120]}
+    try:
+        import config_builder as _cb
+        checks["config_builder"] = {
+            **(checks.get("config_builder") or {}),
+            **_cb.history_summary(),
+        }
+    except Exception as exc:
+        pass
+    try:
+        import iran_gateway as _ig
+        checks["iran_gateway"] = _ig.summary()
+    except Exception as exc:
+        checks["iran_gateway"] = {"status": "UNKNOWN", "error": str(exc)[:120]}
+    try:
+        import structured_events as _se
+        stats = _se.event_stats()
+        checks["events"] = {
+            "events_total": stats.get("events_total", 0),
+            "by_event": stats.get("by_event", {}),
+            "recent": _se.recent_events(10),
+        }
+    except Exception as exc:
+        checks["events"] = {"status": "UNKNOWN", "error": str(exc)[:120]}
+    try:
+        import domestic_route_engine as _dre2
+        checks["iran_routing"] = {
+            "policy_presets": list(_dre2.PRESET_POLICIES),
+            "active_policy": _dre2.get_active_policy_name(),
+            "iran_proxy_egress": _dre2.gateway_egress_status(),
+        }
+    except Exception as exc:
+        checks["iran_routing"] = {"status": "UNKNOWN", "error": str(exc)[:120]}
+
     return {
         "ok": True,
         "checks": checks,

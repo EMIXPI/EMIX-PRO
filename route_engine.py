@@ -38,7 +38,8 @@ ROUTE_REGISTRY_BOUND = 500          # bounded memory — no unbounded route stor
 ROUTE_STALE_AFTER_S = 900.0         # routes unverified this long → STALE
 
 # Route policies (public contract; domestic engine extends semantics)
-ROUTE_POLICIES = ("ALL_VPN", "IRAN_DIRECT", "CUSTOM")
+ROUTE_POLICIES = ("ALL_VPN", "IRAN_DIRECT", "IRAN_PROXY", "INTERNATIONAL_VPN",
+                  "CUSTOM")
 
 # Verification states reuse the egress engine taxonomy — never re-invented.
 VERIFICATION_STATES = ee.EGRESS_CLASSIFICATIONS          # VERIFIED_EGRESS / CONFIGURED_ONLY / UNKNOWN

@@ -539,6 +539,25 @@ def get_health(uid: str) -> Optional[HealthRecord]:
     return _records.get(uid)
 
 
+def ensure_record(uid: str, link: dict) -> HealthRecord:
+    """Create the born-UNKNOWN record for a fresh config SYNCHRONOUSLY.
+
+    Phase 38+ race fix: link creation fires the initial real probe as a
+    background task — before this, /api/health/links/{uid} could 404 in the
+    window before the probe landed. The record now exists immediately
+    (state UNKNOWN — a config is NEVER born HEALTHY); real evidence
+    overwrites it when the probe completes."""
+    rec = _records.get(uid)
+    if rec is None:
+        rec = HealthRecord(uid=uid, protocol=link.get("protocol", ""))
+        _records[uid] = rec
+        try:
+            link["health"] = rec.to_dict()
+        except Exception:
+            pass
+    return rec
+
+
 def get_health_dict(uid: str) -> Optional[dict]:
     r = _records.get(uid)
     return r.to_dict() if r else None

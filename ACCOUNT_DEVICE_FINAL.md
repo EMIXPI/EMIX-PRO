@@ -1,4 +1,17 @@
 # ACCOUNT_DEVICE_FINAL.md — account_manager.py v1.0.0 (Phase 38 / P2+P3)
+
+---
+
+## v11.4.0-builder update — config ownership linkage
+The Unified Config Builder completes the chain with config ownership:
+`ConfigRequest.account_id / subscription_id` are stored on every history
+entry (کانفیگ‌های ساخته‌شده) and the history list supports `?account_id=`
+filtering. All engine semantics (PBKDF2, one-time device tokens, limits,
+can_connect gate, subscription lifecycle, canonical-compiler emission) are
+unchanged from v11.3. The full object chain is now:
+Account → Subscription → Device → Config (history) → Protocol → Transport →
+Endpoint Profile → Routing Policy → Node → Egress → Verification.
+
 # EMIX-PRO v11.3.0-network
 
 > Account → Subscription → Config → Route → Node → Verified Egress.

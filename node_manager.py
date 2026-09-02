@@ -203,6 +203,14 @@ async def set_quarantine(node_id: str, on: bool,
             rec.state = "QUARANTINED"
             rec.notes = [n for n in rec.notes if not n.startswith("quarantine:")]
             rec.notes.append(f"quarantine:{reason or 'operator'}")
+            try:
+                import structured_events as events
+                events.log_event("NODE_QUARANTINED", severity="WARNING",
+                                 node=node_id, reason=reason or "operator",
+                                 note="traffic fully excluded while egress/behavior "
+                                      "is under investigation")
+            except Exception:
+                pass
         else:
             rec.state = "REGISTER"
             rec.notes = [n for n in rec.notes if not n.startswith("quarantine:")]

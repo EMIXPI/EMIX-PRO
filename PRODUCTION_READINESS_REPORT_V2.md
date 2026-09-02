@@ -1,28 +1,44 @@
-# PRODUCTION_READINESS_REPORT_V2.md — EMIX-PRO v11.3.0-network
+# PRODUCTION_READINESS_REPORT_V2.md — EMIX-PRO v11.4.0-builder
 # Phase 38 / P16 production gate results — VERIFIED ONLY
 
 > Rule: no "done" until all gates pass. All results below were executed in
 > this session against the exact code that was committed.
 
-## 1. Production gate execution (15/15 PASS)
+## 1. Production gate execution (15/15 PASS — re-executed for v11.4.0-builder)
 
 | # | Gate | Result |
 |---|---|---|
-| 1 | Full test suite | **808/808 passed** (13.4s) |
-| 2 | Three consecutive clean runs | 808 / 808 / 808 (13.65s, 13.37s, 13.41s) |
+| 1 | Full test suite | **904/904 passed** (808 baseline + 96 Phase 38+) |
+| 2 | Three consecutive clean runs | 904 / 904 / 904 (14.22s, 14.19s, 13.88s) |
 | 3 | Import-order / compile | `compileall` exit 0; `import main` clean; engines register fault-isolated |
 | 4 | State migration (old → new) | old rvg_state.json (no `account_manager`/`domestic_routing` keys) loads unchanged; new keys additive + defensive restores (round-trip tested) |
 | 5 | Real uvicorn boot | clean, 0 errors: 19 protocol adapters, 9 jobs registered, phase38 wiring logged |
-| 6 | API smoke (real server) | **38/38 PASS** (login, egress, routes, failover, accounts, domestic, diagnostics, auth-401 gates) |
-| 7 | Frontend JS syntax | 3/3 script blocks `node --check` OK; 12/12 new-section markers present in served `/dashboard` HTML |
+| 6 | API smoke (real server) | **17/17 + 5× auth-401 PASS** (capabilities, validation-matrix, builder generate/preview/history, iran-gateway CRUD, events, diagnostics + invalid-combo & IRAN_PROXY-without-gateway rejections) |
+| 7 | Frontend JS syntax | 4/4 dashboard blocks `node --check` OK (new isolated builder/iran-proxy block included); 7/7 new markers in served HTML (pg-builder / pg-iranproxy / nav / loaders / history) |
 | 8 | Egress verification test | in suite (unit 28 + integration 17 + E2E flow 2) |
 | 9 | Route verification test | in suite (route_engine 15 + E2E flows 5-7) |
 | 10 | Failover integration test | E2E flow 4 (drain → select → verify → repoint → FAILOVER_SUCCESS) |
 | 11 | Account/device lifecycle test | E2E flows 1/9/10 + 32 unit tests |
-| 12 | Security scan | auth gates on all new endpoints (unauth ⇒ 401, smoke-verified); PBKDF2; one-time tokens; no secrets in audit |
+| 12 | Security scan | auth gates on ALL new endpoints (unauth ⇒ 401, unit + smoke); gateway auth secrets masked in API; history credentials masked in list; events scrubbed (UUID redaction); QR stays local |
 | 13 | Secret scan | diff + new-files pattern scan: **clean** (no hardcoded credentials/tokens) |
 | 14 | Dependency audit | fastapi 0.128.0 · uvicorn 0.44.0 · httpx 0.28.1 · pydantic 2.12.5 · starlette 0.50.0 · aiofiles 24.1.0 · qrcode 8.2 — all current |
-| 15 | Git diff audit | 8 modified + 11 new files, +~6,900 lines; no generated DBs, no debug files, no .tmp artifacts staged |
+| 15 | Git diff audit | 9 modified + 10 new files, +~3,900 lines this phase (on top of v11.3); old-state migration re-verified (v11.3 state file → clean boot, policy preserved); no chmod-only artifacts staged |
+
+> **v11.4.0-builder re-execution:** all 15 gates re-run against the exact
+> committed code. New gates evidence: real uvicorn boot 0 critical errors
+> (EMIX v11.4.0-builder, 10 jobs incl. iran-gateway-check, phase38+ wiring
+> logged), old-state migration PASS, secret scan over diff + new files: 0
+> findings. Gates script: scripts/gates_phase38plus.sh.
+
+## 1b. v11.4.0-builder scope summary
+
+New engines (all backend-driven, all authed): capability_engine (deployment
+models + validation matrix), config_builder (canonical ConfigRequest +
+history), iran_gateway (IRAN_PROXY), structured_events. Routing policies now
+five (ALL_VPN / IRAN_DIRECT / IRAN_PROXY / INTERNATIONAL_VVPN / CUSTOM).
+Failover capability hard gates. Diagnostics +4 sections. UI: ساخت کانفیگ +
+پروکسی ایران + کانفیگ‌های ساخته‌شده (capability-driven, zero JS hardcoding).
+96 new tests. Fixed a latent full-suite flake (network_health.ensure_record).
 
 Extra live evidence captured during boot (REAL NETWORK, not mocked):
 - Worker gateway-status fetch from the deployed CF worker: **200 OK**.

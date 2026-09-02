@@ -1,4 +1,4 @@
-# COMPETITIVE_MATRIX_V2.md — EMIX-PRO v11.3.0-network
+# COMPETITIVE_MATRIX_V2.md — EMIX-PRO v11.4.0-builder
 # Phase 38 / P12 — capability comparison, evidence-based
 
 > Sources: public repositories/docs of the panels below as of 2026-08,
@@ -28,6 +28,13 @@ Legend: ✅ verified in code+tests · 🟡 partial/honest-labeled · ❌ absent
 | **Worker-terminated egress (WTE)** | ✅ CF worker v2.2.0 + exit-node blueprints | ❌ | ❌ | ❌ | ❌ | 🟡 worker relay |
 | **Local QR generation** (no third-party leak) | ✅ /api/qr | 🟡 some use external | 🟡 | 🟡 | 🟡 | 🟡 |
 | **Test discipline** (808 tests, honest classification, 3× clean runs) | ✅ | 🟡 | 🟡 | 🟡 | 🟡 | 🟡 |
+| **Capability-driven config builder** (frontend renders backend capabilities; zero JS hardcoding) | ✅ v11.4 capability_engine + builder | ❌ | ❌ | ❌ | 🟡 static forms | ❌ |
+| **Deployment capability model** (RAILWAY_EDGE/DEPLOYMENT/OUTBOUND/ACTUAL_EGRESS; UDP never claimed Railway-native) | ✅ v11.4 | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **IRAN_PROXY — real Iran Gateway** (registry + probes + VERIFIED_IRAN_EGRESS evidence) | ✅ v11.4 iran_gateway | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **Config history** (masked credentials, deterministic regenerate, ownership) | ✅ v11.4 config_builder | ❌ | ❌ | 🟡 export only | 🟡 | ❌ |
+| **Structured operational events** (CONFIG_GENERATED/ROUTE_MISMATCH/… with secret scrubbing) | ✅ v11.4 structured_events | ❌ | 🟡 logs | 🟡 logs | 🟡 logs | 🟡 |
+| **Failover capability gates** (incompatible nodes never selected regardless of score) | ✅ v11.4 hard gates | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **Test discipline** (904 tests, honest classification, 3× clean runs) | ✅ | 🟡 | 🟡 | 🟡 | 🟡 | 🟡 |
 
 ## 2. Where competitors lead (honest gaps)
 
@@ -48,11 +55,18 @@ Legend: ✅ verified in code+tests · 🟡 partial/honest-labeled · ❌ absent
 2. **Routing intelligence**: explainable node selection + first-class routes
    + 9-step validation + never-blind failover with drain semantics.
 3. **Iran-specific networking**: anti-DPI 5-layer toolbox + WTE + domestic
-   split-tunneling with a real RIR-sourced, atomically-updated prefix dataset.
+   split-tunneling with a real RIR-sourced, atomically-updated prefix dataset
+   + (v11.4) the only IRAN_PROXY architecture with a real Iran Gateway whose
+   Iranian egress is VERIFIED by measurement, never by a typed IP.
 4. **Observability**: 5 health layers, diagnostics coverage of every engine,
    labeled latencies (never an anonymous "ping" number).
 5. **Security posture**: PBKDF2, one-time device tokens, no-token-logging
-   (tested), local QR, SSRF-tested proxy, secret-scan-clean diffs.
+   (tested), local QR, SSRF-tested proxy, secret-scan-clean diffs,
+   (v11.4) centrally-scrubbed structured events + masked history credentials.
+6. **Capability-driven generation (v11.4)**: one canonical ConfigRequest
+   pipeline, validation-before-generation with stage-labeled rejections,
+   deterministic regeneration, and a Railway validation matrix that never
+   labels a unit-test-only result as real protocol verification.
 
 **Goal statement (spec): win through correctness, observability, routing
 intelligence, real health, failover, account/device management, protocol

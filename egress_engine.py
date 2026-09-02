@@ -394,7 +394,9 @@ async def verify_egress(target: str = "panel") -> dict:
             measurement_source=raw.get("measurement_source", "panel"),
             error=raw.get("error"))
         await store_evidence(ev)
-        return classify_egress("panel")
+        out = classify_egress("panel")
+        _emit_egress_event("panel", out)
+        return out
     # worker targets need the gateway — resolve cfg lazily
     import gaming_boost  # local import (module registered after gaming in main)
     cfg = gaming_boost._load_cfg()
@@ -410,7 +412,9 @@ async def verify_egress(target: str = "panel") -> dict:
             raw = await gaming_boost._call_worker(cfg, "/egress-test")
         ev = _evidence_from_worker(tid, raw, "worker:/egress-test")
         await store_evidence(ev)
-        return classify_egress(tid)
+        out = classify_egress(tid)
+        _emit_egress_event(tid, out)
+        return out
     # loc:<name>
     name = target[4:]
     fn = _providers.get("worker_exit_ip")
@@ -421,7 +425,27 @@ async def verify_egress(target: str = "panel") -> dict:
             cfg, f"/exit-ip?loc={name}&via=upstream")
     ev = _evidence_from_worker(tid, raw, f"worker:/exit-ip?loc={name}")
     await store_evidence(ev)
-    return classify_egress(tid, configured={"upstream": raw.get("upstream") or ""})
+    out = classify_egress(tid, configured={"upstream": raw.get("upstream") or ""})
+    _emit_egress_event(tid, out)
+    return out
+
+
+def _emit_egress_event(target_id: str, classification: dict) -> None:
+    """Structured event for egress verification (spec §29 — never secrets).
+    ROUTE_MISMATCH is announced, never masked."""
+    try:
+        import structured_events as events
+        cls = classification.get("classification", "UNKNOWN")
+        ev = classification.get("egress") or {}
+        events.log_event(
+            "ROUTE_MISMATCH" if cls == "UNKNOWN" and classification.get("route_health") == "ROUTE_MISMATCH"
+            else "EGRESS_VERIFIED",
+            severity="INFO" if cls == "VERIFIED_EGRESS" else "WARNING",
+            target=target_id, classification=cls,
+            public_ip=ev.get("public_ip"), country=ev.get("country_code"),
+            asn=ev.get("asn"), source=ev.get("measurement_source"))
+    except Exception:
+        pass
 
 
 def _evidence_from_worker(target_id: str, raw: dict, source: str) -> EgressEvidence:
@@ -693,6 +717,14 @@ def _verdict(location: str, health: str, steps: list, latencies: list,
              "expected_country": expected_country}
     _route_history.append(entry)
     del _route_history[:-ROUTE_HISTORY_BOUND]
+    if health == "ROUTE_MISMATCH":
+        try:
+            import structured_events as events
+            events.log_event("ROUTE_MISMATCH", severity="WARNING",
+                             location=location, expected_country=expected_country,
+                             note="expected ≠ observed — never masked as healthy")
+        except Exception:
+            pass
     return out
 
 

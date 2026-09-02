@@ -205,6 +205,25 @@ async def load_state():
                     f"({n_ir} IR prefixes, policy={_dre.get_active_policy_name()})")
             except Exception as _dre_exc:
                 logger.warning(f"domestic_route_engine restore failed (ignored): {_dre_exc}")
+            # Phase 38+ — Iran Gateway + Config Builder history restore
+            try:
+                import iran_gateway as _ig
+                _ig.restore_snapshot(data.get("iran_gateway") or {})
+                _ig_summary = _ig.summary()
+                if _ig_summary.get("gateways"):
+                    logger.info(f"iran_gateway: {_ig_summary['gateways']} gateway(s) "
+                                f"restored (state={_ig_summary.get('state')})")
+            except Exception as _ig_exc:
+                logger.warning(f"iran_gateway restore failed (ignored): {_ig_exc}")
+            try:
+                import config_builder as _cb
+                _cb.restore_snapshot(data.get("config_builder") or {})
+                _cb_sum = _cb.history_summary()
+                if _cb_sum.get("entries"):
+                    logger.info(f"config_builder: {_cb_sum['entries']} history "
+                                f"entries restored")
+            except Exception as _cb_exc:
+                logger.warning(f"config_builder restore failed (ignored): {_cb_exc}")
             # Sessions: restore non-expired tokens (survive redeploy)
             now_ts = time.time()
             for tok, exp in (data.get("sessions") or {}).items():
@@ -294,6 +313,17 @@ def _persist_phase38_engines() -> dict:
         out["domestic_routing"] = domestic_route_engine.persist_policy_snapshot()
     except Exception:
         out["domestic_routing"] = {"active_policy": "ALL_VPN"}
+    # Phase 38+ — Iran Gateway registry + Unified Config Builder history
+    try:
+        import iran_gateway
+        out["iran_gateway"] = iran_gateway.persist_snapshot()
+    except Exception:
+        out["iran_gateway"] = {"gateways": []}
+    try:
+        import config_builder
+        out["config_builder"] = config_builder.persist_snapshot()
+    except Exception:
+        out["config_builder"] = {"history": []}
     return out
 
 
@@ -848,7 +878,50 @@ def _wire_phase38_engines() -> None:
 
     if dre.dataset_status().get("prefix_count", 0) == 0:
         dre.load_seed()
-    logger.info("[phase38] route/failover/account/domestic engines wired")
+
+    # ─── Phase 38+ wiring — capability/config-builder/iran-gateway/events ──
+    import capability_engine
+    import config_builder
+    import iran_gateway
+    import structured_events
+
+    # Config Builder DI: host / worker-domain / CDN providers (no import cycles)
+    config_builder.set_host_provider(get_host)
+
+    def _worker_domain() -> str:
+        try:
+            import gaming_boost
+            cfg = gaming_boost._load_cfg()
+            return gaming_boost._norm_domain(cfg.get("worker_domain", ""))
+        except Exception:
+            return ""
+    config_builder.set_worker_domain_provider(_worker_domain)
+    config_builder.set_cdn_domain_provider(lambda: CONFIG.get("cdn_domain", ""))
+
+    # IRAN_PROXY gateway verdict → domestic engine (honest attribution)
+    dre.set_gateway_status_fn(iran_gateway.iran_proxy_egress_status)
+
+    # Railway validation matrix: LIVE listener evidence from the running app
+    capability_engine.set_listener_paths({
+        "vless:ws": ["/ws/{uuid}"],
+        "vless:xhttp-packet-up": ["/xhttp-siz10/packet-up/{uuid}"],
+        "vless:xhttp-stream-up": ["/xhttp-siz10/stream-up/{uuid}"],
+        "trojan:ws": ["/trojan-ws"],
+        "trojan:xhttp-packet-up": ["/txhttp-siz10/packet-up/{uuid}"],
+        "trojan:xhttp-stream-up": ["/txhttp-siz10/stream-up/{uuid}"],
+        "shadowsocks:ws": ["/ss-ws"],
+        "__mtproto_probe__": _mtproto_instance_probe,
+    })
+    logger.info("[phase38+] capability/config-builder/iran-gateway/events wired")
+
+
+def _mtproto_instance_probe() -> int:
+    """Live count of running mtg subprocesses (validation-matrix evidence)."""
+    try:
+        from protocol.mtproto import mtproto_native
+        return len(getattr(mtproto_native, "_instances", {}))
+    except Exception:
+        return 0
 
 
 async def _job_domestic_rules_update() -> None:
@@ -874,11 +947,24 @@ async def _job_account_sweep() -> None:
         logger.info(f"[accounts] closed {closed} stale sessions")
 
 
+async def _job_iran_gateway_check() -> None:
+    """Periodic Iran Gateway health + egress re-verification (evidence TTL)."""
+    import iran_gateway
+    results = await iran_gateway.check_all()
+    verified = sum(1 for r in results.values()
+                   if r.get("state") == "VERIFIED_IRAN_EGRESS")
+    if results:
+        logger.info(f"[iran-gateway] checked {len(results)} gateway(s), "
+                    f"{verified} VERIFIED_IRAN_EGRESS")
+
+
 def _register_phase38_jobs() -> None:
     job_system.register("domestic-rules-update", _job_domestic_rules_update,
                         interval=86400.0, timeout=60.0, retries=0)
     job_system.register("account-sweep", _job_account_sweep,
                         interval=300.0, timeout=30.0, retries=1)
+    job_system.register("iran-gateway-check", _job_iran_gateway_check,
+                        interval=21600.0, timeout=60.0, retries=1)
 
 
 async def _persistence_health() -> dict:
@@ -2790,6 +2876,9 @@ async def _create_link_core(body: dict) -> dict:
     # immediately gets a real protocol-level probe (non-blocking). The result
     # lands on link_data["health"] — a config is NEVER "healthy" merely
     # because it was generated.
+    # Phase 38+ race fix: the born-UNKNOWN record exists SYNCHRONOUSLY so
+    # /api/health/links/{uid} never 404s while the initial probe is in flight.
+    network_health.ensure_record(uid, link_data)
     async def _probe_new_link():
         try:
             await network_health.probe_config(uid, link_data)
@@ -4348,6 +4437,57 @@ except Exception as _exc:
 
 
 # ═════════════════════════════════════════════════════════════════════════════
+# Phase 38+ — Capability Engine (protocol × transport × deployment × node ×
+# client — ONE backend-driven capability source; frontend renders from API)
+# ═════════════════════════════════════════════════════════════════════════════
+try:
+    import capability_engine
+    capability_engine.register_routes(app, require_auth)
+    logger.info(f"[bootstrap] capability_engine v{capability_engine.ENGINE_VERSION} "
+                f"routes registered (/api/config-builder/capabilities, "
+                f"/api/railway/validation-matrix)")
+except Exception as _exc:
+    logger.error(f"[bootstrap] capability_engine بارگذاری نشد (نادیده گرفته شد): {_exc}")
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# Phase 38+ — Unified Config Builder (canonical ConfigRequest → compiler →
+# outputs + history). ONE builder; every output from the canonical compiler.
+# ═════════════════════════════════════════════════════════════════════════════
+try:
+    import config_builder
+    config_builder.register_routes(app, require_auth)
+    logger.info(f"[bootstrap] config_builder v{config_builder.ENGINE_VERSION} "
+                f"routes registered (preview/generate/history)")
+except Exception as _exc:
+    logger.error(f"[bootstrap] config_builder بارگذاری نشد (نادیده گرفته شد): {_exc}")
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# Phase 38+ §13 — Iran Gateway / IRAN_PROXY (REAL Iranian exit, evidence-based)
+# ═════════════════════════════════════════════════════════════════════════════
+try:
+    import iran_gateway
+    iran_gateway.register_routes(app, require_auth)
+    logger.info(f"[bootstrap] iran_gateway v{iran_gateway.ENGINE_VERSION} "
+                f"routes registered (IRAN_PROXY — real Iranian gateway)")
+except Exception as _exc:
+    logger.error(f"[bootstrap] iran_gateway بارگذاری نشد (نادیده گرفته شد): {_exc}")
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# Phase 38+ §29 — Structured operational events (CONFIG_GENERATED, …)
+# ═════════════════════════════════════════════════════════════════════════════
+try:
+    import structured_events
+    structured_events.register_routes(app, require_auth)
+    logger.info(f"[bootstrap] structured_events v{structured_events.ENGINE_VERSION} "
+                f"routes registered (/api/events)")
+except Exception as _exc:
+    logger.error(f"[bootstrap] structured_events بارگذاری نشد (نادیده گرفته شد): {_exc}")
+
+
+# ═════════════════════════════════════════════════════════════════════════════
 # ماژول زیرساخت ریلوی — volume خودکار + سلامت‌سنجی کل پنل (railway_infra.py)
 # اگر این ماژول حذف شود یا خطا بدهد، پنل و همه‌ی تونل‌ها بدون تغییر کار می‌کنند.
 # ═════════════════════════════════════════════════════════════════════════════
@@ -5173,7 +5313,7 @@ async def api_migrate_legacy_spoof():
 # تا قبل از لاگین هم قابل بررسی باشد. (از /api/version استفاده نمی‌کنیم چون
 # آن مسیر قبلاً برای بررسی به‌روزرسانی در نظر گرفته شده است.)
 # ══════════════════════════════════════════════════════════════════════════════
-EMIX_VERSION = "11.3.0-network"
+EMIX_VERSION = "11.4.0-builder"
 EMIX_BUILD_DATE = "2026-09-01"
 
 @app.get("/api/deployment-version")

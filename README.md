@@ -112,6 +112,15 @@ It gives you a beautiful admin dashboard to create, monitor, and manage proxy li
 - Node states include **DRAINING / QUARANTINED**; drained nodes stop taking new assignments
 - Domestic DIRECT traffic is labeled **USER_ISP** — never Railway, never Cloudflare, never an EMIX node
 
+### ✨ Unified Config Builder & IRAN_PROXY (v11.4.0-builder)
+- **ساخت کانفیگ** — the ONE canonical 9-step builder; every option renders from `/api/config-builder/capabilities` (zero protocol-support hardcoding in JS); invalid combos are rejected with an explicit reason before anything is generated
+- **Deployment capability model** — RAILWAY_EDGE / RAILWAY_DEPLOYMENT / RAILWAY_OUTBOUND / ACTUAL_EGRESS are never conflated; UDP-dependent protocols are never exposed as Railway-native
+- **کانفیگ‌های ساخته‌شده** — generated-config history: view (credential-masked), copy/QR (local), deterministic regenerate, delete
+- **🇮🇷 پروکسی ایران (IRAN_PROXY)** — a real Iranian gateway registry with measured-evidence verification (`VERIFIED_IRAN_EGRESS`); a typed Iranian IP is CONFIGURED, never VERIFIED
+- **INTERNATIONAL_VVPN** policy — domestic traffic is refused (BLOCK) so it never enters the tunnel; **IRAN_PROXY/IRAN_DIRECT/ALL_VPN** complete the five-policy vocabulary
+- **Railway validation matrix** — honest stages (CONFIG_VALID / RUNTIME_STARTED / LISTENER_REACHABLE real; CLIENT_CONNECTED+ labeled NOT_TESTABLE_WITHOUT_REAL_CLIENT)
+- **Structured events** — CONFIG_GENERATED / ROUTE_SELECTED / ROUTE_MISMATCH / FAILOVER_TRIGGERED / IRAN_GATEWAY_CHECK … with central secret-scrubbing (`/api/events`)
+
 </td>
 </tr>
 <tr>

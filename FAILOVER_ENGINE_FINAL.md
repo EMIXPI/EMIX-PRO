@@ -1,4 +1,20 @@
 # FAILOVER_ENGINE_FINAL.md — failover_engine.py v1.0.0 (Phase 38 / P1)
+
+---
+
+## v11.4.0-builder update — capability hard gates (spec §15)
+`select_replacement` now enforces HARD capability gates BEFORE scoring:
+- **protocol requirement** — node must serve the protocol, else skipped (`UNSUPPORTED_NODE_PROTOCOL`);
+- **transport requirement** — the node's compat-decomposed capabilities must carry the transport, else skipped (`UNSUPPORTED_NODE_TRANSPORT`);
+- **role: EXIT_NODE** — only nodes with valid egress evidence are eligible (`NO_VERIFIED_EGRESS`).
+
+A health/latency score can never override capability reality. `score_node`
+additionally reports `UNSUPPORTED_NODE_TRANSPORT` in the ranking reasons.
+Every failover run emits the `FAILOVER_TRIGGERED` structured event (node,
+reason, protocol, transport). The 7-step pipeline, verdicts, and no-blind-failback
+semantics are unchanged. Verified by new unit tests (incompatible nodes are
+never selected; compatible nodes are).
+
 # EMIX-PRO v11.3.0-network
 
 > A failover is successful ONLY when the replacement route is actually usable.
