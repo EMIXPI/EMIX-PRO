@@ -4476,6 +4476,20 @@ except Exception as _exc:
 
 
 # ═════════════════════════════════════════════════════════════════════════════
+# Phase 38+ §11/§12 — IRAN_DIRECT endpoint assets (Clean IP + Handshake)
+# دارایی‌های اندپوینت برای ساخت کانفیگ IRAN_DIRECT — صفر emitter؛
+# ساخت کانفیگ فقط از مسیر کانونی config_builder انجام می‌شود.
+# ═════════════════════════════════════════════════════════════════════════════
+try:
+    import iran_direct
+    iran_direct.register_routes(app, require_auth)
+    logger.info(f"[bootstrap] iran_direct v{iran_direct.ENGINE_VERSION} "
+                f"routes registered (Clean IP + Handshake assets)")
+except Exception as _exc:
+    logger.error(f"[bootstrap] iran_direct بارگذاری نشد (نادیده گرفته شد): {_exc}")
+
+
+# ═════════════════════════════════════════════════════════════════════════════
 # Phase 38+ §29 — Structured operational events (CONFIG_GENERATED, …)
 # ═════════════════════════════════════════════════════════════════════════════
 try:
@@ -5313,8 +5327,8 @@ async def api_migrate_legacy_spoof():
 # تا قبل از لاگین هم قابل بررسی باشد. (از /api/version استفاده نمی‌کنیم چون
 # آن مسیر قبلاً برای بررسی به‌روزرسانی در نظر گرفته شده است.)
 # ══════════════════════════════════════════════════════════════════════════════
-EMIX_VERSION = "11.4.0-builder"
-EMIX_BUILD_DATE = "2026-09-01"
+EMIX_VERSION = "11.5.0-iran-direct"
+EMIX_BUILD_DATE = "2026-09-02"
 
 @app.get("/api/deployment-version")
 async def api_deployment_version():

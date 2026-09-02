@@ -1,5 +1,55 @@
 # CHANGELOG — EMIX-PRO
 
+## v11.5.0-iran-direct (2026-09-02) — 🇮🇷 IRAN DIRECT Config Builder: Clean IP + Handshake
+
+**User request:** in the IRAN_DIRECT section, be able to enter a healthy/set
+Clean IP or a fake Handshake (SNI) and then build & receive a config — exactly
+like the «ساخت کانفیگ» (Config Builder) section.
+
+Baseline: v11.4.0-builder (904 tests) → **921/921 tests (2× consecutive clean
+runs), real uvicorn boot, full HTTP smoke incl. real TLS probe, secret scan
+clean.** This phase adds **22 tests** (17 unit + 5 integration).
+
+### NEW ENGINE
+- **iran_direct.py (§11/§12)** — IRAN_DIRECT endpoint-asset store:
+  Clean-IP list + Handshake (SNI) list, persisted at
+  DATA_DIR/iran_direct_assets.json (isolated — module removal hides only this
+  UI card). Honest semantics enforced:
+  - manual IP = **CONFIGURED_ENDPOINT** only — never presented as verified
+    egress, never tied to any geographic claim;
+  - Handshake/SNI = TLS/endpoint semantics only (SNI ≠ ROUTE ≠ GEO);
+  - server-side probe = TCP_REACHABLE / TLS_VERIFIED with explicit caveat
+    «measured from the panel server, NOT your ISP»;
+  - use-counters/last-used bookkeeping after each generated config;
+  - IRAN_DIRECT egress attribution unchanged: USER_ISP (user's own ISP).
+  API (admin-auth, 401-verified): GET /api/iran-direct/assets, POST/DELETE
+  /api/iran-direct/ips[/{id}], POST /api/iran-direct/handshakes[/{id}],
+  POST /api/iran-direct/ips/{id}/probe, POST /api/iran-direct/use.
+  **Zero emitters** — config generation goes ONLY through the canonical
+  config_builder (custom_address=Clean IP, custom_sni=handshake,
+  routing_policy=IRAN_DIRECT).
+
+### UI (pg-routing — «مسیریابی هوشمند»)
+- New card «🇮🇷 ساخت کانفیگ IRAN_DIRECT — IP سالم + هندشیک» mirroring the
+  unified Config Builder step flow: ۱ پروتکل → ۲ نود → ۳ ترنسپورت →
+  ۴ امنیت → ۵ IP سالم (+ saved list, probe ⚡ badge) → ۶ هندشیک (+ saved
+  list) → ۷ پورت → ۸ خروجی کلاینت (URI/subscription honestly disabled for
+  IRAN_DIRECT — SPLIT_TUNNEL_NOT_SUPPORTED) → preview/generate via the
+  canonical API → URI + copy + QR + Xray JSON download + explainable
+  IRAN_DIRECT legs + shared history filtered to IRAN_DIRECT.
+  100% capability-driven (same /api/config-builder/capabilities source);
+  isolated script block (node --check verified).
+
+### CANONICAL VALIDATOR FIX (endpoint_profiles.py)
+- validate_hostname previously accepted impossible dotted-quads (e.g.
+  104.17.1.999 — octet > 255) via the hostname regex. Now: dotted-quad SHAPE
+  ⇒ it IS an IP ⇒ real octet validation (0-255) or outright rejection.
+  An impossible address can never again emit a config that cannot connect.
+
+### EVENTS
+- IRAN_DIRECT_ASSET_SAVED / IRAN_DIRECT_PROBE (severity-mapped), central
+  secret-scrubbing unchanged.
+
 ## v11.4.0-builder (2026-09-02) — Phase 38+: Unified Config Builder, Capability Engine, IRAN_PROXY & Iran Gateway
 
 **Master Network Platform Upgrade: Unified Routing, Egress, Iran Network,

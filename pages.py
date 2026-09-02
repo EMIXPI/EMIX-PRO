@@ -4122,6 +4122,15 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
 .igw-bad{background:rgba(239,68,68,.2);color:#f87171}
 .igw-info{background:rgba(59,130,246,.2);color:#60a5fa}
 .bld-form2{display:grid;gap:10px;margin-top:10px}
+/* ── IRAN DIRECT builder assets (ird-) ───────────────────────────────── */
+.ird-assets{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.ird-asset{display:inline-flex;align-items:center;gap:8px;padding:7px 12px;border-radius:12px;border:1px solid var(--card-b);background:rgba(249,115,22,.06);cursor:pointer;font-size:12px;transition:.15s;direction:ltr}
+.ird-asset:hover{border-color:var(--accent)}
+.ird-asset.sel{border-color:var(--accent);background:rgba(249,115,22,.16);box-shadow:0 0 0 1px var(--accent)}
+.ird-asset .addr{font-family:'JetBrains Mono',monospace;font-size:11.5px;word-break:break-all}
+.ird-asset .st{font-size:10px;opacity:.9}
+.ird-asset .pbtn{cursor:pointer;font-size:12px;line-height:1}
+.ird-asset .xbtn{cursor:pointer;color:#f87171;font-size:13px;line-height:1}
 </style>
 
 <script>
@@ -4439,6 +4448,372 @@ async function iranGwDel(id){
 }
 </script>
 
+<script>
+/* ════════════════════════════════════════════════════════════════════════
+   🇮🇷 IRAN DIRECT — ساخت کانفیگ با IP سالم + هندشیک (بلاک ایزوله)
+   آینه‌ی «ساخت کانفیگ» با مسیریابی ثابت IRAN_DIRECT. رندر ۱۰۰٪
+   قابلیت‌محور از /api/config-builder/capabilities؛ ساخت کانفیگ فقط از
+   API کانونی config-builder (preview/generate) — هیچ emitter در JS نیست.
+   IP دستی = CONFIGURED_ENDPOINT؛ SNI = فقط معنای TLS.
+   ════════════════════════════════════════════════════════════════════════ */
+var IRD_CAPS=null, IRD_ASSETS={ips:[],handshakes:[]};
+var IRD_SEL={protocol:'',transport:'',security:'',node:'panel',client:'xray-json',ip_id:'',hs_id:''};
+
+async function irdLoad(){
+  try{
+    var r=await authF('/api/config-builder/capabilities');
+    if(r.ok)IRD_CAPS=await r.json();
+    var a=await authF('/api/iran-direct/assets');
+    if(a.ok)IRD_ASSETS=await a.json();
+    irdRenderProtocols(); irdRenderNodes(); irdRenderClients(); irdRenderAssets(); irdLoadHistory();
+  }catch(e){netErr(e,'IRAN DIRECT')}
+}
+
+async function irdRefreshAssets(){
+  try{
+    var a=await authF('/api/iran-direct/assets');
+    if(a.ok){IRD_ASSETS=await a.json(); irdRenderAssets()}
+  }catch(e){}
+}
+
+function irdBusy(btn,on){if(!btn)return;btn.disabled=on;var i=btn.querySelector('i');if(i){if(!btn.dataset.icon)btn.dataset.icon=i.className;i.className=on?'ti ti-loader-2 spin':btn.dataset.icon}}
+
+/* ── Steps 1-4: قابلیت‌محور (همان منبع سازنده‌ی کانونی) ──────────────── */
+function irdRenderProtocols(){
+  var host=document.getElementById('ird-protocols'); if(!host)return;
+  if(!IRD_SEL.protocol){
+    var first=(IRD_CAPS&&IRD_CAPS.protocols||[]).filter(function(p){return p.selectable})[0];
+    if(first)IRD_SEL.protocol=first.protocol;
+  }
+  host.innerHTML='';
+  (IRD_CAPS&&IRD_CAPS.protocols||[]).forEach(function(p){
+    var d=document.createElement('div');
+    d.className='bld-chip'+(p.selectable?'':' off')+(IRD_SEL.protocol===p.protocol?' sel':'');
+    d.innerHTML=esc(p.protocol)+(p.selectable?'':' <span class="st">('+esc(p.readiness)+')</span>');
+    if(p.selectable){d.onclick=function(){IRD_SEL.protocol=p.protocol;IRD_SEL.transport='';irdRenderProtocols()}}
+    host.appendChild(d);
+  });
+  var hint=document.getElementById('ird-proto-hint');
+  if(hint){var bp=(IRD_CAPS&&IRD_CAPS.protocols||[]).filter(function(p){return !p.selectable});
+    hint.textContent=bp.length?('پروتکل‌های دیگر فقط تولید لینک/کانفیگ (BETA — بدون ران‌تایم پنل): '+bp.map(function(p){return p.protocol}).join(', ')):'';}
+  irdRenderTransports();
+}
+
+function irdNodeProtocols(){
+  var node=(IRD_CAPS&&IRD_CAPS.nodes||[]).filter(function(n){return n.node_id===IRD_SEL.node})[0];
+  return (node&&node.protocols)||[];
+}
+
+function irdRenderTransports(){
+  var host=document.getElementById('ird-transports'); if(!host)return;
+  host.innerHTML='';
+  var list=irdNodeProtocols().filter(function(x){return !IRD_SEL.protocol||x.protocol===IRD_SEL.protocol});
+  var supported=list.filter(function(x){return x.status==='SUPPORTED'});
+  if(!IRD_SEL.transport&&supported.length)IRD_SEL.transport=supported[0].transport;
+  var seen={};
+  list.forEach(function(x){
+    if(seen[x.transport])return; seen[x.transport]=1;
+    var ok=(x.status==='SUPPORTED');
+    var d=document.createElement('div');
+    d.className='bld-chip'+(ok?'':' off')+(IRD_SEL.transport===x.transport?' sel':'');
+    d.innerHTML=esc(x.transport)+' <span class="st">'+(ok?'':'('+esc(x.status)+')</span>');
+    if(ok){d.onclick=function(){IRD_SEL.transport=x.transport;IRD_SEL.security=x.security;irdRenderTransports()}}
+    host.appendChild(d);
+  });
+  var hint=document.getElementById('ird-tr-hint');
+  if(hint){
+    var bad=list.filter(function(x){return x.status!=='SUPPORTED'}).map(function(x){return x.transport+' ('+x.status+(x.reason?': '+x.reason:'')+')'});
+    hint.textContent=bad.length?('ناموجود روی این نود/دیپلوی: '+bad.join(' · ')):'';
+  }
+  irdRenderSecurity();
+}
+
+function irdRenderSecurity(){
+  var host=document.getElementById('ird-security'); if(!host)return;
+  host.innerHTML='';
+  var list=irdNodeProtocols().filter(function(x){return (!IRD_SEL.protocol||x.protocol===IRD_SEL.protocol)&&(!IRD_SEL.transport||x.transport===IRD_SEL.transport)});
+  if(!IRD_SEL.security&&list.length)IRD_SEL.security=list[0].security;
+  var seen={};
+  list.forEach(function(x){
+    if(seen[x.security])return; seen[x.security]=1;
+    var d=document.createElement('div');
+    d.className='bld-chip'+(IRD_SEL.security===x.security?' sel':'');
+    d.textContent=x.security;
+    d.onclick=function(){IRD_SEL.security=x.security;irdRenderSecurity()};
+    host.appendChild(d);
+  });
+}
+
+function irdRenderNodes(){
+  var host=document.getElementById('ird-nodes'); if(!host)return;
+  host.innerHTML='';
+  (IRD_CAPS&&IRD_CAPS.nodes||[]).forEach(function(n){
+    var d=document.createElement('div');
+    d.className='bld-node'+(IRD_SEL.node===n.node_id?' sel':'');
+    var eg=n.egress||{};
+    var egBadge=eg.classification==='VERIFIED_EGRESS'?'<span class="igw-state igw-ok">EGRESS ✓</span>':(eg.classification==='CONFIGURED_ONLY'?'<span class="igw-state igw-warn">CONFIGURED</span>':'<span class="igw-state igw-info">UNKNOWN</span>');
+    d.innerHTML='<div class="nm">'+esc(n.name||n.node_id)+'</div><div class="meta">'+esc(n.role||'')+' · '+esc(n.state||'')+'<br>UDP: '+esc(String(n.udp))+' '+egBadge+'</div>';
+    d.onclick=function(){IRD_SEL.node=n.node_id;IRD_SEL.transport='';irdRenderNodes()};
+    host.appendChild(d);
+    var det=document.getElementById('ird-node-detail');
+    if(det&&IRD_SEL.node===n.node_id){
+      det.innerHTML='نود انتخابی: <b>'+esc(n.name||n.node_id)+'</b> — '+esc(n.deployment_label||'')+'<br>'+
+        'TCP: '+esc(String(n.tcp))+' · UDP: '+esc(String(n.udp))+' · TLS: '+esc(String(n.tls))+' — '+esc(n.state_note||'')+
+        (eg.classification==='VERIFIED_EGRESS'?('<br>خروج اثبات‌شده: '+esc(eg.public_ip||'?')+' → '+esc(eg.country||'')):'');
+    }
+  });
+  irdRenderTransports();   /* تغییر نود ⇒ بازرندر ترنسپورت‌ها (قابلیت نود جدید) */
+}
+
+function irdRenderClients(){
+  var host=document.getElementById('ird-clients'); if(!host)return;
+  var clients=(IRD_CAPS&&IRD_CAPS.clients)||{};
+  if(!clients[IRD_SEL.client]){
+    var k=Object.keys(clients).filter(function(x){return clients[x].split_tunnel==='SPLIT_TUNNEL_SUPPORTED'})[0];
+    if(k)IRD_SEL.client=k;
+  }
+  host.innerHTML='';
+  Object.keys(clients).forEach(function(k){
+    var cl=clients[k];
+    var splitOk=(cl.split_tunnel==='SPLIT_TUNNEL_SUPPORTED');
+    var d=document.createElement('div');
+    d.className='bld-chip'+(splitOk?'':' off')+(IRD_SEL.client===k?' sel':'');
+    d.innerHTML=esc(k)+' <span class="st">'+(splitOk?'split ✓':'بدون split ⛔')+'</span>';
+    if(splitOk){d.onclick=function(){IRD_SEL.client=k;irdRenderClients()}}
+    host.appendChild(d);
+  });
+  var hint=document.getElementById('ird-client-hint');
+  if(hint){hint.innerHTML='IRAN_DIRECT نیازمند کلاینتی است که قواعد split-tunnel را واقعاً اعمال کند — فرمت‌های ساده‌ی URI/subscription صادقانه غیرفعال‌اند (<b>SPLIT_TUNNEL_NOT_SUPPORTED</b>).'+' خروجی Xray JSON شامل قواعد GEOIP:ir + CIDR دیتاست ایران است.'}
+}
+
+/* ── Steps 5-6: دارایی‌ها (IP سالم + هندشیک) ─────────────────────────── */
+function irdRenderAssets(){
+  var hip=document.getElementById('ird-ips'), hhs=document.getElementById('ird-hss');
+  if(hip){
+    if(!(IRD_ASSETS.ips||[]).length){hip.innerHTML='<div class="bld-hint">IP سالمی ذخیره نشده — با دکمه‌ی «ذخیره در لیست» اضافه کن، یا مستقیم در فیلد بالا تایپ کن.</div>'}
+    else{
+      hip.innerHTML='';
+      IRD_ASSETS.ips.forEach(function(ip){
+        var d=document.createElement('div');
+        d.className='ird-asset'+(ip.id===IRD_SEL.ip_id?' sel':'');
+        var pr=ip.last_probe||{};
+        var prBadge=pr.state==='TLS_VERIFIED'?' <span class="st" style="color:#34d399">TLS ✓ '+(pr.tls_ms||'?')+'ms</span>':(pr.state==='TCP_REACHABLE'?' <span class="st" style="color:#fbbf24">TCP '+(pr.tcp_ms||'?')+'ms</span>':(pr.state==='UNREACHABLE'?' <span class="st" style="color:#f87171">UNREACHABLE</span>':''));
+        d.innerHTML='<span class="addr">'+esc(ip.address)+((ip.port&&ip.port!==443)?':'+esc(String(ip.port)):'')+'</span>'+prBadge+(ip.use_count?' <span class="st">×'+toFa(ip.use_count)+'</span>':'')+' <span class="pbtn" title="تست از سرور پنل">⚡</span><span class="xbtn" title="حذف">✕</span>';
+        d.onclick=function(ev){
+          var t=ev.target||ev.srcElement; var cls=(t&&t.className)||'';
+          if(cls.indexOf('xbtn')>=0){irdDelIp(ip.id);return}
+          if(cls.indexOf('pbtn')>=0){irdProbeIp(ip.id);return}
+          IRD_SEL.ip_id=ip.id;
+          var ii=document.getElementById('ird-ip-input'); if(ii)ii.value=ip.address;
+          var pp=document.getElementById('ird-port'); if(pp)pp.value=ip.port||443;
+          irdRenderAssets();
+        };
+        hip.appendChild(d);
+      });
+    }
+  }
+  if(hhs){
+    if(!(IRD_ASSETS.handshakes||[]).length){hhs.innerHTML='<div class="bld-hint">هندشیکی ذخیره نشده — دامنه‌ی هندشیک را اضافه کن یا مستقیم تایپ کن.</div>'}
+    else{
+      hhs.innerHTML='';
+      IRD_ASSETS.handshakes.forEach(function(hs){
+        var d=document.createElement('div');
+        d.className='ird-asset'+(hs.id===IRD_SEL.hs_id?' sel':'');
+        d.innerHTML='<span class="addr">'+esc(hs.sni)+'</span>'+(hs.use_count?' <span class="st">×'+toFa(hs.use_count)+'</span>':'')+' <span class="xbtn" title="حذف">✕</span>';
+        d.onclick=function(ev){
+          var t=ev.target||ev.srcElement; var cls=(t&&t.className)||'';
+          if(cls.indexOf('xbtn')>=0){irdDelHs(hs.id);return}
+          IRD_SEL.hs_id=hs.id;
+          var hi=document.getElementById('ird-hs-input'); if(hi)hi.value=hs.sni;
+          irdRenderAssets();
+        };
+        hhs.appendChild(d);
+      });
+    }
+  }
+}
+
+async function irdAddIp(btn){
+  var inp=document.getElementById('ird-ip-input');
+  var v=(inp.value||'').trim();
+  if(!v){toast('IP سالم را وارد کنید','err');return}
+  irdBusy(btn,true);
+  try{
+    var r=await authF('/api/iran-direct/ips',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({address:v,port:parseInt(document.getElementById('ird-port').value)||443})});
+    var j=await r.json().catch(function(){return{}});
+    if(r.ok){IRD_SEL.ip_id=(j.asset||{}).id;await irdRefreshAssets();toast('IP سالم ذخیره شد ✓','ok')}
+    else toast(j.detail||'IP نامعتبر است','err');
+  }catch(e){netErr(e,'ذخیره‌ی IP')}finally{irdBusy(btn,false)}
+}
+
+async function irdDelIp(id){
+  if(!confirm('این IP حذف شود؟'))return;
+  try{
+    var r=await authF('/api/iran-direct/ips/'+id,{method:'DELETE'});
+    if(r.ok){if(IRD_SEL.ip_id===id)IRD_SEL.ip_id='';toast('حذف شد','ok');irdRefreshAssets()}
+  }catch(e){netErr(e,'حذف IP')}
+}
+
+async function irdAddHs(btn){
+  var inp=document.getElementById('ird-hs-input');
+  var v=(inp.value||'').trim();
+  if(!v){toast('هندشیک (دامنه) را وارد کنید','err');return}
+  irdBusy(btn,true);
+  try{
+    var r=await authF('/api/iran-direct/handshakes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sni:v})});
+    var j=await r.json().catch(function(){return{}});
+    if(r.ok){IRD_SEL.hs_id=(j.asset||{}).id;await irdRefreshAssets();toast('هندشیک ذخیره شد ✓','ok')}
+    else toast(j.detail||'هندشیک نامعتبر است (باید دامنه باشد)','err');
+  }catch(e){netErr(e,'ذخیره‌ی هندشیک')}finally{irdBusy(btn,false)}
+}
+
+async function irdDelHs(id){
+  if(!confirm('این هندشیک حذف شود؟'))return;
+  try{
+    var r=await authF('/api/iran-direct/handshakes/'+id,{method:'DELETE'});
+    if(r.ok){if(IRD_SEL.hs_id===id)IRD_SEL.hs_id='';toast('حذف شد','ok');irdRefreshAssets()}
+  }catch(e){netErr(e,'حذف هندشیک')}
+}
+
+async function irdProbeIp(id){
+  toast('در حال تست از سرور پنل…','');
+  try{
+    var hs=(document.getElementById('ird-hs-input').value||'').trim();
+    var r=await authF('/api/iran-direct/ips/'+id+'/probe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sni:hs})});
+    var j=await r.json();
+    var p=j.probe||{};
+    if(p.state==='TLS_VERIFIED')toast('TLS با هندشیک تأیید شد ✓ ('+p.tls_ms+'ms — اندازه‌گیری از سرور پنل)','ok');
+    else if(p.state==='TCP_REACHABLE')toast('TCP در دسترس ('+p.tcp_ms+'ms — از سرور پنل؛ TLS با این هندشیک تأیید نشد)','warn');
+    else toast('از سرور پنل در دسترس نیست ('+(p.error||p.tls_error||'?')+')','err');
+    await irdRefreshAssets();
+  }catch(e){netErr(e,'تست IP')}
+}
+
+/* ── Payload — همان API کانونی؛ routing ثابت IRAN_DIRECT ────────────── */
+function irdPayload(){
+  var ip=(document.getElementById('ird-ip-input').value||'').trim();
+  var hs=(document.getElementById('ird-hs-input').value||'').trim();
+  var address=ip||hs;   /* فقط هندشیک؟ → همان دامنه، آدرس اتصال هم هست */
+  return {
+    name:document.getElementById('ird-name').value||'',
+    remark:document.getElementById('ird-remark').value||'EMIX',
+    protocol:IRD_SEL.protocol, transport:IRD_SEL.transport, security:IRD_SEL.security,
+    node_id:IRD_SEL.node, endpoint_profile_id:'',
+    custom_address:address, custom_sni:hs,
+    custom_port:parseInt(document.getElementById('ird-port').value)||443,
+    routing_policy:'IRAN_DIRECT', client_format:IRD_SEL.client
+  };
+}
+
+async function irdMarkUse(){
+  try{
+    var body={ip_id:IRD_SEL.ip_id||'', handshake_id:IRD_SEL.hs_id||''};
+    if(body.ip_id||body.handshake_id)await authF('/api/iran-direct/use',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  }catch(e){}
+}
+
+function irdRenderResult(j){
+  var v=document.getElementById('ird-validation'), o=document.getElementById('ird-outputs');
+  if(!v||!o)return;
+  if(!j.ok){
+    v.innerHTML='<div class="bld-valid-bad">⛔ <b>INVALID</b> — مرحله: '+esc(j.stage||'?')+'<br>'+(j.errors||[]).map(esc).join('<br>')+'</div>';
+    o.innerHTML=''; return;
+  }
+  v.innerHTML='<div class="bld-valid-ok">✓ <b>VALID</b> — '+esc(j.preview.protocol)+' / '+esc(j.preview.transport)+' / '+esc(j.preview.security)+' · نود: '+esc((j.preview.node||{}).label||(j.preview.node||{}).node_id||'?')+' · مسیریابی: <b>IRAN_DIRECT</b>'+(j.credential_placeholder?' · (credential پیش‌نمایش: جای‌نگهدار)':'')+'</div>';
+  var out=j.outputs||{}; var h='';
+  if(out.uri){h+='<div class="bld-out"><b>URI</b> <button class="btn btn-sm btn-o" onclick="irdCopy(this)">کپی</button> <button class="btn btn-sm btn-o" onclick="showQR(window.__irdUri)">QR</button><code>'+esc(out.uri)+'</code></div>';window.__irdUri=out.uri}
+  if(out.xray_json){h+='<div class="bld-out"><b>Xray JSON</b> <button class="btn btn-sm btn-o" onclick="irdDlJson()">دانلود فایل</button><code>'+esc(JSON.stringify(out.xray_json,null,1))+'</code></div>';window.__irdJson=out.xray_json}
+  var rd=j.preview&&j.preview.routing_detail;
+  if(rd&&rd.legs){
+    h+='<div class="bld-out"><b>مسیریابی IRAN_DIRECT (explainable)</b><br>';
+    Object.keys(rd.legs).forEach(function(k){h+=esc(k)+' → '+esc(rd.legs[k].decision)+' · خروج: '+esc(rd.legs[k].egress)+'<br>'});
+    if(rd.split_rules){h+='قواعد split-tunnel: '+rd.split_rules.rules.length+' قاعده ('+esc(rd.split_rules.mechanism||'')+') — در خروجی JSON گنجانده شد'}
+    h+='</div>';
+  }
+  o.innerHTML=h;
+}
+
+function irdCopy(btn){if(window.__irdUri){navigator.clipboard.writeText(window.__irdUri).then(function(){toast('URI کپی شد ✓','ok')})}}
+
+function irdDlJson(){
+  try{
+    var blob=new Blob([JSON.stringify(window.__irdJson,null,2)],{type:'application/json'});
+    var a=document.createElement('a');a.href=URL.createObjectURL(blob);
+    a.download=((document.getElementById('ird-name').value||'emix-iran-direct')+'.json');
+    a.click();setTimeout(function(){URL.revokeObjectURL(a.href)},1000);
+  }catch(e){toast('دانلود ناموفق','err')}
+}
+
+async function irdPreview(btn){
+  irdBusy(btn,true);
+  try{
+    var r=await authF('/api/config-builder/preview',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(irdPayload())});
+    var j=await r.json(); irdRenderResult(j);
+    if(!j.ok)toast('ترکیب نامعتبر — ساخته نشد','err');
+  }catch(e){netErr(e,'پیش‌نمایش IRAN DIRECT')}finally{irdBusy(btn,false)}
+}
+
+async function irdGenerate(btn){
+  var p=irdPayload();
+  if(!p.custom_address){toast('حداقل یکی از IP سالم یا هندشیک را وارد/انتخاب کن','err');return}
+  irdBusy(btn,true);
+  try{
+    var r=await authF('/api/config-builder/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});
+    var j=await r.json(); irdRenderResult(j);
+    if(j.ok){toast('کانفیگ IRAN_DIRECT ساخته شد ✓','ok');irdMarkUse();irdLoadHistory()}
+    else toast('ساخت ناموفق — '+(((j.errors||[''])[0])+'').slice(0,70),'err');
+  }catch(e){netErr(e,'ساخت کانفیگ IRAN DIRECT')}finally{irdBusy(btn,false)}
+}
+
+/* ── History (تاریخچه‌ی مشترک کانونی — فیلتر IRAN_DIRECT) ───────────── */
+async function irdLoadHistory(){
+  try{
+    var r=await authF('/api/config-builder/history');
+    if(!r.ok)return;
+    var j=await r.json();
+    var rows=(j.history||[]).filter(function(h){return h.routing==='IRAN_DIRECT'});
+    var host=document.getElementById('ird-history'); if(!host)return;
+    if(!rows.length){host.className='';host.innerHTML='<div class="bld-hint">هنوز کانفیگ IRAN_DIRECT نساخته‌ای — اولین را با «ساخت نهایی و تحویل» بساز.</div>';return}
+    host.className='bld-hist';
+    host.innerHTML=rows.map(function(h){
+      return '<div class="bld-hcard"><div class="nm">'+esc(h.name)+' <span class="igw-state igw-ok">'+esc(h.status)+'</span></div>'+
+      '<div class="meta">'+esc(h.protocol)+' / '+esc(h.transport)+' / '+esc(h.security)+' · نود: '+esc(h.node)+' · <b>IRAN_DIRECT</b><br>'+esc(h.created_at_iso||'')+' · checksum: '+esc((h.checksum||'').slice(0,10))+'</div>'+
+      '<button class="btn btn-sm btn-o" onclick="irdHistView(\''+h.history_id+'\')">مشاهده/کپی</button> '+
+      '<button class="btn btn-sm btn-o" onclick="irdHistRegen(\''+h.history_id+'\')">بازسازی</button> '+
+      '<button class="btn btn-sm btn-d" onclick="irdHistDel(\''+h.history_id+'\')">حذف</button></div>';
+    }).join('');
+  }catch(e){netErr(e,'تاریخچه‌ی IRAN DIRECT')}
+}
+
+async function irdHistView(id){
+  try{
+    var r=await authF('/api/config-builder/history/'+id+'?reveal=1');
+    if(!r.ok){toast('یافت نشد','err');return}
+    var j=await r.json(); var e=j.entry||{};
+    window.__irdUri=e.uri||'';
+    var v=document.getElementById('ird-validation'), o=document.getElementById('ird-outputs');
+    v.innerHTML='<div class="bld-valid-ok">✓ کانفیگ: <b>'+esc(e.name)+'</b> — '+esc((e.outputs_summary||{}).protocol||'')+' · '+esc((e.outputs_summary||{}).transport||'')+' · IRAN_DIRECT</div>';
+    o.innerHTML=e.uri?('<div class="bld-out"><b>URI</b> <button class="btn btn-sm btn-o" onclick="irdCopy(this)">کپی</button> <button class="btn btn-sm btn-o" onclick="showQR(window.__irdUri)">QR</button><code>'+esc(e.uri)+'</code></div>'):'<div class="bld-hint">URI در تاریخچه ذخیره نشده — از «بازسازی» استفاده کن</div>';
+  }catch(err){netErr(err,'مشاهده‌ی کانفیگ')}
+}
+
+async function irdHistRegen(id){
+  try{
+    var r=await authF('/api/config-builder/history/'+id+'/regenerate',{method:'POST'});
+    var j=await r.json();
+    if(j.ok){irdRenderResult(j);toast('بازسازی شد'+(j.deterministic_match?' (checksum یکسان ✓)':''),'ok');irdLoadHistory()}else toast('بازسازی ناموفق','err');
+  }catch(e){netErr(e,'بازسازی کانفیگ')}
+}
+
+async function irdHistDel(id){
+  if(!confirm('این کانفیگ از تاریخچه حذف شود؟'))return;
+  try{
+    var r=await authF('/api/config-builder/history/'+id,{method:'DELETE'});
+    if(r.ok){toast('حذف شد','ok');irdLoadHistory()}else toast('حذف ناموفق','err');
+  }catch(e){netErr(e,'حذف کانفیگ')}
+}
+</script>
+
 <!-- ════════════════════════════════════════════════════════════════════════════
      🇮🇷 PHASE 38 / P17 — مسیریابی هوشمند (Split Tunneling صادقانه)
      مقصدهای ایرانی → DIRECT از ISP خود کاربر (USER_ISP)
@@ -4470,6 +4845,64 @@ async function iranGwDel(id){
       <b>چطور کار می‌کند؟</b> موتور مسیریابی، IP مقصد را با پایگاه پیشوندهای ایران (RIPEstat — <span id="rt-prefix-count">—</span> پیشوند) تطبیق می‌دهد؛ تطابق ⇒ مسیر DIRECT و خروج از ISP خود کاربر (<b>USER_ISP</b>)؛ عدم تطابق ⇒ تونل VPN.
       تصمیم بر اساس <b>IP نهایی بعد از DNS</b> است — نه پسوند دامنه. کلادفلر و ریلی هرگز به‌عنوان خروج ایرانی طبقه‌بندی نمی‌شوند.
     </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════════════
+       🇮🇷 IRAN DIRECT — ساخت کانفیگ با IP سالم + هندشیک (آینه‌ی «ساخت کانفیگ»)
+       مسیریابی ثابت IRAN_DIRECT · اندپوینت از دارایی‌های کاربر ·
+       خروجی فقط از کامپایلر کانونی (config-builder API) — صفر emitter در JS.
+       ════════════════════════════════════════════════════════════════════════ -->
+  <div class="card" style="margin-bottom:18px">
+    <div class="card-title"><i class="ti ti-wand" style="color:#F97316"></i> 🇮🇷 ساخت کانفیگ IRAN_DIRECT — IP سالم + هندشیک</div>
+    <div class="bld-hint" style="margin:6px 0 0">
+      دقیقاً مثل «ساخت کانفیگ» — با این تفاوت که مسیریابی ثابت <b>IRAN_DIRECT</b> است (ترافیک داخلی از ISP خودت · <b>USER_ISP</b> · ترافیک بین‌المللی از تونل EMIX) و اندپوینت اتصال از <b>IP سالم</b> و <b>هندشیک</b>ِ خودت ساخته می‌شود. IP دستی فقط <b>CONFIGURED_ENDPOINT</b> است و SNI فقط معنای TLS دارد — نه مسیریابی، نه خروج جغرافیایی.
+    </div>
+    <div class="g2 bld-grid" style="align-items:start;margin-top:12px">
+      <div>
+        <div class="bld-step"><div class="bld-step-label">۱ · پروتکل</div><div id="ird-protocols" class="bld-chips"></div><div id="ird-proto-hint" class="bld-hint"></div></div>
+        <div class="bld-step"><div class="bld-step-label">۲ · نود (سرویس پشت اندپوینت)</div><div id="ird-nodes" class="bld-nodes"></div><div id="ird-node-detail" class="bld-hint"></div></div>
+        <div class="bld-step"><div class="bld-step-label">۳ · ترنسپورت</div><div id="ird-transports" class="bld-chips"></div><div id="ird-tr-hint" class="bld-hint"></div></div>
+        <div class="bld-step"><div class="bld-step-label">۴ · امنیت (Security)</div><div id="ird-security" class="bld-chips"></div></div>
+        <div class="bld-step"><div class="bld-step-label">۵ · IP سالم (آدرس اتصال — Address)</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <input id="ird-ip-input" class="cm-input" placeholder="IP سالم — مثل 104.17.1.1 یا دامنه" style="flex:1;min-width:200px;direction:ltr;text-align:left;font-family:monospace">
+            <button class="btn btn-o btn-sm" onclick="irdAddIp(this)"><i class="ti ti-plus"></i> ذخیره در لیست</button>
+          </div>
+          <div id="ird-ips" class="ird-assets"></div>
+          <div class="bld-hint">IP دستی = فقط اندپوینت پیکربندی‌شده. «سالم‌بودن از دید ISP خودت» را باید از مرورگر خودت تست کنی — تست سرور پنل فقط «در دسترس بودن از پنل» را می‌سنجد.</div>
+        </div>
+        <div class="bld-step"><div class="bld-step-label">۶ · هندشیک (SNI/Host)</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <input id="ird-hs-input" class="cm-input" placeholder="دامنه هندشیک — مثل bridge.example.com" style="flex:1;min-width:200px;direction:ltr;text-align:left;font-family:monospace">
+            <button class="btn btn-o btn-sm" onclick="irdAddHs(this)"><i class="ti ti-plus"></i> ذخیره در لیست</button>
+          </div>
+          <div id="ird-hss" class="ird-assets"></div>
+          <div class="bld-hint">هندشیک باید <b>دامنه</b> باشد (نه IP). اگر اندپوینتت IP است، هندشیک الزامی است — SNI فقط معنای TLS/اندپوینت دارد و هرگز روی خروج ترافیک داخلی (USER_ISP) اثری ندارد. اگر فقط هندشیک وارد کنی، همان دامنه به‌عنوان آدرس اتصال هم استفاده می‌شود.</div>
+        </div>
+        <div class="bld-step"><div class="bld-step-label">۷ · پورت اتصال</div><input id="ird-port" class="cm-input" type="number" value="443" style="direction:ltr;max-width:140px"></div>
+        <div class="bld-step"><div class="bld-step-label">۸ · خروجی کلاینت</div><div id="ird-clients" class="bld-chips"></div><div id="ird-client-hint" class="bld-hint"></div></div>
+        <div class="bld-step"><div class="bld-step-label">نام و برچسب</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <input id="ird-name" class="cm-input" placeholder="نام کانفیگ (تاریخچه)">
+            <input id="ird-remark" class="cm-input" placeholder="EMIX" style="direction:ltr;text-align:left;font-family:monospace">
+          </div>
+        </div>
+        <div class="bld-actions">
+          <button class="btn btn-o" id="ird-preview-btn" onclick="irdPreview(this)"><i class="ti ti-eye"></i> پیش‌نمایش و اعتبارسنجی</button>
+          <button class="btn btn-p" id="ird-gen-btn" onclick="irdGenerate(this)"><i class="ti ti-wand"></i> ساخت نهایی و تحویل</button>
+        </div>
+      </div>
+      <div>
+        <div style="font-weight:700;font-size:13px;margin:12px 0 8px"><i class="ti ti-eye"></i> پیش‌نمایش و خروجی (از کامپایلر کانونی)</div>
+        <div id="ird-validation"></div>
+        <div id="ird-outputs"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:18px">
+    <div class="card-title"><i class="ti ti-history"></i> کانفیگ‌های IRAN_DIRECT ساخته‌شده</div>
+    <div id="ird-history"><div class="bld-hint">—</div></div>
   </div>
 
   <div class="card" style="margin-bottom:18px">
@@ -6784,6 +7217,7 @@ async function loadRoutingPage(){
       document.getElementById('rt-split-body').innerHTML=rows+'<div style="font-size:10.5px;color:var(--t3);margin-top:6px">تنها کلاینت‌هایی که واقعاً قادر به اعمال قواعد مسیر در سطح route هستند پشتیبانی می‌شوند — بقیه صادقانه NOT_SUPPORTED گزارش می‌شوند.</div>';
     }
   }catch(e){netErr(e,'loadRoutingPage')}
+  irdLoad();   /* 🇮🇷 IRAN DIRECT builder (IP سالم + هندشیک) — بلاک ایزوله */
 }
 function tva(row){return (row.bytes_sent||0)+(row.bytes_received||0)}
 function routingRenderMode(){

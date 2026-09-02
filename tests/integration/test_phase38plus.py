@@ -12,6 +12,7 @@ import capability_engine as caps
 import config_builder as cb
 import domestic_route_engine as dre
 import iran_gateway as ig
+import iran_direct as ird
 import structured_events as events
 from fastapi.testclient import TestClient
 
@@ -44,6 +45,7 @@ def engines_clean():
     # state that the tests themselves pollute is cleared.
     cb._history.clear()
     ig.reset_for_tests()
+    ird.reset_for_tests()      # IRD assets persist on disk — wipe per test
     events.reset_for_tests()
     dre.reset_for_tests()
     # re-wire the gateway status fn that dre.reset just cleared (main wiring)
@@ -51,6 +53,7 @@ def engines_clean():
     yield
     cb._history.clear()
     ig.reset_for_tests()
+    ird.reset_for_tests()
     events.reset_for_tests()
     dre.reset_for_tests()
     dre.set_gateway_status_fn(ig.iran_proxy_egress_status)
@@ -311,3 +314,100 @@ def test_builder_js_is_capability_driven_not_hardcoded(client):
     assert "IRAN_PROXY" in html and "INTERNATIONAL_VPN" in html
     # honest SNI note present (spec §10 — SNI is never routing)
     assert "نه مسیریابی" in html or "هرگز مسیریابی" in html
+
+
+# ── IRAN DIRECT assets + builder E2E (Phase 38+ §11/§12 — Clean IP + Handshake) ──
+
+def test_iran_direct_routes_require_auth(anon):
+    assert anon.get("/api/iran-direct/assets").status_code == 401
+    assert anon.post("/api/iran-direct/ips", json={"address": "1.1.1.1"}).status_code == 401
+    assert anon.post("/api/iran-direct/handshakes", json={"sni": "x.com"}).status_code == 401
+
+
+def test_iran_direct_asset_lifecycle_via_real_app(authed):
+    r = authed.post("/api/iran-direct/ips",
+                    json={"address": "104.17.1.1", "port": 443})
+    assert r.status_code == 200
+    ip_id = r.json()["asset"]["id"]
+    assert r.json()["asset"]["verification"] == "CONFIGURED_ENDPOINT"
+
+    # invalid octets rejected (canonical validator — no impossible IPs)
+    r = authed.post("/api/iran-direct/ips", json={"address": "104.17.1.999"})
+    assert r.status_code == 400
+    # SNI can never be an IP
+    r = authed.post("/api/iran-direct/handshakes", json={"sni": "104.17.1.1"})
+    assert r.status_code == 400
+
+    r = authed.post("/api/iran-direct/handshakes",
+                    json={"sni": "hs.example.com"})
+    assert r.status_code == 200
+    hs_id = r.json()["asset"]["id"]
+
+    assets = authed.get("/api/iran-direct/assets").json()
+    assert [a["address"] for a in assets["ips"]] == ["104.17.1.1"]
+    assert [h["sni"] for h in assets["handshakes"]] == ["hs.example.com"]
+    assert "USER_ISP" in assets["note"]
+
+    assert authed.delete(f"/api/iran-direct/ips/{ip_id}").status_code == 200
+    assert authed.delete(f"/api/iran-direct/handshakes/{hs_id}").status_code == 200
+
+
+def test_iran_direct_clean_ip_handshake_config_e2e(authed):
+    """IP سالم + هندشیک → کانفیگ IRAN_DIRECT از کامپایلر کانونی (همان API)."""
+    authed.post("/api/iran-direct/ips", json={"address": "104.17.1.1"})
+    authed.post("/api/iran-direct/handshakes", json={"sni": "hs.example.com"})
+    body = {
+        "name": "ird-e2e", "protocol": "vless", "transport": "xhttp-packet-up",
+        "security": "tls", "node_id": "panel", "endpoint_profile_id": "",
+        "custom_address": "104.17.1.1", "custom_sni": "hs.example.com",
+        "custom_port": 443, "routing_policy": "IRAN_DIRECT",
+        "client_format": "xray-json", "remark": "e2e",
+    }
+    r = authed.post("/api/config-builder/generate", json=body)
+    assert r.status_code == 200, r.text
+    j = r.json()
+    assert j["ok"], j.get("errors")
+    uri = j["outputs"]["uri"]
+    assert "104.17.1.1" in uri            # address = Clean IP
+    assert "hs.example.com" in uri        # host/sni = handshake
+    assert j["history_id"]
+    # split rules embedded in xray json (IRAN_DIRECT honored)
+    rules = j["preview"]["routing_detail"]["split_rules"]
+    assert rules["verdict"] == "SPLIT_TUNNEL_SUPPORTED"
+    legs = j["preview"]["routing_detail"]["legs"]
+    assert legs["IRAN_DOMESTIC"]["egress"] == "USER_ISP (VPN BYPASSED)"
+
+    # events recorded (structured)
+    recs = authed.get("/api/events?limit=50").json()
+    evs = [e["event"] for e in recs.get("events", [])]
+    assert "CONFIG_GENERATED" in evs
+    assert "IRAN_DIRECT_ASSET_SAVED" in evs
+
+
+def test_iran_direct_ip_without_handshake_rejected(authed):
+    body = {
+        "name": "ird-bad", "protocol": "vless", "transport": "xhttp-packet-up",
+        "security": "tls", "node_id": "panel",
+        "custom_address": "104.17.1.1", "custom_sni": "", "custom_port": 443,
+        "routing_policy": "IRAN_DIRECT", "client_format": "xray-json",
+    }
+    r = authed.post("/api/config-builder/preview", json=body)
+    assert r.status_code == 422
+    j = r.json()
+    assert not j["ok"]
+    assert any("SNI" in e for e in j["errors"])
+
+
+def test_dashboard_serves_iran_direct_builder(client):
+    r = client.get("/dashboard")
+    assert r.status_code == 200
+    html = r.text
+    for marker in ('id="ird-protocols"', 'id="ird-ips"', 'id="ird-hss"',
+                   'id="ird-preview-btn"', 'id="ird-history"',
+                   'irdLoad', 'irdGenerate', 'irdPayload',
+                   'IP سالم', 'هندشیک', 'IRAN_DIRECT'):
+        assert marker in html, marker
+    # canonical-only: the IRD builder posts to the config-builder API
+    assert "/api/config-builder/generate" in html
+    # honest labeling present in the section
+    assert "CONFIGURED_ENDPOINT" in html

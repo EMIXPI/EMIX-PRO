@@ -32,7 +32,14 @@ import compat
 # ── Validation (superset of the legacy _validate_sni rules) ─────────────────
 
 _HOSTNAME_RE = re.compile(r"^[a-z0-9]([a-z0-9\-\.]*[a-z0-9])?$", re.IGNORECASE)
-_IPV4_RE = re.compile(r"^\d+\.\d+\.\d+\.\d+$")
+# IPv4 with real octet range (0-255) — an impossible address like 104.17.1.999
+# must NEVER pass validation (it would emit a config that can never connect).
+_IPV4_RE = re.compile(
+    r"^(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}$")
+# Anything with the dotted-quad SHAPE (all-numeric labels) is an IP, never a
+# hostname: if its octets are invalid it must be rejected outright — the
+# hostname regex alone would happily accept "104.17.1.999".
+_IPV4_SHAPE_RE = re.compile(r"^\d+\.\d+\.\d+\.\d+$")
 _BLOCKED_HOSTS = frozenset({"localhost", "127.0.0.1", "0.0.0.0", "::1", "ip6-localhost"})
 _VALID_IP_VERSIONS = {"ipv4", "ipv6", "auto"}
 _VALID_DNS_MODES = {"auto", "system", "doh"}
@@ -44,6 +51,9 @@ def validate_hostname(value, allow_ip: bool = False) -> tuple[bool, Optional[str
         return False, None
     s = value.strip().lower().rstrip(".")
     if not s or len(s) > 253:
+        return False, None
+    # dotted-quad shape ⇒ it IS an IP: valid octets or nothing (never a hostname)
+    if _IPV4_SHAPE_RE.match(s) and not _IPV4_RE.match(s):
         return False, None
     if not _IPV4_RE.match(s) and not _HOSTNAME_RE.match(s):
         return False, None
