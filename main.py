@@ -912,7 +912,35 @@ def _register_default_jobs() -> None:
     if boot_profile.enabled("ip_quality"):
         job_system.register("ip-quality-prune", _job_ip_quality_prune,
                             interval=3600.0, timeout=30.0, retries=1)
+    # v12.1: دیتاست IR پیشوندها هسته است — به‌روزرسانی روزانه هم همیشه فعال
+    job_system.register("domestic-rules-update", _job_domestic_rules_update,
+                        interval=86400.0, timeout=60.0, retries=0)
     _register_phase37_jobs()
+
+
+def _wire_domestic_core() -> None:
+    """v12.1: موتور domestic همیشه‌روشن است (اولویت اپراتور: Iran Direct) —
+    wiring حداقلی‌اش (ریزالور واقعی + دیتاست seed) هم باید همیشه اجرا شود،
+    مستقل از پروفایل بوت. بدون این، Test-Route فقط از پالیسی حرف می‌زد."""
+    import domestic_route_engine as dre
+
+    # Real (but timeout-bounded) resolver for the Test Route diagnostics
+    async def _resolve_domain(domain: str):
+        loop = asyncio.get_running_loop()
+        try:
+            infos = await asyncio.wait_for(
+                loop.getaddrinfo(domain, None, family=0, proto=IPPROTO_TCP), 5.0)
+            for info in infos:
+                sockaddr = info[4]
+                if sockaddr and sockaddr[0]:
+                    return sockaddr[0]
+        except Exception:
+            return None
+        return None
+    dre.set_resolver(_resolve_domain)
+
+    if dre.dataset_status().get("prefix_count", 0) == 0:
+        dre.load_seed()
 
 
 def _wire_phase38_engines() -> None:
@@ -922,9 +950,8 @@ def _wire_phase38_engines() -> None:
       Config Compiler — no duplicate URI logic anywhere.
     * route_engine gets a real control-plane RTT provider (egress_engine).
     * failover_engine gets a real route re-point function (route registry).
-    * domestic engine gets a REAL DNS resolver (getaddrinfo) so the
-      Test-Route diagnostic follows actual destination IPs.
-    * default Iranian prefix dataset loads if the seed was not yet applied.
+    * domestic gateway-status wiring (honest attribution) — resolver/seed
+      moved to _wire_domestic_core (always-on, v12.1).
     """
     import account_manager
     import config_compiler
@@ -951,23 +978,7 @@ def _wire_phase38_engines() -> None:
                         f"{old_node} → {new_node}")
     failover_engine.set_route_repoint_fn(_repoint_routes)
 
-    # Real (but timeout-bounded) resolver for the Test Route diagnostics
-    async def _resolve_domain(domain: str):
-        loop = asyncio.get_running_loop()
-        try:
-            infos = await asyncio.wait_for(
-                loop.getaddrinfo(domain, None, family=0, proto=IPPROTO_TCP), 5.0)
-            for info in infos:
-                sockaddr = info[4]
-                if sockaddr and sockaddr[0]:
-                    return sockaddr[0]
-        except Exception:
-            return None
-        return None
-    dre.set_resolver(_resolve_domain)
-
-    if dre.dataset_status().get("prefix_count", 0) == 0:
-        dre.load_seed()
+    # (v12.1) resolver/seed wiring → _wire_domestic_core (همیشه‌روشن)
 
     # ─── Phase 38+ wiring — capability/config-builder/iran-gateway/events ──
     import capability_engine
@@ -1051,8 +1062,7 @@ async def _job_iran_gateway_check() -> None:
 
 
 def _register_phase38_jobs() -> None:
-    job_system.register("domestic-rules-update", _job_domestic_rules_update,
-                        interval=86400.0, timeout=60.0, retries=0)
+    # (v12.1) domestic-rules-update → _register_default_jobs (هسته، همیشه)
     job_system.register("account-sweep", _job_account_sweep,
                         interval=300.0, timeout=30.0, retries=1)
     job_system.register("iran-gateway-check", _job_iran_gateway_check,
@@ -1131,11 +1141,18 @@ async def startup():
         await _register_mtproto_runtimes()
     except Exception as _rs_exc:
         logger.warning(f"[startup] runtime supervisor registration failed: {_rs_exc}")
-    # ─── Phase 38 wiring — route/failover/accounts/domestic ────────────────
-    # v12: در پروفایل core این موتورها لود نمی‌شوند؛ wiring هم باید کامل‌اً
-    # رد شود (وگرنه import اجباری، لِین‌بوت را از بین می‌برد).
+    # ─── v12.1: wiring هسته‌ی دوم — domestic همیشه‌روشن ─────────────────────
+    try:
+        _wire_domestic_core()
+    except Exception as _dom_exc:
+        logger.warning(f"[startup] domestic core wiring failed: {_dom_exc}")
+
+    # ─── Phase 38 wiring — route/failover/accounts/gateway ─────────────────
+    # v12: در پروفایل core موتورهای اختیاری لود نمی‌شوند؛ wiring هم باید
+    # کامل‌اً رد شود (وگرنه import اجباری، لِین‌بوت را از بین می‌برد).
+    # (domestic از v12.1 هسته است و بالاتر همیشه وصل می‌شود.)
     if boot_profile.all_enabled("egress_engine", "route_engine", "failover_engine",
-                                "account_manager", "domestic_route_engine",
+                                "account_manager",
                                 "iran_gateway", "iran_direct",
                                 "capability_engine", "config_builder",
                                 "structured_events"):
@@ -3132,6 +3149,7 @@ async def node_create_link(request: Request, key_id: str = Depends(require_node_
 
 @app.get("/api/links")
 async def list_links(_=Depends(require_auth)):
+    _ir_rules_ok = "ir_client_rules" in globals()
     host = get_host()
     async with LINKS_LOCK:
         snap = dict(LINKS)
@@ -3172,6 +3190,13 @@ async def list_links(_=Depends(require_auth)):
             ),
             "vless_link": generate_share_link(uid, host, remark=f"EMIX-{d['label']}", protocol=proto),
             "sub_url": f"https://{host}/sub/{uid}",
+            # v12.1: ساب JSON با قواعد IR-Direct — None برای پروتکل‌های رول‌ناپذیر
+            "sub_json_urls": (
+                {"singbox": f"/sub-json/{uid}?client=singbox",
+                 "xray": f"/sub-json/{uid}?client=xray"}
+                if (_ir_rules_ok and ir_client_rules.client_rules_supported(proto))
+                else None
+            ),
         })
     result.sort(key=lambda x: x["created_at"], reverse=True)
     return {"links": result}
@@ -4694,6 +4719,42 @@ else:
     boot_profile.note("domestic_route_engine", False)
 
 
+# ══════════════════════════════════════════════════════════════════════════════
+# v12.1 — IR-Direct client rules (هسته‌ی همیشه‌زنده): /sub-json/{uuid}
+# «داخلی کردن مصرف حتی با کانفیگ» — کانفیگ کامل sing-box / xray با قواعد
+# مسیریابی: مقاصد ایرانی (پیشوندهای RIPEstat-IR + دامنه‌های .ir) → DIRECT
+# از ISP خود کاربر؛ بقیه‌ی دنیا → تونل EMIX. پروکسی‌ساید از همان
+# generate_share_link پارس می‌شود (SNI Spoofing/CDN خودکار اعمال می‌شود).
+# ══════════════════════════════════════════════════════════════════════════════
+try:
+    import ir_client_rules
+
+    async def _bp_get_link_for_rules(uid: str):
+        async with LINKS_LOCK:
+            return LINKS.get(uid)
+
+    def _bp_ir_prefixes():
+        import domestic_route_engine as _dre
+        if _dre.dataset_status().get("prefix_count", 0) == 0:
+            _dre.load_seed()
+        return _dre.dataset_prefixes()
+
+    ir_client_rules.register_routes(
+        app,
+        get_link_fn=_bp_get_link_for_rules,
+        is_allowed_fn=is_link_allowed,
+        share_link_fn=generate_share_link,
+        host_fn=get_host,
+        headers_fn=build_sub_headers,
+        prefixes_fn=_bp_ir_prefixes,
+        default_protocol=DEFAULT_PROTOCOL,
+    )
+    logger.info(f"[bootstrap] ir_client_rules v{ir_client_rules.IR_CLIENT_RULES_VERSION} "
+                f"registered (/sub-json/{{uuid}}?client=singbox|xray)")
+except Exception as _exc:
+    logger.error(f"[bootstrap] ir_client_rules load failed (CORE!): {_exc}")
+
+
 # ═════════════════════════════════════════════════════════════════════════════
 # Phase 38+ — Capability Engine (protocol × transport × deployment × node ×
 # client — ONE backend-driven capability source; frontend renders from API)
@@ -5671,7 +5732,7 @@ async def api_migrate_legacy_spoof():
 # تا قبل از لاگین هم قابل بررسی باشد. (از /api/version استفاده نمی‌کنیم چون
 # آن مسیر قبلاً برای بررسی به‌روزرسانی در نظر گرفته شده است.)
 # ══════════════════════════════════════════════════════════════════════════════
-EMIX_VERSION = "12.0.0-core"
+EMIX_VERSION = "12.1.0-ir-direct"
 EMIX_BUILD_DATE = "2026-09-04"
 
 @app.get("/api/boot-profile")

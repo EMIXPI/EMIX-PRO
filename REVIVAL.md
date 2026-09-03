@@ -100,7 +100,44 @@ state پابرجای بین ران‌ها totals ترافیکی را آلوده 
 5. سلامت بعد از دیپلوی: `/api/ping` باید `{"ok":true}` بدهد؛ در لاگ
    `✅ CORE SURFACE OK` ببینید؛ با لاگین `/api/boot-profile` گزارش کامل.
 
-## 4. نقشه‌ی راه — «به قدرت vpn-ui، بدون شکستن هسته»
+## 4. v12.1 — IR-Direct: «داخلی‌کردن مصرف حتی با کانفیگ» (اولویت اپراتور)
+
+**مشکل:** کانفیگ‌های URI-محور (`vless://…`) قابلیت حمل قواعد روتینگ ندارند؛
+مصرف داخلی کاربر از تونل می‌رفت — کند، پرهزینه (پهنای‌باند Railway) و بدون
+کاربرد domestically. `config_builder` قدیمی برای sing-box فقط یک «note» می‌داد.
+
+**راه‌حل — `/sub-json/{uuid}` (هسته‌ی همیشه‌زنده):**
+
+```
+GET /sub-json/{uuid}?client=singbox   ← کانفیگ کامل sing-box
+GET /sub-json/{uuid}?client=xray      ← کانفیگ کامل xray
+GET /sub-json/{uuid}?client=singbox&geosite=1   ← + rule-set/geosite-ir ریموت
+```
+
+* **قواعد:** پیشوندهای IP ایران (۲,۵۲۸ پیشوند RIPEstat-IR — همان دیتاست
+  موتور domestic) + دامنه‌های `.ir` → **DIRECT از ISP خود کاربر**؛ بقیه‌ی
+  دنیا → تونل EMIX. دیتاست هر روز به‌صورت اتمی آپدیت می‌شود (job هسته).
+* **یک منبع حقیقت:** پروکسی‌ساید کانفیگ از **همان `generate_share_link` پارس
+  می‌شود** — یعنی SNI Spoofing (CDN و allowInsecure)، واریانت CF و هر تغییر
+  emission آینده خودکار در کانفیگ کلاینت هم اعمال می‌شود.
+* **صداقت:** ss/mtproto و xhttp-روی-singbox → `422 SPLIT_TUNNEL_NOT_SUPPORTED`
+  با توضیح — هرگز کانفیگ «شبیه split-tunnel» تحویل داده نمی‌شود.
+* **دسترسی:** داشبورد → کارت هر لینک → دو دکمه‌ی بنفش جدید (sing-box / xray)؛
+  یا در `/api/links` فیلد `sub_json_urls`. ورود در Hiddify/Karing/NekoBox:
+  «Import from file/clipboard → full config».
+* **موتور domestic حالا ALWAYS_ON است** (هسته‌ی دوم) — پالیسی/تشخیص/گیت‌وی
+  ارزیابی در هر دو پروفایل حی است؛ `always_on` در `/api/boot-profile`.
+
+> ⚠️ نکته‌ی معماری: `domestic_route_engine` در سطح ماژول `egress_engine` را
+> import می‌کند؛ پس ماژول egress در پروفایل core هم لود می‌شود (فقط
+> اندپوینت‌هایش ثبت نمی‌شوند). هزینه‌اش < ۰.۱ ثانیه import است — در برابر
+> اولویت اپراتور قابل‌قبول.
+
+**SNI Spoofing** (خواسته‌ی دوم) از قبل در هسته بود و دست‌نخورده فعال است:
+per-link `spoof_sni` (+ `EMIX_CDN_DOMAIN` برای حالت CDN بدون allowInsecure) —
+و حالا از مسیر `/sub-json` به کانفیگ کلاینت هم منتقل می‌شود.
+
+## 5. نقشه‌ی راه — «به قدرت vpn-ui، بدون شکستن هسته»
 
 قرارداد جدید دقیقاً برای همین هدف است: هر قابلیت تازه = یک موتور اختیاری در
 `boot_profile.ENGINES` + route registration پشت `boot_profile.enabled(...)` —

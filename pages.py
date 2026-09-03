@@ -8759,6 +8759,8 @@ async function loadLinks(){
         ${isMt
           ? `<button class="btn btn-sm btn-g btn-icon" onclick="openMtInfoModal('${esc(l.label)}','${esc(l.mtproto_secret||'')}','${esc(l.vless_link)}',${!!l.mtproto_public_host})" title="اطلاعات پروکسی"><i class="ti ti-info-circle"></i></button>`
           : `<button class="btn btn-sm btn-g btn-icon" onclick="navigator.clipboard.writeText('${esc(l.sub_url)}').then(()=>toast('Sub کپی شد','ok'))" title="Sub URL"><i class="ti ti-rss"></i></button>
+        ${l.sub_json_urls ? `<button class="btn btn-sm btn-pur btn-icon" onclick="navigator.clipboard.writeText(window.location.origin+'${esc(l.sub_json_urls.singbox)}').then(()=>toast('ساب IR-Direct (sing-box) کپی شد','ok'))" title="ساب IR-Direct — داخلی‌کردن مصرف (sing-box)"><i class="ti ti-route"></i></button>
+        <button class="btn btn-sm btn-pur btn-icon" onclick="navigator.clipboard.writeText(window.location.origin+'${esc(l.sub_json_urls.xray)}').then(()=>toast('ساب IR-Direct (xray) کپی شد','ok'))" title="ساب IR-Direct — داخلی‌کردن مصرف (xray)"><i class="ti ti-router"></i></button>` : ''}
         <button class="btn btn-sm btn-g btn-icon" onclick="showQR('${esc(l.vless_link)}')" title="QR"><i class="ti ti-qrcode"></i></button>`
         }
         ${!isNode?`<button class="btn btn-sm btn-amber btn-icon" onclick="openEditLink('${l.uuid}')" title="ویرایش"><i class="ti ti-edit"></i></button>`:`<button class="btn btn-sm btn-amber btn-icon" onclick="openEditLink('${l.uuid}','${l._nodeId}')" title="ویرایش از راه دور"><i class="ti ti-edit"></i></button>`}

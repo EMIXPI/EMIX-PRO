@@ -1,5 +1,34 @@
 # CHANGELOG — EMIX-PRO
 
+## v12.1.0-ir-direct (2026-09-04) — 🇮🇷 IR-Direct: داخلی‌کردن مصرف حتی با کانفیگ
+
+**User priority:** «مهم‌ترین چیزی که برای پنلم می‌خواهم sni spoofing یا
+iran direct است — برای داخلی کردن مصرف حتی با کانفیگ.»
+
+### NEW — `/sub-json/{uuid}` (هسته‌ی همیشه‌زنده)
+- کانفیگ **کامل کلاینت** sing-box / xray با قواعد split-tunneling واقعی:
+  پیشوندهای IR (۲,۵۲۸ RIPEstat) + دامنه‌های `.ir` → DIRECT از ISP کاربر؛
+  بقیه → تونل EMIX. `?geosite=1` → rule-set ریموت geosite-ir.
+- پروکسی‌ساید از `generate_share_link` پارس می‌شود → SNI Spoofing/CDN/
+  allowInsecure خودکار منعکس می‌شود (single source of truth).
+- ترکیب پشتیبانی‌نشده → `422 SPLIT_TUNNEL_NOT_SUPPORTED` (صداقت، نه ظاهرسازی).
+- `/api/links` فیلد `sub_json_urls`؛ دو دکمه‌ی جدید در داشبورد (ساب IR-Direct).
+- DNS داخلی: دامنه‌های ایران از DNS ایرانی (detour=direct) رزولو می‌شوند.
+
+### CORE PROMOTION — موتور domestic همیشه‌روشن
+- `boot_profile.ALWAYS_ON = {domestic_route_engine}` — پالیسی/تشخیص/CRUD در
+  core هم حی است؛ job آپدیت روزانه‌ی دیتاست به jobهای هسته منتقل شد؛
+  wiring رزالور/seed به `_wire_domestic_core()` (همیشه اجرا) منتقل شد.
+- CORE_SURFACE اکنون ۹ مسیر است (+`/sub-json/{uuid}`).
+
+### TESTS — ۹۷۶/۹۷۶ سبز
+- `tests/unit/test_ir_client_rules.py` (۹ تست): ساختار sing-box/xray،
+  بازتاب SNI spoof، رد صادقانه ss/xhttp-singbox، ماتریس پشتیبانی.
+- `tests/integration/test_ir_direct_sub.py` (۵ تست): e2e با دیتاست واقعی،
+  هدر `x-emix-ir-rules`، spoof، فیلد API.
+
+---
+
 ## v12.0.0-core (2026-09-04) — 🏗️ REVIVAL: پروتکل پایه‌ی EMIX به‌عنوان هسته‌ی همیشه‌زنده
 
 **User report:** «پنل باز می‌شود ولی کانفیگ‌ها وصل نمی‌شوند… EMIX اصلی پینگ

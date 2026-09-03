@@ -64,6 +64,11 @@ ENGINES: dict[str, tuple[str, str]] = {
     "vpn_pro":          ("mgmt", "نودهای VPN (WG/OpenVPN)"),
 }
 
+# ── موتورهای «همیشه‌روشن» — هسته‌ی دوم (اولویت اپراتور، v12.1) ───────────────
+# Iran Direct ستون‌فقرات پنل است؛ موتور دیتاست/پالیسی آن در هر دو پروفایل
+# روشن می‌ماند (خروجی کلاینت‌محورش /sub-json خودش مستقلاً هسته است).
+ALWAYS_ON: set[str] = {"domestic_route_engine"}
+
 # هسته‌ی همیشه‌زنده — فقط برای گزارش و self-check بوت (هرگز gate نمی‌شوند)
 CORE_SURFACE = [
     ("/api/ping",        "healthcheck سبک Railway"),
@@ -72,6 +77,7 @@ CORE_SURFACE = [
     ("/trojan-ws",       "رله‌ی Trojan over WebSocket"),
     ("/ss-ws",           "رله‌ی Shadowsocks over WS"),
     ("/sub/{uuid}",      "سابسکریپشن/اشتراک لینک"),
+    ("/sub-json/{uuid}", "ساب JSON با قواعد IR-Direct (داخلی‌کردن مصرف)"),
     ("/dashboard",       "داشبورد مدیریت"),
     ("/login",           "احراز هویت پنل"),
 ]
@@ -120,6 +126,8 @@ def current_profile() -> str:
 def enabled(name: str) -> bool:
     """آیا موتور اختیاری «name» باید در این بوت لود شود؟ (هسته همیشه True است
     ولی برای هسته این تابع صدا زده نمی‌شود — هسته gate ندارد.)"""
+    if name in ALWAYS_ON:
+        return True
     return _resolve_profile()["enabled"].get(name, False)
 
 
@@ -146,13 +154,23 @@ def report() -> dict:
         {"path": p, "desc": d, "registered": bool(core_registry.get(p))}
         for p, d in CORE_SURFACE
     ]
-    loaded = sum(1 for e in _report["engines"].values() if e.get("loaded"))
+    # موتورهای ALWAYS_ON جزو «اختیاری‌ها» شمرده نمی‌شوند — آنها هسته‌اند
+    engines_view = {n: e for n, e in _report["engines"].items()
+                    if n not in ALWAYS_ON}
+    enabled_map = {n: v for n, v in _resolve_profile()["enabled"].items()
+                   if n not in ALWAYS_ON}
+    loaded = sum(1 for e in engines_view.values() if e.get("loaded"))
+    out["always_on"] = {
+        n: {"loaded": _report["engines"].get(n, {}).get("loaded")}
+        for n in sorted(ALWAYS_ON)
+    }
+    out["engines"] = engines_view
     out["summary"] = {
-        "engines_total": len(ENGINES),
-        "engines_enabled": sum(1 for v in _resolve_profile()["enabled"].values() if v),
+        "engines_total": len(ENGINES) - len(ALWAYS_ON & set(ENGINES)),
+        "engines_enabled": sum(1 for v in enabled_map.values() if v),
         "engines_loaded": loaded,
         "engines_failed": sum(
-            1 for e in _report["engines"].values()
+            1 for e in engines_view.values()
             if e.get("enabled") and e.get("loaded") is False),
     }
     return out
