@@ -1,7 +1,35 @@
 # EMIX-PRO Deployment Guide
 
-**Version:** 9.11.0-reverse-proxy-edge
+**Version:** 11.5.1-hotfix-identity
 **Platform:** Railway (primary), Cloudflare Worker (edge gateway, optional), ArvanCloud (edge, optional)
+
+---
+
+## 0. Panel Identity (READ FIRST — v11.5.1)
+
+The panel derives the UUIDs of the **default configs** (and the admin password
+hash) from a deployment **identity**. Identity resolution order:
+
+| Priority | Source | Stable across redeploys? | Notes |
+|---|---|---|---|
+| 1 | `SECRET_KEY` env | ✅ yes | **Recommended** — operator-controlled, high entropy |
+| 2 | `DATA_DIR/.rvg_secret` file | ✅ yes (needs Volume) | Existing volume deployments — unchanged behavior |
+| 3 | `RAILWAY_SERVICE_ID` env | ✅ yes | Auto-fallback on Railway (stable per service; **not a strong secret**) |
+| 4 | `EMIX_IDENTITY_SEED` env | ✅ yes | Generic fallback for other platforms (not a strong secret) |
+| 5 | random | ❌ **NO** | Last resort — CRITICAL warning logged; every redeploy kills delivered default configs |
+
+**Why this matters:** without a stable identity (no `SECRET_KEY`, no Volume),
+every redeploy (i.e. every `git push`) regenerates the secret → default-config
+UUIDs change → **every previously delivered config is rejected with
+`1008 not authorized`** (this caused a real production outage — see CHANGELOG
+v11.5.1). Check your deployment anytime:
+`GET /api/deployment-version → identity.stable_across_redeploy`.
+
+**Recommended setup:**
+```
+ADMIN_PASSWORD=<strong-password-16+chars>
+SECRET_KEY=<strong-secret-32+chars>
+```
 
 ---
 

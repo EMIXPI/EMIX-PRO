@@ -322,6 +322,30 @@ async def _worker_via_params(via: str) -> tuple[str | None, str]:
         raise RuntimeError(f"گیت‌وی کلادفلر در دسترس نیست: {exc}")
 
 
+async def _local_fallback_probe(kind: str, uid: str, link: dict, proto: str) -> dict:
+    """FIX v11.5.1 — پروب محلی وقتی مسیر عمومی از «داخل دیپلوی» در دسترس نیست.
+
+    برخی پلتفرم‌ها (Railway و مشابه) connection خودِ سرویس به دامنه‌ی عمومی خودش
+    (hairpin) را مسدود می‌کنند. نتیجه: health-sweep همه‌ی لینک‌ها را UNREACHABLE
+    نشان می‌دهد در حالی که کلاینت‌های واقعی از بیرون وصل می‌شوند. این fallback
+    همان تونل را از آدرس محلی خود پنل می‌سنجد و نتیجه را صادقانه برچسب می‌زند
+    (evidence: local-fallback) — هیچ‌وقت شواهد را جعل نمی‌کند؛ فقط vantage دوم.
+    """
+    local_ws = f"ws://127.0.0.1:{CONFIG['port']}"
+    local_http = f"http://127.0.0.1:{CONFIG['port']}"
+    if proto in ("vless-ws", "trojan-ws", "shadowsocks"):
+        return await _probe_ws_tunnel(kind, uid, link, ws_base=local_ws)
+    return await _probe_xhttp_tunnel(kind, uid, link, http_base=local_http)
+
+
+def _is_public_base_probe(ws_base_override, http_base_override) -> bool:
+    """آیا این پروب قرار بود از مسیر عمومی خود پنل برود؟ (نه پل/گیت‌وی، نه محلی)"""
+    if ws_base_override or http_base_override:
+        return False
+    host = get_host()
+    return bool(host) and host not in ("localhost", "127.0.0.1", "0.0.0.0")
+
+
 async def _run_link_ping(uid: str, link: dict, via: str = "direct") -> dict:
     """اجرای تست مناسب برای هر پروتکل + ثبت نتیجه روی لینک (last_ping).
     via=direct → مسیر خود پنل | via=worker → از مسیر گیت‌وی کلادفلر (سلامت خروجی واقعی)."""
@@ -362,6 +386,37 @@ async def _run_link_ping(uid: str, link: dict, via: str = "direct") -> dict:
                     result = {"ok": False, "protocol": proto, "via": via, "detail": "پورت MTProto یافت نشد"}
     else:
         result = {"ok": False, "protocol": proto, "via": via, "detail": f"پروتکل «{proto}» تست خودکار ندارد"}
+
+    # ── FIX v11.5.1: fallback صادقانه‌ی vantage دوم ──────────────────────────
+    # پروب از مسیر عمومی خودِ پنل شکست خورد (connect/TLS/timeout) و این لینک
+    # واقعاً فعال است → همان تونل را یک‌بار هم از آدرس محلی خود پنل بسنج؛
+    # اگر محلی جواب داد، نتیجه ok می‌شود ولی با برچسب واضح local-fallback
+    # (ادعا نمی‌کنیم لبه‌ی عمومی سالم است — فقط شواهد را جدا گزارش می‌کنیم).
+    if (
+        via == "direct"
+        and not result.get("ok")
+        and result.get("test") in ("ws-tunnel", "xhttp-tunnel")
+        and is_link_allowed(link)
+        and _is_public_base_probe(ws_base_override, http_base_override)
+    ):
+        _kind = "trojan" if (proto.startswith("trojan")) else ("ss" if proto == "shadowsocks" else "vless")
+        try:
+            local = await _local_fallback_probe(_kind, uid, link, proto)
+        except Exception:
+            local = {"ok": False}
+        if local.get("ok"):
+            result = {
+                "protocol": proto, "test": result.get("test"), "via": "direct",
+                **{k: v for k, v in local.items() if k not in ("ok",)},
+                "ok": True,
+                "fallback": "local",
+                "fallback_note": (
+                    "مسیر عمومی از داخل دیپلوی در دسترس نبود "
+                    f"({result.get('detail', '')[:80]}) — تونل از آدرس محلی پنل "
+                    "تأیید شد؛ دسترسی کلاینت از بیرون را جداگانه بسنجید"),
+            }
+        else:
+            result["fallback_attempted"] = "local"
 
     result.setdefault("ok", False)
     result["target"] = f"{PING_TEST_HOST}:{PING_TEST_PORT}" if result.get("test") in ("ws-tunnel", "xhttp-tunnel") else None

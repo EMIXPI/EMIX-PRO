@@ -103,24 +103,76 @@ SECRET_FILE = DATA_DIR / ".rvg_secret"
 SAVE_LOCK = asyncio.Lock()
 
 
+def _identity_from_env_seed() -> tuple[str, str]:
+    """هویت پایدار بدون Volume — برای دیپلوی‌های ephemeral (مثل Railway بدون دیسک).
+
+    مشکل واقعی production: بدون Volume و بدون SECRET_KEY، هر ری‌دیپلوی یک secret
+    تازه می‌ساخت → UUID کانفیگ‌های پیش‌فرض عوض می‌شد → همه‌ی کانفیگ‌های تحویل‌شده
+    به کلاینت‌ها با 1008 (not authorized) رد می‌شدند و «همه قطع» می‌شدند.
+
+    زنجیره‌ی fallback (هر چه پایدارتر، اول):
+      RAILWAY_SERVICE_ID — بین ری‌دیپلویهای همان سرویس در Railway پایدار است.
+      EMIX_IDENTITY_SEED — seed عمومی برای هر پلتفرم دیگری که اپراتور ست می‌کند.
+    ⚠️ این مقادیر «راز» نیستند — فقط پایدارند. خروجی صادقانه برچسب می‌خورد و
+    در لاگ/نسخه/مستندات توصیه‌ی SECRET_KEY (یا Volume) باقی می‌ماند.
+    """
+    rsid = (os.environ.get("RAILWAY_SERVICE_ID") or "").strip()
+    if rsid:
+        return f"rsid-v1:{rsid}", "railway_service_id"
+    seed = (os.environ.get("EMIX_IDENTITY_SEED") or "").strip()
+    if seed:
+        return f"seed-v1:{seed}", "identity_seed_env"
+    return "", ""
+
+
 def _get_or_create_secret() -> str:
+    # ۱) SECRET_KEY اپراتور — منبع حقیقت (production)
     env_secret = os.environ.get("SECRET_KEY")
     if env_secret:
+        CONFIG_IDENTITY_SOURCE["value"] = "secret_key_env"
         return env_secret
     try:
         DATA_DIR.mkdir(parents=True, exist_ok=True)
+        # ۲) فایل روی Volume — دیپلوی‌های موجود (رفتار قبلی، بدون تغییر)
         if SECRET_FILE.exists():
             val = SECRET_FILE.read_text(encoding="utf-8").strip()
             if val:
+                CONFIG_IDENTITY_SOURCE["value"] = "secret_file"
                 return val
+        # ۳) seed پایدار پلتفرم — بدون Volume: هویت بین ری‌دیپلویها ثابت می‌ماند
+        #    (FIX: کانفیگ‌های تحویل‌شده بعد از ری‌دیپلوی باطل نمی‌شوند)
+        stable, source = _identity_from_env_seed()
+        if stable:
+            CONFIG_IDENTITY_SOURCE["value"] = source
+            try:
+                SECRET_FILE.write_text(stable, encoding="utf-8")
+            except Exception:
+                pass  # ephemeral FS — دفعه بعد دوباره از همان env مشتق می‌شود
+            logger.warning(
+                f"هویت پنل از «{source}» مشتق شد (بدون Volume/SECRET_KEY) — "
+                f"UUID کانفیگ‌ها بین ری‌دیپلویها پایدار می‌ماند، اما این seed رازِ "
+                f"قوی نیست؛ برای production مقدار SECRET_KEY را ست کنید.")
+            return stable
+        # ۴) آخرین fallback — رندوم (ناپایدار!) با هشدار CRITICAL
         new_secret = secrets.token_urlsafe(32)
-        SECRET_FILE.write_text(new_secret, encoding="utf-8")
-        logger.info("SECRET_KEY جدید ساخته و در دیسک ذخیره شد (پایدار بین ری‌استارت‌ها).")
+        CONFIG_IDENTITY_SOURCE["value"] = "random_no_seed"
+        try:
+            SECRET_FILE.write_text(new_secret, encoding="utf-8")
+            logger.info("SECRET_KEY جدید ساخته و در دیسک ذخیره شد (پایدار بین ری‌استارت‌ها).")
+        except Exception as e:
+            logger.critical(
+                "⚠️⚠️ هویت پنل EPHEMERAL است: نه SECRET_KEY ست شده، نه Volume/فایل قابل "
+                f"نوشتن است ({e})، نه seed پلتفرمی موجود است. هر ری‌دیپلوی UUID کانفیگ‌های "
+                "پیش‌فرض را عوض می‌کند و همه‌ی کانفیگ‌های قبلی قطع می‌شوند! "
+                "راه‌حل: SECRET_KEY در متغیرهای محیطی Railway یا اتصال Volume.")
         return new_secret
     except Exception as e:
         logger.warning(f"عدم امکان ذخیره‌ی SECRET_KEY روی دیسک: {e} — از مقدار موقت استفاده می‌شود.")
+        CONFIG_IDENTITY_SOURCE["value"] = "random_no_seed"
         return secrets.token_urlsafe(32)
 
+
+CONFIG_IDENTITY_SOURCE: dict = {"value": None}
 
 CONFIG = {
     "port": int(os.environ.get("PORT", 8000)),
@@ -128,6 +180,10 @@ CONFIG = {
     "host": os.environ.get("RAILWAY_PUBLIC_DOMAIN", "localhost"),
     "disable_logging": False,
 }
+
+# منبع هویت بعد از ساخت CONFIG قطعی است — برای /api/deployment-version و لاگ‌ها.
+IDENTITY_SOURCE = CONFIG_IDENTITY_SOURCE["value"] or "random_no_seed"
+IDENTITY_STABLE = IDENTITY_SOURCE != "ephemeral_random"
 
 
 def apply_logging_state():
@@ -162,6 +218,18 @@ async def load_state():
                         link["spoof_sni_enabled"] = False
             LINKS.update(data.get("links", {}))
             SUBS.update(data.get("subs", {}))
+            # FIX v11.5.1: بازیابی دامنه‌ی عمومی خودآموخته (با همان شرط‌های
+            # امنیتی middleware یادگیری) تا بعد از ری‌دیپلوی get_host() درست باشد.
+            _stored_host = data.get("public_host")
+            global _LEARNED_PUBLIC_HOST
+            if (
+                isinstance(_stored_host, str)
+                and "." in _stored_host
+                and _stored_host not in ("localhost", "127.0.0.1", "0.0.0.0")
+                and not _stored_host.startswith(("10.", "192.168.", "172."))
+            ):
+                _LEARNED_PUBLIC_HOST = _stored_host.lower()
+                logger.info(f"[host] دامنه‌ی عمومی از state بازیابی شد: {_LEARNED_PUBLIC_HOST}")
             # Endpoint Profile Engine restore (Phase 25)
             try:
                 endpoint_profiles.restore_snapshot(data)
@@ -283,6 +351,10 @@ async def save_state():
                 **_persist_phase38_engines(),
                 # Sessions survive restarts (Railway redeploy خروج اجباری نمی‌دهد)
                 "sessions": {t: exp for t, exp in SESSIONS.items() if exp > time.time()},
+                # FIX v11.5.1: دامنه‌ی عمومی خودآموخته هم ماندگار شود — بعد از
+                # ری‌دیپلوی، لینک‌ها و پروب‌ها بلافاصله دامنه‌ی درست را استفاده
+                # می‌کنند (نه localhost تا اولین بازدید از داشبورد).
+                "public_host": _LEARNED_PUBLIC_HOST,
                 # Lifetime traffic totals (per-link used_bytes قبلاً هم ذخیره
                 # می‌شد؛ این مجموع‌های session-bound بودند که ریست می‌شدند)
                 "stats_totals": {
@@ -5327,8 +5399,8 @@ async def api_migrate_legacy_spoof():
 # تا قبل از لاگین هم قابل بررسی باشد. (از /api/version استفاده نمی‌کنیم چون
 # آن مسیر قبلاً برای بررسی به‌روزرسانی در نظر گرفته شده است.)
 # ══════════════════════════════════════════════════════════════════════════════
-EMIX_VERSION = "11.5.0-iran-direct"
-EMIX_BUILD_DATE = "2026-09-02"
+EMIX_VERSION = "11.5.1-hotfix-identity"
+EMIX_BUILD_DATE = "2026-09-03"
 
 @app.get("/api/deployment-version")
 async def api_deployment_version():
@@ -5346,6 +5418,16 @@ async def api_deployment_version():
         "service": "EMIX",
         "version": EMIX_VERSION,
         "build_date": EMIX_BUILD_DATE,
+        # FIX v11.5.1: سلامت هویت دیپلوی — اگر unstable باشد، هر ری‌دیپلوی
+        # UUID کانفیگ‌های پیش‌فرض را عوض می‌کند و کانفیگ‌های قبلی قطع می‌شوند.
+        "identity": {
+            "source": IDENTITY_SOURCE,
+            "stable_across_redeploy": IDENTITY_STABLE,
+            "hint": (
+                "SECRET_KEY (یا Volume) را ست کنید تا هویت پنل رازِ قوی و پایدار باشد"
+                if not IDENTITY_STABLE else
+                "هویت بین ری‌دیپلوی‌ها پایدار است"),
+        },
         "has_zeus": True,
         "has_clean_ip": True,
         "has_bridge": True,

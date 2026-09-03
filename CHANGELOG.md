@@ -1,5 +1,59 @@
 # CHANGELOG — EMIX-PRO
 
+## v11.5.1-hotfix-identity (2026-09-03) — 🔧 ROOT-CAUSE FIX: configs cut after redeploy
+
+**User report (production):** «با تغییرات آخر سلامت کلی پروژه به خطر افتاد و
+کانفیگ‌هایی که پینگ می‌دادند همه قطع شدند.»
+
+**Root cause (verified, not assumed):** the git push triggered a Railway
+redeploy. Without a persistent Volume and without `SECRET_KEY`, the app
+generated a **fresh random secret on every deploy** → default-config UUIDs
+(derived from the secret) changed → every previously delivered config was
+rejected by the tunnel with `1008 not authorized` → **all client configs cut**,
+while the panel itself stayed green (ping 200, WS routes 101, vless engine
+alive — all re-verified live against production). Reproduced locally: two
+fresh boots produced different UUIDs (`934e3824…` vs `f632e0f1…`).
+
+### FIXES
+- **main.py — stable identity chain** in `_get_or_create_secret()`:
+  `SECRET_KEY` env → `.rvg_secret` file (Volume; existing deployments
+  unchanged) → **`RAILWAY_SERVICE_ID`** (stable across redeploys of the same
+  Railway service — fixes the outage) → `EMIX_IDENTITY_SEED` (generic
+  platform seed) → random last-resort with a CRITICAL warning.
+  Honest labeling: derived seeds are STABLE, not secret — the UI/log/version
+  endpoint keeps recommending `SECRET_KEY` for production.
+- **main.py — public_host persistence**: the learned public domain
+  (`_LEARNED_PUBLIC_HOST`) is now saved in state and restored on boot — after
+  a redeploy, emitted links and probes use the real domain immediately
+  (before: `localhost` until the first dashboard visit).
+- **main.py — /api/deployment-version**: new `identity` block
+  (`source`, `stable_across_redeploy`, `hint`) so deployment health is
+  inspectable without shell access.
+- **link_health.py — honest probe vantage fallback**: if a direct probe
+  against the panel's own public base fails (e.g. Railway hairpin blocking),
+  the same tunnel is re-measured from the panel's local address; success is
+  reported `ok:true` with `fallback:"local"` + `fallback_note` carrying the
+  public failure evidence. No evidence is fabricated — second vantage, fully
+  labeled. Prevents blanket-UNREACHABLE/false-«همه قطع شدند» displays.
+
+### VERIFICATION (all real, local + live)
+- Full suite **940/940** (926 existing + 14 new: identity matrix, redeploy
+  UUID stability via dual fresh-dir subprocess boots, public_host
+  save/restore, probe fallback matrix incl. no-rescue cases).
+- E2E: two simulated «redeploy without volume» boots with
+  `RAILWAY_SERVICE_ID` fixed → **identical UUIDs** (fix verified);
+  manual ws-tunnel ping ok (`ws_ms 4.1`, reply `HTTP/1.1 200 OK`).
+- Live production probes during triage: panel UP on v11.5.0, WS routes 101
+  (HTTP/1.1), vless engine rejecting test UUID with 1008 — code healthy;
+  outage was identity/state, not protocol.
+
+### OPERATOR ACTION (important)
+- **Set `SECRET_KEY` (long random value) in Railway service variables** —
+  guarantees stable AND high-entropy identity. (Or attach a Volume.)
+- Configs delivered before this hotfix are NOT revivable (their UUIDs derived
+  from the lost random secret) — re-deliver once from the panel; after this
+  deploy they survive every future redeploy.
+
 ## v11.5.0-iran-direct (2026-09-02) — 🇮🇷 IRAN DIRECT Config Builder: Clean IP + Handshake
 
 **User request:** in the IRAN_DIRECT section, be able to enter a healthy/set
