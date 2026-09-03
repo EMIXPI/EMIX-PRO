@@ -35,6 +35,7 @@ import time
 import traceback
 import central
 import aiofiles
+import boot_profile  # پروفایل بوت — هسته همیشه‌زنده + موتورهای اختیاری (v12)
 import compat
 import endpoint_profiles
 import config_compiler
@@ -131,45 +132,58 @@ def _get_or_create_secret() -> str:
     if env_secret:
         CONFIG_IDENTITY_SOURCE["value"] = "secret_key_env"
         return env_secret
+
+    # ۲) فایل روی Volume — دیپلوی‌های موجود (رفتار قبلی، بدون تغییر)
+    #
+    # 🔴 FIX v12.0.0-core (باستندگی کل زنجیره‌ی fallback):
+    #   قبلاً DATA_DIR.mkdir داخل همین try بود؛ روی Railway بدون Volume
+    #   («/data» قابل نوشتن نیست) mkdir خطای Permission می‌داد و کنترل
+    #   مستقیم به except بیرونی می‌پرید — یعنی fallback پایدار
+    #   RAILWAY_SERVICE_ID هرگز بررسی نمی‌شد و secret رندوم برگردانده
+    #   می‌شد → هر ری‌دیپلوی UUID همه‌ی کانفیگ‌های پیش‌فرض را عوض می‌کرد
+    #   → «پنل باز می‌شود ولی کانفیگ‌ها وصل نمی‌شوند» (حادثه‌ی production).
+    #   الان خطای دیسک فقط یک warning است و زنجیره ادامه می‌یابد.
     try:
         DATA_DIR.mkdir(parents=True, exist_ok=True)
-        # ۲) فایل روی Volume — دیپلوی‌های موجود (رفتار قبلی، بدون تغییر)
         if SECRET_FILE.exists():
             val = SECRET_FILE.read_text(encoding="utf-8").strip()
             if val:
                 CONFIG_IDENTITY_SOURCE["value"] = "secret_file"
                 return val
-        # ۳) seed پایدار پلتفرم — بدون Volume: هویت بین ری‌دیپلویها ثابت می‌ماند
-        #    (FIX: کانفیگ‌های تحویل‌شده بعد از ری‌دیپلوی باطل نمی‌شوند)
-        stable, source = _identity_from_env_seed()
-        if stable:
-            CONFIG_IDENTITY_SOURCE["value"] = source
-            try:
-                SECRET_FILE.write_text(stable, encoding="utf-8")
-            except Exception:
-                pass  # ephemeral FS — دفعه بعد دوباره از همان env مشتق می‌شود
-            logger.warning(
-                f"هویت پنل از «{source}» مشتق شد (بدون Volume/SECRET_KEY) — "
-                f"UUID کانفیگ‌ها بین ری‌دیپلویها پایدار می‌ماند، اما این seed رازِ "
-                f"قوی نیست؛ برای production مقدار SECRET_KEY را ست کنید.")
-            return stable
-        # ۴) آخرین fallback — رندوم (ناپایدار!) با هشدار CRITICAL
-        new_secret = secrets.token_urlsafe(32)
-        CONFIG_IDENTITY_SOURCE["value"] = "random_no_seed"
-        try:
-            SECRET_FILE.write_text(new_secret, encoding="utf-8")
-            logger.info("SECRET_KEY جدید ساخته و در دیسک ذخیره شد (پایدار بین ری‌استارت‌ها).")
-        except Exception as e:
-            logger.critical(
-                "⚠️⚠️ هویت پنل EPHEMERAL است: نه SECRET_KEY ست شده، نه Volume/فایل قابل "
-                f"نوشتن است ({e})، نه seed پلتفرمی موجود است. هر ری‌دیپلوی UUID کانفیگ‌های "
-                "پیش‌فرض را عوض می‌کند و همه‌ی کانفیگ‌های قبلی قطع می‌شوند! "
-                "راه‌حل: SECRET_KEY در متغیرهای محیطی Railway یا اتصال Volume.")
-        return new_secret
     except Exception as e:
-        logger.warning(f"عدم امکان ذخیره‌ی SECRET_KEY روی دیسک: {e} — از مقدار موقت استفاده می‌شود.")
-        CONFIG_IDENTITY_SOURCE["value"] = "random_no_seed"
-        return secrets.token_urlsafe(32)
+        logger.warning(
+            f"دسترسی به فایل secret ناموفق بود (زنجیره‌ی fallback ادامه می‌یابد): {e}")
+
+    # ۳) seed پایدار پلتفرم — بدون Volume: هویت بین ری‌دیپلویها ثابت می‌ماند
+    #    (FIX: کانفیگ‌های تحویل‌شده بعد از ری‌دیپلوی باطل نمی‌شوند)
+    stable, source = _identity_from_env_seed()
+    if stable:
+        CONFIG_IDENTITY_SOURCE["value"] = source
+        try:
+            DATA_DIR.mkdir(parents=True, exist_ok=True)
+            SECRET_FILE.write_text(stable, encoding="utf-8")
+        except Exception:
+            pass  # ephemeral FS — دفعه بعد دوباره از همان env مشتق می‌شود
+        logger.warning(
+            f"هویت پنل از «{source}» مشتق شد (بدون Volume/SECRET_KEY) — "
+            f"UUID کانفیگ‌ها بین ری‌دیپلویها پایدار می‌ماند، اما این seed رازِ "
+            f"قوی نیست؛ برای production مقدار SECRET_KEY را ست کنید.")
+        return stable
+
+    # ۴) آخرین fallback — رندوم (ناپایدار!) با هشدار CRITICAL
+    new_secret = secrets.token_urlsafe(32)
+    CONFIG_IDENTITY_SOURCE["value"] = "random_no_seed"
+    try:
+        DATA_DIR.mkdir(parents=True, exist_ok=True)
+        SECRET_FILE.write_text(new_secret, encoding="utf-8")
+        logger.info("SECRET_KEY جدید ساخته و در دیسک ذخیره شد (پایدار بین ری‌استارت‌ها).")
+    except Exception as e:
+        logger.critical(
+            "⚠️⚠️ هویت پنل EPHEMERAL است: نه SECRET_KEY ست شده، نه Volume/فایل قابل "
+            f"نوشتن است ({e})، نه seed پلتفرمی موجود است. هر ری‌دیپلوی UUID کانفیگ‌های "
+            "پیش‌فرض را عوض می‌کند و همه‌ی کانفیگ‌های قبلی قطع می‌شوند! "
+            "راه‌حل: SECRET_KEY در متغیرهای محیطی Railway یا اتصال Volume.")
+    return new_secret
 
 
 CONFIG_IDENTITY_SOURCE: dict = {"value": None}
@@ -182,8 +196,10 @@ CONFIG = {
 }
 
 # منبع هویت بعد از ساخت CONFIG قطعی است — برای /api/deployment-version و لاگ‌ها.
+# FIX v12.0.0-core: قبلاً با «ephemeral_random» مقایسه می‌شد که دیگر تولید
+# نمی‌شود؛ در نتیجه حتی هویت رندومِ ناپایدار «stable: true» گزارش می‌شد (دروغ).
 IDENTITY_SOURCE = CONFIG_IDENTITY_SOURCE["value"] or "random_no_seed"
-IDENTITY_STABLE = IDENTITY_SOURCE != "ephemeral_random"
+IDENTITY_STABLE = IDENTITY_SOURCE not in ("random_no_seed", "ephemeral_random")
 
 
 def apply_logging_state():
@@ -892,8 +908,10 @@ def _register_default_jobs() -> None:
                             interval=_HEALTH_SWEEP_INTERVAL, timeout=180.0, retries=1)
     job_system.register("expiry-sweep", _job_expiry_sweep,
                         interval=_EXPIRY_SWEEP_INTERVAL, timeout=30.0, retries=1)
-    job_system.register("ip-quality-prune", _job_ip_quality_prune,
-                        interval=3600.0, timeout=30.0, retries=1)
+    # v12: این job فقط وقتی معنا دارد که موتور ip_quality لود شده باشد
+    if boot_profile.enabled("ip_quality"):
+        job_system.register("ip-quality-prune", _job_ip_quality_prune,
+                            interval=3600.0, timeout=30.0, retries=1)
     _register_phase37_jobs()
 
 
@@ -962,6 +980,8 @@ def _wire_phase38_engines() -> None:
 
     def _worker_domain() -> str:
         try:
+            if not boot_profile.enabled("gaming_boost"):
+                return ""  # v12: موتور خاموش → هیچ import پنهانی اتفاق نمی‌افتد
             import gaming_boost
             cfg = gaming_boost._load_cfg()
             return gaming_boost._norm_domain(cfg.get("worker_domain", ""))
@@ -1112,16 +1132,48 @@ async def startup():
     except Exception as _rs_exc:
         logger.warning(f"[startup] runtime supervisor registration failed: {_rs_exc}")
     # ─── Phase 38 wiring — route/failover/accounts/domestic ────────────────
-    try:
-        _wire_phase38_engines()
-    except Exception as _p38_exc:
-        logger.warning(f"[startup] phase38 wiring failed: {_p38_exc}")
-    try:
-        _register_phase38_jobs()
-    except Exception as _p38j_exc:
-        logger.warning(f"[startup] phase38 jobs failed: {_p38j_exc}")
+    # v12: در پروفایل core این موتورها لود نمی‌شوند؛ wiring هم باید کامل‌اً
+    # رد شود (وگرنه import اجباری، لِین‌بوت را از بین می‌برد).
+    if boot_profile.all_enabled("egress_engine", "route_engine", "failover_engine",
+                                "account_manager", "domestic_route_engine",
+                                "iran_gateway", "iran_direct",
+                                "capability_engine", "config_builder",
+                                "structured_events"):
+        try:
+            _wire_phase38_engines()
+        except Exception as _p38_exc:
+            logger.warning(f"[startup] phase38 wiring failed: {_p38_exc}")
+        try:
+            _register_phase38_jobs()
+        except Exception as _p38j_exc:
+            logger.warning(f"[startup] phase38 jobs failed: {_p38j_exc}")
+    else:
+        logger.info("[bootstrap] phase38 wiring/jobs در پروفایل core رد شد (موتورهای راستی‌آزمایی خاموش)")
     log_activity("system", "سرور راه‌اندازی شد", "ok")
     logger.info(f"EMIX v{EMIX_VERSION} started on port {CONFIG['port']}")
+
+    # ─── v12 قرارداد هسته‌ی همیشه‌زنده — self-check سطح بوت ─────────────────
+    # اگر هر یک از مسیرهای پایه (پینگ/رله/ساب/داشبورد) ثبت نشده باشد، این
+    # جایگزینِ «سکوت مرگبار» است: CRITICAL واضح در لاگ + ثبت در boot report.
+    try:
+        registered = {getattr(r, "path", None) for r in app.routes}
+        boot_profile.core_registry = {p: (p in registered) for p, _ in boot_profile.CORE_SURFACE}
+        missing = [p for p, ok in boot_profile.core_registry.items() if not ok]
+        rep = boot_profile.report()
+        _bp_sum = rep.get("summary", {})
+        if missing:
+            logger.critical(
+                f"⚠️ CORE SURFACE BROKEN — مسیرهای پایه ثبت نشده‌اند: {missing} "
+                f"(پنل روی Railway می‌زنده ولی پروتکل پایه لنگ است!)")
+        else:
+            logger.info(
+                f"✅ CORE SURFACE OK — {len(boot_profile.CORE_SURFACE)} مسیر پایه "
+                f"(پینگ/رله/ساب/داشبورد) همگی ثبت شدند | "
+                f"profile={rep.get('profile')} engines="
+                f"{_bp_sum.get('engines_loaded')}/{_bp_sum.get('engines_total')} loaded, "
+                f"{_bp_sum.get('engines_failed')} failed")
+    except Exception as _bp_exc:
+        logger.warning(f"[startup] core self-check failed: {_bp_exc}")
     # ─── هشدار پایداری دیتا روی Railway ────────────────────────────────────
     # اگر روی Railway هستید و Volume به /data وصل نشده، هر ری‌دیپلوی کل state
     # (LINKS + SUBS + NODES + password_hash) را پاک می‌کند. این هشدار کمک
@@ -4450,16 +4502,27 @@ link_health.register_routes(app)
 # ══════════════════════════════════════════════════════════════════════════════
 # ماژول پل ایران — مصرف داخلی + شتاب‌دهی (کاملاً جدا از هسته — bridge_boost.py)
 # اگر این ماژول حذف شود، پنل و همه‌ی تونل‌ها بدون تغییر کار می‌کنند.
+# v12: موتور اختیاری — در پروفایل core خاموش (EMIX_PROFILE=full / EMIX_ENABLE=…)
 # ══════════════════════════════════════════════════════════════════════════════
-import bridge_boost
-bridge_boost.register_routes(app)
+if boot_profile.enabled("bridge_boost"):
+    import bridge_boost
+    bridge_boost.register_routes(app)
+    boot_profile.note("bridge_boost", True)
+else:
+    boot_profile.note("bridge_boost", False)
 
 # ══════════════════════════════════════════════════════════════════════════════
 # ماژول توربو — لینک‌های 0-RTT + تست A/B خودکار (کاملاً جدا از هسته — turbo_boost.py)
 # اگر این ماژول حذف شود، پنل و همه‌ی تونل‌ها بدون تغییر کار می‌کنند.
 # ══════════════════════════════════════════════════════════════════════════════
-import turbo_boost
-turbo_boost.register_routes(app)
+# v12: موتور اختیاری — در پروفایل core خاموش (EMIX_PROFILE=full / EMIX_ENABLE=…)
+# ══════════════════════════════════════════════════════════════════════════════
+if boot_profile.enabled("turbo_boost"):
+    import turbo_boost
+    turbo_boost.register_routes(app)
+    boot_profile.note("turbo_boost", True)
+else:
+    boot_profile.note("turbo_boost", False)
 
 # ══════════════════════════════════════════════════════════════════════════════
 # Assets سلف‌هاست (فونت/آیکون/Chart.js محلی) + GZip — static_assets.py
@@ -4472,9 +4535,14 @@ static_assets.register(app)
 # ══════════════════════════════════════════════════════════════════════════════
 try:
     import clean_ip_boost
-    clean_ip_boost.register_routes(app)
+    if boot_profile.enabled("clean_ip_boost"):
+        clean_ip_boost.register_routes(app)
+        boot_profile.note("clean_ip_boost", True)
+    else:
+        boot_profile.note("clean_ip_boost", False)
 except Exception as _exc:
     logger.error(f"[bootstrap] clean_ip_boost بارگذاری نشد (نادیده گرفته شد): {_exc}")
+    boot_profile.note("clean_ip_boost", False)
 
 # ══════════════════════════════════════════════════════════════════════════════
 # ماژول تنظیمات حرفه‌ای ZEUS — ISP + TLS Mask + Smart Mode + Security (zeus_features.py)
@@ -4484,9 +4552,14 @@ except Exception as _exc:
 # ══════════════════════════════════════════════════════════════════════════════
 try:
     import zeus_features
-    zeus_features.register_routes(app)
+    if boot_profile.enabled("zeus_features"):
+        zeus_features.register_routes(app)
+        boot_profile.note("zeus_features", True)
+    else:
+        boot_profile.note("zeus_features", False)
 except Exception as _exc:
     logger.error(f"[bootstrap] zeus_features بارگذاری نشد (نادیده گرفته شد): {_exc}")
+    boot_profile.note("zeus_features", False)
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -4496,9 +4569,14 @@ except Exception as _exc:
 # ═════════════════════════════════════════════════════════════════════════════
 try:
     import gaming_boost
-    gaming_boost.register_routes(app)
+    if boot_profile.enabled("gaming_boost"):
+        gaming_boost.register_routes(app)
+        boot_profile.note("gaming_boost", True)
+    else:
+        boot_profile.note("gaming_boost", False)
 except Exception as _exc:
     logger.error(f"[bootstrap] gaming_boost بارگذاری نشد (نادیده گرفته شد): {_exc}")
+    boot_profile.note("gaming_boost", False)
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -4511,10 +4589,15 @@ except Exception as _exc:
 # ═════════════════════════════════════════════════════════════════════════════
 try:
     import multiloc
-    multiloc.register_routes(app)
-    logger.info(f"[bootstrap] multiloc v{multiloc.MULTILOC_VERSION} routes registered (multi-location bridge v2 + WTE)")
+    if boot_profile.enabled("multiloc"):
+        multiloc.register_routes(app)
+        logger.info(f"[bootstrap] multiloc v{multiloc.MULTILOC_VERSION} routes registered (multi-location bridge v2 + WTE)")
+        boot_profile.note("multiloc", True)
+    else:
+        boot_profile.note("multiloc", False)
 except Exception as _exc:
     logger.error(f"[bootstrap] multiloc بارگذاری نشد (نادیده گرفته شد): {_exc}")
+    boot_profile.note("multiloc", False)
 
 
 # ═════════════════════════════════════════════════════════════════════════
@@ -4526,103 +4609,143 @@ except Exception as _exc:
 #   - تأخیرهای برچسب‌دار (control_plane_rtt / node_rtt / route_rtt / …)
 # یک منبع حقیقت برای همه‌ی ادعاهای خروج — /api/egress/*
 # ═════════════════════════════════════════════════════════════════════════
-try:
-    import egress_engine
-    egress_engine.register_routes(app)
-    logger.info(f"[bootstrap] egress_engine v{egress_engine.EGRESS_ENGINE_VERSION} routes registered (egress & route truth: roles, verification, route validation)")
-except Exception as _exc:
-    logger.error(f"[bootstrap] egress_engine بارگذاری نشد (نادیده گرفته شد): {_exc}")
+if boot_profile.enabled("egress_engine"):
+    try:
+        import egress_engine
+        egress_engine.register_routes(app)
+        logger.info(f"[bootstrap] egress_engine v{egress_engine.EGRESS_ENGINE_VERSION} routes registered (egress & route truth: roles, verification, route validation)")
+        boot_profile.note("egress_engine", True)
+    except Exception as _exc:
+        logger.error(f"[bootstrap] egress_engine بارگذاری نشد (نادیده گرفته شد): {_exc}")
+        boot_profile.note("egress_engine", False)
+else:
+    boot_profile.note("egress_engine", False)
 
 
 # ═════════════════════════════════════════════════════════════════════════════
 # Phase 38 / P0 — Route Engine: مسیرها به‌عنوان موجودیت درجه‌یک
 # (route_id / entry / relay / exit / expected-vs-observed / health / latency)
 # ═════════════════════════════════════════════════════════════════════════════
-try:
-    import route_engine
-    route_engine.register_routes(app, require_auth)
-    logger.info(f"[bootstrap] route_engine v{route_engine.ROUTE_ENGINE_VERSION} routes registered (first-class routes)")
-except Exception as _exc:
-    logger.error(f"[bootstrap] route_engine بارگذاری نشد (نادیده گرفته شد): {_exc}")
+if boot_profile.enabled("route_engine"):
+    try:
+        import route_engine
+        route_engine.register_routes(app, require_auth)
+        logger.info(f"[bootstrap] route_engine v{route_engine.ROUTE_ENGINE_VERSION} routes registered (first-class routes)")
+        boot_profile.note("route_engine", True)
+    except Exception as _exc:
+        logger.error(f"[bootstrap] route_engine بارگذاری نشد (نادیده گرفته شد): {_exc}")
+        boot_profile.note("route_engine", False)
+else:
+    boot_profile.note("route_engine", False)
 
 
 # ═════════════════════════════════════════════════════════════════════════════
 # Phase 38 / P1 — Failover Engine: drain → explainable replacement → verify
 # health → verify route → verify egress → re-point → resume
 # ═════════════════════════════════════════════════════════════════════════════
-try:
-    import failover_engine
-    failover_engine.register_routes(app, require_auth)
-    logger.info(f"[bootstrap] failover_engine v{failover_engine.FAILOVER_ENGINE_VERSION} routes registered (real failover, never blind)")
-except Exception as _exc:
-    logger.error(f"[bootstrap] failover_engine بارگذاری نشد (نادیده گرفته شد): {_exc}")
+if boot_profile.enabled("failover_engine"):
+    try:
+        import failover_engine
+        failover_engine.register_routes(app, require_auth)
+        logger.info(f"[bootstrap] failover_engine v{failover_engine.FAILOVER_ENGINE_VERSION} routes registered (real failover, never blind)")
+        boot_profile.note("failover_engine", True)
+    except Exception as _exc:
+        logger.error(f"[bootstrap] failover_engine بارگذاری نشد (نادیده گرفته شد): {_exc}")
+        boot_profile.note("failover_engine", False)
+else:
+    boot_profile.note("failover_engine", False)
 
 
 # ═════════════════════════════════════════════════════════════════════════════
 # Phase 38 / P2+P3 — Accounts / Devices / Subscriptions / Sessions
 # (backend-enforced limits, PBKDF2 hashes, one-time device tokens)
 # ═════════════════════════════════════════════════════════════════════════════
-try:
-    import account_manager
-    account_manager.register_routes(app, require_auth)
-    logger.info(f"[bootstrap] account_manager v{account_manager.ACCOUNT_ENGINE_VERSION} routes registered (accounts/devices/subscriptions)")
-except Exception as _exc:
-    logger.error(f"[bootstrap] account_manager بارگذاری نشد (نادیده گرفته شد): {_exc}")
+if boot_profile.enabled("account_manager"):
+    try:
+        import account_manager
+        account_manager.register_routes(app, require_auth)
+        logger.info(f"[bootstrap] account_manager v{account_manager.ACCOUNT_ENGINE_VERSION} routes registered (accounts/devices/subscriptions)")
+        boot_profile.note("account_manager", True)
+    except Exception as _exc:
+        logger.error(f"[bootstrap] account_manager بارگذاری نشد (نادیده گرفته شد): {_exc}")
+        boot_profile.note("account_manager", False)
+else:
+    boot_profile.note("account_manager", False)
 
 
 # ═════════════════════════════════════════════════════════════════════════════
 # Phase 38 / P17 — Iran Domestic Direct Routing (split tunneling)
 # پیشوندهای ایرانی از RIPEstat (seed واقعی + به‌روزرسانی اتمی روزانه)
 # ═════════════════════════════════════════════════════════════════════════════
-try:
-    import domestic_route_engine
-    import domestic_rules_updater
-    domestic_route_engine.register_routes(app, require_auth)
-    logger.info(
-        f"[bootstrap] domestic_route_engine v{domestic_route_engine.DOMESTIC_ENGINE_VERSION} "
-        f"+ rules_updater registered (IR split-tunneling, {domestic_route_engine.dataset_status().get('prefix_count', 0)} prefixes)"
-    )
-except Exception as _exc:
-    logger.error(f"[bootstrap] domestic_route_engine بارگذاری نشد (نادیده گرفته شد): {_exc}")
+if boot_profile.enabled("domestic_route_engine"):
+    try:
+        import domestic_route_engine
+        import domestic_rules_updater
+        domestic_route_engine.register_routes(app, require_auth)
+        logger.info(
+            f"[bootstrap] domestic_route_engine v{domestic_route_engine.DOMESTIC_ENGINE_VERSION} "
+            f"+ rules_updater registered (IR split-tunneling, {domestic_route_engine.dataset_status().get('prefix_count', 0)} prefixes)"
+        )
+        boot_profile.note("domestic_route_engine", True)
+    except Exception as _exc:
+        logger.error(f"[bootstrap] domestic_route_engine بارگذاری نشد (نادیده گرفته شد): {_exc}")
+        boot_profile.note("domestic_route_engine", False)
+else:
+    boot_profile.note("domestic_route_engine", False)
 
 
 # ═════════════════════════════════════════════════════════════════════════════
 # Phase 38+ — Capability Engine (protocol × transport × deployment × node ×
 # client — ONE backend-driven capability source; frontend renders from API)
 # ═════════════════════════════════════════════════════════════════════════════
-try:
-    import capability_engine
-    capability_engine.register_routes(app, require_auth)
-    logger.info(f"[bootstrap] capability_engine v{capability_engine.ENGINE_VERSION} "
-                f"routes registered (/api/config-builder/capabilities, "
-                f"/api/railway/validation-matrix)")
-except Exception as _exc:
-    logger.error(f"[bootstrap] capability_engine بارگذاری نشد (نادیده گرفته شد): {_exc}")
+if boot_profile.enabled("capability_engine"):
+    try:
+        import capability_engine
+        capability_engine.register_routes(app, require_auth)
+        logger.info(f"[bootstrap] capability_engine v{capability_engine.ENGINE_VERSION} "
+                    f"routes registered (/api/config-builder/capabilities, "
+                    f"/api/railway/validation-matrix)")
+        boot_profile.note("capability_engine", True)
+    except Exception as _exc:
+        logger.error(f"[bootstrap] capability_engine بارگذاری نشد (نادیده گرفته شد): {_exc}")
+        boot_profile.note("capability_engine", False)
+else:
+    boot_profile.note("capability_engine", False)
 
 
 # ═════════════════════════════════════════════════════════════════════════════
 # Phase 38+ — Unified Config Builder (canonical ConfigRequest → compiler →
 # outputs + history). ONE builder; every output from the canonical compiler.
 # ═════════════════════════════════════════════════════════════════════════════
-try:
-    import config_builder
-    config_builder.register_routes(app, require_auth)
-    logger.info(f"[bootstrap] config_builder v{config_builder.ENGINE_VERSION} "
-                f"routes registered (preview/generate/history)")
-except Exception as _exc:
-    logger.error(f"[bootstrap] config_builder بارگذاری نشد (نادیده گرفته شد): {_exc}")
+if boot_profile.enabled("config_builder"):
+    try:
+        import config_builder
+        config_builder.register_routes(app, require_auth)
+        logger.info(f"[bootstrap] config_builder v{config_builder.ENGINE_VERSION} "
+                    f"routes registered (preview/generate/history)")
+        boot_profile.note("config_builder", True)
+    except Exception as _exc:
+        logger.error(f"[bootstrap] config_builder بارگذاری نشد (نادیده گرفته شد): {_exc}")
+        boot_profile.note("config_builder", False)
+else:
+    boot_profile.note("config_builder", False)
 
 
 # ═════════════════════════════════════════════════════════════════════════════
 # Phase 38+ §13 — Iran Gateway / IRAN_PROXY (REAL Iranian exit, evidence-based)
 # ═════════════════════════════════════════════════════════════════════════════
-try:
-    import iran_gateway
-    iran_gateway.register_routes(app, require_auth)
-    logger.info(f"[bootstrap] iran_gateway v{iran_gateway.ENGINE_VERSION} "
-                f"routes registered (IRAN_PROXY — real Iranian gateway)")
-except Exception as _exc:
-    logger.error(f"[bootstrap] iran_gateway بارگذاری نشد (نادیده گرفته شد): {_exc}")
+if boot_profile.enabled("iran_gateway"):
+    try:
+        import iran_gateway
+        iran_gateway.register_routes(app, require_auth)
+        logger.info(f"[bootstrap] iran_gateway v{iran_gateway.ENGINE_VERSION} "
+                    f"routes registered (IRAN_PROXY — real Iranian gateway)")
+        boot_profile.note("iran_gateway", True)
+    except Exception as _exc:
+        logger.error(f"[bootstrap] iran_gateway بارگذاری نشد (نادیده گرفته شد): {_exc}")
+        boot_profile.note("iran_gateway", False)
+else:
+    boot_profile.note("iran_gateway", False)
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -4630,36 +4753,51 @@ except Exception as _exc:
 # دارایی‌های اندپوینت برای ساخت کانفیگ IRAN_DIRECT — صفر emitter؛
 # ساخت کانفیگ فقط از مسیر کانونی config_builder انجام می‌شود.
 # ═════════════════════════════════════════════════════════════════════════════
-try:
-    import iran_direct
-    iran_direct.register_routes(app, require_auth)
-    logger.info(f"[bootstrap] iran_direct v{iran_direct.ENGINE_VERSION} "
-                f"routes registered (Clean IP + Handshake assets)")
-except Exception as _exc:
-    logger.error(f"[bootstrap] iran_direct بارگذاری نشد (نادیده گرفته شد): {_exc}")
+if boot_profile.enabled("iran_direct"):
+    try:
+        import iran_direct
+        iran_direct.register_routes(app, require_auth)
+        logger.info(f"[bootstrap] iran_direct v{iran_direct.ENGINE_VERSION} "
+                    f"routes registered (Clean IP + Handshake assets)")
+        boot_profile.note("iran_direct", True)
+    except Exception as _exc:
+        logger.error(f"[bootstrap] iran_direct بارگذاری نشد (نادیده گرفته شد): {_exc}")
+        boot_profile.note("iran_direct", False)
+else:
+    boot_profile.note("iran_direct", False)
 
 
 # ═════════════════════════════════════════════════════════════════════════════
 # Phase 38+ §29 — Structured operational events (CONFIG_GENERATED, …)
 # ═════════════════════════════════════════════════════════════════════════════
-try:
-    import structured_events
-    structured_events.register_routes(app, require_auth)
-    logger.info(f"[bootstrap] structured_events v{structured_events.ENGINE_VERSION} "
-                f"routes registered (/api/events)")
-except Exception as _exc:
-    logger.error(f"[bootstrap] structured_events بارگذاری نشد (نادیده گرفته شد): {_exc}")
+if boot_profile.enabled("structured_events"):
+    try:
+        import structured_events
+        structured_events.register_routes(app, require_auth)
+        logger.info(f"[bootstrap] structured_events v{structured_events.ENGINE_VERSION} "
+                    f"routes registered (/api/events)")
+        boot_profile.note("structured_events", True)
+    except Exception as _exc:
+        logger.error(f"[bootstrap] structured_events بارگذاری نشد (نادیده گرفته شد): {_exc}")
+        boot_profile.note("structured_events", False)
+else:
+    boot_profile.note("structured_events", False)
 
 
 # ═════════════════════════════════════════════════════════════════════════════
 # ماژول زیرساخت ریلوی — volume خودکار + سلامت‌سنجی کل پنل (railway_infra.py)
 # اگر این ماژول حذف شود یا خطا بدهد، پنل و همه‌ی تونل‌ها بدون تغییر کار می‌کنند.
 # ═════════════════════════════════════════════════════════════════════════════
-try:
-    import railway_infra
-    railway_infra.register_routes(app)
-except Exception as _exc:
-    logger.error(f"[bootstrap] railway_infra بارگذاری نشد (نادیده گرفته شد): {_exc}")
+if boot_profile.enabled("railway_infra"):
+    try:
+        import railway_infra
+        railway_infra.register_routes(app)
+        boot_profile.note("railway_infra", True)
+    except Exception as _exc:
+        logger.error(f"[bootstrap] railway_infra بارگذاری نشد (نادیده گرفته شد): {_exc}")
+        boot_profile.note("railway_infra", False)
+else:
+    boot_profile.note("railway_infra", False)
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -4668,32 +4806,52 @@ except Exception as _exc:
 # اگر فعال نشوند، هیچ اثری ندارند — پایداری اصلی حفظ می‌شود.
 # هر ماژول در try/except قرار دارد تا خرابی‌اش پنل را از کار نیندازد.
 # ══════════════════════════════════════════════════════════════════════════════
-try:
-    import experimental
-    logger.info(f"[bootstrap] experimental loaded: enabled={experimental.is_experimental_enabled()}")
-except Exception as _exc:
-    logger.error(f"[bootstrap] experimental load failed (ignored): {_exc}")
+if boot_profile.enabled("experimental"):
+    try:
+        import experimental
+        logger.info(f"[bootstrap] experimental loaded: enabled={experimental.is_experimental_enabled()}")
+        boot_profile.note("experimental", True)
+    except Exception as _exc:
+        logger.error(f"[bootstrap] experimental load failed (ignored): {_exc}")
+        boot_profile.note("experimental", False)
+else:
+    boot_profile.note("experimental", False)
 
-try:
-    import security_exp
-    app.add_middleware(security_exp.SecurityHeadersMiddleware)
-    app.add_middleware(security_exp.RateLimitMiddleware)
-    logger.info("[bootstrap] security_exp middleware registered")
-except Exception as _exc:
-    logger.error(f"[bootstrap] security_exp load failed (ignored): {_exc}")
+if boot_profile.enabled("security_exp"):
+    try:
+        import security_exp
+        app.add_middleware(security_exp.SecurityHeadersMiddleware)
+        app.add_middleware(security_exp.RateLimitMiddleware)
+        logger.info("[bootstrap] security_exp middleware registered")
+        boot_profile.note("security_exp", True)
+    except Exception as _exc:
+        logger.error(f"[bootstrap] security_exp load failed (ignored): {_exc}")
+        boot_profile.note("security_exp", False)
+else:
+    boot_profile.note("security_exp", False)
 
-try:
-    import link_emit
-    logger.info("[bootstrap] link_emit loaded (new share-link generators)")
-except Exception as _exc:
-    logger.error(f"[bootstrap] link_emit load failed (ignored): {_exc}")
+if boot_profile.enabled("link_emit"):
+    try:
+        import link_emit
+        logger.info("[bootstrap] link_emit loaded (new share-link generators)")
+        boot_profile.note("link_emit", True)
+    except Exception as _exc:
+        logger.error(f"[bootstrap] link_emit load failed (ignored): {_exc}")
+        boot_profile.note("link_emit", False)
+else:
+    boot_profile.note("link_emit", False)
 
-try:
-    import exp_api
-    app.include_router(exp_api.router)
-    logger.info("[bootstrap] exp_api routes registered (experimental section)")
-except Exception as _exc:
-    logger.error(f"[bootstrap] exp_api load failed (ignored): {_exc}")
+if boot_profile.enabled("experimental"):
+    try:
+        import exp_api
+        app.include_router(exp_api.router)
+        logger.info("[bootstrap] exp_api routes registered (experimental section)")
+        boot_profile.note("experimental", True)
+    except Exception as _exc:
+        logger.error(f"[bootstrap] exp_api load failed (ignored): {_exc}")
+        boot_profile.note("experimental", False)
+else:
+    boot_profile.note("experimental", False)
 
 # Phase 2 — Protocol engine + adapters
 try:
@@ -4770,7 +4928,12 @@ except Exception as _exc:
     logger.error(f"[bootstrap] reverseproxy load failed (ignored): {_exc}")
 
 # ── SNI Management + Security Signatures + VPN Pro (Phase SNI-Management + Security + VPN-Pro) ──
+# v12: خانواده‌ی امنیتی/مدیریتی — در پروفایل core خاموش (سه موتور با هم).
 try:
+    if not boot_profile.all_enabled("sni_management", "security_signatures", "vpn_pro"):
+        raise boot_profile.EngineDisabled(
+            "sni/security/vpn_pro",
+            "SNI/Security/VPN-Pro disabled by boot profile (core) — EMIX_PROFILE=full برای فعال‌سازی")
     import sni_management
     import security_signatures
     import vpn_pro
@@ -4991,29 +5154,55 @@ try:
     async def _vpn_providers():
         return vpn_pro.all_providers_dict()
     logger.info("[bootstrap] SNI Management + Security Signatures + VPN Pro routes registered")
+    boot_profile.note("sni_management", True)
+    boot_profile.note("security_signatures", True)
+    boot_profile.note("vpn_pro", True)
+except boot_profile.EngineDisabled as _bp_dis:
+    logger.info(f"[bootstrap] {_bp_dis} — (خاموش طبق پروفایل بوت، نه خطا)")
+    boot_profile.note("sni_management", False)
+    boot_profile.note("security_signatures", False)
+    boot_profile.note("vpn_pro", False)
 except Exception as _exc:
     logger.error(f"[bootstrap] SNI/Security/VPN-Pro load failed (ignored): {_exc}")
+    boot_profile.note("sni_management", False)
+    boot_profile.note("security_signatures", False)
+    boot_profile.note("vpn_pro", False)
 
-try:
-    import gaming_health
-    app.include_router(gaming_health.router)
-    logger.info("[bootstrap] gaming_health routes registered")
-except Exception as _exc:
-    logger.error(f"[bootstrap] gaming_health load failed (ignored): {_exc}")
+if boot_profile.enabled("gaming_health"):
+    try:
+        import gaming_health
+        app.include_router(gaming_health.router)
+        logger.info("[bootstrap] gaming_health routes registered")
+        boot_profile.note("gaming_health", True)
+    except Exception as _exc:
+        logger.error(f"[bootstrap] gaming_health load failed (ignored): {_exc}")
+        boot_profile.note("gaming_health", False)
+else:
+    boot_profile.note("gaming_health", False)
 
-try:
-    import smart_route
-    app.include_router(smart_route.router)
-    logger.info("[bootstrap] smart_route routes registered")
-except Exception as _exc:
-    logger.error(f"[bootstrap] smart_route load failed (ignored): {_exc}")
+if boot_profile.enabled("smart_route"):
+    try:
+        import smart_route
+        app.include_router(smart_route.router)
+        logger.info("[bootstrap] smart_route routes registered")
+        boot_profile.note("smart_route", True)
+    except Exception as _exc:
+        logger.error(f"[bootstrap] smart_route load failed (ignored): {_exc}")
+        boot_profile.note("smart_route", False)
+else:
+    boot_profile.note("smart_route", False)
 
-try:
-    import isp_detect
-    app.include_router(isp_detect.router)
-    logger.info("[bootstrap] isp_detect routes registered")
-except Exception as _exc:
-    logger.error(f"[bootstrap] isp_detect load failed (ignored): {_exc}")
+if boot_profile.enabled("isp_detect"):
+    try:
+        import isp_detect
+        app.include_router(isp_detect.router)
+        logger.info("[bootstrap] isp_detect routes registered")
+        boot_profile.note("isp_detect", True)
+    except Exception as _exc:
+        logger.error(f"[bootstrap] isp_detect load failed (ignored): {_exc}")
+        boot_profile.note("isp_detect", False)
+else:
+    boot_profile.note("isp_detect", False)
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -5175,12 +5364,17 @@ async def api_diagnostics():
 app.middleware("http")(diagnostics_mod.diagnostics_middleware)
 
 # ── IP Quality Engine (Phase 9/28) ────────────────────────────────────────────
-try:
-    import ip_quality
-    app.include_router(ip_quality.router)
-    logger.info("[bootstrap] ip_quality routes registered (IP Quality Engine)")
-except Exception as _exc:
-    logger.error(f"[bootstrap] ip_quality load failed (ignored): {_exc}")
+if boot_profile.enabled("ip_quality"):
+    try:
+        import ip_quality
+        app.include_router(ip_quality.router)
+        logger.info("[bootstrap] ip_quality routes registered (IP Quality Engine)")
+        boot_profile.note("ip_quality", True)
+    except Exception as _exc:
+        logger.error(f"[bootstrap] ip_quality load failed (ignored): {_exc}")
+        boot_profile.note("ip_quality", False)
+else:
+    boot_profile.note("ip_quality", False)
 
 # ── Subscription profiles (Phase 13 + Phase 37.13) on /sub-all ───────────────
 _SUB_PROFILES = ("ALL", "HEALTHY", "HEALTHIEST", "FASTEST", "REGION", "PROTOCOL", "CUSTOM")
@@ -5477,15 +5671,21 @@ async def api_migrate_legacy_spoof():
 # تا قبل از لاگین هم قابل بررسی باشد. (از /api/version استفاده نمی‌کنیم چون
 # آن مسیر قبلاً برای بررسی به‌روزرسانی در نظر گرفته شده است.)
 # ══════════════════════════════════════════════════════════════════════════════
-EMIX_VERSION = "11.6.0-revive"
-EMIX_BUILD_DATE = "2026-09-03"
+EMIX_VERSION = "12.0.0-core"
+EMIX_BUILD_DATE = "2026-09-04"
+
+@app.get("/api/boot-profile")
+async def api_boot_profile(_=Depends(require_auth)):
+    """گزارش پروفایل بوت — کدام موتورها فعال/لود شده‌اند و آیا سطح هسته
+    (پینگ/رله/ساب/داشبورد) کامل ثبت شده است. برای عیب‌یابی «چرا فلان بخش
+    داشبورد خالی است» — پاسخ: در پروفایل core آن موتور خاموش است."""
+    return {"ok": True, **boot_profile.report()}
 
 @app.get("/api/deployment-version")
 async def api_deployment_version():
     """اطلاعات نسخه‌ی دیپلوی‌شده — بدون نیاز به احراز هویت.
     اگر نسخه‌ای که می‌بینید با نسخه‌ی گیت‌هاب تطابق نداشت، یعنی Railway هنوز
     روی کد قدیمی است و باید «Deploy Latest Commit» (نه Redeploy) را بزنید."""
-    # خلاصه‌ی فیچرهای آزمایشی (اگر فعالند)
     exp_summary = "disabled"
     try:
         import experimental
@@ -5496,6 +5696,8 @@ async def api_deployment_version():
         "service": "EMIX",
         "version": EMIX_VERSION,
         "build_date": EMIX_BUILD_DATE,
+        # v12: پروفایل بوت — core (پیش‌فرض، فقط هسته‌ی همیشه‌زنده) یا full
+        "boot_profile": boot_profile.current_profile(),
         # FIX v11.5.1: سلامت هویت دیپلوی — اگر unstable باشد، هر ری‌دیپلوی
         # UUID کانفیگ‌های پیش‌فرض را عوض می‌کند و کانفیگ‌های قبلی قطع می‌شوند.
         "identity": {
