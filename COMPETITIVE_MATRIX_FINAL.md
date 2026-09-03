@@ -77,3 +77,32 @@
 3. Their public-SOCKS Iranian exit is a trust hazard our Iran Gateway refuses by design: evidence-verified gateway or honest `UNCONFIGURED` — never an untrusted exit.
 
 **Score impact**: none — matrix above already scores Zeus; this re-audit only confirms the two structural advantages (platform-native persistence, one-click bot deploy) and one honest gap (their exit trust model is weaker than ours by choice).
+
+## 5. EMIX + RVG cross-audit (2026-09-03, v11.6.0-revive) — the revival sources
+
+**Context**: user's live report — «کلاینت همچنان ارور میده و کانفیگ درست نشدن… پروتکل سالم پروژه EMIX رو بهت میدم چک کنی… این پروژه الهام گرفته شده از RVG بوده و احتمالا آپدیت داده… Rvg از طریق وورکر خودکاری که به پروژه اش وصل کرده اپدیت جدید میده برای پنل… میخوام بخش های سالم با بررسی این دو پروژه دوباره احیا بشن.»
+
+**EMIX (github.com/EMIXPI/EMIX @ 05f2f2c)** — the known-healthy sibling:
+- History is a mirror of our own incident class: new transports (REALITY/gRPC/Hysteria2/TUIC) → critical regression → Xray/sing-box bridges → **full revert (9408236)** → «Restore to healthy original state (c33ba43)» + ping-test button only.
+- Health mechanism #1: **updater LOCKED** (`DISABLE_UPDATES=1` default — the worker manifest can never rewrite the panel). EMIX-PRO never adopted the RVG auto-updater, so this hazard does not exist here.
+- Health mechanism #2: protocol surface kept at the proven set (vless-ws/xhttp/trojan/ss/mtproto) — identical core emitters to ours (verified by diff; EMIX-PRO is a strict superset with 0-RTT, fast-ping path, IPv4-first connect).
+
+**RVG (github.com/arvin341az-glitch/RVG @ ce2f878)** — the family root, «recently updated» per user:
+- Its auto-update worker (rvg-update.arvin341az.workers.dev/version.json, manifest v11.0.2) distributes a main.py **sha1-identical to the repo** — the GitHub repo IS the latest release.
+- The v11.0.2 payload = **weak-link tuning**: RELAY_BUF 1MB→256KB, SOCK_BUF 4MB→512KB (bufferbloat fix on weak links), WRITE_HIGH_WATER 512KB→128KB, TCP_USER_TIMEOUT 20s (half-dead mobile connections reaped). Plus system stats (psutil), server-location endpoint.
+- **Adopted in EMIX-PRO v11.6.0**: the full weak-link profile, as a single source of truth in `protocol/net_connect.py` consumed by every protocol module. Deliberately NOT adopted: the auto-updater itself (uncontrolled remote rewrites of a running panel = the exact incident class we just survived).
+
+**Live truth test that framed the revival (real client emulation from sandbox)**:
+- Production healthy at every layer: identity stable across TWO redeploys; delivered configs (clean AND spoofed SNI) connect full E2E (TLS → WS 101 → VLESS → real HTTP 200).
+- User-side breakage pattern (Karing screenshot): all Railway-direct entries dead, CF-routed Auto–PoP alive → vantage/path-specific blocking (Iran→Railway direct), not server-side breakage.
+- Answer shipped in v11.6.0: (1) every sub now carries a same-identity **CF-tunnel variant** (verified full E2E via the real worker: 101 → VLESS → HTTP 200, exit AMS) so clients auto-survive direct-path blocks; (2) **پینگ واقعی از مرورگر شما** card measures BOTH entry paths from the admin's own network — the exact vantage Karing uses; (3) RVG weak-link tuning for the weak-Iranian-link experience; (4) worker UUID auto-sync so the WTE allowlist never goes stale.
+
+| Revival item | Source | EMIX-PRO implementation |
+|---|---|---|
+| Weak-link buffers + TCP_USER_TIMEOUT | RVG v11.0.2 | `protocol/net_connect.py` single source; all protocols import |
+| Real client-vantage ping | user request («پینگ واقعی») + EMIX ping-button spirit | browser WS probes (direct + CF gateway) on the configs page; `/api/client-ping-config` |
+| Sub multi-entry resilience | Zeus client-resolve idea + our multiloc tunnel | `/sub/{uuid}` / `/sub-all` / `/sub-group` append CF `/loc/auto` variant (same UUID, honest `· CF` remark) |
+| Worker UUID staleness | our own finding (6/7 synced) | auto-sync on vless link create/delete |
+| Updater lock | EMIX (DISABLE_UPDATES) | n/a — EMIX-PRO has no auto-updater (by design) |
+
+**Conclusion**: the two reference projects' healthy patterns are now either adopted (RVG tuning, multi-entry subs) or already structurally present (EMIX's locked protocol surface ≡ our canonical compiler path; identity stability ≡ their no-updater stance). The remaining user-side action: **re-import once via sub URLs** — each refresh now self-heals across BOTH entry paths.
