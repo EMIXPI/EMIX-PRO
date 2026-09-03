@@ -46,3 +46,34 @@
 4. **MED — WG/AWG runtime on VPS nodes**: the control-plane is ready; needs the node agent.
 5. **MED — Security promotions**: PBKDF2 default, signed update channel, bounded activity log.
 6. **LOW — Adapter extended contract** (latency_test/traffic_stats/online_clients), MTProto byte counters (upstream binary limitation), main.py decomposition (extract MTProto orchestration + retire legacy emitter).
+
+## 4. Zeus live re-audit (2026-09-03, after the v11.5.1 identity incident)
+
+**Context**: user asked whether Zeus's latest changes could improve EMIX-PRO's health after the production incident (all delivered configs cut after redeploy). Method: cloned `panel-zeus/Z-E-U-S` @ `561c8b3` (pushed 2026-09-03 07:59 +0330) — **architectural study only, zero proprietary code copied** (their license: Proprietary / Non-Commercial).
+
+**What Zeus is (v2.0.6)**: a single-file Cloudflare Worker (~595 KB `Source.js`) + D1 database + one-click Telegram bot deployment. VLESS/Trojan over WebSocket terminated inside the Worker (egress = CF colo), multi-location routing by chaining users through **community-scanned public SOCKS5 lists per country** (`proxy/*.txt`, incl. 820 Iranian entries), TLS-fragment presets per Iranian ISP, PWA panel, anti-tamper/DRM integrity checks, full JSON backup/import.
+
+**Their last-7-day changes (verified in git log — all operational-health, not features)**:
+1. **D1 daily row-quota exhaustion** → user-facing Persian error («سهمیه دیتابیس شما تمام شده…») + D1 write-throttling relaxed (50→250 MB threshold, 20s→60s / 120s→300s intervals) + live d1Reads/d1Writes quota bars. Their own «everything down» incident was **platform quota, not code**.
+2. **Online window 20s→60s→180s** (relaxed twice in one day) — flapping «offline» display fix.
+3. **Subscription links switched to `vless://uuid@0.0.0.0:1?…&host=<domain>`** — the «client-resolve» convention: capable clients (v2rayNG/Hiddify/Karing family) resolve the `host` domain client-side and pick their own best IP.
+4. `fragment=…,tlshello` URL param emitted **only for TLS ports**.
+5. Panel auto-refresh default → 5 s.
+
+**Mapping to EMIX-PRO**:
+
+| Zeus change | EMIX-PRO state | Verdict |
+|---|---|---|
+| D1 quota → honest Persian errors | v11.5.1 identity incident root-caused + fixed (stable identity chain, honest `source`/`stable_across_redeploy` labels); structured events + honest verdicts across all engines | equivalent already shipped |
+| D1 write throttling | no per-row quota on Railway; traffic accounting already EWMA-batched, quota-safe | n/a |
+| Online window flapping (20/60/180s) | session sweep = 3600 s idle; health states expire to UNKNOWN honestly, never born HEALTHY | already saner |
+| `0.0.0.0:1` client-resolve links | standard **domain-dial** links achieve the same via portable semantics — verified live: the one config that kept ping through the identity incident was our multiloc **Auto–PoP** (`addr = domain`), because Karing resolved the domain client-side | achieved, portable; nonstandard encoding deliberately not adopted |
+| fragment-tlshello-on-TLS-only | we never emit fragment URL params (Xray client JSON snippets only) | no bug to fix |
+| 5 s auto-refresh | event/diagnostics polling already bounded | skip |
+
+**Structural lessons (the real answer to «can Zeus help our health?»)**:
+1. Zeus never has our identity incident **because D1 persists by platform design**. Our equivalent is the v11.5.1 identity chain (RAILWAY_SERVICE_ID-derived, redeploy-stable — deployed and verified live) **plus the operator action: set `SECRET_KEY` or attach a Volume at `/data`**. Note: state beyond identity (accounts, saved Clean-IPs, custom links) is still ephemeral without a Volume.
+2. Zeus users hold **subscription URLs** — self-healing on every refresh. With stable identity, EMIX-PRO's `/sub/{uuid}` now gives the same for default configs: re-import via sub URL once → future redeploys no longer cut clients.
+3. Their public-SOCKS Iranian exit is a trust hazard our Iran Gateway refuses by design: evidence-verified gateway or honest `UNCONFIGURED` — never an untrusted exit.
+
+**Score impact**: none — matrix above already scores Zeus; this re-audit only confirms the two structural advantages (platform-native persistence, one-click bot deploy) and one honest gap (their exit trust model is weaker than ours by choice).
