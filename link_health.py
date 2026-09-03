@@ -445,6 +445,58 @@ def register_routes(app) -> None:
             headers={"Cache-Control": "no-store"},
         )
 
+    @app.get("/api/client-ping-config")
+    async def api_client_ping_config(_=Depends(require_auth)):
+        """اهداف «پینگ واقعی از مرورگر شما» — سمت کلاینت (منظره‌ی کاربر).
+
+        مرورگرِ ادمین (که معمولاً داخل ایران است) خودش WebSocket واقعی به
+        مسیرهای ورودی کانفیگ باز می‌کند و زمان هندشیک TCP+TLS+WS را می‌سنجد —
+        دقیقاً همان چیزی که کلاینت (Karing/v2rayNG) تجربه می‌کند. سرور فقط
+        URLهای درست را می‌دهد؛ اندازه‌گیری از شبکه‌ی خود کاربر است.
+
+        targets:
+          direct     → wss://پنل/<مسیر پروتکل>            (ورودی Railway)
+          cf_gateway → wss://worker/loc/auto/<مسیر>        (تونل CF→Railway)
+        هر URL شامل {uuid} است که JS جایگزین می‌کند.
+        """
+        host = get_host()
+        proto_paths = {
+            "vless-ws": "/ws/{uuid}",
+            "trojan-ws": "/trojan-ws",
+            "shadowsocks": "/ss-ws",
+            # xhttp/mtproto: مسیر WS ندارند؛ پینگ مرورگر فقط ورودی عمومی می‌سنجد
+            "_entry": "/ws/{uuid}",
+        }
+        targets = [
+            {
+                "id": "direct",
+                "label": "ورودی مستقیم (Railway)",
+                "url": f"wss://{host}/ws/{{uuid}}",
+                "note": "همان میزبانی که پنل روی آن است — اگر ISP شما آن را بلاک کند این مسیر قرمز می‌شود.",
+            }
+        ]
+        gateway_domain = ""
+        try:
+            import multiloc as _ml
+            cfg = _ml._worker_cfg()
+            gateway_domain = cfg.get("worker_domain") or ""
+        except Exception:
+            gateway_domain = ""
+        if gateway_domain:
+            targets.append({
+                "id": "cf_gateway",
+                "label": "گیت‌وی Cloudflare (تونل)",
+                "url": f"wss://{gateway_domain}/loc/auto/ws/{{uuid}}",
+                "note": "مسیر از لبه‌ی کلادفلر به پنل — معمولاً وقتی مسیر مستقیم بلاک است همین زنده می‌ماند.",
+            })
+        return JSONResponse({
+            "ok": True,
+            "panel_host": host,
+            "gateway_domain": gateway_domain,
+            "proto_paths": proto_paths,
+            "targets": targets,
+        })
+
     @app.get("/api/exit-check")
     async def api_exit_check():
         """برای تست سلامت خروج واقعی از طریق گیت‌وی کلادفلر.

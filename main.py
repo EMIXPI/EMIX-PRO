@@ -1402,6 +1402,42 @@ def _emit_mtproto_link(link: dict, host: str, remark: str) -> str:
     )
 
 
+def _cf_tunnel_variant(uri: str, remark_suffix: str = " · CF") -> str | None:
+    """واریانت «همان کانفیگ از مسیر گیت‌وی Cloudflare» — تاب‌آوری ساب (v11.6.0).
+
+    اگر دامنه‌ی Worker کلادفلر (مرکز گیمینگ) تنظیم شده باشد، از همان URI یک
+    نسخه‌ی هم‌مقصد می‌سازد که به‌جای اتصال مستقیم به Railway، از لبه‌ی
+    کلادفلر با مسیر /loc/auto به همین پنل تونل می‌شود (وارد UUID چک نمی‌خواهد —
+    احراز هویت همان پنل است؛ Worker فقط پروکسی است).
+
+    چرا: وقتی ISP مسیر مستقیم Railway را بلاک می‌کند (سناریوی «همه‌ی کانفیگ‌ها
+    قطع شدند در حالی که سرور سالم است»)، مسیر CF معمولاً زنده می‌ماند. کلاینت‌های
+    مدرن (Karing/v2rayNG) هر دو خطِ ساب را می‌گیرند و خودکار روی مسیرِ قابل‌دسترس
+    از شبکه‌ی کاربر می‌مانند.
+
+    فقط vless/trojan — برای بقیه None برمی‌گردد و لینک اصلی دست‌نخورده می‌ماند.
+    """
+    try:
+        import multiloc as _ml
+        cfg = _ml._worker_cfg()
+        domain = (cfg or {}).get("worker_domain") or ""
+        if not domain:
+            return None
+        variant = _ml._tunnel_link(uri, "auto", domain, domain)
+        if not variant:
+            return None
+        # برچسب صادقانه: نشانه‌ی «مسیر CF» به remark اضافه شود تا کاربر/کلاینت
+        # بتواند دو ورودی را از هم تشخیص دهد
+        base, frag_marker, frag = variant.partition("#")
+        if frag_marker:
+            from urllib.parse import unquote as _unquote
+            rem = _unquote(frag)
+            variant = base + "#" + quote(rem + remark_suffix, safe="")
+        return variant
+    except Exception:
+        return None
+
+
 def generate_share_link(uuid: str, host: str, remark: str = "EMIX", protocol: str = DEFAULT_PROTOCOL) -> str:
     """[Config Compiler facade — Phase 3 refactor]
 
@@ -1913,7 +1949,14 @@ async def subscription_single(uuid: str):
     host = get_host()
     proto = link.get("protocol", DEFAULT_PROTOCOL)
     vless = generate_share_link(uuid, host, remark=f"EMIX-{link['label']}", protocol=proto)
-    content = base64.b64encode(vless.encode()).decode()
+    lines = [vless]
+    # 🩱 Resilience v11.6.0: واریانت CF — همان کانفیگ از مسیر تونل Cloudflare.
+    # کلاینت‌های مدرن هر دو خط را می‌گیرند و روی مسیرِ قابل‌دسترس از شبکه‌ی
+    # کاربر می‌مانند (مقاوم در برابر بلاکِ مسیر مستقیم Railway توسط ISP).
+    cf = _cf_tunnel_variant(vless)
+    if cf:
+        lines.append(cf)
+    content = base64.b64encode("\n".join(lines).encode()).decode()
     headers = build_sub_headers(link["label"], link.get("used_bytes", 0), link.get("limit_bytes", 0), link.get("expires_at"))
     return Response(content=content, media_type="text/plain", headers=headers)
 
@@ -1922,11 +1965,15 @@ async def subscription_all(_=Depends(require_auth)):
     host = get_host()
     async with LINKS_LOCK:
         allowed = [d for d in LINKS.values() if is_link_allowed(d)]
-        lines = [
-            generate_share_link(uid, host, remark=f"EMIX-{d['label']}", protocol=d.get("protocol", DEFAULT_PROTOCOL))
-            for uid, d in LINKS.items()
-            if is_link_allowed(d)
-        ]
+        lines = []
+        for uid, d in LINKS.items():
+            if not is_link_allowed(d):
+                continue
+            uri = generate_share_link(uid, host, remark=f"EMIX-{d['label']}", protocol=d.get("protocol", DEFAULT_PROTOCOL))
+            lines.append(uri)
+            cf = _cf_tunnel_variant(uri)
+            if cf:
+                lines.append(cf)
         total_used = sum(d.get("used_bytes", 0) for d in allowed)
         total_limit = sum(d.get("limit_bytes", 0) for d in allowed)
         expiries = [d["expires_at"] for d in allowed if d.get("expires_at")]
@@ -2120,7 +2167,12 @@ async def sub_group_subscription(uuid_key: str, request: Request):
         for lid in link_ids:
             link = LINKS.get(lid)
             if link and is_link_allowed(link):
-                lines.append(generate_share_link(lid, host, remark=f"EMIX-{link['label']}", protocol=link.get("protocol", DEFAULT_PROTOCOL)))
+                uri = generate_share_link(lid, host, remark=f"EMIX-{link['label']}", protocol=link.get("protocol", DEFAULT_PROTOCOL))
+                lines.append(uri)
+                # تاب‌آوری v11.6.0: واریانت CF (تونل /loc/auto) کنار مسیر مستقیم
+                cf = _cf_tunnel_variant(uri)
+                if cf:
+                    lines.append(cf)
                 allowed_links.append(link)
         total_used = sum(l.get("used_bytes", 0) for l in allowed_links)
         total_limit = sum(l.get("limit_bytes", 0) for l in allowed_links)
@@ -2967,6 +3019,20 @@ async def _create_link_core(body: dict) -> dict:
                 pass
     asyncio.create_task(_probe_new_link())
 
+    # v11.6.0 — UUID auto-sync to CF worker (WTE /vl): بعد از ساخت هر کانفیگ
+    # vless، UUID جدید در پس‌زمینه به وورکر سینک می‌شود تا مسیر WTE بدون دخالت
+    # دستی همیشه به‌روز باشد (قبلاً فقط build_links سینک می‌کرد — فراموش‌شدنی).
+    async def _sync_worker_uuids():
+        try:
+            import multiloc as _ml
+            res = await _ml.sync_worker()
+            if res.get("ok"):
+                logger.info(f"[sync] UUIDs auto-synced to CF worker: {res.get('pushed', '?')}")
+        except Exception as _exc:
+            logger.debug(f"[sync] worker UUID auto-sync skipped: {type(_exc).__name__}")
+    if protocol.startswith("vless"):
+        asyncio.create_task(_sync_worker_uuids())
+
     host = get_host()
     return {
         "uuid": uid,
@@ -3249,6 +3315,18 @@ async def delete_link(uid: str, _=Depends(require_auth)):
                     ids.remove(uid)
     asyncio.create_task(save_state())
     log_activity("link", f"کانفیگ «{label}» حذف شد", "err")
+
+    # v11.6.0 — UUID auto-sync after delete: وورکر CF نباید UUID حذف‌شده را
+    # دیگر بپذیرد (سینک کامل لیست، حذف خودکارِ موارد stale در سمت وورکر)
+    async def _sync_after_delete():
+        try:
+            import multiloc as _ml
+            await _ml.sync_worker()
+        except Exception:
+            pass
+    if (proto or "").startswith("vless"):
+        asyncio.create_task(_sync_after_delete())
+
     return {"ok": True, "deleted": uid}
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -5399,7 +5477,7 @@ async def api_migrate_legacy_spoof():
 # تا قبل از لاگین هم قابل بررسی باشد. (از /api/version استفاده نمی‌کنیم چون
 # آن مسیر قبلاً برای بررسی به‌روزرسانی در نظر گرفته شده است.)
 # ══════════════════════════════════════════════════════════════════════════════
-EMIX_VERSION = "11.5.1-hotfix-identity"
+EMIX_VERSION = "11.6.0-revive"
 EMIX_BUILD_DATE = "2026-09-03"
 
 @app.get("/api/deployment-version")

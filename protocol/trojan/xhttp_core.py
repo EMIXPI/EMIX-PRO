@@ -18,7 +18,7 @@ from datetime import datetime, timezone
 
 from fastapi import Request, HTTPException
 
-from protocol.net_connect import open_connection_v4first
+from protocol.net_connect import open_connection_v4first, apply_weak_link_tuning
 from main import (
     LINKS,
     LINKS_LOCK,
@@ -39,7 +39,7 @@ TROJAN_SESSION_IDLE_TIMEOUT_ACTIVE = 90
 TROJAN_REAPER_INTERVAL = 10
 TROJAN_TCP_CONNECT_TIMEOUT = 10.0
 
-TROJAN_SOCK_BUF_SIZE = 4 * 1024 * 1024
+TROJAN_SOCK_BUF_SIZE = 512 * 1024   # پروفایل ضعیف-لینک RVG v11.0.2 (ضد bufferbloat)
 
 # ── AdaptiveFlow (AIMD) مخصوص Trojan-XHTTP ────────────────────────────────────
 TROJAN_FLOW_MIN_HW = 256 * 1024
@@ -81,17 +81,13 @@ def _resp_headers(fp: str) -> dict:
 
 
 def _tune_socket(writer: asyncio.StreamWriter):
-    """TCP_NODELAY + بافرهای بزرگ‌تر سوکت مخصوص Trojan-XHTTP."""
+    """پروفایل ضعیف-لینک net_connect (RVG v11.0.2): بافر 512KB + TCP_USER_TIMEOUT 20s."""
     sock = writer.transport.get_extra_info("socket")
     if not sock:
         return
     try:
-        sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, TROJAN_SOCK_BUF_SIZE)
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, TROJAN_SOCK_BUF_SIZE)
-        if hasattr(socket, "TCP_QUICKACK"):
-            sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_QUICKACK, 1)
-    except OSError as e:
+        apply_weak_link_tuning(sock)
+    except Exception as e:
         logger.warning(f"Trojan-XHTTP _tune_socket failed: {e}")
 
 

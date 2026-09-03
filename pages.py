@@ -3268,6 +3268,38 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
 
   <div class="cfg-grid" id="links-grid"></div>
   <div class="empty" id="links-empty" style="display:none"><i class="ti ti-link-off"></i><p>هنوز کانفیگی وجود ندارد</p></div>
+
+  <!-- ══ حقیقت مسیر از مرورگر شما — پینگ واقعی سمت کلاینت ══ -->
+  <div class="card" id="ct-card" style="margin-top:18px">
+    <div class="tb-row" style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,rgba(76,201,240,.16),rgba(139,92,246,.14));display:flex;align-items:center;justify-content:center">
+          <i class="ti ti-radar-2" style="color:var(--accent)"></i>
+        </div>
+        <div>
+          <div class="tb-title" style="font-size:14.5px">حقیقت مسیر از مرورگر شما</div>
+          <div class="tb-sub" style="font-size:11.5px">اندازه‌گیری واقعی از شبکه‌ی خودتان — همان چیزی که کلاینت (Karing / v2rayNG) تجربه می‌کند، نه از سرور</div>
+        </div>
+      </div>
+      <button class="btn btn-sm btn-g" id="ct-refresh" onclick="refreshClientTruth()"><i class="ti ti-refresh"></i> تست دوباره</button>
+    </div>
+    <div id="ct-rows" style="display:flex;flex-direction:column;gap:8px;margin-top:14px">
+      <div class="ct-row" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--card-b);border-radius:10px">
+        <i class="ti ti-rss"></i>
+        <span style="min-width:170px;font-weight:600">ورودی مستقیم (Railway)</span>
+        <span id="ct-direct" style="color:var(--t3)">—</span>
+      </div>
+      <div class="ct-row" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--card-b);border-radius:10px">
+        <i class="ti ti-cloud" style="color:#f38020"></i>
+        <span style="min-width:170px;font-weight:600">گیت‌وی Cloudflare (تونل)</span>
+        <span id="ct-cf-gateway" style="color:var(--t3)">—</span>
+      </div>
+    </div>
+    <div class="cl" style="margin-top:12px;font-size:11.5px;line-height:1.9">
+      <i class="ti ti-info-circle"></i>
+      <span>هر سطر یک <b>WebSocket واقعی</b> از مرورگر شما تا مسیر ورودی کانفیگ‌ها باز می‌کند (TCP + TLS + هندشیک WS). اگر «مستقیم» قرمز و «گیت‌وی» سبز باشد، ISP شما مسیر Railway را بلاک کرده — کانفیگ‌های سالم را از <b>مسیر گیت‌وی</b> (مرکز گیمینگ → ساخت لینک پل) تحویل بگیرید. این همان دلیلی است که گاهی «همه‌ی کانفیگ‌ها قطع» دیده می‌شوند در حالی که سرور سالم است.</span>
+    </div>
+  </div>
 </section>
 
 <!-- ════════════════════════ پل ایران ════════════════════════ -->
@@ -6277,6 +6309,62 @@ async function clientRtt(){
   }
   return ts.length?Math.min(...ts):null;
 }
+/* ══════ پینگ واقعی از مرورگر شما (منظره‌ی کلاینت — مثل Karing) ══════ */
+let ctConfig=null;      // /api/client-ping-config → {targets, panel_host, gateway_domain}
+const ctCache={};       // uuid → {direct:{ok,ms}|{ok:false,error}, cf_gateway:...}
+function browserWsPing(url,timeoutMs){
+  // یک WebSocket واقعی از مرورگرِ شما تا مسیر ورودی کانفیگ (TCP+TLS+WS upgrade)
+  return new Promise(res=>{
+    let done=false, ws;
+    try{ ws=new WebSocket(url); }catch(e){ return res({ok:false,error:'construct'}); }
+    const t0=performance.now();
+    const fin=(ok,error)=>{
+      if(done)return; done=true;
+      try{ ws.onopen=ws.onerror=ws.onclose=null; ws.close(); }catch(e){}
+      res(ok?{ok:true,ms:Math.round(performance.now()-t0)}:{ok:false,error:error||'fail'});
+    };
+    const timer=setTimeout(()=>fin(false,'timeout'),timeoutMs||8000);
+    ws.onopen=()=>{clearTimeout(timer);fin(true)};
+    ws.onerror=()=>{clearTimeout(timer);fin(false,'unreachable')};
+    ws.onclose=()=>{if(!done){clearTimeout(timer);fin(false,'closed')}};
+  });
+}
+async function loadClientPingConfig(){
+  if(ctConfig) return ctConfig;
+  try{
+    const r=await authF('/api/client-ping-config');
+    const d=await r.json();
+    if(d.ok) ctConfig=d;
+  }catch(e){}
+  return ctConfig;
+}
+async function refreshClientTruth(){
+  // کارت «حقیقت مسیر از مرورگر شما» — هر سطر یک WS واقعی از شبکه‌ی خودتان
+  const cfg=await loadClientPingConfig();
+  if(!cfg){
+    const el=document.getElementById('ct-direct');
+    if(el){el.textContent='در دسترس نیست';el.style.color='var(--t3)'}
+    return;
+  }
+  const probeUuid='00000000-0000-0000-0000-000000000000'; // UUID آزمایشی — هندشیک WS کافی است
+  for(const t of (cfg.targets||[])){
+    const el=document.getElementById('ct-'+t.id);
+    if(!el) continue;
+    el.innerHTML=pingWaveHtml()+' در حال تست…'; el.style.color='var(--t3)';
+    const r=await browserWsPing(t.url.replace('{uuid}',probeUuid),8000);
+    if(r.ok){ el.innerHTML=`<i class="ti ti-circle-check" style="color:var(--green)"></i> زنده از شبکه‌ی شما — ${toFa(r.ms)}ms`; el.style.color='var(--green)'; }
+    else{ el.innerHTML=`<i class="ti ti-circle-x" style="color:var(--red)"></i> از شبکه‌ی شما قابل دسترس نیست (${r.error})`; el.style.color='var(--red)'; }
+  }
+}
+async function clientProbeLink(uuid){
+  // پینگ مرورگر برای یک کانفیگِ مشخص — با UUID واقعی همان کانفیگ
+  const cfg=await loadClientPingConfig();
+  if(!cfg) return null;
+  const out={};
+  for(const t of (cfg.targets||[])) out[t.id]=await browserWsPing(t.url.replace('{uuid}',uuid),8000);
+  ctCache[uuid]=out;
+  return out;
+}
 function pingWaveHtml(){return '<span class="ping-wave"><span></span><span></span><span></span></span>'}
 function pingMsClass(ms){return ms==null?'var(--green)':ms<500?'var(--green)':ms<1200?'var(--amber)':'var(--red)'}
 function pingBadgeHtml(l){
@@ -6289,13 +6377,22 @@ function pingBadgeHtml(l){
   }
   return `<span class="cfg-sub-tag" id="pb-${l.uuid}" style="color:var(--red-t);cursor:pointer" onclick="pingLink('${l.uuid}',this)" title="${tip}"><i class="ti ti-wifi-off"></i> قطع</span>`;
 }
-function renderPingBadge(uuid,d,rtt){
+function renderPingBadge(uuid,d,rtt,cp){
   const el=document.getElementById('pb-'+uuid);
   if(!el) return;
   if(d&&d.ok){
     const ms=d.e2e_ms!=null?Math.round(d.e2e_ms):null;
     el.style.color=pingMsClass(ms);
-    el.innerHTML=`<i class="ti ti-activity"></i> تونل ${ms!=null?toFa(ms)+'ms':'✓'}${rtt!=null?' · من '+toFa(rtt)+'ms':''}`;
+    // «من:» = پینگ واقعی از مرورگر شما (دقیقاً مسیری که کلاینت می‌رود)
+    let mine='';
+    if(cp){
+      const parts=[];
+      if(cp.direct) parts.push(`مستقیم ${cp.direct.ok?toFa(cp.direct.ms)+'ms':'✗'}`);
+      if(cp.cf_gateway) parts.push(`CF ${cp.cf_gateway.ok?toFa(cp.cf_gateway.ms)+'ms':'✗'}`);
+      if(parts.length) mine=' · من: '+parts.join(' · ');
+    }
+    if(!mine && rtt!=null) mine=' · من '+toFa(rtt)+'ms';
+    el.innerHTML=`<i class="ti ti-activity"></i> تونل ${ms!=null?toFa(ms)+'ms':'✓'}${mine}`;
     el.title=`WS: ${d.ws_ms!=null?Math.round(d.ws_ms)+'ms':'—'} | تونل: ${d.e2e_ms!=null?Math.round(d.e2e_ms)+'ms':'—'} | پینگ شما: ${rtt!=null?rtt+'ms':'—'}`;
   }else{
     el.style.color='var(--red-t)';
@@ -6318,10 +6415,14 @@ async function pingLink(uuid,btn){
   pingLoading(uuid);
   if(ic){ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite'}
   try{
-    const [rtt,r]=await Promise.all([clientRtt(),authF(`/api/links/${uuid}/ping`,{method:'POST'})]);
+    // سه اندازه‌گیری موازی: تونل از سرور + RTT مرورگر + پینگ واقعی مرورگر (دو مسیر ورودی)
+    const [rtt,r,cp]=await Promise.all([clientRtt(),authF(`/api/links/${uuid}/ping`,{method:'POST'}),clientProbeLink(uuid)]);
     const d=await r.json();
-    renderPingBadge(uuid,d,rtt);
-    if(d.ok) toast(`تونل سالم — ${d.e2e_ms!=null?Math.round(d.e2e_ms)+'ms':''}${rtt!=null?' · پینگ شما '+rtt+'ms':''}`,'ok');
+    renderPingBadge(uuid,d,rtt,cp);
+    if(d.ok){
+      const mine=cp?((cp.direct?(cp.direct.ok?'مستقیم '+cp.direct.ms+'ms':'مستقیم ✗'):'')+(cp.cf_gateway?(cp.cf_gateway.ok?' · CF '+cp.cf_gateway.ms+'ms':' · CF ✗'):'')):'';
+      toast(`تونل سالم — ${d.e2e_ms!=null?Math.round(d.e2e_ms)+'ms':''}${mine?' · از مرورگر شما: '+mine:(rtt!=null?' · پینگ شما '+rtt+'ms':'')}`,'ok');
+    }
     else toast('تست ناموفق: '+(d.detail||'نامشخص'),'err');
   }catch(e){
     const el=document.getElementById('pb-'+uuid);
@@ -8589,6 +8690,11 @@ async function loadLinks(){
     }
     document.getElementById('links-nb').textContent=links.length;
     document.getElementById('links-pg-cnt').textContent=toFa(links.length)+' کانفیگ';
+    // پینگ واقعی از مرورگر شما — کارت «حقیقت مسیر» (حداکثر هر ۶۰ ثانیه یک‌بار)
+    if(!window.__ctLast || (Date.now()-window.__ctLast)>60000){
+      window.__ctLast=Date.now();
+      refreshClientTruth();
+    }
     const lsumBadge=document.getElementById('lsummary-badge'); if(lsumBadge)lsumBadge.textContent=toFa(links.length);
     const liveUuids=new Set(links.map(l=>l.uuid));
     [...selectedLinkUuids].forEach(u=>{if(!liveUuids.has(u))selectedLinkUuids.delete(u)});

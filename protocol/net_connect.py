@@ -12,8 +12,51 @@
 #   asyncio حفظ می‌شود. سازگار ۱۰۰٪ با امضای open_connection (reader, writer).
 # ══════════════════════════════════════════════════════════════════════════════
 
+# ══════════════════════════════════════════════════════════════════════════════
+# 🩺 WEAK-LINK TUNING — تیونینگ لینک‌های ضعیف/پرتاخیر (پورت‌شده از RVG v11.0.2)
+#
+# منبع: پروژه‌ی RVG (ریشه‌ی خانواده‌ی EMIX) — آخرین آپدیت خودکارش دقیقاً همین
+# پروفایل را توزیع کرد («افزایش سرعت کانفیگ‌ها با اینترنت‌های ضعیف»):
+#   1. RELAY_BUF = 256KB — چانک کوچک‌تر روی لینک پرتاخیر یعنی داده زودتر به
+#      مقصد می‌رسد به‌جای صف‌کشیدن در بافر بزرگ (1MB قبلی).
+#   2. SOCK_BUF = 512KB — بافر OS بزرگ (4MB قبلی) روی لینک ضعیف باعث
+#      bufferbloat و تاخیر اضافه می‌شود، نه throughput بیشتر.
+#   3. WRITE_HIGH_WATER = 128KB — drain زودتر، صف ارسال کوچک‌تر می‌ماند؛
+#      تاخیر کمتر مخصوصاً وقتی پهنای‌باند سمت مقصد کم است.
+#   4. TCP_USER_TIMEOUT = 20s — کانکشن‌های نیمه‌قطع (پرش وای‌فای↔موبایل‌دیتا)
+#      بدون این دقیقه‌ها معلق می‌ماندند و throughput را قفل می‌کردند.
+# همه‌ی پروتکل‌ها (VLESS/Trojan/SS/XHTTP) این مقادیر را از همین‌جا می‌خوانند —
+# یک منبع حقیقت واحد برای پروفایل شبکه.
+# ══════════════════════════════════════════════════════════════════════════════
+
+RELAY_BUF = 256 * 1024           # 256KB — چانک رله روی لینک ضعیف
+SOCK_BUF = 512 * 1024            # 512KB — بافر سوکت سطح OS (ضد bufferbloat)
+WRITE_HIGH_WATER = 128 * 1024    # 128KB — آستانه‌ی drain زودهنگام
+TCP_USER_TIMEOUT_MS = 20000      # 20s — قطع اتصال نیمه‌مرده
+
 import asyncio
 import socket
+
+
+def apply_weak_link_tuning(sock) -> None:
+    """اعمال پروفایل ضعیف-لینک روی یک سوکت متصل (best-effort، هرگز raise نمی‌کند).
+
+    TCP_NODELAY/QUICKACK مثل قبل؛ بافرها طبق پروفایل RVG (512KB)؛
+    TCP_USER_TIMEOUT برای درو کانکشن‌های نیمه‌قطع (پرش شبکه‌ی موبایل).
+    """
+    try:
+        sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, SOCK_BUF)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, SOCK_BUF)
+        if hasattr(socket, "TCP_QUICKACK"):
+            sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_QUICKACK, 1)
+        if hasattr(socket, "TCP_USER_TIMEOUT"):
+            # روی لینک‌های ضعیف/موبایل، کانکشن‌های نیمه‌قطع بدون این می‌تونن
+            # دقیقه‌ها معلق بمونن و throughput رو قفل کنن (RVG v11.0.2)
+            sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_USER_TIMEOUT,
+                            TCP_USER_TIMEOUT_MS)
+    except Exception:
+        pass
 
 
 async def open_connection_v4first(address: str, port: int, timeout: float = 10.0):

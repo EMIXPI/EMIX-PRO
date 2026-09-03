@@ -15,7 +15,7 @@ import time
 import traceback
 from datetime import datetime, timezone
 from protocol.trojan.trojan import parse_trojan_header, find_uuid_by_trojan_hash
-from protocol.net_connect import open_connection_v4first
+from protocol.net_connect import open_connection_v4first, apply_weak_link_tuning
 
 from fastapi import Request, HTTPException
 from starlette.requests import ClientDisconnect
@@ -44,10 +44,10 @@ REAPER_INTERVAL = 10
 TCP_CONNECT_TIMEOUT = 10.0
 
 # ── تنظیمات موتور تطبیقی ──────────────────────────────────────────────────────
-SOCK_BUF_SIZE = 4 * 1024 * 1024     # افزایش از 2MB به 4MB برای throughput بالاتر
-                                     # (قبلاً کامنت این تغییر رو می‌گفت ولی مقدار واقعی
-                                     #  هنوز 2MB مونده بود — همینجا واقعاً به 4MB رسید،
-                                     #  هم‌راستا با نسخه‌ی Trojan که از قبل 4MB بود)
+SOCK_BUF_SIZE = 512 * 1024        # پروفایل ضعیف-لینک RVG v11.0.2 — بافر ۴MB سطح OS
+                                     # روی لینک ضعیف فقط bufferbloat و تاخیر اضافه
+                                     # می‌ساخت؛ موتور AIMD application-level است
+                                     # و همچنان تا سقف بالا رشد می‌کند
 
 # _AdaptiveFlow: بازه‌ی مجاز برای high-water تطبیقی (AIMD)
 FLOW_MIN_HW = 256 * 1024
@@ -94,17 +94,13 @@ def _resp_headers(fp: str) -> dict:
 
 
 def _tune_socket(writer: asyncio.StreamWriter):
-    """TCP_NODELAY + بافرهای بزرگ‌تر سوکت برای کاهش سربار سیستم‌عامل روی ترافیک بالا."""
+    """پروفایل ضعیف-لینک net_connect (RVG v11.0.2): بافر 512KB + TCP_USER_TIMEOUT 20s."""
     sock = writer.transport.get_extra_info("socket")
     if not sock:
         return
     try:
-        sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, SOCK_BUF_SIZE)
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, SOCK_BUF_SIZE)
-        if hasattr(socket, "TCP_QUICKACK"):
-            sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_QUICKACK, 1)
-    except OSError as e:
+        apply_weak_link_tuning(sock)
+    except Exception as e:
         logger.warning(f"XHTTP _tune_socket failed: {e}")
 
 

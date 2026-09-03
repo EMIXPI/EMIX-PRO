@@ -18,10 +18,11 @@ from main import (
     logger,
     is_link_allowed,
 )
-
-RELAY_BUF = 1024 * 1024
-SOCK_BUF = 4 * 1024 * 1024
-WRITE_HIGH_WATER = 512 * 1024
+from protocol.net_connect import (
+    RELAY_BUF,
+    WRITE_HIGH_WATER,
+    apply_weak_link_tuning,
+)
 
 CIPHERS = {
     "chacha20-ietf-poly1305": {"key_len": 32, "salt_len": 32, "nonce_len": 12, "cls": ChaCha20Poly1305},
@@ -41,16 +42,13 @@ def _ws_client_ip(ws: WebSocket) -> str:
 
 
 def _tune_socket(writer: asyncio.StreamWriter):
+    """پروفایل ضعیف-لینک net_connect (RVG v11.0.2): بافر 512KB + TCP_USER_TIMEOUT."""
     sock = writer.transport.get_extra_info("socket")
     if not sock:
         return
     try:
-        sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, SOCK_BUF)
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, SOCK_BUF)
-        if hasattr(socket, "TCP_QUICKACK"):
-            sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_QUICKACK, 1)
-    except OSError as e:
+        apply_weak_link_tuning(sock)
+    except Exception as e:
         logger.warning(f"SS _tune_socket failed: {e}")
 
 

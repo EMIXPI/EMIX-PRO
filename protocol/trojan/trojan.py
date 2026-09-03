@@ -3,8 +3,9 @@
 # Trojan Relay — بهینه‌شده برای حداکثر throughput
 #  بهبودها نسبت به نسخه‌ی قبل:
 #   1. _TrojanHashCache: هش UUID‌ها رو cache می‌کنه → دیگه هر بار SHA224 محاسبه نمی‌شه
-#   2. RELAY_BUF: 256KB → 1MB (4× بیشتر)
-#   3. SO_SNDBUF / SO_RCVBUF بزرگ روی سوکت TCP
+#   2. RELAY_BUF / WRITE_HIGH_WATER / SOCK_BUF از پروفایل ضعیف-لینک net_connect.py
+#      (پورت RVG v11.0.2: 256KB/128KB/512KB — رفاه لینک پرتاخیر/موبایل)
+#   3. SO_SNDBUF / SO_RCVBUF روی سوکت TCP + TCP_USER_TIMEOUT 20s
 #   4. _QuotaGate تطبیقی (از xhttp_siz10) به‌جای check_and_use به‌ازای هر chunk
 #   5. relay_ws_to_tcp: drain فقط وقتی بافر پر بشه، نه هر بار
 #   6. relay_tcp_to_ws: خواندن با read(RELAY_BUF) بدون await اضافه
@@ -24,10 +25,13 @@ from main import (
     is_link_allowed,
 )
 from protocol.vless.vless import check_and_use
+from protocol.net_connect import (
+    RELAY_BUF,
+    SOCK_BUF,
+    WRITE_HIGH_WATER,
+    apply_weak_link_tuning,
+)
 
-RELAY_BUF = 1024 * 1024          # 1 MB — 4× نسبت به قبل
-SOCK_BUF = 4 * 1024 * 1024       # 4 MB بافر سوکت سطح OS
-WRITE_HIGH_WATER = 512 * 1024    # drain فقط وقتی بیشتر از 512KB در بافر باشه
 TROJAN_HEADER_MIN = 56 + 2 + 1 + 1 + 1 + 2 + 2
 
 # تنظیمات QuotaGate تطبیقی
@@ -146,17 +150,13 @@ async def find_uuid_by_trojan_hash(pw_hash: str) -> str | None:
 
 
 def _tune_socket(writer: asyncio.StreamWriter):
-    """TCP_NODELAY + بافرهای بزرگ برای کاهش overhead سیستم‌عامل."""
+    """پروفایل ضعیف-لینک net_connect (RVG v11.0.2): بافر 512KB + TCP_USER_TIMEOUT."""
     sock = writer.transport.get_extra_info("socket")
     if not sock:
         return
     try:
-        sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, SOCK_BUF)
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, SOCK_BUF)
-        if hasattr(socket, "TCP_QUICKACK"):
-            sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_QUICKACK, 1)
-    except OSError as e:
+        apply_weak_link_tuning(sock)
+    except Exception as e:
         logger.warning(f"Trojan _tune_socket failed: {e}")
 
 

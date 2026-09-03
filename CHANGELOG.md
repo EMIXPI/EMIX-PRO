@@ -1,5 +1,68 @@
 # CHANGELOG — EMIX-PRO
 
+## v11.6.0-revive (2026-09-03) — 🩺 REVIVAL via EMIX + RVG cross-audit (real-ping + weak-link + sub resilience)
+
+**User report:** «کلاینت همچنان ارور میده و کانفیگ درست نشدن… پروتکل سالم پروژه
+EMIX رو بهت میدم چک کنی… این پروژه الهام گرفته شده از RVG بوده و احتمالا آپدیت
+داده… میخوام بخش‌های سالم با بررسی این دو پروژه دوباره احیا بشن و emix pro
+دوباره سالم با پینگ واقعی بشه.»
+
+**Cross-audit evidence (real, live):**
+- **EMIX** (github.com/EMIXPI/EMIX @ 05f2f2c) = the known-healthy fork:
+  restored to original c33ba43 after its own transport-protocol regression;
+  updater LOCKED (`DISABLE_UPDATES=1` — no external rewrites).
+- **RVG** (github.com/arvin341az-glitch/RVG @ ce2f878) = the family root; its
+  auto-update worker (rvg-update.arvin341az.workers.dev, manifest v11.0.2 —
+  sha1-identical to the repo) ships a **weak-link tuning profile**: smaller
+  relay chunks, small OS buffers, early drain, TCP_USER_TIMEOUT.
+- **Live production truth test** (real client emulation from sandbox):
+  server healthy, identity stable; BOTH clean-SNI and spoofed-SNI delivered
+  configs connect end-to-end through the real data plane (TLS → WS 101 →
+  VLESS → real HTTP 200). Remaining client-side breakage is path/vantage
+  specific (Iran→Railway direct blocked while CF-routed configs stay alive) —
+  exactly what the revival below addresses.
+
+### WHAT WAS REVIVED / PORTED
+1. **RVG v11.0.2 weak-link tuning** — single source of truth
+   `protocol/net_connect.py`: `RELAY_BUF 256KB` (was 1MB), `SOCK_BUF 512KB`
+   (was 4MB — big OS buffers on weak links = bufferbloat), `WRITE_HIGH_WATER
+   128KB` (was 512KB), `TCP_USER_TIMEOUT 20s` (half-dead mobile connections
+   reaped instead of locking throughput). All protocols (VLESS/Trojan/SS/XHTTP)
+   now import the shared profile via `apply_weak_link_tuning()`.
+2. **پینگ واقعی از مرورگر شما (real client-vantage ping)** — new card on the
+   configs page: the admin's browser (usually inside Iran) opens REAL
+   WebSockets to both entry paths (Railway direct + Cloudflare gateway) and
+   reports live/dead + ms from the user's actual network — the same thing
+   Karing experiences, finally measurable in-panel. Per-config ping now runs
+   server-tunnel + browser probes in parallel and shows
+   `تونل Xms · من: مستقیم Yms · CF Zms`. New authed endpoint
+   `GET /api/client-ping-config` provides the exact per-protocol target URLs.
+3. **Sub resilience — CF gateway variant** — `/sub/{uuid}`, `/sub-all`,
+   `/sub-group/{key}` now append a same-identity variant of every vless/trojan
+   config routed through the Cloudflare worker tunnel (`/loc/auto/...`,
+   host/sni=worker domain, allowInsecure=0). Modern clients pick whichever
+   entry is reachable from the user's network — if the ISP blocks Railway
+   direct, the CF-routed line keeps the config alive (verified: worker
+   returned 101 and tunneled to the real panel auth layer).
+4. **UUID auto-sync to the CF worker** — creating/deleting a vless link now
+   triggers a background full-list sync to the worker KV (previously only
+   manual build_links synced — forgettable, leaving WTE /vl stale).
+
+### VERIFICATION (all real)
+- Full suite **952/952 × 2 consecutive clean runs** (940 + 12 new:
+  tests/unit/test_revive_v1160.py — §A tuning values/single-source/never-raise,
+  §B client-ping-config auth+targets, §C sub variants (0/1/2 lines, path
+  rewrite, honest CF suffix, ss/mtproto untouched), §D auto-sync on
+  create/delete, §E UI source markers).
+- Real boot (python main.py, Railway-style): version 11.6.0-revive; sub
+  delivers 2 lines; local client E2E through the real tunnel (101 → VLESS →
+  HTTP 200, 18ms); CF-worker tunnel path reaches the real panel auth layer
+  (1008 for a foreign UUID — proof of end-to-end reachability).
+- Dashboard HTML markers verified in served output; JS blocks node --check OK
+  (pre-existing raw-f-string false positive unchanged).
+
+## v11.5.1-hotfix-identity (2026-09-03) — 🔧 ROOT-CAUSE FIX: configs cut after redeploy
+
 ## v11.5.1-hotfix-identity (2026-09-03) — 🔧 ROOT-CAUSE FIX: configs cut after redeploy
 
 **User report (production):** «با تغییرات آخر سلامت کلی پروژه به خطر افتاد و
