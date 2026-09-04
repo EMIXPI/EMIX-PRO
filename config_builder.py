@@ -316,9 +316,39 @@ def _auto_credentials(req: ConfigRequest, generate: bool) -> dict:
 
 # ── The build pipeline (validation BEFORE generation — spec §19) ────────────
 
+def _request_integrity(req: ConfigRequest) -> List[str]:
+    """Phase 41 §6 — strict boundary validation BEFORE any engine runs.
+
+    A canonical ConfigRequest must never carry an empty required field into
+    the capability engine / compiler. Empty transport is a DATA-FLOW bug
+    (frontend state desync), not a capability verdict — it gets its own
+    INVALID_REQUEST stage so the caller can tell the two apart.
+    """
+    problems: List[str] = []
+    for field in ("protocol", "transport", "security", "node_id"):
+        val = (getattr(req, field, None) or "").strip() if isinstance(
+            getattr(req, field, None), str) else getattr(req, field, None)
+        if not val:
+            problems.append(
+                f"INVALID_REQUEST — required field '{field}' is empty; "
+                f"the request never reached the capability engine "
+                f"(pick a value from /api/config-builder/capabilities)")
+    return problems
+
+
 async def build_config(req: ConfigRequest, for_preview: bool = False) -> dict:
     """Validate → compile (canonical compiler) → outputs.
     for_preview=True: same pipeline, no history write, no credential invention."""
+    # 0. Phase 41 §6 — request-integrity boundary: empty required fields
+    #    are a caller bug, not a capability verdict. Honest, explicit, first.
+    integrity = _request_integrity(req)
+    if integrity:
+        events.log_event("PROTOCOL_VALIDATION_FAILED", severity="WARNING",
+                         stage="request", protocol=req.protocol,
+                         transport=req.transport, node=req.node_id,
+                         problems=integrity)
+        return {"ok": False, "errors": integrity, "stage": "request"}
+
     # 1. protocol/transport/security × deployment/node capability
     combo = caps.validate_request_combination(
         req.protocol, req.transport, req.security, req.node_id, req.client_format)

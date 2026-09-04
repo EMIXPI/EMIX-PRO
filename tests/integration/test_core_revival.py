@@ -273,7 +273,7 @@ def test_deployment_version_reports_core_profile_and_stable_identity():
         r = client.get("/api/deployment-version")
         assert r.status_code == 200
         body = r.json()
-    assert body["version"] == "12.4.0-workspace"  # v12.4.0: کانفیگ‌ها = single workspace
+    assert body["version"] == "12.4.1-recovery"  # v12.4.1: transport-integrity + mobile rebuild
     # پروفایل گزارش‌شده باید با پروفایل واقعی بوت یکی باشد (تست‌سایت: full)
     assert body["boot_profile"] == boot_profile.current_profile()
     ident = body["identity"]

@@ -101,7 +101,23 @@ app.add_middleware(
 DATA_DIR = Path(os.environ.get("DATA_DIR", "/data"))
 DATA_FILE = DATA_DIR / "rvg_state.json"
 SECRET_FILE = DATA_DIR / ".rvg_secret"
-SAVE_LOCK = asyncio.Lock()
+# Phase 41: a module-level asyncio.Lock binds itself to the FIRST loop that
+# touches it; with several test-suite TestClient boots (each with its own
+# loop) later loops raised "Lock is bound to a different event loop" and the
+# save task silently died (state not persisted). Loop-agnostic guard:
+SAVE_LOCK = None
+SAVE_LOCK_LOOP = None
+
+
+def _save_lock() -> asyncio.Lock:
+    """Return a Lock valid for the CURRENT running loop (re-created when the
+    loop changes — tests boot several loops against the same process)."""
+    global SAVE_LOCK, SAVE_LOCK_LOOP
+    loop = asyncio.get_running_loop()
+    if SAVE_LOCK is None or SAVE_LOCK_LOOP is not loop:
+        SAVE_LOCK = asyncio.Lock()
+        SAVE_LOCK_LOOP = loop
+    return SAVE_LOCK
 
 
 def _identity_from_env_seed() -> tuple[str, str]:
@@ -342,7 +358,7 @@ async def load_state():
         logger.warning(f"Could not load state: {e}")
 
 async def save_state():
-    async with SAVE_LOCK:
+    async with _save_lock():
         try:
             DATA_DIR.mkdir(parents=True, exist_ok=True)
             data = {
@@ -5793,7 +5809,7 @@ async def api_migrate_legacy_spoof():
 # تا قبل از لاگین هم قابل بررسی باشد. (از /api/version استفاده نمی‌کنیم چون
 # آن مسیر قبلاً برای بررسی به‌روزرسانی در نظر گرفته شده است.)
 # ══════════════════════════════════════════════════════════════════════════════
-EMIX_VERSION = "12.4.0-workspace"
+EMIX_VERSION = "12.4.1-recovery"
 EMIX_BUILD_DATE = "2026-09-04"
 
 @app.get("/api/boot-profile")

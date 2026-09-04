@@ -3331,6 +3331,12 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
           <button class="btn btn-o btn-sm" onclick="loadBuilderPage()"><i class="ti ti-refresh"></i> رفرش</button>
           <button class="btn btn-d btn-sm ws-close-btn" onclick="closeCreateWorkspace()"><i class="ti ti-x"></i> بستن</button>
         </div>
+        <!-- ═══ Phase 41 §20 — خلاصه‌ی پیکربندی؛ سطر دومِ هدرِ چسبان — همیشه مرئی ═══ -->
+        <div class="ws-summary" id="ws-summary">
+          <span class="ws-sum-lbl">کانفیگ</span>
+          <span class="ws-sum-vals" id="ws-summary-vals">—</span>
+          <span class="ws-sum-dot" id="ws-summary-state">—</span>
+        </div>
       </div>
 
       <!-- استپر فشرده — پیشرفت شفاف (progressive disclosure) -->
@@ -3348,7 +3354,7 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
       </div>
 
       <div class="ws-body">
-        <div class="g2 ncc-grid" style="align-items:start">
+        <div class="ncc-grid">
           <!-- ═══ ستون اول: سازنده (مرحله‌ای) ═══ -->
           <div class="card ncc-build">
             <div class="card-title"><i class="ti ti-list-check"></i> مراحل ساخت کانفیگ</div>
@@ -3373,15 +3379,20 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
               <div id="ncc-sec-hint" class="bld-hint"></div>
             </div>
 
-            <div class="ncc-step"><div class="ncc-step-label">۵ · پروفایل اندپوینت (TLS/SNI — فقط معنای اتصال، نه مسیریابی)</div>
-              <select id="bld-ep" class="cm-input" onchange="builderOnEpChange()"></select>
-              <div id="bld-ep-custom" style="display:none;gap:8px;margin-top:8px">
-                <input id="bld-ep-address" class="cm-input" placeholder="آدرس اندپوینت (ورودی — دامنه یا IP)" style="direction:ltr;text-align:left;font-family:monospace">
-                <input id="bld-ep-sni" class="cm-input" placeholder="SNI (اختیاری — معنای TLS، نه جغرافیا)" style="direction:ltr;text-align:left;font-family:monospace">
-                <input id="bld-ep-port" class="cm-input" type="number" value="443" placeholder="پورت" style="direction:ltr">
+            <!-- Phase 41 §16/§21: اندپوینت/SNI به‌طور پیش‌فرض جمع است —
+                 فقط وقتی کاربر بخواهد باز می‌شود (پیشرفت افشای تدریجی) -->
+            <details class="ncc-step ncc-fold" id="ncc-ep-fold">
+              <summary class="ncc-step-label"><i class="ti ti-chevron-down"></i> ۵ · اندپوینت / SNI <span class="ncc-step-note">— پیش‌فرض: استاندارد (panel host) · جمع‌شده</span></summary>
+              <div class="ncc-fold-body">
+                <select id="bld-ep" class="cm-input" onchange="builderOnEpChange()"></select>
+                <div id="bld-ep-custom" style="display:none;gap:8px;margin-top:8px">
+                  <input id="bld-ep-address" class="cm-input" placeholder="آدرس اندپوینت (ورودی — دامنه یا IP)" style="direction:ltr;text-align:left;font-family:monospace">
+                  <input id="bld-ep-sni" class="cm-input" placeholder="SNI (اختیاری — معنای TLS، نه جغرافیا)" style="direction:ltr;text-align:left;font-family:monospace">
+                  <input id="bld-ep-port" class="cm-input" type="number" value="443" placeholder="پورت" style="direction:ltr">
+                </div>
+                <div class="bld-hint">SNI فقط معنای TLS/اندپوینت دارد — هرگز مسیریابی، هرگز خروج جغرافیایی، هرگز «IP ایران» نیست. SNI جعلی روی لینک = رفتار TLS در برابر فیلتر، بدون تغییر مسیر.</div>
               </div>
-              <div class="bld-hint">SNI فقط معنای TLS/اندپوینت دارد — هرگز مسیریابی، هرگز خروج جغرافیایی، هرگز «IP ایران» نیست. SNI جعلی روی لینک = رفتار TLS در برابر فیلتر، بدون تغییر مسیر.</div>
-            </div>
+            </details>
 
             <div class="ncc-step"><div class="ncc-step-label">۶ · مسیریابی (Routing Policy) <span class="ncc-step-note">— تقسیم ترافیک ایران / بین‌الملل</span></div>
               <div id="ncc-routing" class="ncc-route-cards"></div>
@@ -3393,23 +3404,22 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
               <div id="ncc-client-hint" class="bld-hint"></div>
             </div>
 
-            <div class="ncc-step"><div class="ncc-step-label">نام و تنظیمات پیشرفته</div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-                <input id="bld-name" class="cm-input" placeholder="نام کانفیگ (تاریخچه)">
-                <input id="bld-remark" class="cm-input" placeholder="remark" style="direction:ltr;text-align:left;font-family:monospace">
-              </div>
-              <details class="ncc-adv" id="ncc-adv">
-                <summary><i class="ti ti-adjustments"></i> تنظیمات پیشرفته (ALPN / fingerprint / رمزنگاری SS)</summary>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+            <!-- Phase 41 §21: نام/تنظیمات پیشرفته — جمع‌شده، فقط فیلدهای مرتبط -->
+            <details class="ncc-step ncc-fold" id="ncc-adv-fold">
+              <summary class="ncc-step-label"><i class="ti ti-chevron-down"></i> نام و تنظیمات پیشرفته <span class="ncc-step-note">— ALPN / fingerprint / رمزنگاری SS</span></summary>
+              <div class="ncc-fold-body">
+                <div class="ncc-adv-grid">
+                  <input id="bld-name" class="cm-input" placeholder="نام کانفیگ (تاریخچه)">
+                  <input id="bld-remark" class="cm-input" placeholder="remark" style="direction:ltr;text-align:left;font-family:monospace">
                   <input id="bld-alpn" class="cm-input" value="h2,http/1.1" placeholder="ALPN (مثلاً h2,http/1.1)" style="direction:ltr">
                   <input id="bld-fingerprint" class="cm-input" value="chrome" placeholder="fingerprint" style="direction:ltr">
                 </div>
-                <div style="display:grid;grid-template-columns:1fr;gap:8px;margin-top:8px" id="ncc-ss-extra" hidden>
+                <div id="ncc-ss-extra" hidden>
                   <input id="bld-ss-cipher" class="cm-input" value="chacha20-ietf-poly1305" placeholder="SS cipher" style="direction:ltr">
                 </div>
                 <div class="bld-hint">پیش‌فرض‌ها امن و سازگارند — فقط اگر می‌دانید چه می‌کنید تغییر دهید.</div>
-              </details>
-            </div>
+              </div>
+            </details>
 
             <div class="bld-actions">
               <button class="btn btn-o" id="bld-preview-btn" onclick="builderPreview(this)"><i class="ti ti-eye"></i> پیش‌نمایش و اعتبارسنجی</button>
@@ -3417,34 +3427,37 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
             </div>
           </div>
 
-          <!-- ═══ ستون دوم: پنل تست زنده + خروجی ═══ -->
-          <div class="ncc-live">
-            <div class="card ncc-test-card">
-              <div class="card-title"><i class="ti ti-activity"></i> پنل تست زنده‌ی شبکه <span class="badge bg-purple" style="margin-inline-start:8px">واقعی</span></div>
-              <div class="ncc-test-target" id="ncc-test-target">هدف تست: <b>—</b></div>
-              <div class="ncc-test-btns">
-                <button class="btn btn-p btn-sm" onclick="nccTestQuick(this)"><i class="ti ti-bolt"></i> تست سریع</button>
-                <button class="btn btn-o btn-sm" onclick="nccTestTls(this)"><i class="ti ti-lock-square"></i> تست TLS</button>
-                <button class="btn btn-o btn-sm" onclick="nccTestSni(this)"><i class="ti ti-certificate"></i> تست SNI</button>
-                <button class="btn btn-o btn-sm" onclick="nccTestTunnel(this)"><i class="ti ti-tunnel"></i> تست تونل E2E</button>
-                <button class="btn btn-o btn-sm" onclick="nccTestTurbo(this)"><i class="ti ti-rocket"></i> توربو A/B</button>
-                <button class="btn btn-amber btn-sm" onclick="nccTestDiagnostic(this)"><i class="ti ti-stethoscope"></i> تشخیص کامل</button>
-              </div>
-              <div class="ncc-test-links">
-                <select id="ncc-link-sel" class="cm-input" onchange="nccOnLinkSel()"><option value="">— کانفیگ ساخته‌شده‌ای برای تست تونل/توربو انتخاب کنید —</option></select>
-              </div>
-              <div id="ncc-console" class="ncc-console"><div class="ncc-console-empty">برای شروع، یکی از دکمه‌های تست را بزنید — هر عدد از اندازه‌گیری واقعی می‌آید.</div></div>
-              <div id="ncc-browser" class="ncc-browser">
-                <div class="ncc-browser-title"><i class="ti ti-world"></i> حقیقت مسیر از مرورگر شما <button class="btn btn-o btn-sm" onclick="nccBrowserPing()"><i class="ti ti-refresh"></i></button></div>
-                <div id="ncc-browser-rows"></div>
-              </div>
+          <!-- ═══ Phase 41 §16 — تست شبکه: در جریانِ ساخت، بلافاصله بعد از مراحل ═══ -->
+          <div class="ncc-live card ncc-test-card">
+            <div class="card-title"><i class="ti ti-activity"></i> تست شبکه <span class="badge bg-purple" style="margin-inline-start:8px">واقعی</span></div>
+            <div class="ncc-test-target" id="ncc-test-target">هدف تست: <b>—</b></div>
+            <div class="ncc-test-btns">
+              <button class="btn btn-p btn-sm" onclick="nccTestQuick(this)"><i class="ti ti-bolt"></i> تست سریع</button>
+              <button class="btn btn-o btn-sm ncc-more-toggle" id="ncc-more-toggle" onclick="nccToggleMoreTests(this)"><i class="ti ti-dots"></i> تست‌های بیشتر <i class="ti ti-chevron-down"></i></button>
             </div>
+            <!-- Phase 41 §22: موبایل = جمع‌شده؛ دسکتاپ = باز. شش دکمه‌ی غول‌پیکر کنار هم نیست. -->
+            <div class="ncc-test-extra" id="ncc-test-extra">
+              <button class="btn btn-o btn-sm" onclick="nccTestTls(this)"><i class="ti ti-lock-square"></i> تست TLS</button>
+              <button class="btn btn-o btn-sm" onclick="nccTestSni(this)"><i class="ti ti-certificate"></i> تست SNI</button>
+              <button class="btn btn-o btn-sm" onclick="nccTestTunnel(this)"><i class="ti ti-tunnel"></i> تست تونل E2E</button>
+              <button class="btn btn-o btn-sm" onclick="nccTestTurbo(this)"><i class="ti ti-rocket"></i> توربو A/B</button>
+              <button class="btn btn-amber btn-sm" onclick="nccTestDiagnostic(this)"><i class="ti ti-stethoscope"></i> تشخیص کامل</button>
+            </div>
+            <div class="ncc-test-links">
+              <select id="ncc-link-sel" class="cm-input" onchange="nccOnLinkSel()"><option value="">— کانفیگ ساخته‌شده‌ای برای تست تونل/توربو انتخاب کنید —</option></select>
+            </div>
+            <div id="ncc-console" class="ncc-console"><div class="ncc-console-empty">برای شروع، یکی از دکمه‌های تست را بزنید — هر عدد از اندازه‌گیری واقعی می‌آید.</div></div>
+            <div id="ncc-browser" class="ncc-browser">
+              <div class="ncc-browser-title"><i class="ti ti-world"></i> حقیقت مسیر از مرورگر شما <button class="btn btn-o btn-sm" onclick="nccBrowserPing()"><i class="ti ti-refresh"></i></button></div>
+              <div id="ncc-browser-rows"></div>
+            </div>
+          </div>
 
-            <div class="card">
-              <div class="card-title"><i class="ti ti-eye"></i> اعتبارسنجی و خروجی (از کامپایلر کانونی)</div>
-              <div id="bld-validation"></div>
-              <div id="bld-outputs"></div>
-            </div>
+          <!-- ═══ اعتبارسنجی و خروجی (کامپایلر کانونی) ═══ -->
+          <div class="card ncc-out">
+            <div class="card-title"><i class="ti ti-eye"></i> اعتبارسنجی و خروجی (از کامپایلر کانونی)</div>
+            <div id="bld-validation"></div>
+            <div id="bld-outputs"></div>
           </div>
         </div>
 
@@ -3454,10 +3467,10 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
         </div>
       </div>
 
-      <!-- موبایل: نوار اقدام چسبان (Phase 40 §29) -->
+      <!-- موبایل: نوار اقدام چسبان (§16 BOTTOM STICKY ACTION) -->
       <div class="ws-sticky">
-        <button class="btn btn-o" onclick="builderPreview(this)"><i class="ti ti-eye"></i> پیش‌نمایش</button>
-        <button class="btn btn-p" onclick="builderGenerate(this)"><i class="ti ti-wand"></i> ساخت نهایی</button>
+        <button class="btn btn-o" onclick="builderPreview(this)"><i class="ti ti-eye"></i> اعتبارسنجی</button>
+        <button class="btn btn-p" onclick="builderGenerate(this)"><i class="ti ti-wand"></i> ساخت کانفیگ</button>
       </div>
     </div>
   </div>
@@ -4297,13 +4310,38 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
 .ncc-dot.ok{background:#22c55e;box-shadow:0 0 8px rgba(34,197,94,.7)}
 .ncc-dot.bad{background:#ef4444;box-shadow:0 0 8px rgba(239,68,68,.7)}
 .ncc-dot.warn{background:#f59e0b;box-shadow:0 0 8px rgba(245,158,11,.7)}
-.ncc-grid{grid-template-columns:minmax(0,1.15fr) minmax(0,1fr)}
-@media(max-width:1080px){.ncc-grid{grid-template-columns:1fr}}
-.ncc-build,.ncc-live{min-width:0}
+/* ═══ Phase 41 — گرید ورک‌اسپیس: دسکتاپ دوستونه (§18)، موبایل تک‌ستونه (§17) ═══
+   DOM: builder → test → outputs. دسکتاپ: build چپ، test+out راست. */
+.ncc-grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);grid-template-areas:"build test" "build out";align-items:start}
+.ncc-build{grid-area:build}
+.ncc-live{grid-area:test}
+.ncc-out{grid-area:out}
+@media(max-width:1080px){
+  .ncc-grid{grid-template-columns:minmax(0,1fr);grid-template-areas:"build" "test" "out"}
+}
+.ncc-build,.ncc-live,.ncc-out{min-width:0;max-width:100%;box-sizing:border-box}
 .ncc-step{margin:16px 0;padding-bottom:8px;border-bottom:1px dashed var(--card-b)}
 .ncc-step:last-of-type{border-bottom:none}
 .ncc-step-label{font-size:12.5px;color:var(--t2);margin-bottom:10px;font-weight:800;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .ncc-step-note{font-size:10px;color:var(--t3);font-weight:600}
+/* Phase 41 §16/§21 — بخش‌های جمع‌شونده (Endpoint/SNI و تنظیمات پیشرفته) */
+details.ncc-fold{margin:14px 0;padding-bottom:0;border-bottom:1px dashed var(--card-b)}
+details.ncc-fold>summary{list-style:none;cursor:pointer;font-size:12.5px;color:var(--t2);font-weight:800;display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:6px 0}
+details.ncc-fold>summary::-webkit-details-marker{display:none}
+details.ncc-fold>summary .ti-chevron-down{font-size:13px;color:var(--t3);transition:transform .18s}
+details.ncc-fold[open]>summary .ti-chevron-down{transform:rotate(180deg)}
+.ncc-fold-body{padding:2px 0 12px;display:grid;gap:9px}
+.ncc-adv-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+@media(max-width:640px){.ncc-adv-grid{grid-template-columns:1fr}}
+/* ═══ Phase 41 §22 — تست‌های بیشتر: موبایل جمع‌شده، دسکتاپ همیشه باز ═══ */
+.ncc-test-extra{display:none;flex-wrap:wrap;gap:8px;margin-top:9px}
+.ncc-test-extra.open{display:flex}
+@media(min-width:1081px){
+  .ncc-test-extra{display:flex}
+  .ncc-more-toggle{display:none!important}
+}
+.ncc-more-toggle .ti-chevron-down{transition:transform .18s;font-size:11px}
+.ncw-split-warn{display:inline-block;font-size:10.5px;color:#fbbf24;line-height:1.8}
 .ncc-proto-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
 .ncc-pcard{border:1.5px solid var(--card-b);border-radius:14px;padding:13px 12px;cursor:pointer;transition:.18s;text-align:center;position:relative;background:rgba(0,0,0,.12)}
 [data-theme="light"] .ncc-pcard{background:#fff}
@@ -4315,12 +4353,13 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
 .ncc-pcard-title{font-size:12.5px;font-weight:800;color:var(--t1)}
 .ncc-pcard-sub{font-size:9.5px;color:var(--t3);margin-top:3px;line-height:1.5}
 .ncc-node-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
-.ncc-ncard{padding:12px 14px;border-radius:14px;border:1px solid var(--card-b);cursor:pointer;transition:.15s;background:rgba(0,0,0,.1)}
+.ncc-ncard{padding:12px 14px;border-radius:14px;border:1px solid var(--card-b);cursor:pointer;transition:.15s;background:rgba(0,0,0,.1);max-width:100%;box-sizing:border-box;overflow:hidden}
 [data-theme="light"] .ncc-ncard{background:#fff}
 .ncc-ncard:hover{border-color:var(--accent)}
 .ncc-ncard.sel{border-color:var(--accent);background:rgba(139,92,246,.14)}
 .ncc-ncard .nm{font-weight:800;font-size:13px;color:var(--t1);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.ncc-ncard .meta{font-size:10.5px;color:var(--t3);margin-top:5px;line-height:1.8}
+.ncc-ncard .meta{font-size:10.5px;color:var(--t3);margin-top:5px;line-height:1.8;overflow:hidden;text-overflow:ellipsis}
+.ncc-ncard .meta b{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom}
 .ncc-chips{display:flex;flex-wrap:wrap;gap:8px}
 .ncc-chip{padding:9px 15px;border-radius:12px;border:1px solid var(--card-b);background:rgba(139,92,246,.06);cursor:pointer;font-size:12.5px;transition:.15s;font-weight:700}
 .ncc-chip:hover{border-color:var(--accent)}
@@ -4470,27 +4509,76 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
 .ws-hdr-sub{font-size:10.5px;color:var(--t3);margin-top:3px}
 .ws-hdr-stats{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .ws-close-btn{flex-shrink:0}
-.ws-steps{display:flex;align-items:center;gap:4px;padding:10px 18px;overflow-x:auto;white-space:nowrap;border-bottom:1px solid var(--card-b);background:rgba(0,0,0,.14)}
+.ws-steps{display:flex;align-items:center;gap:4px;padding:10px 18px;overflow-x:auto;white-space:nowrap;border-bottom:1px solid var(--card-b);background:rgba(0,0,0,.14);-webkit-overflow-scrolling:touch}
 .ws-step{font-size:10.5px;font-weight:700;color:var(--t3);padding:5px 10px;border-radius:9px;border:1px solid transparent;flex-shrink:0}
 .ws-step.on{color:#a5b4fc;border-color:rgba(139,92,246,.4);background:rgba(139,92,246,.12)}
 .ws-step.done{color:#86efac;background:rgba(34,197,94,.1)}
 .ws-steps i{font-size:11px;color:var(--t3);opacity:.5;flex-shrink:0}
-.ws-body{padding:18px;flex:1}
+.ws-body{padding:18px;flex:1;max-width:100%;box-sizing:border-box}
+
+/* ═══ Phase 41 §20 — خلاصه‌ی پیکربندی؛ سطر دومِ هدر چسبان — همیشه مرئی ═══ */
+.ws-summary{display:flex;align-items:center;gap:9px;padding:7px 2px 0;flex-wrap:nowrap;flex-basis:100%;min-width:0;max-width:100%;border-top:1px dashed var(--card-b);margin-top:6px;padding-top:8px}
+.ws-sum-lbl{font-size:10px;font-weight:800;color:var(--t3);letter-spacing:.4px;flex-shrink:0}
+.ws-sum-vals{font-size:11.5px;font-weight:700;color:var(--t1);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.ws-sum-dot{font-size:9.5px;font-weight:800;color:var(--t3);border:1px solid var(--card-b);border-radius:8px;padding:3px 8px;flex-shrink:0}
+.ws-sum-dot.ok{color:#86efac;border-color:rgba(34,197,94,.45);background:rgba(34,197,94,.1)}
+
+/* ═══ Phase 41 §16 — نوار اقدام چسبان: قانون پایه قبل از مدیاکوئری ═══
+   (باگ CSS: قاعده‌ی display:none بعد از @media آمده بود و با اولویت برابر
+   آن را خنثی می‌کرد — استیکی هرگز روی موبایل نمایش داده نمی‌شد) */
+.ws-sticky{display:none;position:sticky;bottom:0;z-index:60;padding:11px 14px;gap:9px;
+  background:rgba(8,13,22,.95);backdrop-filter:blur(10px);border-top:1px solid var(--card-b)}
+.ws-sticky .btn{flex:1;justify-content:center;padding:12px 10px}
+
+/* ═══ موبایل — یک ستون، فشرده، بدون سرریز (§16/§17) ═══ */
 @media(max-width:640px){
   .ncw-hdr{padding:15px}
   .ncw-stats{padding:9px 10px}
   .ncw-stat{padding:6px 9px;font-size:10.5px}
-  .ws-hdr{padding:12px 13px}
+  .ws-hdr{padding:11px 12px}
   .ws-hdr-stats .ncc-stat{display:none}
   .ws-hdr-stats .ws-close-btn{display:inline-flex}
+  .ws-hdr-sub{display:none}
+  .ws-summary{gap:7px;padding-top:6px;margin-top:5px}
+  .ws-sum-vals{font-size:10.5px}
+  .ws-steps{padding:8px 12px}
+  .ws-step{font-size:10px;padding:4px 8px}
   .ws-body{padding:11px}
   .ncw-card{padding:13px;gap:9px}
   .ncw-actions .btn{flex:1 1 auto;justify-content:center}
   .ws-sticky{display:flex}
+  /* فشرده‌سازی کارت‌ها: نودها/مسیریابی/کلاینت‌ها — نه فونت‌ریزه، ساختار کوچک‌تر */
+  .ncc-proto-cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .ncc-pcard{padding:10px 9px}
+  .ncc-pcard-icon{width:28px;height:28px;font-size:15px;border-radius:9px;margin-bottom:5px}
+  .ncc-pcard-title{font-size:11.5px}
+  .ncc-pcard-sub{font-size:9px}
+  .ncc-node-cards{grid-template-columns:1fr;gap:7px}
+  .ncc-ncard{padding:9px 11px;border-radius:11px}
+  .ncc-ncard .nm{font-size:12px}
+  .ncc-ncard .meta{font-size:9.5px;line-height:1.55;margin-top:3px}
+  .ncc-route-cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+  .ncc-rcard{padding:9px 10px;border-radius:11px}
+  .ncc-rcard .nm{font-size:11.5px}
+  .ncc-rcard .legs{font-size:9.5px;line-height:1.6;margin-top:4px}
+  .ncc-rcard .req{display:none}
+  .ncc-rcard .why-off{font-size:9px}
+  .ncc-client-cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+  .ncc-ccard{padding:9px 10px;border-radius:11px}
+  .ncc-ccard .nm{font-size:11.5px}
+  .ncc-ccard .meta{font-size:9px;line-height:1.5}
+  .ncc-chip{padding:8px 13px;font-size:11.5px}
+  .ncc-step{margin:12px 0}
+  .ncc-step-label{font-size:11.5px;margin-bottom:8px}
+  .bld-actions{grid-template-columns:1fr}
+  .ncc-test-btns .btn{padding:9px 12px}
+  .ncc-console{padding:10px 11px;font-size:11px}
+  .ws-sticky .btn{font-size:12.5px}
 }
-.ws-sticky{display:none;position:sticky;bottom:0;z-index:60;padding:11px 14px;gap:9px;
-  background:rgba(8,13,22,.95);backdrop-filter:blur(10px);border-top:1px solid var(--card-b)}
-.ws-sticky .btn{flex:1;justify-content:center}
+@media(max-width:400px){
+  .ncc-route-cards,.ncc-client-cards{grid-template-columns:1fr}
+  .ncc-proto-cards{grid-template-columns:1fr}
+}
 /* پنل «کانفیگ زنده ساخته شد» در خروجی سازنده */
 .bld-link-ok{margin:10px 0;padding:13px 14px;border-radius:14px;border:1px solid rgba(34,197,94,.4);background:linear-gradient(140deg,rgba(34,197,94,.14),transparent 60%);font-size:12px;color:#bbf7d0;line-height:1.9}
 .bld-link-ok b{color:#86efac}
@@ -4522,6 +4610,14 @@ var NCC_ROUTE_META={
   IRAN_PROXY:{icon:'ti-flag-2',fa:'پروکسی ایران (گیت‌وی واقعی)'},
   INTERNATIONAL_VPN:{icon:'ti-globe',fa:'بین‌الملل VPN'},
   CUSTOM:{icon:'ti-adjustments',fa:'قواعد سفارشی'}
+};
+// Phase 41 §4 — برچسب نمایشی ترنسپورت‌ها؛ مقدار داخلی همیشه canonical است:
+// xhttp-packet-up / xhttp-stream-up / ws / tcp — دقیقاً مقادیرِ capability engine.
+var NCC_TR_FA={
+  'tcp':'TCP',
+  'ws':'WebSocket',
+  'xhttp-packet-up':'XHTTP Packet-up',
+  'xhttp-stream-up':'XHTTP Stream-up'
 };
 
 async function loadBuilderPage(){
@@ -4574,6 +4670,25 @@ function nccDot(which,ok){
 }
 
 // ── ۱) پروتکل — کارت‌ها؛ فقط چیزی که واقعاً قابل انتخاب است فعال است ──
+// Phase 41 §7: با تغییر پروتکل، transport/security از نو محاسبه می‌شوند —
+// هیچ مقدار قدیمی از پروتکل قبلی در state نمی‌ماند (capability-driven).
+function nccAutoTransport(){
+  // §4/§5 — قابلیت‌محور: اولین ترنسپورتِ SUPPORTED برای (protocol × node فعلی).
+  // فقط وقتی transport خالی/نامعتبر است انتخاب می‌کند — انتخاب صریح کاربر را
+  // بازنویس نمی‌کند. (همان الگوی UX موجود در صفحه‌ی IR-Direct.)
+  if(!BLD_SEL.protocol)return false;
+  var list=nccNodeProtocols().filter(function(x){
+    return x.protocol===BLD_SEL.protocol&&x.status==='SUPPORTED';
+  });
+  if(!list.length)return false;
+  var cur=null;
+  if(BLD_SEL.transport)cur=list.filter(function(x){return x.transport===BLD_SEL.transport})[0];
+  if(!cur){cur=list[0];BLD_SEL.transport=cur.transport}
+  if(!BLD_SEL.security||!list.filter(function(x){return x.transport===BLD_SEL.transport&&x.security===BLD_SEL.security}).length){
+    BLD_SEL.security=cur.security;
+  }
+  return true;
+}
 function nccRenderProtocols(){
   var host=document.getElementById('ncc-protocols'); if(!host)return;
   host.innerHTML='';
@@ -4584,7 +4699,11 @@ function nccRenderProtocols(){
     d.innerHTML='<div class="ncc-pcard-icon"><i class="ti '+m.icon+'"></i></div>'+
       '<div class="ncc-pcard-title">'+esc(m.fa)+'</div>'+
       '<div class="ncc-pcard-sub">'+esc(m.sub)+(p.selectable?'':' · '+(p.readiness||''))+'</div>';
-    if(p.selectable){d.onclick=function(){BLD_SEL.protocol=p.protocol;BLD_SEL.transport='';nccRenderProtocols();nccUpdateTarget()}}
+    if(p.selectable){d.onclick=function(){
+      if(BLD_SEL.protocol!==p.protocol){BLD_SEL.protocol=p.protocol;BLD_SEL.transport='';BLD_SEL.security='';}
+      nccAutoTransport();            // §5: انتخاب خودکار اولین ترنسپورت معتبر
+      nccRenderProtocols();nccUpdateTarget();
+    }}
     else{d.title='Not supported on this deployment — '+esc(p.note||p.readiness||'')}
     host.appendChild(d);
   });
@@ -4600,17 +4719,26 @@ function nccNodeProtocols(){
 }
 
 // ── ۳) ترنسپورت — فقط ترکیب‌های معتبر ──
+// Phase 41 §3/§8: هر رندر، انتخاب فعلی را با فهرست واقعیِ نود/پروتکل فعلی
+// تطبیق می‌دهد — اگر transport در state با چیزیز رندرشده یکی نباشد یعنی
+// باگ همگام‌سازی است؛ دیگر هرگز «چیپ SEL ولی state خالی» رخ نمی‌دهد.
 function nccRenderTransports(){
   var host=document.getElementById('ncc-transports'); if(!host)return;
   host.innerHTML='';
   var list=nccNodeProtocols().filter(function(x){return !BLD_SEL.protocol||x.protocol===BLD_SEL.protocol});
+  var supported=list.filter(function(x){return x.status==='SUPPORTED'});
+  if(BLD_SEL.transport){
+    var stillValid=supported.some(function(x){return x.transport===BLD_SEL.transport});
+    if(!stillValid)BLD_SEL.transport='';   // §7/§8: state قدیمی/نامعتبر پاک می‌شود
+  }
+  nccAutoTransport();                      // §5: پرکردن خودکار فقط وقتی خالی است
   var seen={};
   list.forEach(function(x){
     if(seen[x.transport])return; seen[x.transport]=1;
     var ok=(x.status==='SUPPORTED');
     var d=document.createElement('div');
     d.className='ncc-chip'+(ok?'':' off')+(BLD_SEL.transport===x.transport?' sel':'');
-    d.innerHTML=esc(x.transport)+(ok?'':' <span class="st">'+esc(x.status)+'</span>');
+    d.innerHTML=esc(NCC_TR_FA[x.transport]||x.transport)+(ok?'':' <span class="st">'+esc(x.status)+'</span>');
     if(ok){d.onclick=function(){BLD_SEL.transport=x.transport;BLD_SEL.security=x.security;nccRenderTransports();nccUpdateTarget()}}
     else{d.title=esc(x.reason||x.status)}
     host.appendChild(d);
@@ -4625,10 +4753,16 @@ function nccRenderTransports(){
 }
 
 // ── ۴) امنیت ──
+// Phase 41 §7: امنیت همیشه با (protocol × transport) فعلی اعتبارسنجی می‌شود —
+// مقدار امنیتیِ خارج از مجموعه‌ی مجاز، به اولین مقدار معتبر برمی‌گردد.
 function nccRenderSecurity(){
   var host=document.getElementById('ncc-security'); if(!host)return;
   host.innerHTML='';
   var list=nccNodeProtocols().filter(function(x){return (!BLD_SEL.protocol||x.protocol===BLD_SEL.protocol)&&(!BLD_SEL.transport||x.transport===BLD_SEL.transport)});
+  var valid=list.map(function(x){return x.security});
+  if(BLD_SEL.security&&valid.length&&valid.indexOf(BLD_SEL.security)<0){
+    BLD_SEL.security=valid[0]||'';        // §7: بقاژی امنیتِ پروتکل قبلی پاک می‌شود
+  }
   var seen={};
   list.forEach(function(x){
     if(seen[x.security])return; seen[x.security]=1;
@@ -4656,7 +4790,11 @@ function nccRenderNodes(){
       '<div class="meta">'+esc(n.role||'')+' · '+(n.region?esc(n.region):'')+'<br>'+
       '<b style="direction:ltr;display:inline-block;font-family:monospace;font-size:10px">'+esc(n.address||'')+'</b><br>'+
       'TCP: '+esc(String(n.tcp)).slice(0,42)+' · TLS: '+(n.tls?'✓':'✗')+' · UDP: '+esc(String(n.udp))+' '+egBadge+'</div>';
-    d.onclick=function(){BLD_SEL.node=n.node_id;BLD_SEL.transport='';nccRenderNodes();nccLoadStatus()};
+    d.onclick=function(){BLD_SEL.node=n.node_id;nccRenderNodes();
+      // Phase 41 §8: تغییر نود → سطح قابلیتِ نود جدید اعمال می‌شود:
+      // transport/security از نو محاسبه و رندر می‌شوند (همگام‌سازی visual=state)
+      nccAutoTransport();nccRenderTransports();nccUpdateTarget();nccLoadStatus();
+    };
     host.appendChild(d);
     var det=document.getElementById('ncc-node-detail');
     if(det&&BLD_SEL.node===n.node_id){
@@ -4696,7 +4834,14 @@ function nccRenderRouting(){
     if(BLD_SEL.routing==='IRAN_DIRECT'){extra='IRAN_DIRECT = split tunnel سمت کلاینت (بدون سرور ایرانی): ترافیک ایران از ISP خودت، بقیه از تونل.'}
     else if(BLD_SEL.routing==='IRAN_PROXY'){extra='IRAN_PROXY = خروج ایرانی واقعی فقط از گیت‌وی اثبات‌شده — SNI/دامنه/IP تنظیم‌شده هرگز مبنای «خروج ایران» نیست.'}
     else if(BLD_SEL.routing==='ALL_VPN'){extra='همه‌ی ترافیک از تونل EMIX — با هر خروجی کلایتی.'}
-    hint.innerHTML='گیت‌وی ایران: <b>'+esc(gw.state||'UNCONFIGURED')+'</b>'+(gw.verified_count?(' ('+gw.verified_count+' اثبات‌شده)'):'')+' — IRAN_PROXY بدون گیت‌وی اثبات‌شده ساخته نمی‌شود.'+(extra?('<br>'+extra):'');
+    // Phase 41 §24 — هشدار زنده: فرمت کلاینتِ بدون split-tunnel نمی‌تواند IRAN_DIRECT
+    // را اجرا کند؛ صادقانه قبل از اعتبارسنجی گفته می‌شود (نه بعد از آن).
+    var splitWarn='';
+    var cl=(BLD_CAPS.clients||{})[BLD_SEL.client]||{};
+    if((BLD_SEL.routing==='IRAN_DIRECT'||BLD_SEL.routing==='INTERNATIONAL_VPN')&&cl.split_tunnel!=='SPLIT_TUNNEL_SUPPORTED'){
+      splitWarn='<br><span class="ncw-split-warn"><i class="ti ti-alert-triangle"></i> SPLIT_TUNNEL_NOT_SUPPORTED — فرمت «'+esc(BLD_SEL.client)+'» split-tunnel را اجرا نمی‌کند؛ برای این مسیریابی xray-json یا sing-box انتخاب کنید.</span>';
+    }
+    hint.innerHTML='گیت‌وی ایران: <b>'+esc(gw.state||'UNCONFIGURED')+'</b>'+(gw.verified_count?(' ('+gw.verified_count+' اثبات‌شده)'):'')+' — IRAN_PROXY بدون گیت‌وی اثبات‌شده ساخته نمی‌شود.'+(extra?('<br>'+extra):'')+splitWarn;
   }
 }
 
@@ -4764,6 +4909,13 @@ async function nccLoadLinks(){
 }
 function nccOnLinkSel(){NCC_SEL_LINK=document.getElementById('ncc-link-sel').value||''}
 
+// Phase 41 §22 — تست‌های بیشتر: موبایل جمع‌شده، دسکتاپ باز
+function nccToggleMoreTests(btn){
+  var ex=document.getElementById('ncc-test-extra'); if(!ex)return;
+  var open=ex.classList.toggle('open');
+  if(btn){var ch=btn.querySelector('.ti-chevron-down'); if(ch)ch.style.transform=open?'rotate(180deg)':''}
+}
+
 // ── ماتریس اعتبارسنجی ران‌تایم (شواهد RUNTIME_STARTED/LISTENER_REACHABLE) ──
 async function nccLoadMatrix(){
   try{
@@ -4815,12 +4967,31 @@ function nccTarget(){
   }catch(e){}
   return t;
 }
+// ── خلاصه‌ی پیکربندی (§20) — همیشه مرئی؛ بدون اسکرول به عقب ──
+function nccSummaryUpdate(){
+  var el=document.getElementById('ws-summary'); if(!el)return;
+  var node=(BLD_CAPS.nodes||[]).filter(function(n){return n.node_id===BLD_SEL.node})[0]||{};
+  var proto=BLD_SEL.protocol?(NCC_PROTO_META[BLD_SEL.protocol]||{}).fa||BLD_SEL.protocol:'—';
+  var tr=BLD_SEL.transport?(NCC_TR_FA[BLD_SEL.transport]||BLD_SEL.transport):'—';
+  var sec=BLD_SEL.security||'—';
+  var nodeLbl=node.name||node.node_id||'—';
+  var route=BLD_SEL.routing?(NCC_ROUTE_META[BLD_SEL.routing]||{}).fa||BLD_SEL.routing:'—';
+  var ready=BLD_SEL.protocol&&BLD_SEL.transport&&BLD_SEL.security;
+  var sum=document.getElementById('ws-summary-vals');
+  if(sum)sum.innerHTML=esc(proto)+' <i class="ti ti-circle-dot" style="font-size:6px;vertical-align:middle;opacity:.5"></i> '+
+    esc(String(nodeLbl).slice(0,22))+' <i class="ti ti-circle-dot" style="font-size:6px;vertical-align:middle;opacity:.5"></i> '+
+    esc(tr)+' <i class="ti ti-circle-dot" style="font-size:6px;vertical-align:middle;opacity:.5"></i> '+esc(sec)+
+    (BLD_SEL.routing?' <i class="ti ti-circle-dot" style="font-size:6px;vertical-align:middle;opacity:.5"></i> '+esc(String(route).slice(0,26)):'');
+  var dot=document.getElementById('ws-summary-state');
+  if(dot){dot.className='ws-sum-dot '+(ready?'ok':'');dot.textContent=ready?'READY':'—'}
+}
 function nccUpdateTarget(){
   var el=document.getElementById('ncc-test-target'); if(!el)return;
   var t=nccTarget();
   var link=NCC_SEL_LINK?((BLD_LINKS||[]).filter(function(l){return l.uuid===NCC_SEL_LINK})[0]||{}):{};
   el.innerHTML='هدف تست: <b>'+esc(t.address||'—')+':'+esc(String(t.port))+'</b>'+(t.sni?(' · SNI: <b>'+esc(t.sni)+'</b>'):'')+(t.tls?' · TLS':' · بدون TLS')+
     (NCC_SEL_LINK?(' · تونل: <b>'+esc(link.label||NCC_SEL_LINK.slice(0,8))+'</b>'):'');
+  nccSummaryUpdate();   // Phase 41 §20: خلاصه همیشه مرئی
   wsStepAuto();   // Phase 40: استپر پیشرفت از انتخاب‌های واقعی
 }
 
@@ -4850,6 +5021,28 @@ function bldPayload(){
 }
 
 function bldBusy(btn,on){if(!btn)return;btn.disabled=on;var i=btn.querySelector('i');if(i){i.className=on?'ti ti-loader-2 spin':'ti '+(btn.id==='bld-gen-btn'?'ti-wand':'ti-eye')}}
+
+// ═══ Phase 41 §5/§6 — مرز اعتبار درخواست (فرانت‌اند) ═══
+// ConfigRequest هرگز نباید با فیلد اجباریِ خالی به سرور برسد. این
+// اعتبارسنجی قبل از preview/generate اجرا می‌شود و پیام فارسیِ دقیق
+// می‌دهد — دقیقاً همان قراردادی که §5 خواسته است.
+function bldValidateSelection(){
+  var v=document.getElementById('bld-validation');
+  var missing=[];
+  if(!BLD_SEL.protocol)missing.push('protocol');
+  if(!BLD_SEL.transport)missing.push('transport');
+  if(!BLD_SEL.security)missing.push('security');
+  if(!missing.length)return true;
+  var msg=missing.indexOf('protocol')>=0?'اول پروتکل را انتخاب کنید (مرحله‌ی ۱).'
+    :(missing.indexOf('transport')>=0?'ابتدا نوع انتقال را انتخاب کنید (مرحله‌ی ۳).'
+    :'ابتدا امنیت (Security) را انتخاب کنید (مرحله‌ی ۴).');
+  if(v){v.innerHTML='<div class="bld-valid-bad">⚠ <b>درخواست ناقص</b> — '+esc(msg)+'<br>'+
+    '<span class="bld-hint">این خطا قبل از ارسال به سرور گرفته شد — درخواستِ ناقص هرگز به کامپایلر نمی‌رسد (INVALID_REQUEST در مرز).</span></div>';
+    v.scrollIntoView({behavior:'smooth',block:'nearest'});
+  }
+  toast(msg,'err');
+  return false;
+}
 
 // ── نتیجه: دو وضعیت (CONFIGURATION / RUNTIME) + خروجی‌ها ──
 function bldRenderResult(j){
@@ -4897,6 +5090,7 @@ function bldRenderResult(j){
 function bldCopy(btn){if(window.__bldUri){navigator.clipboard.writeText(window.__bldUri).then(function(){toast('کپی شد ✓','ok')})}}
 
 async function builderPreview(btn){
+  if(!bldValidateSelection())return;   // §5: درخواست ناقص ارسال نمی‌شود
   bldBusy(btn,true);
   try{
     var r=await authF('/api/config-builder/preview',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(bldPayload())});
@@ -4906,6 +5100,7 @@ async function builderPreview(btn){
 }
 
 async function builderGenerate(btn){
+  if(!bldValidateSelection())return;   // §5: درخواست ناقص ارسال نمی‌شود
   bldBusy(btn,true);
   try{
     var r=await authF('/api/config-builder/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(bldPayload())});
@@ -7126,13 +7321,15 @@ function pingBadgeHtml(l){
   }
   return `<span class="cfg-sub-tag" id="pb-${l.uuid}" style="color:var(--red-t);cursor:pointer" onclick="pingLink('${l.uuid}',this)" title="${tip}"><i class="ti ti-wifi-off"></i> قطع</span>`;
 }
+// ═══ Phase 41 §12/§13 — قرارداد نتیجه‌ی تست روی کارت‌ها ═══
+// موفق: RUNTIME VERIFIED ✓ · Xms — شکست: RUNTIME FAILED ✗ + علت (قابل دیدن،
+// نه فقط در tooltip). هرگز مقدار جعل‌شده، هرگز خالی. tap روی چیپ = جزئیات کامل.
 function renderPingBadge(uuid,d,rtt,cp){
   const el=document.getElementById('pb-'+uuid);
   if(!el) return;
   if(d&&d.ok){
     const ms=d.e2e_ms!=null?Math.round(d.e2e_ms):null;
     el.style.color=pingMsClass(ms);
-    // «من:» = پینگ واقعی از مرورگر شما (دقیقاً مسیری که کلاینت می‌رود)
     let mine='';
     if(cp){
       const parts=[];
@@ -7141,12 +7338,15 @@ function renderPingBadge(uuid,d,rtt,cp){
       if(parts.length) mine=' · من: '+parts.join(' · ');
     }
     if(!mine && rtt!=null) mine=' · من '+toFa(rtt)+'ms';
-    el.innerHTML=`<i class="ti ti-activity"></i> تونل ${ms!=null?toFa(ms)+'ms':'✓'}${mine}`;
-    el.title=`WS: ${d.ws_ms!=null?Math.round(d.ws_ms)+'ms':'—'} | تونل: ${d.e2e_ms!=null?Math.round(d.e2e_ms)+'ms':'—'} | پینگ شما: ${rtt!=null?rtt+'ms':'—'}`;
+    el.innerHTML=`<i class="ti ti-shield-check"></i> RUNTIME VERIFIED ✓${ms!=null?(' · '+toFa(ms)+'ms'):''}${mine}`;
+    el.title=`WS: ${d.ws_ms!=null?Math.round(d.ws_ms)+'ms':'—'} | تونل: ${d.e2e_ms!=null?Math.round(d.e2e_ms)+'ms':'—'} | ${d.reply||''} | پینگ شما: ${rtt!=null?rtt+'ms':'—'}`;
   }else{
+    // شکست صادقانه: علت کوتاه روی خود چیپ + علت کامل در title/تیپ‌اُوور
+    const raw=(d&&d.detail)||(d&&d.error_code)||'نامشخص';
+    const short=String(raw).replace(/\s+/g,' ').slice(0,60);
     el.style.color='var(--red-t)';
-    el.innerHTML=`<i class="ti ti-wifi-off"></i> قطع`;
-    el.title=(d&&d.detail)?d.detail:'تست ناموفق';
+    el.innerHTML=`<i class="ti ti-wifi-off"></i> RUNTIME FAILED ✗ · ${esc(short)}`;
+    el.title='علت کامل: '+String(raw);
   }
   // پاپ ظریف هنگام رسیدن نتیجه
   el.classList.remove('ping-pop');

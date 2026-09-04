@@ -1,5 +1,87 @@
 # CHANGELOG — EMIX-PRO
 
+## v12.4.1-recovery (2026-09-04) — 🔧 PHASE 41: Real Network Test Recovery + Config-Builder Data-Integrity Fix + Mobile UX Rebuild
+
+**Mandate:** no new engines, no new builders, no new pages — FIX THE ACTUAL
+BROKEN PRODUCT. Two production data-flow bugs root-caused end-to-end
+(browser → JS state → payload → API → engine), plus the mobile workspace
+rebuilt as an intentional one-column layout.
+
+### BUG 1 — transport '(empty)' INVALID at capability stage (ROOT-CAUSED, FIXED)
+Reproduced exactly in a real browser: POST /api/config-builder/preview →
+422 `transport '(empty)' not supported`. Root cause was a three-part
+frontend state desync, NOT a capability problem:
+1. Node click cleared `BLD_SEL.transport` **without re-rendering the
+   transport chips** — the old chip kept its `.sel` class while the state
+   was already empty (visually selected ≠ ConfigRequest value).
+2. No capability-driven auto-select after protocol/node selection.
+3. No frontend boundary validation — the empty string went straight to
+   the compiler.
+**Fix (state machine, §3–§8):** `nccAutoTransport()` picks the first
+SUPPORTED transport from the capability engine (same UX as the IR-Direct
+page); protocol change resets transport+security; node change re-renders
+and re-validates them (chips now always mirror state); `nccRenderTransports`
+drops stale selections; security auto-repairs to the allowed set.
+**Fix (boundary, §5/§6):** `bldValidateSelection()` refuses to send an
+incomplete request — «ابتدا نوع انتقال را انتخاب کنید» — and the backend
+gained a strict request-integrity stage (`stage:"request"`,
+`INVALID_REQUEST — required field 'transport' is empty`) BEFORE the
+capability engine, so an empty required field is a caller bug, never a
+capability verdict. Backend does not hide the error — both ends fixed.
+Transport chips show friendly labels (XHTTP Packet-up …) while sending the
+exact canonical values (xhttp-packet-up / xhttp-stream-up / ws / tcp).
+
+### BUG 2 — "real ping produces no result" (ROOT-CAUSED, FIXED)
+The engines were healthy (production pings returned real ms); the RESULT
+was invisible from the user's perspective:
+1. On failure the card showed a bare «قطع» — the reason lived only in a
+   hover tooltip (dead on touch devices).
+2. Two competing badge renderers left inconsistent cards after auto-ping.
+3. On mobile the whole live-test panel sat ~4400px below the fold and the
+   sticky action bar NEVER rendered — a CSS order bug: `.ws-sticky
+   {display:none}` was declared AFTER the `@media(max-width:640px)
+   {.ws-sticky{display:flex}}` override, so the base rule (same
+   specificity, later position) always won.
+**Fix (§12/§13):** `renderPingBadge` now renders the unified two-state
+format — success: `RUNTIME VERIFIED ✓ · Xms (+ من: browser-vantage ms)`,
+failure: `RUNTIME FAILED ✗ · <reason>` visible ON the chip with the full
+detail on tap. The quick-test console already showed staged DNS/TCP/TLS
+lines with honest error codes (kept as-is).
+
+### MOBILE REBUILD (§15–§22, verified at 320/360/390/412px)
+- **One column, no builder grid** on ≤1080px (grid-template-areas), two
+  columns on desktop (steps right, live test + outputs left — RTL-correct).
+- **Sticky bottom actions** [اعتبارسنجی][ساخت کانفیگ] — CSS order bug fixed;
+  verified tappable at the viewport bottom.
+- **Compact always-visible summary** (§20) as the sticky header's second
+  row: `ولس · آلمان — فرانکفورت · XHTTP Packet-up · tls · مسیریابی — READY`.
+- **Endpoint/SNI and name/advanced sections collapsed by default** (§21);
+  only fields applicable to the selected combination show.
+- **Network test in the build flow** (after the steps, before outputs):
+  تست سریع + «تست‌های بیشتر ▾» disclosure on mobile (six giant buttons
+  no longer side-by-side), all buttons on desktop.
+- Compacted cards (nodes/routing/clients), zero horizontal overflow at
+  320px, ellipsized monospace addresses, 400px single-column fallback.
+
+### ALSO
+- **IRAN DIRECT live honesty (§24):** selecting IRAN_DIRECT with a
+  non-split-tunnel client format now shows an immediate inline
+  SPLIT_TUNNEL_NOT_SUPPORTED warning in the routing section (before
+  validation, not after).
+- **Latent state-persistence bug fixed:** the module-level `SAVE_LOCK`
+  (asyncio.Lock) bound to the first event loop; across later loops ( Railway
+  restarts of the test suite multi-boot scenario) save tasks silently died
+  with "Lock is bound to a different event loop". Replaced with a
+  loop-agnostic `_save_lock()` that re-creates the lock per running loop.
+- **Tests:** +21 (tests/integration/test_phase41_recovery.py): §6 boundary
+  stages, §30 every capability-SUPPORTED combo previews with the exact
+  canonical transport, §31 VLESS+XHTTP+TLS validate→preview→generate (live
+  link, card, retestable) + VLESS+WS + Trojan + Shadowsocks + MTProto,
+  §32 real ping contract (real latency or honest error_code — never
+  fabricated) + loopback honestly rejected (SSRF posture), §33/§34
+  structural UI acceptance (boundary guard, state machine, sticky CSS
+  order, mobile areas). Full suite: 1053/1053 ×2 consecutive.
+
 ## v12.4.0-workspace (2026-09-04) — 🎯 PHASE 40: Configuration Center as the Single Network Workspace
 
 **Mandate:** «کانفیگ‌ها = the single network workspace» — the whole product
