@@ -4019,46 +4019,122 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
      نشده). پیش‌نمایش از همان کامپایلر کانونی است؛ ترکیب نامعتبر ساخته نمی‌شود.
      ════════════════════════════════════════════════════════════════════════════ -->
 <section class="pg" id="pg-builder">
-  <div class="topbar">
-    <div><div class="tb-title"><i class="ti ti-wand" style="color:#A78BFA"></i> ساخت کانفیگ — سازنده‌ی یکپارچه</div><div class="tb-sub">قابلیت‌ها از بک‌اند · ترکیب‌های نامعتبر رد می‌شوند · خروجی فقط از کامپایلر کانونی</div></div>
-    <div class="tb-right"><span class="badge bg-purple" id="bld-caps-badge">…</span><button class="btn btn-o btn-sm" onclick="loadBuilderPage()"><i class="ti ti-refresh"></i> رفرش</button></div>
+  <!-- ═════════ PHASE 39 — مرکز کنترل شبکه (Network Control Center) ═════════
+       تنها صفحه‌ی ساخت کانفیگ: پروتکل → نود → ترنسپورت → امنیت → اندپوینت →
+       مسیریابی → کلاینت + پنل تست زنده‌ی واقعی + پیش‌نمایش از کامپایلر کانونی.
+       همه‌ی گزینه‌ها از /api/config-builder/capabilities (قابلیت‌محور) می‌آیند. -->
+  <div class="ncc-hdr">
+    <div class="ncc-hdr-icon"><i class="ti ti-world-cog"></i></div>
+    <div class="ncc-hdr-text">
+      <div class="ncc-hdr-title">مرکز کنترل شبکه EMIX</div>
+      <div class="ncc-hdr-sub">هسته‌ی EMIX · کامپایلر کانونی · تست‌های زنده‌ی واقعی — ساخت و مدیریت کانفیگ، همه در یک صفحه</div>
+    </div>
+    <div class="ncc-hdr-stats">
+      <div class="ncc-stat" id="ncc-st-core"><i class="ti ti-cpu"></i> Core <span class="ncc-dot" id="ncc-dot-core"></span><b id="ncc-val-core">…</b></div>
+      <div class="ncc-stat" id="ncc-st-backend"><i class="ti ti-server-2"></i> Backend <span class="ncc-dot" id="ncc-dot-backend"></span><b id="ncc-val-backend">…</b></div>
+      <div class="ncc-stat" id="ncc-st-node"><i class="ti ti-router"></i> <b id="ncc-val-node">…</b></div>
+      <div class="ncc-stat" id="ncc-st-lat"><i class="ti ti-activity-heartbeat"></i> <b id="ncc-val-lat">—</b></div>
+      <button class="btn btn-o btn-sm" onclick="loadBuilderPage()"><i class="ti ti-refresh"></i> رفرش</button>
+    </div>
   </div>
 
-  <div class="g2 bld-grid" style="align-items:start">
-    <div class="card" style="margin-bottom:18px">
-      <div class="card-title"><i class="ti ti-list-check"></i> مراحل ساخت</div>
+  <div class="g2 ncc-grid" style="align-items:start">
+    <!-- ═══ ستون چپ: سازنده (مرحله‌ای) ═══ -->
+    <div class="card ncc-build">
+      <div class="card-title"><i class="ti ti-list-check"></i> مراحل ساخت کانفیگ</div>
 
-      <div class="bld-step"><div class="bld-step-label">۱ · پروتکل</div><div id="bld-protocols" class="bld-chips"></div><div id="bld-proto-hint" class="bld-hint"></div></div>
-      <div class="bld-step"><div class="bld-step-label">۲ · نود</div><div id="bld-nodes" class="bld-nodes"></div><div id="bld-node-detail" class="bld-hint"></div></div>
-      <div class="bld-step"><div class="bld-step-label">۳ · ترنسپورت</div><div id="bld-transports" class="bld-chips"></div><div id="bld-tr-hint" class="bld-hint"></div></div>
-      <div class="bld-step"><div class="bld-step-label">۴ · امنیت (Security)</div><div id="bld-security" class="bld-chips"></div></div>
-      <div class="bld-step"><div class="bld-step-label">۵ · Endpoint Profile (TLS/اندپوینت — نه مسیریابی)</div>
+      <div class="ncc-step"><div class="ncc-step-label">۱ · پروتکل <span class="ncc-step-note">— فقط پروتکل‌های واقعاً فعال روی این دیپلوی</span></div>
+        <div id="ncc-protocols" class="ncc-proto-cards"></div>
+        <div id="ncc-proto-hint" class="bld-hint"></div>
+      </div>
+
+      <div class="ncc-step"><div class="ncc-step-label">۲ · نود / اندپوینت سرور</div>
+        <div id="ncc-nodes" class="ncc-node-cards"></div>
+        <div id="ncc-node-detail" class="bld-hint"></div>
+      </div>
+
+      <div class="ncc-step"><div class="ncc-step-label">۳ · ترنسپورت</div>
+        <div id="ncc-transports" class="ncc-chips"></div>
+        <div id="ncc-tr-hint" class="bld-hint"></div>
+      </div>
+
+      <div class="ncc-step"><div class="ncc-step-label">۴ · امنیت (Security)</div>
+        <div id="ncc-security" class="ncc-chips"></div>
+        <div id="ncc-sec-hint" class="bld-hint"></div>
+      </div>
+
+      <div class="ncc-step"><div class="ncc-step-label">۵ · پروفایل اندپوینت (TLS/SNI — فقط معنای اتصال، نه مسیریابی)</div>
         <select id="bld-ep" class="cm-input" onchange="builderOnEpChange()"></select>
         <div id="bld-ep-custom" style="display:none;gap:8px;margin-top:8px">
-          <input id="bld-ep-address" class="cm-input" placeholder="آدرس اندپوینت (ورودی)" style="direction:ltr;text-align:left;font-family:monospace">
+          <input id="bld-ep-address" class="cm-input" placeholder="آدرس اندپوینت (ورودی — دامنه یا IP)" style="direction:ltr;text-align:left;font-family:monospace">
           <input id="bld-ep-sni" class="cm-input" placeholder="SNI (اختیاری — معنای TLS، نه جغرافیا)" style="direction:ltr;text-align:left;font-family:monospace">
           <input id="bld-ep-port" class="cm-input" type="number" value="443" placeholder="پورت" style="direction:ltr">
         </div>
-        <div class="bld-hint">SNI فقط معنای TLS/اندپوینت دارد — هرگز مسیریابی، هرگز خروج جغرافیایی، هرگز «IP ایران» نیست.</div>
+        <div class="bld-hint">SNI فقط معنای TLS/اندپوینت دارد — هرگز مسیریابی، هرگز خروج جغرافیایی، هرگز «IP ایران» نیست. SNI جعلی روی لینک = رفتار TLS در برابر فیلتر، بدون تغییر مسیر.</div>
       </div>
-      <div class="bld-step"><div class="bld-step-label">۶ · مسیریابی (Routing Policy)</div><div id="bld-routing" class="bld-modes"></div><div id="bld-routing-hint" class="bld-hint"></div></div>
-      <div class="bld-step"><div class="bld-step-label">۷ · خروجی کلاینت</div><div id="bld-clients" class="bld-chips"></div><div id="bld-client-hint" class="bld-hint"></div></div>
-      <div class="bld-step"><div class="bld-step-label">نام و برچسب</div>
+
+      <div class="ncc-step"><div class="ncc-step-label">۶ · مسیریابی (Routing Policy) <span class="ncc-step-note">— تقسیم ترافیک ایران / بین‌الملل</span></div>
+        <div id="ncc-routing" class="ncc-route-cards"></div>
+        <div id="ncc-routing-hint" class="bld-hint"></div>
+      </div>
+
+      <div class="ncc-step"><div class="ncc-step-label">۷ · خروجی کلاینت</div>
+        <div id="ncc-clients" class="ncc-client-cards"></div>
+        <div id="ncc-client-hint" class="bld-hint"></div>
+      </div>
+
+      <div class="ncc-step"><div class="ncc-step-label">نام و تنظیمات پیشرفته</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
           <input id="bld-name" class="cm-input" placeholder="نام کانفیگ (تاریخچه)">
           <input id="bld-remark" class="cm-input" placeholder="remark" style="direction:ltr;text-align:left;font-family:monospace">
         </div>
+        <details class="ncc-adv" id="ncc-adv">
+          <summary><i class="ti ti-adjustments"></i> تنظیمات پیشرفته (ALPN / fingerprint / رمزنگاری SS)</summary>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+            <input id="bld-alpn" class="cm-input" value="h2,http/1.1" placeholder="ALPN (مثلاً h2,http/1.1)" style="direction:ltr">
+            <input id="bld-fingerprint" class="cm-input" value="chrome" placeholder="fingerprint" style="direction:ltr">
+          </div>
+          <div style="display:grid;grid-template-columns:1fr;gap:8px;margin-top:8px" id="ncc-ss-extra" hidden>
+            <input id="bld-ss-cipher" class="cm-input" value="chacha20-ietf-poly1305" placeholder="SS cipher" style="direction:ltr">
+          </div>
+          <div class="bld-hint">پیش‌فرض‌ها امن و سازگارند — فقط اگر می‌دانید چه می‌کنید تغییر دهید.</div>
+        </details>
       </div>
+
       <div class="bld-actions">
         <button class="btn btn-o" id="bld-preview-btn" onclick="builderPreview(this)"><i class="ti ti-eye"></i> پیش‌نمایش و اعتبارسنجی</button>
         <button class="btn btn-p" id="bld-gen-btn" onclick="builderGenerate(this)"><i class="ti ti-wand"></i> ساخت نهایی</button>
       </div>
     </div>
 
-    <div class="card" style="margin-bottom:18px">
-      <div class="card-title"><i class="ti ti-eye"></i> پیش‌نمایش و خروجی (از کامپایلر کانونی)</div>
-      <div id="bld-validation"></div>
-      <div id="bld-outputs"></div>
+    <!-- ═══ ستون راست: پنل تست زنده + خروجی ═══ -->
+    <div class="ncc-live">
+      <div class="card ncc-test-card">
+        <div class="card-title"><i class="ti ti-activity"></i> پنل تست زنده‌ی شبکه <span class="badge bg-purple" style="margin-inline-start:8px">واقعی</span></div>
+        <div class="ncc-test-target" id="ncc-test-target">هدف تست: <b>—</b></div>
+        <div class="ncc-test-btns">
+          <button class="btn btn-p btn-sm" onclick="nccTestQuick(this)"><i class="ti ti-bolt"></i> تست سریع</button>
+          <button class="btn btn-o btn-sm" onclick="nccTestTls(this)"><i class="ti ti-lock-square"></i> تست TLS</button>
+          <button class="btn btn-o btn-sm" onclick="nccTestSni(this)"><i class="ti ti-certificate"></i> تست SNI</button>
+          <button class="btn btn-o btn-sm" onclick="nccTestTunnel(this)"><i class="ti ti-tunnel"></i> تست تونل E2E</button>
+          <button class="btn btn-o btn-sm" onclick="nccTestTurbo(this)"><i class="ti ti-rocket"></i> توربو A/B</button>
+          <button class="btn btn-amber btn-sm" onclick="nccTestDiagnostic(this)"><i class="ti ti-stethoscope"></i> تشخیص کامل</button>
+        </div>
+        <div class="ncc-test-links">
+          <select id="ncc-link-sel" class="cm-input" onchange="nccOnLinkSel()"><option value="">— کانفیگ ساخته‌شده‌ای برای تست تونل/توربو انتخاب کنید —</option></select>
+        </div>
+        <div id="ncc-console" class="ncc-console"><div class="ncc-console-empty">برای شروع، یکی از دکمه‌های تست را بزنید — هر عدد از اندازه‌گیری واقعی می‌آید.</div></div>
+        <div id="ncc-browser" class="ncc-browser">
+          <div class="ncc-browser-title"><i class="ti ti-world"></i> حقیقت مسیر از مرورگر شما <button class="btn btn-o btn-sm" onclick="nccBrowserPing()"><i class="ti ti-refresh"></i></button></div>
+          <div id="ncc-browser-rows"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><i class="ti ti-eye"></i> اعتبارسنجی و خروجی (از کامپایلر کانونی)</div>
+        <div id="bld-validation"></div>
+        <div id="bld-outputs"></div>
+      </div>
     </div>
   </div>
 
@@ -4163,6 +4239,115 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
 .ird-asset .st{font-size:10px;opacity:.9}
 .ird-asset .pbtn{cursor:pointer;font-size:12px;line-height:1}
 .ird-asset .xbtn{cursor:pointer;color:#f87171;font-size:13px;line-height:1}
+/* ═══ PHASE 39 — مرکز کنترل شبکه (ncc-) ═════════════════════════════ */
+.ncc-hdr{display:flex;align-items:center;gap:14px;padding:18px 22px;border-radius:20px;border:1px solid var(--card-b);
+  background:linear-gradient(140deg,rgba(139,92,246,.14) 0%,var(--card) 55%);margin-bottom:18px;position:relative;overflow:hidden;flex-wrap:wrap}
+.ncc-hdr::before{content:'';position:absolute;top:-80px;left:-40px;width:240px;height:240px;background:radial-gradient(circle,rgba(139,92,246,.22),transparent 70%);pointer-events:none}
+.ncc-hdr-icon{width:52px;height:52px;border-radius:15px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;color:#fff;font-size:26px;flex-shrink:0;box-shadow:0 8px 22px rgba(139,92,246,.4)}
+.ncc-hdr-text{flex:1;min-width:230px;position:relative;z-index:1}
+.ncc-hdr-title{font-size:17px;font-weight:800;color:var(--t1);letter-spacing:-.01em}
+.ncc-hdr-sub{font-size:11.5px;color:var(--t3);margin-top:3px;line-height:1.7}
+.ncc-hdr-stats{display:flex;gap:9px;flex-wrap:wrap;position:relative;z-index:1}
+.ncc-stat{display:flex;align-items:center;gap:7px;padding:8px 13px;border-radius:12px;border:1px solid var(--card-b);background:rgba(0,0,0,.22);font-size:11.5px;color:var(--t2)}
+[data-theme="light"] .ncc-stat{background:rgba(255,255,255,.75)}
+.ncc-stat i{color:var(--accent);font-size:14px}
+.ncc-stat b{color:var(--t1);font-weight:700}
+.ncc-dot{width:8px;height:8px;border-radius:50%;background:var(--t3);display:inline-block;flex-shrink:0}
+.ncc-dot.ok{background:#22c55e;box-shadow:0 0 8px rgba(34,197,94,.7)}
+.ncc-dot.bad{background:#ef4444;box-shadow:0 0 8px rgba(239,68,68,.7)}
+.ncc-dot.warn{background:#f59e0b;box-shadow:0 0 8px rgba(245,158,11,.7)}
+.ncc-grid{grid-template-columns:minmax(0,1.15fr) minmax(0,1fr)}
+@media(max-width:1080px){.ncc-grid{grid-template-columns:1fr}}
+.ncc-build,.ncc-live{min-width:0}
+.ncc-step{margin:16px 0;padding-bottom:8px;border-bottom:1px dashed var(--card-b)}
+.ncc-step:last-of-type{border-bottom:none}
+.ncc-step-label{font-size:12.5px;color:var(--t2);margin-bottom:10px;font-weight:800;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ncc-step-note{font-size:10px;color:var(--t3);font-weight:600}
+.ncc-proto-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.ncc-pcard{border:1.5px solid var(--card-b);border-radius:14px;padding:13px 12px;cursor:pointer;transition:.18s;text-align:center;position:relative;background:rgba(0,0,0,.12)}
+[data-theme="light"] .ncc-pcard{background:#fff}
+.ncc-pcard:hover{border-color:var(--card-bh);transform:translateY(-1px)}
+.ncc-pcard.sel{border-color:var(--accent);background:rgba(139,92,246,.14);box-shadow:0 0 0 3px rgba(139,92,246,.12)}
+.ncc-pcard.off{opacity:.45;cursor:not-allowed}
+.ncc-pcard-icon{width:36px;height:36px;border-radius:10px;background:var(--accent-d);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:18px;margin:0 auto 8px}
+.ncc-pcard.sel .ncc-pcard-icon{background:var(--accent);color:#fff}
+.ncc-pcard-title{font-size:12.5px;font-weight:800;color:var(--t1)}
+.ncc-pcard-sub{font-size:9.5px;color:var(--t3);margin-top:3px;line-height:1.5}
+.ncc-node-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
+.ncc-ncard{padding:12px 14px;border-radius:14px;border:1px solid var(--card-b);cursor:pointer;transition:.15s;background:rgba(0,0,0,.1)}
+[data-theme="light"] .ncc-ncard{background:#fff}
+.ncc-ncard:hover{border-color:var(--accent)}
+.ncc-ncard.sel{border-color:var(--accent);background:rgba(139,92,246,.14)}
+.ncc-ncard .nm{font-weight:800;font-size:13px;color:var(--t1);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ncc-ncard .meta{font-size:10.5px;color:var(--t3);margin-top:5px;line-height:1.8}
+.ncc-chips{display:flex;flex-wrap:wrap;gap:8px}
+.ncc-chip{padding:9px 15px;border-radius:12px;border:1px solid var(--card-b);background:rgba(139,92,246,.06);cursor:pointer;font-size:12.5px;transition:.15s;font-weight:700}
+.ncc-chip:hover{border-color:var(--accent)}
+.ncc-chip.sel{border-color:var(--accent);background:rgba(139,92,246,.18);box-shadow:0 0 0 1px var(--accent)}
+.ncc-chip.off{opacity:.4;cursor:not-allowed}
+.ncc-chip .st{font-size:10px;opacity:.8;font-weight:600}
+.ncc-route-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(225px,1fr));gap:10px}
+.ncc-rcard{padding:13px 14px;border-radius:14px;border:1px solid var(--card-b);cursor:pointer;transition:.18s;background:rgba(0,0,0,.1)}
+[data-theme="light"] .ncc-rcard{background:#fff}
+.ncc-rcard:hover{border-color:var(--card-bh)}
+.ncc-rcard.sel{border-color:var(--accent);background:rgba(139,92,246,.14);box-shadow:0 0 0 3px rgba(139,92,246,.12)}
+.ncc-rcard.off{opacity:.55;cursor:not-allowed}
+.ncc-rcard .nm{font-weight:800;font-size:13px;color:var(--t1);display:flex;align-items:center;gap:8px}
+.ncc-rcard .legs{font-size:10.5px;color:var(--t2);margin-top:7px;line-height:1.9;direction:rtl}
+.ncc-rcard .legs b{color:var(--t1)}
+.ncc-rcard .req{font-size:10px;color:var(--t3);margin-top:6px;line-height:1.7}
+.ncc-rcard .why-off{font-size:10px;color:#fbbf24;margin-top:6px;line-height:1.7}
+.ncc-client-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:10px}
+.ncc-ccard{padding:12px 13px;border-radius:14px;border:1px solid var(--card-b);cursor:pointer;transition:.18s;background:rgba(0,0,0,.1)}
+[data-theme="light"] .ncc-ccard{background:#fff}
+.ncc-ccard:hover{border-color:var(--card-bh)}
+.ncc-ccard.sel{border-color:var(--accent);background:rgba(139,92,246,.14);box-shadow:0 0 0 3px rgba(139,92,246,.12)}
+.ncc-ccard .nm{font-weight:800;font-size:12.5px;color:var(--t1)}
+.ncc-ccard .meta{font-size:10px;color:var(--t3);margin-top:4px;line-height:1.7}
+.ncc-adv{margin-top:10px;border:1px dashed var(--card-b);border-radius:12px;padding:10px 13px}
+.ncc-adv summary{cursor:pointer;font-size:12px;color:var(--t2);font-weight:700;display:flex;align-items:center;gap:7px;list-style:none}
+.ncc-adv summary::-webkit-details-marker{display:none}
+.ncc-adv summary i{color:var(--accent)}
+.ncc-test-card{margin-bottom:18px;border:1px solid rgba(139,92,246,.25)}
+.ncc-test-target{font-size:12px;color:var(--t2);background:rgba(0,0,0,.2);border:1px solid var(--card-b);border-radius:11px;padding:10px 13px;margin-top:10px;direction:rtl;line-height:1.8}
+[data-theme="light"] .ncc-test-target{background:rgba(139,92,246,.04)}
+.ncc-test-target b{color:var(--t1);font-family:'JetBrains Mono',monospace;font-size:11.5px;direction:ltr;display:inline-block}
+.ncc-test-btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:11px}
+.ncc-test-links{margin-top:10px}
+.ncc-console{margin-top:12px;border-radius:13px;border:1px solid var(--card-b);background:rgba(0,0,0,.32);padding:13px 15px;min-height:90px;max-height:420px;overflow-y:auto}
+[data-theme="light"] .ncc-console{background:#0d1117}
+.ncc-console-empty{color:var(--t3);font-size:11.5px;text-align:center;padding:18px 8px;line-height:1.9}
+.ncc-cline{display:flex;align-items:center;gap:10px;padding:6px 2px;font-size:12px;color:var(--t2);border-bottom:1px dashed rgba(139,92,246,.1);font-family:'JetBrains Mono',monospace;direction:ltr;justify-content:flex-start}
+.ncc-cline:last-child{border-bottom:none}
+.ncc-cline .ncc-cname{min-width:96px;font-weight:700;color:var(--t1);font-size:11px;direction:ltr;text-align:left}
+.ncc-cline .ncc-cval{flex:1;font-size:11px;color:#9fb0c9;word-break:break-word;text-align:left}
+.ncc-cline.ok .ncc-cname{color:#34d399}
+.ncc-cline.bad .ncc-cname{color:#f87171}
+.ncc-cline.bad .ncc-cval{color:#fca5a5}
+.ncc-cline.warn .ncc-cname{color:#fbbf24}
+.ncc-console-hdr{display:flex;align-items:center;gap:9px;font-size:12.5px;font-weight:800;color:var(--t1);padding:7px 2px 9px;border-bottom:1px solid rgba(139,92,246,.2);margin-bottom:4px;direction:rtl}
+.ncc-console-hdr .ncc-final{margin-inline-start:auto;font-size:12px;font-weight:800;padding:3px 12px;border-radius:9px}
+.ncc-final.ok{background:rgba(34,197,94,.18);color:#4ade80;border:1px solid rgba(34,197,94,.4)}
+.ncc-final.bad{background:rgba(239,68,68,.18);color:#f87171;border:1px solid rgba(239,68,68,.4)}
+.ncc-final.run{background:rgba(139,92,246,.16);color:#a78bfa;border:1px solid rgba(139,92,246,.4)}
+.ncc-browser{margin-top:13px;border:1px dashed var(--card-b);border-radius:12px;padding:11px 13px}
+.ncc-browser-title{font-size:12px;font-weight:800;color:var(--t2);display:flex;align-items:center;gap:8px}
+.ncc-browser-title i{color:var(--accent)}
+.ncc-browser-title button{margin-inline-start:auto}
+.ncc-brow-row{display:flex;align-items:center;gap:9px;font-size:11.5px;color:var(--t2);margin-top:8px;line-height:1.7}
+.ncc-brow-row i{font-size:13px}
+.ncc-brow-row .lbl{color:var(--t3);min-width:120px;text-align:right}
+.ncc-busy{opacity:.6;pointer-events:none}
+@media(max-width:760px){
+  .ncc-hdr{padding:14px 16px}
+  .ncc-hdr-stats{width:100%}
+  .ncc-stat{flex:1;min-width:105px;justify-content:center}
+  .ncc-proto-cards,.ncc-node-cards,.ncc-route-cards,.ncc-client-cards{grid-template-columns:1fr 1fr}
+  .bld-actions{position:sticky;bottom:10px;z-index:40;background:linear-gradient(0deg,var(--bg2) 65%,transparent);padding:12px 0 4px;flex-direction:column}
+  .bld-actions .btn{width:100%;justify-content:center}
+  .ncc-test-btns{gap:6px}
+  .ncc-test-btns .btn{flex:1 1 46%;justify-content:center}
+}
 </style>
 
 <script>
@@ -4172,129 +4357,220 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
    Rendering is 100% capability-driven: /api/config-builder/capabilities.
    No protocol-support assumptions are hardcoded in JavaScript.
    ════════════════════════════════════════════════════════════════════════ */
-var BLD_CAPS=null, BLD_EPS=[], BLD_SEL={protocol:'',transport:'',security:'',node:'panel',ep:'',routing:'ALL_VPN',client:'xray-json'};
+var BLD_CAPS=null, BLD_EPS=[], BLD_LINKS=[], BLD_VMX=null, NCC_SEL_LINK='';
+var BLD_SEL={protocol:'',transport:'',security:'',node:'panel',ep:'',routing:'ALL_VPN',client:'xray-json'};
+
+// ── آیکون/نام فارسی پروتکل‌ها (فقط نمایش — تصمیم‌ها همیشه از capabilities) ──
+var NCC_PROTO_META={
+  vless:{icon:'ti-bolt',fa:'ولس',sub:'سبک · UUID'},
+  trojan:{icon:'ti-shield-check',fa:'تروجان',sub:'پسورد · ضد تشخیص'},
+  shadowsocks:{icon:'ti-ghost',fa:'شادوساکس',sub:'AEAD'},
+  mtproto:{icon:'ti-brand-telegram',fa:'ام‌تی‌پروتو',sub:'tg:// proxy'}
+};
+var NCC_ROUTE_META={
+  ALL_VPN:{icon:'ti-world',fa:'همه‌ی ترافیک از VPN'},
+  IRAN_DIRECT:{icon:'ti-flag',fa:'ایران مستقیم (ISP خودت)'},
+  IRAN_PROXY:{icon:'ti-flag-2',fa:'پروکسی ایران (گیت‌وی واقعی)'},
+  INTERNATIONAL_VPN:{icon:'ti-globe',fa:'بین‌الملل VPN'},
+  CUSTOM:{icon:'ti-adjustments',fa:'قواعد سفارشی'}
+};
 
 async function loadBuilderPage(){
   try{
+    nccLoadStatus(); nccBrowserPing();   // هسته: در هر پروفایلی کار می‌کنند
     var r=await authF('/api/config-builder/capabilities');
-    if(!r.ok){netErr(r,'سازنده‌ی کانفیگ');return}
+    if(!r.ok){
+      // دیپلوی در پروفایل core است — سازنده‌ی کانفیگ opt-in است (v12 boot profile).
+      // پنل تست زنده‌ی واقعی همچنان کار می‌کند (network_test = هسته).
+      var host=document.getElementById('ncc-protocols');
+      if(host)host.innerHTML='<div class="bld-hint" style="grid-column:1/-1;padding:14px;border:1px dashed var(--card-b);border-radius:12px">'+
+        '<b>سازنده‌ی کانفیگ در این دیپلوی فعال نیست.</b><br>'+
+        'این پنل در پروفایل <b>core</b> بوت شده (هسته‌ی همیشه‌زنده‌ی EMIX — پینگ/رله/ساب). '+
+        'برای فعال‌شدن سازنده‌ی یکپارچه: <code style="direction:ltr;display:inline-block">EMIX_PROFILE=full</code> '+
+        'یا <code style="direction:ltr;display:inline-block">EMIX_ENABLE=config_builder,capability_engine,iran_gateway</code> را در Railway تنظیم کنید.<br>'+
+        'پنل تست زنده‌ی شبکه (تست سریع/TLS/SNI/تشخیص کامل) همین حالا هم واقعی و فعال است.</div>';
+      ['ncc-nodes','ncc-routing','ncc-clients'].forEach(function(id){var e=document.getElementById(id);if(e)e.innerHTML=''});
+      return;
+    }
     BLD_CAPS=await r.json();
-    document.getElementById('bld-caps-badge').textContent=BLD_CAPS.nodes.length+' نود · '+Object.keys(BLD_CAPS.clients).length+' خروجی';
-    bldRenderProtocols(); bldRenderNodes(); bldRenderRouting(); bldRenderClients();
-    bldLoadEndpointProfiles(); bldLoadHistory();
-  }catch(e){netErr(e,'سازنده‌ی کانفیگ')}
+    nccRenderProtocols(); nccRenderNodes(); nccRenderRouting(); nccRenderClients();
+    bldLoadEndpointProfiles(); bldLoadHistory(); nccLoadLinks(); nccLoadMatrix();
+  }catch(e){netErr(e,'مرکز کنترل شبکه')}
 }
 
-function bldRenderProtocols(){
-  var host=document.getElementById('bld-protocols'); if(!host)return;
+// ── هدر: وضعیت Core / Backend / Node / Latency — از داده‌ی واقعی ──
+async function nccLoadStatus(){
+  try{
+    var r=await authF('/health'); var h=await r.json();
+    nccDot('core', h && h.status==='ok');
+    document.getElementById('ncc-val-core').textContent=(h&&h.uptime)?('UP '+h.uptime):'—';
+  }catch(e){nccDot('core',false);document.getElementById('ncc-val-core').textContent='DOWN'}
+  try{
+    var r=await authF('/api/health/summary'); var s=await r.json();
+    var by=(s&&s.by_state)||{}; var healthy=(by.HEALTHY||0), tot=(s&&s.tracked)||0;
+    var backend = tot>0 ? (healthy>0?'HEALTHY':'NO VERIFIED') : 'NO CONFIGS';
+    nccDot('backend', backend==='HEALTHY');
+    document.getElementById('ncc-val-backend').textContent=backend+' · '+healthy+'/'+tot;
+  }catch(e){nccDot('backend',false);document.getElementById('ncc-val-backend').textContent='—'}
+  try{
+    var node=(BLD_CAPS.nodes||[]).filter(function(n){return n.node_id===BLD_SEL.node})[0]||{};
+    document.getElementById('ncc-val-node').textContent=(node.name||node.node_id||'—')+(node.state?(' · '+node.state):'');
+  }catch(e){}
+  nccUpdateTarget();
+}
+function nccDot(which,ok){
+  var d=document.getElementById('ncc-dot-'+which); if(d)d.className='ncc-dot '+(ok?'ok':'bad');
+}
+
+// ── ۱) پروتکل — کارت‌ها؛ فقط چیزی که واقعاً قابل انتخاب است فعال است ──
+function nccRenderProtocols(){
+  var host=document.getElementById('ncc-protocols'); if(!host)return;
   host.innerHTML='';
   (BLD_CAPS.protocols||[]).forEach(function(p){
+    var m=NCC_PROTO_META[p.protocol]||{icon:'ti-plug',fa:p.protocol,sub:''};
     var d=document.createElement('div');
-    d.className='bld-chip'+(p.selectable?'':' off')+(BLD_SEL.protocol===p.protocol?' sel':'');
-    d.innerHTML=p.protocol+(p.selectable?'':' <span class="st">('+p.readiness+')</span>');
-    if(p.selectable){d.onclick=function(){BLD_SEL.protocol=p.protocol;BLD_SEL.transport='';bldRenderProtocols();bldRenderTransports()}}
+    d.className='ncc-pcard'+(p.selectable?'':' off')+(BLD_SEL.protocol===p.protocol?' sel':'');
+    d.innerHTML='<div class="ncc-pcard-icon"><i class="ti '+m.icon+'"></i></div>'+
+      '<div class="ncc-pcard-title">'+esc(m.fa)+'</div>'+
+      '<div class="ncc-pcard-sub">'+esc(m.sub)+(p.selectable?'':' · '+(p.readiness||''))+'</div>';
+    if(p.selectable){d.onclick=function(){BLD_SEL.protocol=p.protocol;BLD_SEL.transport='';nccRenderProtocols();nccUpdateTarget()}}
+    else{d.title='Not supported on this deployment — '+esc(p.note||p.readiness||'')}
     host.appendChild(d);
   });
-  var hint=document.getElementById('bld-proto-hint');
+  var hint=document.getElementById('ncc-proto-hint');
   if(hint){var bp=(BLD_CAPS.protocols||[]).filter(function(p){return !p.selectable});
-    hint.textContent=bp.length?('پروتکل‌های دیگر فقط تولید لینک/کانفیگ هستند (BETA — بدون ران‌تایم در پنل): '+bp.map(function(p){return p.protocol}).join(', ')):'';}
-  bldRenderTransports();
+    hint.textContent=bp.length?('پروتکل‌های دیگر روی این دیپلوی پشتیبانی نمی‌شوند (فقط تولید لینک/بخش آزمایشی): '+bp.map(function(p){return p.protocol}).join('، ')):'همه‌ی پروتکل‌های پشتیبانی‌شده روی این دیپلوی فعال‌اند.';}
+  nccRenderTransports();
 }
 
-function bldNodeProtocols(){
+function nccNodeProtocols(){
   var node=(BLD_CAPS.nodes||[]).filter(function(n){return n.node_id===BLD_SEL.node})[0];
   return (node&&node.protocols)||[];
 }
 
-function bldRenderTransports(){
-  var host=document.getElementById('bld-transports'); if(!host)return;
+// ── ۳) ترنسپورت — فقط ترکیب‌های معتبر ──
+function nccRenderTransports(){
+  var host=document.getElementById('ncc-transports'); if(!host)return;
   host.innerHTML='';
-  var list=bldNodeProtocols().filter(function(x){return !BLD_SEL.protocol||x.protocol===BLD_SEL.protocol});
+  var list=nccNodeProtocols().filter(function(x){return !BLD_SEL.protocol||x.protocol===BLD_SEL.protocol});
   var seen={};
   list.forEach(function(x){
     if(seen[x.transport])return; seen[x.transport]=1;
-    var d=document.createElement('div');
     var ok=(x.status==='SUPPORTED');
-    d.className='bld-chip'+(ok?'':' off')+(BLD_SEL.transport===x.transport?' sel':'');
-    d.innerHTML=x.transport+' <span class="st">'+(ok?'':'('+x.status+')</span>');
-    if(ok){d.onclick=function(){BLD_SEL.transport=x.transport;BLD_SEL.security=x.security;bldRenderTransports();bldRenderSecurity()}}
+    var d=document.createElement('div');
+    d.className='ncc-chip'+(ok?'':' off')+(BLD_SEL.transport===x.transport?' sel':'');
+    d.innerHTML=esc(x.transport)+(ok?'':' <span class="st">'+esc(x.status)+'</span>');
+    if(ok){d.onclick=function(){BLD_SEL.transport=x.transport;BLD_SEL.security=x.security;nccRenderTransports();nccUpdateTarget()}}
+    else{d.title=esc(x.reason||x.status)}
     host.appendChild(d);
   });
-  var hint=document.getElementById('bld-tr-hint');
-  if(hint){
+  if(!BLD_SEL.protocol){var hint=document.getElementById('ncc-tr-hint');if(hint)hint.textContent='اول پروتکل را انتخاب کنید.'}
+  else{
     var bad=list.filter(function(x){return x.status!=='SUPPORTED'}).map(function(x){return x.transport+' ('+x.status+(x.reason?': '+x.reason:'')+')'});
-    hint.textContent=bad.length?('ناموجود روی این نود/دیپلوی: '+bad.join(' · ')):'';
+    var hint=document.getElementById('ncc-tr-hint');
+    if(hint){hint.textContent=bad.length?('روی این نود/دیپلوی پشتیبانی نمی‌شود: '+bad.join(' · ')):'ترنسپورت‌ها از قابلیت واقعی نود می‌آیند — ترکیب نامعتبر ساخته نمی‌شود.'}
   }
-  bldRenderSecurity();
+  nccRenderSecurity();
 }
 
-function bldRenderSecurity(){
-  var host=document.getElementById('bld-security'); if(!host)return;
+// ── ۴) امنیت ──
+function nccRenderSecurity(){
+  var host=document.getElementById('ncc-security'); if(!host)return;
   host.innerHTML='';
-  var list=bldNodeProtocols().filter(function(x){return (!BLD_SEL.protocol||x.protocol===BLD_SEL.protocol)&&(!BLD_SEL.transport||x.transport===BLD_SEL.transport)});
+  var list=nccNodeProtocols().filter(function(x){return (!BLD_SEL.protocol||x.protocol===BLD_SEL.protocol)&&(!BLD_SEL.transport||x.transport===BLD_SEL.transport)});
   var seen={};
   list.forEach(function(x){
     if(seen[x.security])return; seen[x.security]=1;
     var d=document.createElement('div');
-    d.className='bld-chip'+(BLD_SEL.security===x.security?' sel':'');
+    d.className='ncc-chip'+(BLD_SEL.security===x.security?' sel':'');
     d.textContent=x.security;
-    d.onclick=function(){BLD_SEL.security=x.security;bldRenderSecurity()};
+    d.onclick=function(){BLD_SEL.security=x.security;nccRenderSecurity();nccUpdateTarget()};
     host.appendChild(d);
   });
+  var hint=document.getElementById('ncc-sec-hint');
+  if(hint){hint.textContent=BLD_SEL.security==='none'?'بدون TLS — فقط برای تست/شبکه‌ی امن':'TLS با SNI از پروفایل اندپوینت — REALITY فقط جایی که هسته واقعاً پشتیبانی کند عرضه می‌شود (قابلیت‌محور).'}
 }
 
-function bldRenderNodes(){
-  var host=document.getElementById('bld-nodes'); if(!host)return;
+// ── ۲) نود — کارت با سلامت/لوکیشن/قابلیت ──
+function nccRenderNodes(){
+  var host=document.getElementById('ncc-nodes'); if(!host)return;
   host.innerHTML='';
   (BLD_CAPS.nodes||[]).forEach(function(n){
     var d=document.createElement('div');
-    d.className='bld-node'+(BLD_SEL.node===n.node_id?' sel':'');
+    d.className='ncc-ncard'+(BLD_SEL.node===n.node_id?' sel':'');
+    var st=(n.state==='ONLINE')?'ok':(n.state==='DEGRADED'?'warn':'bad');
     var eg=n.egress||{};
     var egBadge=eg.classification==='VERIFIED_EGRESS'?'<span class="igw-state igw-ok">EGRESS ✓</span>':(eg.classification==='CONFIGURED_ONLY'?'<span class="igw-state igw-warn">CONFIGURED</span>':'<span class="igw-state igw-info">UNKNOWN</span>');
-    d.innerHTML='<div class="nm">'+esc(n.name||n.node_id)+'</div><div class="meta">'+esc(n.role||'')+' · '+esc(n.state||'')+'<br>UDP: '+esc(String(n.udp))+' '+egBadge+'</div>';
-    d.onclick=function(){BLD_SEL.node=n.node_id;BLD_SEL.transport='';bldRenderNodes()};
+    d.innerHTML='<div class="nm"><i class="ti ti-router"></i> '+esc(n.name||n.node_id)+' <span class="ncc-dot '+(n.state==='ONLINE'?'ok':(n.state==='DEGRADED'?'warn':'bad'))+'"></span></div>'+
+      '<div class="meta">'+esc(n.role||'')+' · '+(n.region?esc(n.region):'')+'<br>'+
+      '<b style="direction:ltr;display:inline-block;font-family:monospace;font-size:10px">'+esc(n.address||'')+'</b><br>'+
+      'TCP: '+esc(String(n.tcp)).slice(0,42)+' · TLS: '+(n.tls?'✓':'✗')+' · UDP: '+esc(String(n.udp))+' '+egBadge+'</div>';
+    d.onclick=function(){BLD_SEL.node=n.node_id;BLD_SEL.transport='';nccRenderNodes();nccLoadStatus()};
     host.appendChild(d);
-    var det=document.getElementById('bld-node-detail');
+    var det=document.getElementById('ncc-node-detail');
     if(det&&BLD_SEL.node===n.node_id){
       det.innerHTML='نود انتخابی: <b>'+esc(n.name||n.node_id)+'</b> — '+esc(n.deployment_label||'')+'<br>'+
-        'TCP: '+esc(String(n.tcp))+' · UDP: '+esc(String(n.udp))+' · TLS: '+esc(String(n.tls))+' — '+esc(n.state_note||'')+
+        esc(n.state_note||'')+
         (eg.classification==='VERIFIED_EGRESS'?('<br>خروج اثبات‌شده: '+esc(eg.public_ip||'?')+' → '+esc(eg.country||'')):'');
     }
   });
 }
 
-function bldRenderRouting(){
-  var host=document.getElementById('bld-routing'); if(!host)return;
+// ── ۶) مسیریابی — کارت‌های بزرگ با پاها؛ IRAN_PROXY فقط با گیت‌وی اثبات‌شده ──
+function nccRenderRouting(){
+  var host=document.getElementById('ncc-routing'); if(!host)return;
   host.innerHTML='';
+  var gw=BLD_CAPS.iran_gateway||{};
+  var gwReady=(gw.state||'')!=='UNCONFIGURED'&&(gw.verified_count||0)>0;
   (BLD_CAPS.routing_policies||[]).forEach(function(p){
+    var m=NCC_ROUTE_META[p.policy]||{icon:'ti-route',fa:p.policy};
+    var isIranProxy=(p.policy==='IRAN_PROXY');
+    var off=isIranProxy&&!gwReady;
     var d=document.createElement('div');
-    d.className='bld-mode'+(BLD_SEL.routing===p.policy?' sel':'');
-    var legs=p.legs&&p.legs.iran?('<span style="direction:ltr;display:inline-block">🇮🇷→'+esc(p.legs.iran)+' · 🌍→'+esc(p.legs.international)+'</span>'):'admin-defined';
-    d.innerHTML='<div class="nm">'+esc(p.policy)+'</div><div class="meta">'+legs+'<br>'+esc(p.egress||'')+'</div>';
-    d.onclick=function(){BLD_SEL.routing=p.policy;bldRenderRouting()};
+    d.className='ncc-rcard'+(off?' off':'')+(BLD_SEL.routing===p.policy?' sel':'');
+    var legs=p.legs||{};
+    var legsHtml= legs.iran!==undefined ?
+      ('🇮🇷 مقاصد ایرانی → <b>'+esc(legs.iran)+'</b><br>🌍 مقاصد بین‌المللی → <b>'+esc(legs.international)+'</b>') : 'قواعد ادمین';
+    d.innerHTML='<div class="nm"><i class="ti '+m.icon+'"></i> '+esc(m.fa)+'</div>'+
+      '<div class="legs">'+legsHtml+'</div>'+
+      (off?'<div class="why-off"><i class="ti ti-alert-triangle"></i> گیت‌وی ایرانی اثبات‌شده‌ای موجود نیست — این مسیریابی ساخته نمی‌شود (بدون جعل).</div>':'')+
+      '<div class="req">'+esc(p.gateway_requirement||'')+'</div>';
+    if(!off){d.onclick=function(){BLD_SEL.routing=p.policy;nccRenderRouting()}}
+    else{d.title='No verified Iranian gateway available — cannot generate this routing profile.'}
     host.appendChild(d);
   });
-  var hint=document.getElementById('bld-routing-hint');
-  var gw=BLD_CAPS.iran_gateway||{};
-  if(hint){hint.innerHTML='گیت‌وی ایران: <b>'+esc(gw.state||'UNCONFIGURED')+'</b>'+(gw.verified_count?(' ('+gw.verified_count+' اثبات‌شده)'):'')+' — IRAN_PROXY بدون گیت‌وی اثبات‌شده ساخته نمی‌شود.'}
+  var hint=document.getElementById('ncc-routing-hint');
+  if(hint){
+    var extra='';
+    if(BLD_SEL.routing==='IRAN_DIRECT'){extra='IRAN_DIRECT = split tunnel سمت کلاینت (بدون سرور ایرانی): ترافیک ایران از ISP خودت، بقیه از تونل.'}
+    else if(BLD_SEL.routing==='IRAN_PROXY'){extra='IRAN_PROXY = خروج ایرانی واقعی فقط از گیت‌وی اثبات‌شده — SNI/دامنه/IP تنظیم‌شده هرگز مبنای «خروج ایران» نیست.'}
+    else if(BLD_SEL.routing==='ALL_VPN'){extra='همه‌ی ترافیک از تونل EMIX — با هر خروجی کلایتی.'}
+    hint.innerHTML='گیت‌وی ایران: <b>'+esc(gw.state||'UNCONFIGURED')+'</b>'+(gw.verified_count?(' ('+gw.verified_count+' اثبات‌شده)'):'')+' — IRAN_PROXY بدون گیت‌وی اثبات‌شده ساخته نمی‌شود.'+(extra?('<br>'+extra):'');
+  }
 }
 
-function bldRenderClients(){
-  var host=document.getElementById('bld-clients'); if(!host)return;
+// ── ۷) کلاینت/خروجی ──
+function nccRenderClients(){
+  var host=document.getElementById('ncc-clients'); if(!host)return;
   host.innerHTML='';
   Object.keys(BLD_CAPS.clients||{}).forEach(function(k){
     var c=BLD_CAPS.clients[k];
+    var split=(c.split_tunnel==='SPLIT_TUNNEL_SUPPORTED');
     var d=document.createElement('div');
-    d.className='bld-chip'+(BLD_SEL.client===k?' sel':'');
-    d.innerHTML=k+' <span class="st">('+(c.split_tunnel==='SPLIT_TUNNEL_SUPPORTED'?'split ✓':'بدون split')+')</span>';
-    d.onclick=function(){BLD_SEL.client=k;bldRenderClients()};
+    d.className='ncc-ccard'+(BLD_SEL.client===k?' sel':'');
+    d.innerHTML='<div class="nm">'+esc(k)+'</div><div class="meta">'+esc(c.label||'')+'<br>'+
+      (split?'<span class="igw-state igw-ok">split ✓</span>':'<span class="igw-state igw-warn">بدون split</span>')+'</div>';
+    d.onclick=function(){BLD_SEL.client=k;nccRenderClients()};
     host.appendChild(d);
   });
-  var hint=document.getElementById('bld-client-hint');
+  var hint=document.getElementById('ncc-client-hint');
   if(hint){var c=BLD_CAPS.clients[BLD_SEL.client]||{};
-    hint.textContent=c.routing_rules?String(c.routing_rules):''}
+    hint.textContent=String(c.routing_rules||'');
+    if(BLD_SEL.routing==='IRAN_DIRECT'&&!((BLD_CAPS.clients||{})[BLD_SEL.client]||{}).split_tunnel||false){}
+  }
 }
 
+// ── ۵) پروفایل اندپوینت ──
 async function bldLoadEndpointProfiles(){
   try{
     var r=await authF('/api/endpoint-profiles');
@@ -4311,11 +4587,95 @@ function builderOnEpChange(){
   var sel=document.getElementById('bld-ep');
   BLD_SEL.ep=sel.value;
   document.getElementById('bld-ep-custom').style.display=(sel.value==='__custom__')?'grid':'none';
+  nccUpdateTarget();
 }
 
+// ── لینک‌های موجود (برای تست تونل/توربو — تست E2E واقعی) ──
+async function nccLoadLinks(){
+  try{
+    var r=await authF('/api/links');
+    if(!r.ok)return;
+    var j=await r.json();
+    BLD_LINKS=j.links||[];
+    var sel=document.getElementById('ncc-link-sel'); if(!sel)return;
+    var cur=sel.value;
+    sel.innerHTML='<option value="">— کانفیگی برای تست تونل/توربو انتخاب کنید —</option>';
+    BLD_LINKS.forEach(function(l){
+      var o=document.createElement('option');
+      o.value=l.uuid;
+      var hp=(l.last_ping&&l.last_ping.ok)?(' · تونل '+Math.round(l.last_ping.e2e_ms!=null?l.last_ping.e2e_ms:l.last_ping.ws_ms)+'ms'):'';
+      o.textContent=(l.label||l.uuid.slice(0,8))+' ('+(l.protocol||'')+')'+hp;
+      sel.appendChild(o);
+    });
+    if(cur)sel.value=cur;
+    NCC_SEL_LINK=sel.value||'';
+  }catch(e){}
+}
+function nccOnLinkSel(){NCC_SEL_LINK=document.getElementById('ncc-link-sel').value||''}
+
+// ── ماتریس اعتبارسنجی ران‌تایم (شواهد RUNTIME_STARTED/LISTENER_REACHABLE) ──
+async function nccLoadMatrix(){
+  try{
+    var r=await authF('/api/railway/validation-matrix');
+    if(!r.ok)return;
+    var j=await r.json();
+    BLD_VMX=j.matrix||[];
+  }catch(e){}
+}
+function nccRuntimeRow(){
+  // دو وضعیت (§31): CONFIGURATION در مقابل RUNTIME — runtime فقط از شواهد
+  if(!BLD_VMX)return null;
+  var proto=BLD_SEL.protocol||'', tr=BLD_SEL.transport||'';
+  var row=BLD_VMX.filter(function(x){
+    return (x.protocol===proto||('vless'===proto&&x.fused===tr))&&(x.transport===tr||x.fused===proto+'-'+tr||x.fused===tr);
+  })[0];
+  if(!row&&tr) row=BLD_VMX.filter(function(x){return x.fused===tr})[0];
+  return row||null;
+}
+function nccRuntimeBadge(){
+  var row=nccRuntimeRow();
+  if(!row)return 'RUNTIME: <span class="igw-state igw-info">UNKNOWN</span>';
+  var st=row.stages||{};
+  var rt=String(st.RUNTIME_STARTED||'');
+  var lr=String(st.LISTENER_REACHABLE||'');
+  if(rt.indexOf('PASS')===0&&lr.indexOf('PASS')===0)return 'RUNTIME: <span class="igw-state igw-ok">VERIFIED ✓</span>';
+  if(rt.indexOf('NO_ACTIVE_INSTANCE')===0)return 'RUNTIME: <span class="igw-state igw-warn">در انتظار instance</span> — '+esc(rt.split('—')[1]||'per-link');
+  return 'RUNTIME: <span class="igw-state igw-info">NOT VERIFIED</span>';
+}
+
+// ── هدف تست فعلی ──
+function nccTarget(){
+  var t={address:'',port:443,sni:'',tls:true};
+  try{
+    if(BLD_SEL.ep==='__custom__'){
+      t.address=document.getElementById('bld-ep-address').value||'';
+      t.port=parseInt(document.getElementById('bld-ep-port').value)||443;
+      t.sni=document.getElementById('bld-ep-sni').value||'';
+    }else if(BLD_SEL.ep){
+      var p=(BLD_EPS||[]).filter(function(x){return x.id===BLD_SEL.ep})[0];
+      if(p){t.address=p.address||'';t.sni=p.sni||'';t.port=p.port||443}
+    }
+    if(!t.address){
+      var node=(BLD_CAPS.nodes||[]).filter(function(n){return n.node_id===BLD_SEL.node})[0]||{};
+      t.address=node.address||'';
+      t.sni='';
+    }
+    t.tls=(BLD_SEL.security!=='none');
+  }catch(e){}
+  return t;
+}
+function nccUpdateTarget(){
+  var el=document.getElementById('ncc-test-target'); if(!el)return;
+  var t=nccTarget();
+  var link=NCC_SEL_LINK?((BLD_LINKS||[]).filter(function(l){return l.uuid===NCC_SEL_LINK})[0]||{}):{};
+  el.innerHTML='هدف تست: <b>'+esc(t.address||'—')+':'+esc(String(t.port))+'</b>'+(t.sni?(' · SNI: <b>'+esc(t.sni)+'</b>'):'')+(t.tls?' · TLS':' · بدون TLS')+
+    (NCC_SEL_LINK?(' · تونل: <b>'+esc(link.label||NCC_SEL_LINK.slice(0,8))+'</b>'):'');
+}
+
+// ── payload کامپایلر کانونی (همان مسیر preview و generate) ──
 function bldPayload(){
   var custom=(BLD_SEL.ep==='__custom__');
-  return {
+  var p={
     name:document.getElementById('bld-name').value||'',
     remark:document.getElementById('bld-remark').value||'EMIX',
     protocol:BLD_SEL.protocol, transport:BLD_SEL.transport, security:BLD_SEL.security,
@@ -4326,19 +4686,33 @@ function bldPayload(){
     custom_port:custom?(parseInt(document.getElementById('bld-ep-port').value)||443):443,
     routing_policy:BLD_SEL.routing, client_format:BLD_SEL.client
   };
+  var alpn=document.getElementById('bld-alpn'); if(alpn&&alpn.value)p.alpn=alpn.value;
+  var fp=document.getElementById('bld-fingerprint'); if(fp&&fp.value)p.fingerprint=fp.value;
+  if(BLD_SEL.protocol==='shadowsocks'){
+    var c=document.getElementById('bld-ss-cipher'); if(c&&c.value)p.ss_cipher=c.value;
+    var ssx=document.getElementById('ncc-ss-extra'); if(ssx)ssx.hidden=false;
+  }else{
+    var ssx2=document.getElementById('ncc-ss-extra'); if(ssx2)ssx2.hidden=true;
+  }
+  return p;
 }
 
 function bldBusy(btn,on){if(!btn)return;btn.disabled=on;var i=btn.querySelector('i');if(i){i.className=on?'ti ti-loader-2 spin':'ti '+(btn.id==='bld-gen-btn'?'ti-wand':'ti-eye')}}
 
+// ── نتیجه: دو وضعیت (CONFIGURATION / RUNTIME) + خروجی‌ها ──
 function bldRenderResult(j){
   var v=document.getElementById('bld-validation'), o=document.getElementById('bld-outputs');
   if(!j.ok){
-    v.innerHTML='<div class="bld-valid-bad">⛔ <b>INVALID</b> — مرحله: '+esc(j.stage||'?')+'<br>'+ (j.errors||[]).map(esc).join('<br>') +'</div>';
+    v.innerHTML='<div class="bld-valid-bad">⛔ <b>INVALID</b> — مرحله: '+esc(j.stage||'?')+'<br>'+ (j.errors||[]).map(esc).join('<br>') +'</div>'+
+      '<div class="bld-hint">ترکیب انتخاب‌شده صادقانه ساخته نشد — از ماتریس قابلیت‌ها (مراحل بالا) یک ترکیب SUPPORTED انتخاب کنید.</div>';
     o.innerHTML=''; return;
   }
-  v.innerHTML='<div class="bld-valid-ok">✓ <b>VALID</b> — '+esc(j.preview.protocol)+' / '+esc(j.preview.transport)+' / '+esc(j.preview.security)+' · نود: '+esc(j.preview.node.label||j.preview.node.node_id)+' · مسیریابی: '+esc(j.preview.routing)+(j.credential_placeholder?' · (credential پیش‌نمایش: جای‌نگهدار)':'')+'</div>';
+  var rtBadge=nccRuntimeBadge();
+  v.innerHTML='<div class="bld-valid-ok">✓ <b>CONFIGURATION: VALID</b> — '+esc(j.preview.protocol)+' / '+esc(j.preview.transport)+' / '+esc(j.preview.security)+' · نود: '+esc(j.preview.node.label||j.preview.node.node_id)+' · مسیریابی: '+esc(j.preview.routing)+'</div>'+
+    '<div style="margin-top:8px">'+rtBadge+' <span class="bld-hint" style="display:inline">— کنترل‌پلین ≠ دیتاپلین: تست واقعی را از پنل تست زنده بزنید.</span></div>'+
+    (j.credential_placeholder?'<div class="bld-hint">credential پیش‌نمایش: جای‌نگهدار — در ساخت نهایی واقعی ساخته می‌شود.</div>':'');
   var out=j.outputs||{}; var h='';
-  if(out.uri){h+='<div class="bld-out"><b>URI</b> <button class="btn btn-sm btn-o" onclick="bldCopy(this)">کپی</button> <button class="btn btn-sm btn-o" onclick="showQR(window.__bldUri)">QR</button><code>'+esc(out.uri)+'</code></div>';window.__bldUri=out.uri}
+  if(out.uri){h+='<div class="bld-out"><b>URI</b> <button class="btn btn-sm btn-o" onclick="bldCopy(this)">کپی</button> <button class="btn btn-sm btn-o" onclick="showQR(window.__bldUri)">QR (محلی)</button><code>'+esc(out.uri)+'</code></div>';window.__bldUri=out.uri}
   if(out.xray_json){h+='<div class="bld-out"><b>Xray JSON</b><code>'+esc(JSON.stringify(out.xray_json,null,1))+'</code></div>'}
   if(out.subscription){h+='<div class="bld-out"><b>Subscription (base64)</b><code>'+esc(out.subscription)+'</code></div>'}
   var rd=j.preview&&j.preview.routing_detail;
@@ -4371,6 +4745,169 @@ async function builderGenerate(btn){
     var j=await r.json(); bldRenderResult(j);
     if(j.ok){toast('کانفیگ ساخته شد ✓','ok');bldLoadHistory()}else{toast('ساخت ناموفق — '+((j.errors||[''])[0]).slice(0,60),'err')}
   }catch(e){netErr(e,'ساخت کانفیگ')}finally{bldBusy(btn,false)}
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// پنل تست زنده‌ی شبکه — هر عدد از اندازه‌گیری واقعی می‌آید (فاز ۳۹ §6/§19)
+// ═══════════════════════════════════════════════════════════════════════
+var NCC_ERR_FA={
+  DNS_ERROR:'دامنه resolve نشد — DNS مسیر شما/سرور را بررسی کنید',
+  TCP_REFUSED:'اتصال TCP رد شد — پورت/فایروال/آدرس را بررسی کنید',
+  TIMEOUT:'مهلت اتصال تمام شد — مسیر یا فیلتر را بررسی کنید',
+  TLS_ERROR:'اتصال TLS برقرار نشد — SNI/گواهی/اندپوینت را بررسی کنید',
+  SNI_ERROR:'SNI پذیرفته نشد'
+};
+function nccConsole(title,running){
+  var c=document.getElementById('ncc-console'); if(!c)return;
+  c.innerHTML='<div class="ncc-console-hdr"><i class="ti ti-activity"></i> '+esc(title)+
+    '<span class="ncc-final '+(running?'run':'')+'">'+(running?'در حال اجرا…':'—')+'</span></div><div id="ncc-console-body"></div>';
+}
+function nccLine(name,state,val){
+  var b=document.getElementById('ncc-console-body'); if(!b)return;
+  var d=document.createElement('div');
+  d.className='ncc-cline '+(state||'');
+  var icon=state==='ok'?'ti-circle-check':(state==='bad'?'ti-circle-x':(state==='warn'?'ti-alert-triangle':'ti-minus'));
+  d.innerHTML='<i class="ti '+icon+'"></i><span class="ncc-cname">'+esc(name)+'</span><span class="ncc-cval">'+val+'</span>';
+  b.appendChild(d);
+  var c=document.getElementById('ncc-console'); if(c)c.scrollTop=c.scrollHeight;
+}
+function nccFinal(ok,text){
+  var h=document.querySelector('#ncc-console .ncc-console-hdr .ncc-final');
+  if(h){h.className='ncc-final '+(ok?'ok':'bad');h.textContent=text}
+}
+function nccBusyBtn(btn,on){if(!btn)return;btn.classList.toggle('ncc-busy',on);var i=btn.querySelector('i');if(i){i.style.animation=on?'spin 1s linear infinite':''}}
+
+async function nccTestQuick(btn){
+  nccBusyBtn(btn,true); nccConsole('تست سریع — DNS / TCP / TLS',true);
+  try{
+    var t=nccTarget();
+    if(!t.address){nccFinal(false,'هدفی نیست');nccLine('TARGET','warn','اول پروتکل/نود یا اندپوینت سفارشی انتخاب کنید');return}
+    var r=await authF('/api/network/test/quick',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({address:t.address,port:t.port,sni:t.sni,tls:t.tls})});
+    var d=await r.json();
+    var s=d.stages_ms||{};
+    nccLine('DNS', d.ok||s.dns!=null?'ok':'bad', (s.dns!=null?(toFa(Math.round(s.dns))+'ms'):('✗ '+(d.error_code||'')))+' — '+esc((d.resolved_ips||[])[0]||''));
+    nccLine('TCP', s.tcp!=null?'ok':'bad', s.tcp!=null?(toFa(Math.round(s.tcp))+'ms'):'✗');
+    if(t.tls){nccLine('TLS', s.tls!=null?'ok':'bad', s.tls!=null?(toFa(Math.round(s.tls))+'ms'+((d.cert||{}).alpn_negotiated?(' · ALPN '+esc(d.cert.alpn_negotiated)):'')):'✗')}
+    nccLine('TOTAL', d.ok?'ok':'bad', d.total_ms!=null?(toFa(Math.round(d.total_ms))+'ms'):'—');
+    if(d.ok){nccFinal(true,'● سالم')}
+    else{
+      var fa=NCC_ERR_FA[d.error_code]||'تست ناموفق';
+      nccLine('ERROR','bad',esc(d.error_code||'FAILED')+' — '+esc(d.error_detail||''));
+      nccLine('راهنما','warn',fa+' · جزئیات فنی: '+esc((d.error_detail||'').slice(0,90)));
+      nccFinal(false,fa);
+    }
+  }catch(e){netErr(e,'تست سریع');nccFinal(false,'خطا')}finally{nccBusyBtn(btn,false)}
+}
+
+async function nccTestTls(btn){
+  nccBusyBtn(btn,true); nccConsole('تست TLS — هندشیک + گواهی',true);
+  try{
+    var t=nccTarget();
+    var r=await authF('/api/network/test/tls',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({address:t.address,port:t.port,sni:(t.sni||t.address)})});
+    var d=await r.json();
+    var s=d.stages_ms||{}; var cert=d.cert||{};
+    nccLine('HANDSHAKE', s.tls!=null?'ok':'bad', s.tls!=null?(toFa(Math.round(s.tls))+'ms · DNS '+toFa(Math.round(s.dns||0))+'ms · TCP '+toFa(Math.round(s.tcp||0))+'ms'):'✗');
+    if(d.ok){
+      nccLine('CERT', 'ok', esc(cert.subject_cn||'?')+' · '+esc(cert.issuer||'?'));
+      nccLine('EXPIRY', (cert.days_left!=null&&cert.days_left>14)?'ok':'warn', cert.days_left!=null?(toFa(Math.round(cert.days_left))+' روز باقی‌مانده'):'—');
+      nccLine('SAN', cert.sans&&cert.sans.length?'ok':'warn', esc((cert.sans||[]).slice(0,3).join(' , '))||'—');
+      nccLine('VERIFY', cert.verify_mode==='verified'?'ok':'warn', cert.verify_mode||'—');
+      nccFinal(true,'● TLS سالم');
+    }else{
+      nccLine('ERROR','bad',esc(d.error_code||'TLS_ERROR')+' — '+esc(d.error_detail||''));
+      nccFinal(false,NCC_ERR_FA[d.error_code]||'اتصال TLS برقرار نشد');
+    }
+  }catch(e){netErr(e,'تست TLS');nccFinal(false,'خطا')}finally{nccBusyBtn(btn,false)}
+}
+
+async function nccTestSni(btn){
+  nccBusyBtn(btn,true); nccConsole('تست SNI — گواهی ارائه‌شده در برابر نام درخواستی',true);
+  try{
+    var t=nccTarget();
+    var r=await authF('/api/network/test/sni',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({address:t.address,port:t.port,sni:(t.sni||t.address)})});
+    var d=await r.json();
+    var sa=d.sni_analysis||{}; var cert=d.cert||{};
+    nccLine('REQUESTED','ok',esc(sa.requested||t.sni||'—'));
+    nccLine('HANDSHAKE', d.ok?'ok':'bad', d.ok?'قبول شد'+((d.stages_ms||{}).tls!=null?(' · '+toFa(Math.round(d.stages_ms.tls))+'ms'):''):'✗ '+esc(d.error_code||''));
+    if(cert.subject_cn||cert.sans){nccLine('PRESENTED', sa.match?'ok':'warn', esc(cert.subject_cn||'?')+' · SAN: '+esc((cert.sans||[]).slice(0,2).join(','))||'—')}
+    nccLine('VERDICT', sa.match?'ok':'warn', esc(sa.verdict||'—'));
+    nccLine('NOTE','warn','SNI فقط معنای TLS دارد — نه مسیریابی، نه خروج جغرافیایی');
+    nccFinal(d.ok,(d.ok?(sa.match?'MATCH ✓':'SNI کار می‌کند (گواهی متفاوت)'):'TLS/SNI ناموفق'));
+  }catch(e){netErr(e,'تست SNI');nccFinal(false,'خطا')}finally{nccBusyBtn(btn,false)}
+}
+
+async function nccTestTunnel(btn){
+  nccBusyBtn(btn,true); nccConsole('تست تونل E2E — کلاینت واقعی همان پروتکل',true);
+  try{
+    if(!NCC_SEL_LINK){nccLine('TARGET','warn','اول یک کانفیگ از فهرست بالا انتخاب کنید (تست تونل روی کانفیگ واقعی اجرا می‌شود)');nccFinal(false,'کانفیگی انتخاب نشده');return}
+    var r=await authF('/api/links/'+NCC_SEL_LINK+'/ping',{method:'POST'});
+    var d=await r.json();
+    nccLine('TEST', d.ok?'ok':'bad', esc(d.test||'')+' · via '+esc(d.via||'direct'));
+    nccLine('WS', d.ws_ms!=null?'ok':'bad', d.ws_ms!=null?(toFa(Math.round(d.ws_ms))+'ms'):'✗');
+    nccLine('TUNNEL', d.e2e_ms!=null?'ok':'bad', d.e2e_ms!=null?(toFa(Math.round(d.e2e_ms))+'ms'):'✗');
+    nccLine('REPLY', d.reply?'ok':'bad', esc(d.reply||d.detail||'—'));
+    if(d.fallback==='local'){nccLine('VANTAGE','warn','مسیر عمومی از داخل دیپلوی در دسترس نبود — تونل از آدرس محلی پنل تأیید شد (fallback صادقانه)')}
+    if(d.ok){nccFinal(true,'● تونل سالم');nccLoadLinks()}
+    else{nccLine('ERROR','bad',esc(d.detail||''));nccFinal(false,'تونل برقرار نشد')}
+  }catch(e){netErr(e,'تست تونل');nccFinal(false,'خطا')}finally{nccBusyBtn(btn,false)}
+}
+
+async function nccTestTurbo(btn){
+  nccBusyBtn(btn,true); nccConsole('توربو A/B — همان تونل، عادی در برابر 0-RTT',true);
+  try{
+    if(!NCC_SEL_LINK){nccLine('TARGET','warn','اول یک کانفیگ VLESS-WS/Trojan-WS انتخاب کنید');nccFinal(false,'کانفیگی انتخاب نشده');return}
+    var r=await authF('/api/turbo/links/'+NCC_SEL_LINK+'/ab',{method:'POST'});
+    var d=await r.json();
+    if(!r.ok){nccLine('ERROR','bad',esc(d.detail||''));nccFinal(false,'توربو برای این کانفیگ در دسترس نیست');return}
+    var n=d.normal||{}, tb=d.turbo||{};
+    nccLine('NORMAL', n.ok?'ok':'bad', n.ok?((n.ws_ms!=null?('WS '+toFa(Math.round(n.ws_ms))+'ms'):'')+(n.e2e_ms!=null?(' · E2E '+toFa(Math.round(n.e2e_ms))+'ms'):'')):esc(n.detail||'✗'));
+    nccLine('TURBO 0-RTT', tb.ok?'ok':'bad', tb.ok?((tb.ws_ms!=null?('WS '+toFa(Math.round(tb.ws_ms))+'ms'):'')+(tb.e2e_ms!=null?(' · E2E '+toFa(Math.round(tb.e2e_ms))+'ms'):'')):esc(tb.detail||'✗'));
+    if(d.improvement_ms!=null||d.improvement_pct!=null){nccLine('GAIN','ok',toFa(Math.round(d.improvement_ms||0))+'ms'+(d.improvement_pct!=null?(' ('+toFa(Math.round(d.improvement_pct))+'%)'):''))}
+    nccFinal(d.ok!==false?((tb.ok&&n.ok)?'● A/B کامل شد':'بخشی ناموفق'):'ناموفق');
+  }catch(e){netErr(e,'توربو A/B');nccFinal(false,'خطا')}finally{nccBusyBtn(btn,false)}
+}
+
+async function nccTestDiagnostic(btn){
+  nccBusyBtn(btn,true); nccConsole('تشخیص کامل — اندپوینت + خروج + سلامت پنل',true);
+  try{
+    var t=nccTarget();
+    if(!t.address){nccFinal(false,'هدفی نیست');return}
+    var r=await authF('/api/network/test/diagnostic',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({address:t.address,port:t.port,sni:t.sni,tls:t.tls})});
+    var d=await r.json();
+    var ep=d.endpoint||{}; var s=ep.stages_ms||{};
+    nccLine('DNS', s.dns!=null?'ok':'bad', (s.dns!=null?(toFa(Math.round(s.dns))+'ms'):esc(ep.error_code||'✗')));
+    nccLine('TCP', s.tcp!=null?'ok':'bad', s.tcp!=null?(toFa(Math.round(s.tcp))+'ms'):'✗');
+    if(t.tls)nccLine('TLS', s.tls!=null?'ok':'bad', s.tls!=null?(toFa(Math.round(s.tls))+'ms'):'✗');
+    var eg=d.panel_egress||{};
+    nccLine('EGRESS', eg.status==='OK'?'ok':'warn', eg.status==='OK'?((eg.ip||'?')+' · '+(eg.country||'?')+' · '+esc(eg.classification||'')):esc(eg.status||''));
+    var ph=d.panel_health||{};
+    nccLine('PANEL', ph.status==='OK'?'ok':'warn', ph.status==='OK'?('tracked '+((ph.tracked||0))+' · HEALTHY '+(((ph.by_state||{}).HEALTHY||0))):esc(ph.status||''));
+    if(!ep.ok&&ep.error_code){nccLine('ERROR','bad',esc(ep.error_code)+' — '+esc(ep.error_detail||''))}
+    nccFinal(ep.ok,ep.ok?'● کلی سالم':'● اندپوینت مشکل دارد');
+    nccBrowserPing();  // نمای مرورگر هم تازه شود
+  }catch(e){netErr(e,'تشخیص کامل');nccFinal(false,'خطا')}finally{nccBusyBtn(btn,false)}
+}
+
+// ── حقیقت مسیر از مرورگر شما — WebSocket واقعی از شبکه‌ی خودتان ──
+async function nccBrowserPing(){
+  var rows=document.getElementById('ncc-browser-rows'); if(!rows)return;
+  var cfg=await loadClientPingConfig();
+  if(!cfg){rows.innerHTML='<div class="ncc-brow-row"><span class="lbl">در دسترس نیست</span></div>';return}
+  rows.innerHTML='';
+  var probeUuid='00000000-0000-0000-0000-000000000000';
+  for(var i=0;i<(cfg.targets||[]).length;i++){
+    var t=cfg.targets[i];
+    var d=document.createElement('div'); d.className='ncc-brow-row';
+    d.dataset.lbl=t.label||t.id;
+    d.innerHTML='<span class="lbl">'+esc(t.label||t.id)+'</span> <i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i> در حال تست…';
+    rows.appendChild(d);
+    (function(rowEl,url){
+      browserWsPing(url.replace('{uuid}',probeUuid),8000).then(function(r){
+        if(r.ok){rowEl.innerHTML='<span class="lbl">'+rowEl.dataset.lbl+'</span> <i class="ti ti-circle-check" style="color:var(--green)"></i> زنده از شبکه‌ی شما — '+toFa(r.ms)+'ms'}
+        else{rowEl.innerHTML='<span class="lbl">'+rowEl.dataset.lbl+'</span> <i class="ti ti-circle-x" style="color:var(--red)"></i> از شبکه‌ی شما در دسترس نیست ('+esc(r.error)+')'}
+      });
+    })(d,t.url);
+  }
 }
 
 async function bldLoadHistory(){
@@ -5986,7 +6523,7 @@ function toast(msg,type=''){
 let cpItems=[],cpSel=0,cpOpen=false;
 function cpActions(){
   return [
-    {t:'ساخت کانفیگ جدید',s:'ایجاد کانفیگ در صفحه کانفیگ‌ها',i:'ti-square-rounded-plus',run:()=>{navTo('links');setTimeout(()=>openModal('modal-create-link'),350)}},
+    {t:'ساخت کانفیگ جدید',s:'مرکز کنترل شبکه — ساخت یکپارچه کانفیگ',i:'ti-square-rounded-plus',run:()=>{navTo('builder')}}, {t:'ساخت کانفیگ سریع (کانفیگ‌ها)',s:'مودال سریع صفحه‌ی مدیریت کانفیگ‌ها',i:'ti-square-rounded-plus',run:()=>{navTo('links');setTimeout(()=>openModal('modal-create-link'),350)}},
     {t:'تست پینگ همه کانفیگ‌ها',s:'بررسی سلامت همه به‌صورت هم‌زمان',i:'ti-activity-heartbeat',run:()=>{navTo('links');setTimeout(()=>{const b=document.getElementById('ping-all-btn');if(b)pingAllLinks(b)},350)}},
     {t:'پیشنهاد هوشمند — سریع‌ترین کانفیگ',s:'تست زنده و رتبه‌بندی همه کانفیگ‌ها',i:'ti-trophy',run:()=>{navTo('overview');setTimeout(()=>bestConfigTest(),400)}},
     {t:'صفحه کانفیگ‌ها',s:'مدیریت لینک‌ها',i:'ti-link-plus',run:()=>navTo('links')},

@@ -4841,6 +4841,20 @@ else:
 
 
 # ═════════════════════════════════════════════════════════════════════════════
+# Phase 39 — Real Network Test Service (مرکز کنترل شبکه)
+# پروب واقعی مرحله‌ای DNS→TCP→TLS→SNI برای پنل تست زنده — صادق، executor-thread،
+# بدون بلاک‌کردن event loop. شکست = کد خطای واقعی (DNS_ERROR/TLS_ERROR/…).
+# ═════════════════════════════════════════════════════════════════════════════
+try:
+    import network_test
+    network_test.register_routes(app, require_auth)
+    logger.info(f"[bootstrap] network_test v{network_test.ENGINE_VERSION} "
+                f"routes registered (quick/tls/sni/diagnostic)")
+except Exception as _exc:
+    logger.error(f"[bootstrap] network_test بارگذاری نشد (نادیده گرفته شد): {_exc}")
+
+
+# ═════════════════════════════════════════════════════════════════════════════
 # Phase 38+ §29 — Structured operational events (CONFIG_GENERATED, …)
 # ═════════════════════════════════════════════════════════════════════════════
 if boot_profile.enabled("structured_events"):
@@ -5744,7 +5758,7 @@ async def api_migrate_legacy_spoof():
 # تا قبل از لاگین هم قابل بررسی باشد. (از /api/version استفاده نمی‌کنیم چون
 # آن مسیر قبلاً برای بررسی به‌روزرسانی در نظر گرفته شده است.)
 # ══════════════════════════════════════════════════════════════════════════════
-EMIX_VERSION = "12.2.0-iran-exit"
+EMIX_VERSION = "12.3.0-ncc"
 EMIX_BUILD_DATE = "2026-09-04"
 
 @app.get("/api/boot-profile")

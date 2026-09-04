@@ -80,6 +80,7 @@ CORE_SURFACE = [
     ("/sub-json/{uuid}", "ساب JSON با قواعد IR-Direct (داخلی‌کردن مصرف)"),
     ("/dashboard",       "داشبورد مدیریت"),
     ("/login",           "احراز هویت پنل"),
+    ("/api/network/test/quick", "پروب مرحله‌ای واقعی DNS/TCP/TLS — مرکز کنترل شبکه"),
 ]
 
 _report: dict = {

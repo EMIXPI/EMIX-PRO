@@ -294,15 +294,19 @@ def test_diagnostics_covers_phase38plus_sections(authed):
 
 # ── Frontend markers (served HTML — source-level assertions) ────────────────
 
-def test_dashboard_serves_builder_and_iranproxy_pages(client):
-    r = client.get("/dashboard")
+def test_dashboard_serves_builder_and_iranproxy_pages(authed):
+    r = authed.get("/dashboard")
     assert r.status_code == 200
     html = r.text
+    # Phase 39: pg-builder is now the unified Network Control Center —
+    # element ids migrated bld-* → ncc-* for the card-based sections.
+    # bld-history / loadBuilderPage are intentionally retained.
     for marker in ('id="pg-builder"', 'id="pg-iranproxy"',
                    'data-pg="builder"', 'data-pg="iranproxy"',
-                   'id="bld-protocols"', 'id="bld-history"',
+                   'id="ncc-protocols"', 'id="ncc-routing"', 'id="ncc-console"',
+                   'id="bld-history"',
                    'id="igw-list"', 'loadBuilderPage', 'loadIranProxyPage',
-                   'کانفیگ‌های ساخته‌شده', 'پروکسی ایران', 'ساخت کانفیگ'):
+                   'مرکز کنترل شبکه', 'کانفیگ‌های ساخته‌شده', 'پروکسی ایران', 'ساخت کانفیگ'):
         assert marker in html, marker
 
 

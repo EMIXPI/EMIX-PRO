@@ -1,5 +1,77 @@
 # CHANGELOG — EMIX-PRO
 
+## v12.3.0-ncc (2026-09-04) — 🛰 PHASE 39: EMIX Core Integration + Unified Network Control Center
+
+**Mandate:** «EMIX Core + EMIX-PRO Control Plane + Unified Network Control UI» —
+backend recovery verified against the healthy EMIX reference, then ONE unified
+config experience replacing the fragmented build pages.
+
+**Recon verdict (real evidence, not assumptions):**
+- The data plane was NOT broken: EMIX-PRO's protocol core (vless/trojan/ss/
+  mtproto) is the same lineage as healthy EMIX @ 05f2f2c (diff = v11.6.0
+  weak-link tuning only) and the E2E probe engine measures REAL ws_ms/e2e_ms
+  (verified: HTTP/1.1 200 OK through the tunnel, ws 2.7ms / e2e 0.4ms).
+- The real gap: the build page had NO live test panel (real ping was invisible
+  at config-creation time), config creation was fragmented across 5+ competing
+  UI paths, and no ad-hoc DNS/TCP/TLS/SNI probe existed.
+- Paper adapters (hysteria2/tuic/wg/…) honestly report DEFERRED — they stay
+  hidden from the unified UI (capability-driven, zero fake support).
+
+### NEW — Real Network Test Service (`network_test.py`)
+- Staged REAL probe DNS → TCP → TLS → SNI, per-stage milliseconds, resolved
+  IPs, certificate (CN/issuer/expiry-days/SAN/ALPN/verify), executed in an
+  executor thread (never blocks the event loop), hard timeouts.
+- Honest error contract: `DNS_ERROR / TCP_REFUSED / TIMEOUT / TLS_ERROR /
+  SNI_ERROR / UNSUPPORTED` + real `error_detail`; `total_ms` only on success.
+- Routes: `POST /api/network/test/{quick,tls,sni,diagnostic}` +
+  `GET /api/network/test/targets`; every test emits a structured event
+  (`source=emix_core`). CA bundle via certifi; insecure-mode certs parsed
+  from DER via cryptography (SNI spoof verdicts: MATCH / MISMATCH, honest).
+- Blocked-host posture preserved (localhost/127.0.0.1 refused — 400).
+
+### NEW — Unified Network Control Center («مرکز کنترل شبکه»)
+`pg-builder` replaced IN PLACE (nav «✨ ساخت کانفیگ» opens it directly):
+- **Header:** Core/Backend status dots (from /health + /api/health/summary),
+  selected node, refresh.
+- **Sections:** protocol CARDS (only PRODUCTION-selectable; others visibly
+  «پشتیبانی نمی‌شود») → node cards (state/region/TCP/TLS/UDP/egress badge) →
+  transport chips (node capability-driven) → security → Endpoint Profile
+  (SNI = TLS semantics only) → routing CARDS (ALL_VPN / IRAN_DIRECT /
+  IRAN_PROXY / INTERNATIONAL_VPN / CUSTOM with leg explanations; IRAN_PROXY
+  disabled + honest message until a VERIFIED Iranian gateway exists) →
+  client output cards (split-tunnel badge) → advanced (ALPN/fingerprint/SS).
+- **LIVE test panel:** [تست سریع] [تست TLS] [تست SNI] [تست تونل E2E] [توربو
+  A/B] [تشخیص کامل] — every number is a real measurement rendered live in a
+  diagnostic console; link selector for tunnel/turbo tests; «حقیقت مسیر از
+  مرورگر شما» card (real browser WebSockets, dual vantage).
+- **Two-status model (§31):** `CONFIGURATION: VALID` (canonical compiler) +
+  `RUNTIME: VERIFIED / در انتظار instance / NOT VERIFIED` (from
+  /api/railway/validation-matrix evidence).
+- Mobile: stacked cards, sticky generate bar, touch-friendly test buttons.
+- QR stays local (/api/qr — no third-party).
+
+### MIGRATION
+- Command palette «ساخت کانفیگ جدید» → `navTo('builder')` (the NCC); the old
+  quick-add modal remains only on the links MANAGEMENT page.
+- No second config page was created — the old builder was replaced in place
+  (single `pg-builder`, single `ncc-console`).
+
+### TESTS — see v12.3.0 gate below (merged on top of v12.2.0) × 2 consecutive clean runs
+- +10 unit (`test_network_test.py`): real-socket staged probe, honest
+  DNS/TCP failures, executor non-blocking, cert DER parsing, blocked hosts.
+- +15 integration (`test_phase39_ncc.py`): REAL network tests against
+  cloudflare.com (staged ms + real cert), honest failures, compiler chain,
+  structured events, migration acceptance (nav→NCC markers, palette routing,
+  old modal retained, no duplicate pages).
+- Updated `test_phase38plus` markers for the bld→ncc element migration and
+  made its dashboard test order-independent (authed).
+- Gates: real uvicorn boot (python main.py) → FINAL GATE 13/13 with REAL
+  measurements (DNS 1.6ms / TCP 5.7ms / TLS 13.7ms on cloudflare; E2E tunnel
+  ws 2.7ms / e2e 0.4ms / HTTP 200; cert Google Trust Services 59d); rendered
+  dashboard JS: ALL 4 script blocks pass node --check; compileall OK; secret
+  scan clean.
+---
+
 ## v12.2.0-iran-exit (2026-09-04) — 🇮🇷 Iran-Exit: «IP من با کانفیگ همچنان ایران»
 
 **User request:** «در اصل می‌خواهم IP من با کانفیگ همچنان ایران باشد.»
