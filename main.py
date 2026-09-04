@@ -3223,14 +3223,17 @@ async def list_links(_=Depends(require_auth)):
             "spoof_sni": d.get("spoof_sni"),
             "spoof_sni_enabled": bool(d.get("spoof_sni_enabled", False)),
             "effective_sni": _get_effective_sni(d, host),
-            # CDN routing status — tells the dashboard whether SNI spoofing
-            # will actually work (requires CDN domain) or will fallback to
-            # panel host (safe but no disguise)
+            # v12.4.2: این فیلد حالت واقعیِ لینک را گزارش می‌کند. تا قبل از این
+            # نسخه فقط با ست‌بودن EMIX_CDN_DOMAIN (حالت CDN/MODE A) true می‌شد و
+            # حالت مستقیمِ Railway (Mode B: sni جعلی + allowInsecure=1) را «غیرفعال»
+            # نشان می‌داد — در حالی که Mode B واقعاً کار می‌کند (آزمون زنده:
+            # هندشیک TLS با SNI جعلی از ingress ریلوی پاس می‌شود، HTTP با Host
+            # درست به پنل می‌رسد و تونل کامل E2E جواب می‌دهد). حالت CDN فقط
+            # استتار بهتر (cert معتبر) می‌دهد، نه شرط کارکرد.
             "cdn_domain": os.environ.get("EMIX_CDN_DOMAIN", "").strip().lower() or None,
             "sni_spoof_active": bool(
                 d.get("spoof_sni_enabled")
                 and _validate_sni(d.get("spoof_sni"))
-                and os.environ.get("EMIX_CDN_DOMAIN", "").strip()
             ),
             "vless_link": generate_share_link(uid, host, remark=f"EMIX-{d['label']}", protocol=proto),
             "sub_url": f"https://{host}/sub/{uid}",
@@ -5809,7 +5812,7 @@ async def api_migrate_legacy_spoof():
 # تا قبل از لاگین هم قابل بررسی باشد. (از /api/version استفاده نمی‌کنیم چون
 # آن مسیر قبلاً برای بررسی به‌روزرسانی در نظر گرفته شده است.)
 # ══════════════════════════════════════════════════════════════════════════════
-EMIX_VERSION = "12.4.1-recovery"
+EMIX_VERSION = "12.4.2-iran-access"
 EMIX_BUILD_DATE = "2026-09-04"
 
 @app.get("/api/boot-profile")

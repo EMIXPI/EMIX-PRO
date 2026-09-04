@@ -7338,15 +7338,19 @@ function renderPingBadge(uuid,d,rtt,cp){
       if(parts.length) mine=' · من: '+parts.join(' · ');
     }
     if(!mine && rtt!=null) mine=' · من '+toFa(rtt)+'ms';
-    el.innerHTML=`<i class="ti ti-shield-check"></i> RUNTIME VERIFIED ✓${ms!=null?(' · '+toFa(ms)+'ms'):''}${mine}`;
-    el.title=`WS: ${d.ws_ms!=null?Math.round(d.ws_ms)+'ms':'—'} | تونل: ${d.e2e_ms!=null?Math.round(d.e2e_ms)+'ms':'—'} | ${d.reply||''} | پینگ شما: ${rtt!=null?rtt+'ms':'—'}`;
+    // v12.4.2: اگر last_ping مسیر کلاینت (SNI جعلی) را سنجیده باشد، برچسب صریح
+    // می‌زند — عدد ms همان مسیری است که کلاینتِ این لینک واقعاً می‌رود.
+    const spoofTag=(d.client_path==='spoofed-sni'&&d.spoof_sni)?` · <span style="opacity:.85" title="این عدد از مسیر کلاینت (TLS با SNI جعلی ${esc(d.spoof_sni)} + Host واقعی) اندازه‌گیری شده — همان مسیر لینک">🎭 SNI جعلی</span>`:'';
+    el.innerHTML=`<i class="ti ti-shield-check"></i> RUNTIME VERIFIED ✓${ms!=null?(' · '+toFa(ms)+'ms'):''}${spoofTag}${mine}`;
+    el.title=`WS: ${d.ws_ms!=null?Math.round(d.ws_ms)+'ms':'—'} | تونل: ${d.e2e_ms!=null?Math.round(d.e2e_ms)+'ms':'—'} | ${d.reply||''} | پینگ شما: ${rtt!=null?rtt+'ms':'—'}${d.client_path==='spoofed-sni'?(' | مسیر کلاینت: SNI جعلی '+d.spoof_sni+' (allowInsecure)'):''}${d.clean_path?(' | مسیر تمیز: '+(d.clean_path.ok?'OK':'✗')):''}`;
   }else{
     // شکست صادقانه: علت کوتاه روی خود چیپ + علت کامل در title/تیپ‌اُوور
     const raw=(d&&d.detail)||(d&&d.error_code)||'نامشخص';
     const short=String(raw).replace(/\s+/g,' ').slice(0,60);
     el.style.color='var(--red-t)';
-    el.innerHTML=`<i class="ti ti-wifi-off"></i> RUNTIME FAILED ✗ · ${esc(short)}`;
-    el.title='علت کامل: '+String(raw);
+    const failPath=(d&&d.client_path==='spoofed-sni')?' · مسیر کلاینت (SNI جعلی)':'';
+    el.innerHTML=`<i class="ti ti-wifi-off"></i> RUNTIME FAILED ✗ · ${esc(short)}${failPath}`;
+    el.title='علت کامل: '+String(raw)+(d&&d.clean_path?` | مسیر تمیز (کنترل): ${d.clean_path.ok?'OK — مشکل فقط مسیر SNI جعلی است':'✗ هر دو مسیر'}`:'');
   }
   // پاپ ظریف هنگام رسیدن نتیجه
   el.classList.remove('ping-pop');

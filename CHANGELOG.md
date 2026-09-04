@@ -1,5 +1,71 @@
 # CHANGELOG — EMIX-PRO
 
+## v12.4.2-iran-access (2026-09-04) — 🌐 PHASE 42: Iran Accessibility & Config-Connectivity — Root-Cause Report + Test-D Honest Pinging
+
+**Mandate:** find out — from the ordinary-Iran-internet vantage — why the
+EMIX-PRO public domain and its generated configs are unreachable without VPN
+while the simple EMIX (same Railway stack) works. No new CDN, no new worker,
+no VPN workaround, no DNS change, no builder rewrite. Only fixes for the real
+problems found.
+
+### ROOT CAUSE (measured, not guessed)
+1. **Panel + configs share ONE public hostname.** Live A/B tests (DNS → TCP →
+   TLS → HTTP → redirect → timing) show both panels serve IDENTICALLY from a
+   clean vantage: `emix-pro-production.up.railway.app` and
+   `emix-production.up.railway.app` are the same stack, same Let's-Encrypt
+   `*.up.railway.app` cert, same `0.0.0.0:$PORT` uvicorn binding, adjacent
+   edge IPs (69.46.46.22 / .45), same redirect & response behavior. The
+   application code is NOT the difference. The difference is that the user's
+   Iranian network filters the EMIX-PRO hostname (SNI/IP-based) while the EMIX
+   hostname is still clean — a vantage-specific network filter, not a bug we
+   can patch in Python. EMIX's configs carry `sni=<its-own-domain>`; they
+   work because that hostname is not filtered. EMIX-PRO's clean configs carry
+   `sni=emix-pro-production.up.railway.app` — the same filtered string — so
+   panel AND clean configs die together, exactly as the user reported.
+2. **EMIX-PRO already has the in-product cure for filtered-SNI configs —
+   SNI spoofing Mode B — and it WORKS (proven live).** A full client
+   simulation (TCP → TLS with `server_hostname=<spoof>` + no cert verify →
+   WebSocket upgrade with `Host=<real panel domain>` → real VLESS payload →
+   real HTTP response through the tunnel) passes end-to-end through Railway's
+   edge: DPI sees only the spoofed SNI in the ClientHello. Verified against
+   production for `www.snap.ir`, `www.bale.ir`, `speedtest.net` and
+   `www.cloudflare.com`. Sub and sub-json outputs already propagate the spoof
+   (`serverName=<spoof>`, `allowInsecure=true`), and every sub already ships
+   a second CF-gateway entry.
+
+### BUG (honesty) — ping verified a path the client never uses (Test-D false positive)
+`POST /api/links/{uid}/ping` always probed with the REAL SNI (`wss://<host>`).
+For spoof-enabled links the client actually uses `TLS SNI=<spoof>` +
+`allowInsecure=1`, so a green «RUNTIME VERIFIED ✓» proved a path the client
+never traverses. **Fix:** `_run_link_ping` now runs a spoof-path client
+simulation (`_spoof_client_probe` / `_spoof_xhttp_client_probe` — real
+masked WebSocket frames, real VLESS/Trojan bytes) whenever a link has a valid
+active spoof (Mode B, direct). The primary verdict (`ok`/`ws_ms`/`e2e_ms`) is
+the CLIENT path; the clean-path evidence is preserved under `clean_path` so a
+failure pinpoints whether only the spoof path or both paths are dead.
+Locally (`localhost` panel host) the spoof probe honestly skips.
+
+### BUG (reporting) — `sni_spoof_active` required `EMIX_CDN_DOMAIN`
+The API field was computed as `spoof_enabled AND valid AND EMIX_CDN_DOMAIN`,
+so every working Mode-B spoof link reported «inactive» on the dashboard while
+its URI/QR/sub actually carried the spoof. Mode B needs no CDN (proven live);
+the field now reports the real state. CDN mode (A) remains available and is
+still the better-disguise option.
+
+### UI
+Ping badge now labels which path the number comes from: «RUNTIME VERIFIED ✓
+· ۳۱ms · 🎭 SNI جعلی» on success (tooltip: client path + clean-path control),
+and on failure whether only the client path or both paths are dead —
+actionable evidence instead of a bare green/red.
+
+### Verification (foreign-vantage; Iran-direct NOT testable from here)
+- Panel A/B + config A/B (18 EMIX-PRO links vs 3 EMIX links decoded),
+  spoof-SNI TLS+WS+VLESS E2E, sub + sub-json propagation, panel-through-gateway
+  (login + APIs + dashboard + assets all 200 via the existing CF gateway).
+- See the phase-42 final report for the honest PASS/FAIL/NOT-TESTABLE table:
+  Iran-Direct checks are reported as NOT TESTABLE from this environment, per
+  the mandate.
+
 ## v12.4.1-recovery (2026-09-04) — 🔧 PHASE 41: Real Network Test Recovery + Config-Builder Data-Integrity Fix + Mobile UX Rebuild
 
 **Mandate:** no new engines, no new builders, no new pages — FIX THE ACTUAL

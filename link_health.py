@@ -27,6 +27,8 @@ import asyncio
 import base64
 import hashlib
 import secrets
+import socket
+import ssl
 import struct
 import time
 import uuid as _uuid_mod
@@ -52,6 +54,7 @@ from main import (
     _require_node_manage,
     _node_request,
     schedule_save,
+    _validate_sni,
 )
 from protocol.shadowsocks.shadowsocks import (
     CIPHERS,
@@ -346,6 +349,212 @@ def _is_public_base_probe(ws_base_override, http_base_override) -> bool:
     return bool(host) and host not in ("localhost", "127.0.0.1", "0.0.0.0")
 
 
+# ══════════════════════════════════════════════════════════════════════════════
+# v12.4.2 — پروب مسیرِ کلاینتِ لینک‌های SNI-جعلی (Mode B: direct Railway)
+# ══════════════════════════════════════════════════════════════════════════════
+# چرا این پروب لازم است (Test-D — جلوگیری از False Positive):
+#   لینک با SNI جعلی به کلاینت می‌گوید: TLS با SNI=دامنه‌ی جعلی بزن (بدون
+#   بررسی cert = allowInsecure=1) و بعد HTTP/WS با Host=دامنه‌ی واقعی پنل.
+#   تا قبل از این تغییر، پینگِ سرور همیشه با SNI واقعی تست می‌شد — یعنی
+#   «RUNTIME VERIFIED ✓» روی مسیری بود که کلاینت هرگز استفاده نمی‌کند.
+#   این پروب دقیقاً همان کاری را می‌کند که Xray با لینک می‌کند:
+#     TCP → IP پنل | TLS → server_hostname=SNI جعلی، بدون verify
+#     WS   → Host=دامنه‌ی واقعی | پروتکل → بایت‌های واقعی VLESS/Trojan/SS
+#   نتیجه‌ی مسیر تمیز (کنترل) جداگانه در clean_path گزارش می‌شود.
+# ══════════════════════════════════════════════════════════════════════════════
+
+# فقط پروتکل‌هایی که لینکشان واقعاً SNI جعلی + allowInsecure می‌گیرد (generate_share_link):
+# SS عمداً نیست — emitter برای SS spoof را اعمال نمی‌کند (Partial support).
+_SPOOF_WS_KINDS = {"vless-ws": "vless", "trojan-ws": "trojan"}
+_SPOOF_XHTTP_PROTOS = ("trojan-xhttp-", "xhttp-", "vless-xhttp")
+
+
+def _link_spoof_sni(link: dict) -> str | None:
+    """SNI جعلیِ فعالِ این لینک (Mode B) — فقط وقتی spoof روشن و مقدار معتبر باشد.
+
+    حالت CDN (EMIX_CDN_DOMAIN ست شده → Mode A) عمداً None برمی‌گرداند: در آن حالت
+    مسیر کلاینت دامنه‌ی CDN است نه دامنه‌ی پنل، و این پروب برایش معنا ندارد.
+    """
+    import os
+    if os.environ.get("EMIX_CDN_DOMAIN", "").strip():
+        return None
+    if not link.get("spoof_sni_enabled"):
+        return None
+    return _validate_sni(link.get("spoof_sni"))
+
+
+def _client_ws_frame(payload: bytes, opcode: int = 2) -> bytes:
+    """فریم WebSocket سمت کلاینت — mask اجباری طبق RFC 6455 (همان کاری که Xray می‌کند)."""
+    mask = secrets.token_bytes(4)
+    n = len(payload)
+    if n < 126:
+        hdr = struct.pack("!BB", 0x80 | opcode, 0x80 | n)
+    elif n < 65536:
+        hdr = struct.pack("!BBH", 0x80 | opcode, 0x80 | 126, n)
+    else:
+        hdr = struct.pack("!BBQ", 0x80 | opcode, 0x80 | 127, n)
+    masked = bytes(b ^ mask[i % 4] for i, b in enumerate(payload))
+    return hdr + mask + masked
+
+
+async def _read_ws_frame_srv(reader: asyncio.StreamReader, timeout: float) -> bytes:
+    """خواندن یک فریم WebSocket سمت سرور (unmasked) — payload برمی‌گرداند."""
+    hdr = await asyncio.wait_for(reader.readexactly(2), timeout)
+    length = hdr[1] & 0x7F
+    if length == 126:
+        (length,) = struct.unpack("!H", await asyncio.wait_for(reader.readexactly(2), timeout))
+    elif length == 127:
+        (length,) = struct.unpack("!Q", await asyncio.wait_for(reader.readexactly(8), timeout))
+    if hdr[1] & 0x80:  # سرور نباید mask کند؛ اگر کرد، هوشمندانه بخوان
+        mask = await asyncio.wait_for(reader.readexactly(4), timeout)
+        data = await asyncio.wait_for(reader.readexactly(length), timeout)
+        return bytes(b ^ mask[i % 4] for i, b in enumerate(data))
+    return await asyncio.wait_for(reader.readexactly(length), timeout)
+
+
+async def _spoof_tls_stream(host: str, spoof: str, port: int = 443,
+                            connect_timeout: float = 8.0):
+    """اتصال TCP+TLS دقیقاً مثل کلاینتِ لینکِ SNI-جعلی:
+    مقصد = IP دامنه‌ی پنل، server_hostname = SNI جعلی، بدون verify cert."""
+    infos = await asyncio.get_running_loop().getaddrinfo(host, port, family=socket.AF_INET, type=socket.SOCK_STREAM)
+    ip = infos[0][4][0]
+    ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE  # = allowInsecure=1 در کلاینت
+    return await asyncio.wait_for(
+        asyncio.open_connection(ip, port, ssl=ctx, server_hostname=spoof),
+        timeout=connect_timeout,
+    )
+
+
+async def _spoof_client_probe(kind: str, uid: str, link: dict,
+                              host: str | None = None, port: int = 443) -> dict:
+    """پروب کامل مسیر کلاینت برای لینک‌های ws (VLESS/Trojan/SS) با SNI جعلی.
+
+    host/port فقط برای تست داخلی override می‌شوند؛ در عمل = دامنه‌ی عمومی پنل:443.
+    """
+    target_host = host or get_host()
+    spoof = _link_spoof_sni(link)
+    if not spoof:
+        return {"ok": False, "detail": "SNI جعلی فعال/معتبر نیست"}
+    # گارد فقط وقتی host صریحاً override نشده (در تست‌ها لبه‌ی TLS خودش داده می‌شود)
+    if host is None and target_host in ("localhost", "127.0.0.1", "0.0.0.0"):
+        return {"ok": False, "detail": "پروب مسیر کلاینت فقط روی دامنه‌ی عمومی معتبر است (Host لوکال)"}
+    ws_ms = e2e_ms = None
+    t0 = time.perf_counter()
+    try:
+        reader, writer = await _spoof_tls_stream(target_host, spoof, port)
+    except Exception as exc:
+        return {"ok": False, "detail": f"TLS(SNI جعلی): {type(exc).__name__}: {str(exc)[:100]}"}
+    try:
+        # هندشیک WS — Host = دامنه‌ی واقعی پنل (پارامتر host لینک)
+        path = {"vless": f"/ws/{uid}", "trojan": "/trojan-ws"}[kind]
+        key = base64.b64encode(secrets.token_bytes(16)).decode()
+        req = (
+            f"GET {path} HTTP/1.1\r\nHost: {target_host}\r\nUpgrade: websocket\r\n"
+            f"Connection: Upgrade\r\nSec-WebSocket-Key: {key}\r\nSec-WebSocket-Version: 13\r\n"
+            f"X-EMIX-Ping: 1\r\n\r\n"
+        )
+        writer.write(req.encode())
+        await writer.drain()
+        resp = await asyncio.wait_for(reader.readuntil(b"\r\n\r\n"), PING_TIMEOUT_WS)
+        ws_ms = _ping_ms(t0)
+        status_line = resp.split(b"\r\n", 1)[0].decode("latin1", "ignore")[:60]
+        if b"101" not in resp.split(b"\r\n", 1)[0]:
+            return {"ok": False, "ws_ms": ws_ms, "detail": f"WS upgrade با Host واقعی: {status_line}"}
+        # payload پروتکل — همان بایت‌هایی که کلاینت واقعی می‌فرستد
+        t1 = time.perf_counter()
+        if kind == "vless":
+            payload = _vless_probe_bytes(uid)
+        elif kind == "trojan":
+            payload = _trojan_probe_bytes(uid)
+        writer.write(_client_ws_frame(payload))
+        await writer.drain()
+        data = await _read_ws_frame_srv(reader, PING_TIMEOUT_WS)
+        e2e_ms = _ping_ms(t1)
+        body = data[2:] if (kind == "vless" and data[:2] == b"\x00\x00") else data
+        first_line = body.split(b"\r\n", 1)[0][:64]
+        if b"HTTP" in first_line:
+            return {"ok": True, "ws_ms": ws_ms, "e2e_ms": e2e_ms, "reply": first_line.decode("latin1", "ignore")}
+        return {"ok": False, "ws_ms": ws_ms, "e2e_ms": e2e_ms, "detail": f"پاسخ غیرمنتظره از مسیر کلاینت: {first_line!r}"}
+    except Exception as exc:
+        return {"ok": False, "ws_ms": ws_ms, "e2e_ms": e2e_ms, "detail": f"مسیر کلاینت: {type(exc).__name__}: {str(exc)[:100]}"}
+    finally:
+        try:
+            writer.close()
+        except Exception:
+            pass
+
+
+async def _spoof_xhttp_client_probe(kind: str, uid: str, link: dict,
+                                    host: str | None = None, port: int = 443) -> dict:
+    """پروب مسیر کلاینت برای لینک‌های xhttp با SNI جعلی — دو اتصال TLS با SNI جعلی:
+    GET دانلینک + POST آپلینک (همان الگوی _probe_xhttp_tunnel اما با TLS جعلی)."""
+    target_host = host or get_host()
+    spoof = _link_spoof_sni(link)
+    if not spoof:
+        return {"ok": False, "detail": "SNI جعلی فعال/معتبر نیست"}
+    if host is None and target_host in ("localhost", "127.0.0.1", "0.0.0.0"):
+        return {"ok": False, "detail": "پروب مسیر کلاینت فقط روی دامنه‌ی عمومی معتبر است (Host لوکال)"}
+    prefix = "xhttp-siz10" if kind == "vless" else "txhttp-siz10"
+    proto = link.get("protocol", "")
+    mode = "packet-up" if proto.endswith("packet-up") else "stream-up"
+    sid = secrets.token_hex(8)
+    probe = _vless_probe_bytes(uid) if kind == "vless" else _trojan_probe_bytes(uid)
+    down_path = f"/{prefix}/{mode}/{uid}/{sid}"
+    up_path = (f"/{prefix}/packet-up/{uid}/{sid}/0" if mode == "packet-up"
+               else f"/{prefix}/stream-up/{uid}/{sid}")
+    t0 = time.perf_counter()
+    try:
+        r1, w1 = await _spoof_tls_stream(target_host, spoof, port)
+        r2, w2 = await _spoof_tls_stream(target_host, spoof, port)
+    except Exception as exc:
+        return {"ok": False, "detail": f"TLS(SNI جعلی): {type(exc).__name__}: {str(exc)[:100]}"}
+    try:
+        # 1) دانلینک — GET با Host واقعی
+        get_req = (f"GET {down_path} HTTP/1.1\r\nHost: {target_host}\r\n"
+                   f"User-Agent: EMIX-HealthCheck/1.0\r\nX-EMIX-Ping: 1\r\n"
+                   f"Accept: */*\r\n\r\n")
+        w1.write(get_req.encode())
+        await w1.drain()
+        hdr = await asyncio.wait_for(r1.readuntil(b"\r\n\r\n"), PING_TIMEOUT_HTTP)
+        down_status = hdr.split(b"\r\n", 1)[0].decode("latin1", "ignore")[:60]
+        if b" 200 " not in hdr.split(b"\r\n", 1)[0]:
+            return {"ok": False, "detail": f"دانلینک از مسیر کلاینت: {down_status}"}
+        t1 = time.perf_counter()
+        # 2) آپلینک — POST با Host واقعی و بدنه‌ی پروتکل
+        post = (f"POST {up_path} HTTP/1.1\r\nHost: {target_host}\r\n"
+                f"Content-Type: application/octet-stream\r\nX-EMIX-Ping: 1\r\n"
+                f"Content-Length: {len(probe)}\r\n\r\n").encode() + probe
+        w2.write(post)
+        await w2.drain()
+        up_resp = await asyncio.wait_for(r2.readuntil(b"\r\n\r\n"), PING_TIMEOUT_HTTP)
+        up_status = up_resp.split(b"\r\n", 1)[0].decode("latin1", "ignore")[:60]
+        if b" 200 " not in up_resp.split(b"\r\n", 1)[0]:
+            return {"ok": False, "detail": f"آپلینک از مسیر کلاینت: {up_status}"}
+        # 3) اولین بایت‌های دانلینک = پاسخ تونل‌شده
+        try:
+            body = await asyncio.wait_for(r1.read(512), PING_TIMEOUT_HTTP)
+        except asyncio.TimeoutError:
+            body = b""
+        e2e_ms = _ping_ms(t1)
+        body = body[2:] if (kind == "vless" and body[:2] == b"\x00\x00") else body
+        first_line = body.split(b"\r\n", 1)[0][:64]
+        if b"HTTP" in first_line:
+            return {"ok": True, "ws_ms": e2e_ms, "e2e_ms": e2e_ms, "reply": first_line.decode("latin1", "ignore")}
+        return {"ok": True, "ws_ms": e2e_ms, "e2e_ms": e2e_ms,
+                "reply": "TLS+HTTP OK (پاسخ تونل کامل دریافت نشد)",
+                "detail": f"مسیر SNI جعلی تا HTTP پاس شد؛ پاسخ تونل: {first_line!r}"}
+    except Exception as exc:
+        return {"ok": False, "detail": f"مسیر کلاینت xhttp: {type(exc).__name__}: {str(exc)[:100]}"}
+    finally:
+        for w in (w1, w2):
+            try:
+                w.close()
+            except Exception:
+                pass
+
+
 async def _run_link_ping(uid: str, link: dict, via: str = "direct") -> dict:
     """اجرای تست مناسب برای هر پروتکل + ثبت نتیجه روی لینک (last_ping).
     via=direct → مسیر خود پنل | via=worker → از مسیر گیت‌وی کلادفلر (سلامت خروجی واقعی)."""
@@ -417,6 +626,50 @@ async def _run_link_ping(uid: str, link: dict, via: str = "direct") -> dict:
             }
         else:
             result["fallback_attempted"] = "local"
+
+    # ── v12.4.2 — مسیر کلاینتِ لینک‌های SNI-جعلی (Test-D: ضد False-Positive) ────
+    # لینک با SNI جعلی (Mode B: direct Railway + allowInsecure=1) به کلاینت
+    # می‌گوید TLS را با SNI جعلی بزند؛ پینگِ تمیز (بالا) همان مسیر را سنجیده
+    # که کلاینت هرگز نمی‌رود. اینجا همان مسیری که کلاینت واقعاً می‌رود
+    # (TLS=SNI جعلی، Host=دامنه‌ی پنل، payload واقعی پروتکل) شبیه‌سازی می‌شود
+    # و نتیجه‌ی اصلی (ok/ws_ms/e2e_ms) = مسیر کلاینت؛ شواهد مسیر تمیز در clean_path.
+    spoof_sni = _link_spoof_sni(link)
+    if (
+        via == "direct"
+        and spoof_sni
+        and is_link_allowed(link)
+        and _is_public_base_probe(ws_base_override, http_base_override)
+    ):
+        _clean = {
+            "ok": result.get("ok"),
+            "ws_ms": result.get("ws_ms"),
+            "e2e_ms": result.get("e2e_ms"),
+            "reply": result.get("reply"),
+            "detail": (result.get("fallback_note") or result.get("detail")),
+            "fallback": result.get("fallback"),
+        }
+        if proto in _SPOOF_WS_KINDS:
+            client = await _spoof_client_probe(_SPOOF_WS_KINDS[proto], uid, link)
+        elif proto.startswith(_SPOOF_XHTTP_PROTOS):
+            client = await _spoof_xhttp_client_probe(
+                "trojan" if proto.startswith("trojan") else "vless", uid, link)
+        else:
+            client = None
+        if client is not None:
+            result = {
+                "protocol": proto,
+                "test": result.get("test", "ws-tunnel"),
+                "via": "direct",
+                "client_path": "spoofed-sni",
+                "spoof_sni": spoof_sni,
+                "allowInsecure": 1,
+                "ok": bool(client.get("ok")),
+                "ws_ms": client.get("ws_ms"),
+                "e2e_ms": client.get("e2e_ms"),
+                "reply": client.get("reply"),
+                "detail": client.get("detail"),
+                "clean_path": _clean,
+            }
 
     result.setdefault("ok", False)
     result["target"] = f"{PING_TEST_HOST}:{PING_TEST_PORT}" if result.get("test") in ("ws-tunnel", "xhttp-tunnel") else None
