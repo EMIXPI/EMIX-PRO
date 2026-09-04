@@ -137,7 +137,32 @@ GET /sub-json/{uuid}?client=singbox&geosite=1   ← + rule-set/geosite-ir ریم
 per-link `spoof_sni` (+ `EMIX_CDN_DOMAIN` برای حالت CDN بدون allowInsecure) —
 و حالا از مسیر `/sub-json` به کانفیگ کلاینت هم منتقل می‌شود.
 
-## 5. نقشه‌ی راه — «به قدرت vpn-ui، بدون شکستن هسته»
+## 5. v12.2 — Iran-Exit: «IP من با کانفیگ همچنان ایران» 
+
+**خواسته‌ی اپراتور:** ظاهرِ IP با کانفیگ هم ایران بماند (مثلاً برای سرویس‌هایی
+که IP غیرایرانی را بلاک می‌کنند). این دقیقاً حالت `IRAN_PROXY` موتور domestic
+است — حالا به کانفیگ کلاینت هم راه پیدا کرده:
+
+```
+GET /sub-json/{uuid}?client=singbox&exit=ir    ← sing-box با خروج ایران
+GET /sub-json/{uuid}?client=xray&exit=ir       ← xray با خروج ایران
+```
+
+* **زنجیره:** `کلاینت → تونل EMIX → گیت‌وی ایرانی → اینترنت` — در sing-box با
+  `detour: "proxy"` روی outbound گیت‌وی؛ در xray با `sockopt.dialerProxy`.
+  IP ظاهریِ ترافیک بین‌المللی = IP گیت‌وی ایرانی؛ مصرف داخلی همچنان DIRECT از
+  ISP کاربر (باز هم IP ایران) — یعنی **همه‌جا ایران**.
+* **صداقت evidence-محور:** فقط گیت‌وی‌هایی با `VERIFIED_IRAN_EGRESS` تازه و
+  پروتکل قابل-dial (`http`/`socks5`) انتخاب می‌شوند (`CONFIGURED` هرگز کافی
+  نیست). بدون گیت‌وی واجد شرایط → `422 NO_VERIFIED_IRAN_GATEWAY` با راهنمای
+  رفع: بخش **Iran Gateway** → افزودن گیت‌وی socks5/http → زدن **Check** تا
+  خروجی ایرانی «اندازه‌گیری» شود.
+* **UI/API:** دو دکمه‌ی پرچم جدید در کارت هر لینک + `sub_json_urls.singbox_ir`
+  / `xray_ir` در `/api/links`. credential گیت‌وی فقط در همین مسیرِ ساخت کانفیگ
+  استفاده می‌شود (APIهای لیست ماسک می‌کنند).
+* گیت‌وی‌ها بین ری‌استارت‌ها در state می‌مانند (`iran_gateway` در rvg_state.json).
+
+## 6. نقشه‌ی راه — «به قدرت vpn-ui، بدون شکستن هسته»
 
 قرارداد جدید دقیقاً برای همین هدف است: هر قابلیت تازه = یک موتور اختیاری در
 `boot_profile.ENGINES` + route registration پشت `boot_profile.enabled(...)` —

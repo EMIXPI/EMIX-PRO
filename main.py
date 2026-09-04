@@ -3191,9 +3191,12 @@ async def list_links(_=Depends(require_auth)):
             "vless_link": generate_share_link(uid, host, remark=f"EMIX-{d['label']}", protocol=proto),
             "sub_url": f"https://{host}/sub/{uid}",
             # v12.1: ساب JSON با قواعد IR-Direct — None برای پروتکل‌های رول‌ناپذیر
+            # v12.2: واریانت‌های exit=ir — IP ظاهری همیشه ایران (Iran-Exit)
             "sub_json_urls": (
                 {"singbox": f"/sub-json/{uid}?client=singbox",
-                 "xray": f"/sub-json/{uid}?client=xray"}
+                 "xray": f"/sub-json/{uid}?client=xray",
+                 "singbox_ir": f"/sub-json/{uid}?client=singbox&exit=ir",
+                 "xray_ir": f"/sub-json/{uid}?client=xray&exit=ir"}
                 if (_ir_rules_ok and ir_client_rules.client_rules_supported(proto))
                 else None
             ),
@@ -4739,6 +4742,14 @@ try:
             _dre.load_seed()
         return _dre.dataset_prefixes()
 
+    def _bp_ir_exit_gateway():
+        """بهترین گیت‌وی ایرانی VERIFIED برای زنجیره‌ی Iran-Exit (یا None)."""
+        try:
+            import iran_gateway
+            return iran_gateway.best_client_chainable_gateway()
+        except Exception:
+            return None
+
     ir_client_rules.register_routes(
         app,
         get_link_fn=_bp_get_link_for_rules,
@@ -4748,6 +4759,7 @@ try:
         headers_fn=build_sub_headers,
         prefixes_fn=_bp_ir_prefixes,
         default_protocol=DEFAULT_PROTOCOL,
+        gateway_fn=_bp_ir_exit_gateway,
     )
     logger.info(f"[bootstrap] ir_client_rules v{ir_client_rules.IR_CLIENT_RULES_VERSION} "
                 f"registered (/sub-json/{{uuid}}?client=singbox|xray)")
@@ -5732,7 +5744,7 @@ async def api_migrate_legacy_spoof():
 # تا قبل از لاگین هم قابل بررسی باشد. (از /api/version استفاده نمی‌کنیم چون
 # آن مسیر قبلاً برای بررسی به‌روزرسانی در نظر گرفته شده است.)
 # ══════════════════════════════════════════════════════════════════════════════
-EMIX_VERSION = "12.1.0-ir-direct"
+EMIX_VERSION = "12.2.0-iran-exit"
 EMIX_BUILD_DATE = "2026-09-04"
 
 @app.get("/api/boot-profile")

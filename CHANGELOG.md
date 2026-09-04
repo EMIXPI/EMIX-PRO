@@ -1,5 +1,29 @@
 # CHANGELOG — EMIX-PRO
 
+## v12.2.0-iran-exit (2026-09-04) — 🇮🇷 Iran-Exit: «IP من با کانفیگ همچنان ایران»
+
+**User request:** «در اصل می‌خواهم IP من با کانفیگ همچنان ایران باشد.»
+
+### NEW — `exit=ir` در /sub-json (خروج کل ترافیک از گیت‌وی ایرانی)
+- زنجیره‌ی `کلاینت → تونل EMIX → گیت‌وی ایرانی → اینترنت`:
+  sing-box با `detour:"proxy"` · xray با `sockopt.dialerProxy` — IP ظاهری
+  بین‌الملل = گیت‌وی ایرانی؛ مصرف داخلی همچنان DIRECT از ISP (همه‌جا ایران).
+- انتخاب گیت‌وی: فقط `VERIFIED_IRAN_EGRESS` تازه + پروتکل قابل-dial
+  (`http`/`socks5`) — `iran_gateway.best_client_chainable_gateway()`؛ بدون
+  گیت‌وی واجد شرایط → `422 NO_VERIFIED_IRAN_GATEWAY` + راهنما (صداقت).
+- `/api/links`: `sub_json_urls.singbox_ir` / `xray_ir`؛ دو دکمه‌ی پرچم در داشبورد.
+- endpoint `422 INVALID_EXIT_MODE` برای exit نامعتبر؛ هدر `x-emix-ir-rules`
+  حالا `exit=` هم دارد.
+- `GatewayIn` credential فقط در مسیر ساخت کانفیگ کلاینت استفاده می‌شود
+  (APIهای لیست ماسک می‌کنند — بدون تغییر).
+
+### TESTS — ۹۸۵/۹۸۵ سبز
+- +۶ تست unit (زنجیره‌ی sing-box/xray، auth، ردِ صادقانه بدون گیت‌وی،
+  exit نامعتبر، auto-مستقل از گیت‌وی) و +۳ integration (۴۲۲ صادقانه،
+  زنجیره‌ی واقعی روی اپ، exit نامعتبر).
+
+---
+
 ## v12.1.0-ir-direct (2026-09-04) — 🇮🇷 IR-Direct: داخلی‌کردن مصرف حتی با کانفیگ
 
 **User priority:** «مهم‌ترین چیزی که برای پنلم می‌خواهم sni spoofing یا

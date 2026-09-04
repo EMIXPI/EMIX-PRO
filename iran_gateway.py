@@ -264,6 +264,41 @@ def list_gateways() -> List[dict]:
     return [gw.to_dict() for gw in _gateways.values()]
 
 
+# ── Client-config chaining (v12.2 Iran-Exit) ─────────────────────────────────
+# فقط گیت‌وی‌هایی که کلاینت می‌تواند hop زنجیره‌ای dial کند (http/socks5) و
+# خروجی‌شان «اندازه‌گیری‌شده» ایرانی است — CONFIGURED هرگز کافی نیست.
+
+CLIENT_CHAINABLE_PROTOCOLS = ("http", "socks5")
+
+
+def best_client_chainable_gateway() -> Optional[dict]:
+    """بهترین گیت‌وی برای زنجیره‌ی Iran-Exit در کانفیگ کلاینت:
+    VERIFIED_IRAN_EGRESS تازه + پروتکل قابل-dial (http/socks5).
+    credential واقعی فقط از این مسیر بیرون می‌رود (ساخت کانفیگ کلاینت)؛
+    APIهای لیست همیشه ماسک می‌کنند. بدون گیت‌وی واجد شرایط → None
+    (تماس‌گیرنده صادقانه NO_VERIFIED_IRAN_GATEWAY می‌دهد)."""
+    best: Optional[Gateway] = None
+    best_ts = -1.0
+    for gw in _gateways.values():
+        if not gw.enabled or gw.protocol not in CLIENT_CHAINABLE_PROTOCOLS:
+            continue
+        if gateway_state(gw) != "VERIFIED_IRAN_EGRESS":
+            continue
+        ts = float((gw.last_egress or {}).get("timestamp") or 0)
+        if ts > best_ts:
+            best, best_ts = gw, ts
+    if best is None:
+        return None
+    return {
+        "gateway_id": best.gateway_id, "name": best.name,
+        "endpoint": best.endpoint, "port": best.port,
+        "protocol": best.protocol,
+        "username": best.auth_username or "",
+        "password": best.auth_password or "",
+        "egress_ip": (best.last_egress or {}).get("public_ip"),
+    }
+
+
 # ── Probes (real network evidence) ───────────────────────────────────────────
 
 async def _tcp_reachable(endpoint: str, port: int, timeout: float = PROBE_TIMEOUT_S) -> dict:
