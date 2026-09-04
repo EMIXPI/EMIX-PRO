@@ -275,6 +275,20 @@ def dataset_status() -> dict:
     return {**_db.meta, "prefix_count": _db.prefix_count()}
 
 
+def dataset_prefixes() -> List[str]:
+    """Normalized prefix list — for client-side rule emission (/sub-json).
+    Core-surface helper: the IR-Direct subscription needs the exact same
+    dataset the engine classifies with (one source of truth)."""
+    nets: List[str] = []
+    for table in (_db._v4, _db._v6):
+        for by_key in table.values():
+            for meta in by_key.values():
+                p = meta.get("prefix")
+                if p:
+                    nets.append(p)
+    return nets
+
+
 # ── Route policy ────────────────────────────────────────────────────────────
 
 @dataclass

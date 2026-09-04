@@ -43,11 +43,27 @@ async def test_v4first_unreachable_raises_original():
 
 
 @pytest.mark.asyncio
-async def test_v4first_timeout_applies():
-    """Connection to a black-hole IP must fail within the timeout window."""
-    import time
-    t0 = time.monotonic()
+async def test_v4first_timeout_applies(monkeypatch):
+    """Connection to a black-hole target must fail within the timeout window.
+
+    FIX v12: قبلاً به TEST-NET-1 (192.0.2.1) وصل می‌شد که رفتارش وابسته به
+    شبکه‌ی محیط اجراست (بعضی sandbox ها/VPN ها بلافاصله accept می‌کنند).
+    الان بخش شبکه‌ی واقعی mock می‌شود: open_connection تا ابد hang می‌کند —
+    فقط و فقط if wait_for(timeout) کار کند، TimeoutError برمی‌گردد."""
+    import time as _time
+    from protocol import net_connect
+
+    async def _hang(*a, **kw):
+        await asyncio.sleep(3600)
+
+    async def _no_resolve(*a, **kw):
+        # getaddrinfo واقعی صدا زده نشود؛ مسیر numeric-IP شبیه‌سازی می‌شود
+        raise OSError("resolve disabled in test")
+
+    monkeypatch.setattr(net_connect.asyncio, "open_connection", _hang)
+    monkeypatch.setattr(net_connect.asyncio, "get_running_loop",
+                        lambda: type("L", (), {"getaddrinfo": staticmethod(_no_resolve)})())
+    t0 = _time.monotonic()
     with pytest.raises((OSError, asyncio.TimeoutError)):
-        # TEST-NET-1 (RFC 5737) — guaranteed non-routable
-        await open_connection_v4first("192.0.2.1", 81, timeout=2.0)
-    assert time.monotonic() - t0 < 6.0
+        await net_connect.open_connection_v4first("203.0.113.7", 81, timeout=2.0)
+    assert _time.monotonic() - t0 < 6.0

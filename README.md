@@ -61,6 +61,8 @@
 
 **EMIX PRO** is a fast, modern, self-hosted **multi-protocol proxy management panel**, built with **Python + FastAPI**, designed to deploy in minutes on **Railway**.
 
+> 🏗️ **v12.0.0-core revival (2026-09-04):** the panel now boots on the **EMIX base-protocol core** — ping / relays (VLESS · Trojan · Shadowsocks · MTProto) / subs / dashboard are an *always-alive core surface* (self-checked at boot), while 27 PRO engines are **opt-in** (`EMIX_PROFILE=full` or `EMIX_ENABLE=…`). Config identity is stable across redeploys even without a Volume. Full story: [`REVIVAL.md`](./REVIVAL.md). IR-Direct split-tunneling ships as **`/sub-json/{uuid}`** (full sing-box/xray client config: Iranian destinations → DIRECT via the user's ISP). Tests: **976/976 green**.
+
 It gives you a beautiful admin dashboard to create, monitor, and manage proxy links across multiple protocols — with per-link traffic quotas, live connection stats, and QR code generation — all from a single lightweight service.
 
 > 💡 Originally built around a simple VLESS-over-WebSocket relay, EMIX has evolved into a **self-diagnosing network orchestration platform**: what it claims is backed by evidence.

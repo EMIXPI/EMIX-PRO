@@ -108,6 +108,61 @@ def test_random_last_resort_is_labeled_unstable():
     assert r["source"] == "random_no_seed"
 
 
+# ── 2.b مسیر Permission-denied (باستندگی کل زنجیره) — حادثه‌ی production ────
+# 🔴 ROOT CAUSE «پنل باز می‌شود ولی کانفیگ‌ها وصل نمی‌شوند»:
+#   قبلاً DATA_DIR.mkdir داخل try بود؛ روی Railway بدون Volume (/data قابل
+#   نوشتن نیست) خطای Permission کل زنجیره را می‌پراند و secret رندوم
+#   برمی‌گشت — حتی اگر RAILWAY_SERVICE_ID موجود بود! نتیجه: هر ری‌دیپلوی
+#   UUID همه‌ی کانفیگ‌های پیش‌فرض را عوض می‌کرد.
+# این تست دقیقاً همان سناریو را بازسازی می‌کند: DATA_DIRِ غیرقابل‌نوشتن.
+
+def _unwritable_dir(tmp_path) -> str:
+    """مسیری که DATA_DIR.mkdir روی آن قطعی شکست می‌خورد (مستقل از پلتفرم):
+    والد یک «فایل» است نه دایرکتوری → NotADirectoryError — همان رفتاری که
+    «/data» غیرقابل‌نوشتن روی Railway بدون Volume تولید می‌کند."""
+    blocker = tmp_path / "not-a-dir"
+    blocker.write_text("I am a file, not a directory", encoding="utf-8")
+    return str(blocker / "data")
+
+
+def test_unwritable_data_dir_still_uses_stable_railway_service_id(tmp_path):
+    """(/data غیرقابل‌نوشتن) + RAILWAY_SERVICE_ID → secret باید پایدار و
+    از نوع railway_service_id باشد — نه رندوم. (FIX v12.0.0-core)"""
+    d = _unwritable_dir(tmp_path)
+    r1 = _boot_identity({"RAILWAY_SERVICE_ID": "srv-fixed-123", "DATA_DIR": d})
+    r2 = _boot_identity({"RAILWAY_SERVICE_ID": "srv-fixed-123", "DATA_DIR": d})
+    assert r1["source"] == "railway_service_id", (
+        f"identity must survive unwritable DATA_DIR — got {r1['source']}")
+    assert r1["secret"] == r2["secret"], (
+        "UUID rotation on redeploy without volume — the production outage bug is back")
+    for prefix in ("vless", "trojan", "ss"):
+        assert _default_uuid_for(r1["secret"], prefix) == \
+               _default_uuid_for(r2["secret"], prefix)
+
+
+def test_unwritable_data_dir_random_last_resort_is_labeled_unstable(tmp_path):
+    """بدون هیچ seed و بدون دیسک → رندوم (ناگریز) ولی باید صادقانه
+    «ناپایدار» برچسب بخورد — نه stable:true دروغین (FIX v12.0.0-core)."""
+    d = _unwritable_dir(tmp_path)
+    code = (
+        "import json, main\n"
+        "print(json.dumps({'source': main.IDENTITY_SOURCE,"
+        " 'stable': main.IDENTITY_STABLE}))\n"
+    )
+    env = {k: v for k, v in os.environ.items()
+           if k not in ("SECRET_KEY", "RAILWAY_SERVICE_ID", "EMIX_IDENTITY_SEED",
+                        "DATA_DIR", "RAILWAY_PUBLIC_DOMAIN")}
+    env["DATA_DIR"] = d
+    out = subprocess.run(
+        [sys.executable, "-c", code], capture_output=True, text=True,
+        cwd=str(REPO), env=env, timeout=120,
+    )
+    assert out.returncode == 0, f"boot failed: {out.stderr[-800:]}"
+    info = json.loads(out.stdout.strip().splitlines()[-1])
+    assert info["source"] == "random_no_seed"
+    assert info["stable"] is False, "random identity must be labeled unstable"
+
+
 # ── 3. public_host — ماندگاری دامنه‌ی خودآموخته بین ری‌استارت ────────────────
 
 def test_public_host_saved_and_restored(tmp_path, monkeypatch):
