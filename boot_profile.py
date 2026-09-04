@@ -67,7 +67,27 @@ ENGINES: dict[str, tuple[str, str]] = {
 # ── موتورهای «همیشه‌روشن» — هسته‌ی دوم (اولویت اپراتور، v12.1) ───────────────
 # Iran Direct ستون‌فقرات پنل است؛ موتور دیتاست/پالیسی آن در هر دو پروفایل
 # روشن می‌ماند (خروجی کلاینت‌محورش /sub-json خودش مستقلاً هسته است).
-ALWAYS_ON: set[str] = {"domestic_route_engine"}
+#
+# ── Phase 40 §32 — «دیوار پروفایل» برداشته شد ────────────────────────────────
+# تجربه‌ی اصلی محصول = ساخت/مدیریت/تست کانفیگ از یک ورک‌اسپیس. اگر آن زنجیره
+# فقط در EMIX_PROFILE=full کار می‌کرد، کاربرِ پروفایل core (پیش‌فرضِ دیپلوی
+# واقعی) به دیوار «پروفایل دیگری را فعال کنید» می‌خورد — که نقض UX نهایی است.
+# زنجیره‌ی ساخت کانفیگ سبک و pure-python است (بدون وابستگی شبکه در import)؛
+# پس بخشی از «هسته‌ی همیشه‌زنده» می‌شود:
+#   config_builder + capability_engine + iran_direct + iran_gateway
+#   + structured_events + turbo_boost (تست A/B واقعی) + account_manager
+# آنها همچنان fail-safe اند (ثبتشان try/except است — خرابی‌شان هرگز بوت را
+# نمی‌شکند؛ فقط همان موتور صادقانه غایب می‌ماند).
+ALWAYS_ON: set[str] = {
+    "domestic_route_engine",
+    "config_builder",
+    "capability_engine",
+    "iran_direct",
+    "iran_gateway",
+    "structured_events",
+    "turbo_boost",
+    "account_manager",
+}
 
 # هسته‌ی همیشه‌زنده — فقط برای گزارش و self-check بوت (هرگز gate نمی‌شوند)
 CORE_SURFACE = [
@@ -80,7 +100,12 @@ CORE_SURFACE = [
     ("/sub-json/{uuid}", "ساب JSON با قواعد IR-Direct (داخلی‌کردن مصرف)"),
     ("/dashboard",       "داشبورد مدیریت"),
     ("/login",           "احراز هویت پنل"),
-    ("/api/network/test/quick", "پروب مرحله‌ای واقعی DNS/TCP/TLS — مرکز کنترل شبکه"),
+    ("/api/network/test/quick", "پروب مرحله‌ای واقعی DNS/TCP/TLS — ورک‌اسپیس کانفیگ"),
+    # ── Phase 40: زنجیره‌ی ساخت کانفیگ = هسته (دیوار پروفایل برداشته شد §32) ──
+    ("/api/config-builder/capabilities", "قابلیت‌های واقعی ساخت کانفیگ (پروتکل/نود/مسیریابی)"),
+    ("/api/config-builder/preview",      "پیش‌نمایش از همان کامپایلر کانونی"),
+    ("/api/config-builder/generate",     "ساخت نهایی + ذخیره‌ی لینک زنده + تاریخچه"),
+    ("/api/config-builder/history",      "تاریخچه‌ی کانفیگ‌های ساخته‌شده"),
 ]
 
 _report: dict = {

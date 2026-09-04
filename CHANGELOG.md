@@ -1,5 +1,96 @@
 # CHANGELOG — EMIX-PRO
 
+## v12.4.0-workspace (2026-09-04) — 🎯 PHASE 40: Configuration Center as the Single Network Workspace
+
+**Mandate:** «کانفیگ‌ها = the single network workspace» — the whole product
+experience rebuilt around ONE central configuration page. No competing builder
+page, no fragmented network menus, no profile wall. The original EMIX
+configuration flow (list page → cards → create → URI/QR/sub → persistence →
+real ping) stays the functional source of truth; the visual and interaction
+model is completely redesigned.
+
+### THE ONE WORKSPACE — کانفیگ‌ها (rebuilt in place)
+- **New header + live stats:** total / تأییدشده (VERIFIED = real E2E ping
+  evidence — never «سالم» without a witness) / فعال / latest network state +
+  `[+ ساخت کانفیگ]` opening the workspace.
+- **Premium config cards (new information architecture):** protocol•transport
+  chip, node badge, and the mandatory two-state model —
+  `CONFIG ✓ VALID` (compiled + stored) vs `RUNTIME VERIFIED / FAILED / تست
+  نشده` (from the real last_ping evidence; the chip itself is clickable →
+  retest). Latency ms, TLS ✓ (only with E2E evidence), Tunnel ✓, and the
+  routing line (IRAN_DIRECT / IRAN_PROXY / INTERNATIONAL_VPN …) from the
+  builder metadata. Primary actions: تست / کپی / QR / ویرایش / more ▾
+  (collapsible: usage, expiry, sub/IR-Direct/Iran-Exit subs, turbo, toggle,
+  reset, delete — NOTHING deleted, §31).
+- **Full-screen create workspace (`#ws-create`) INSIDE the Configurations
+  page** — the unified step builder (۱ پروتکل → … → ۱۰ ساخت) with a live
+  progress stepper, the REAL network verification panel (تست سریع / TLS /
+  SNI / تونل E2E / توربو A/B / تشخیص کامل — the same Phase 39 engines),
+  preview from the SAME canonical compiler, and mobile sticky
+  پیش‌نمایش/ساخت نهایی bar. On generate → «کانفیگ زنده ساخته شد» panel
+  (کپی لینک / QR local / کپی Sub / بازگشت به کانفیگ‌ها).
+
+### ONE CONFIGURATION ENGINE — generate now creates the LIVE link (§25/§34)
+- `config_builder` gained a link-factory seam wired from
+  `main._create_link_core` — «ساخت نهایی» runs the SAME pipeline
+  (capability → node → endpoint → routing validation → canonical compiler)
+  AND persists a real, testable link (persistence + born-UNKNOWN health
+  probe + worker UUID sync), carrying `routing_policy / node_id /
+  transport / security / built_by` metadata onto the card.
+- The compiled credential IS the live link's UUID (relay-authentic), the
+  response carries a `link` block (uuid/share_link/sub_url/routing_policy),
+  history entries reference their `link_uuid`, and regenerate is
+  outputs-only (never duplicates the live link).
+- Honest output-only paths: custom endpoints and non-panel nodes export
+  artifacts with an explicit reason (no fake live link). preview NEVER
+  creates links and never invents credentials.
+
+### THE PROFILE WALL IS GONE (§32)
+- The config-creation chain is now ALWAYS-ON core:
+  `config_builder, capability_engine, iran_direct, iran_gateway,
+  structured_events, turbo_boost, account_manager` (+ existing
+  domestic_route_engine). CORE_SURFACE extended with the builder routes.
+  Production (`EMIX_PROFILE=core`) gets the FULL workspace experience — the
+  «EMIX_PROFILE=full را فعال کنید» message is replaced by an honest
+  technical-failure notice (with جزئیات فنی) that only appears if an engine
+  actually fails to boot.
+- Engine registration stays fail-safe (try/except — a broken engine never
+  breaks boot; turbo_boost registration is now guarded too).
+
+### NAVIGATION — significantly simpler (§30, HIDE not delete)
+- Sidebar: داشبورد / **کانفیگ‌ها** / حساب‌ها / گروه‌های ساب // سیستم
+  (تنظیمات/بروزرسانی/بکاپ/پشتیبانی) // تشخیص و لاگ (سلامت/لاگ/خطا).
+- 14 network-specialized pages (پل ایران، ZEUS، گیمینگ، چندلوکیشن، VPN Pro،
+  مسیریابی، پروکسی ایران، سابسکریپشن، ترافیک، اتصالات، نود، آزمایشی،
+  همه‌ی کانفیگ‌ها، builder) are HIDDEN from the sidebar but fully intact
+  (reachable via command palette Ctrl+K — zero backend/JS removed).
+- `navTo('builder')` redirects to کانفیگ‌ها + opens the workspace (all old
+  links/palette/bookmarks keep working). Command palette ساخت کانفیگ
+  entries route to the workspace.
+
+### TESTS & GATES (real, not counts)
+- NEW `tests/integration/test_phase40_workspace.py` — 22 tests: ALWAYS_ON
+  contract, link-factory chain (generate→card→retestable), preview
+  zero-side-effects, honest output-only paths, routing honesty
+  (SPLIT_TUNNEL_NOT_SUPPORTED for uri clients, IRAN_PROXY blocked without a
+  verified gateway), UI migration acceptance (hidden nav, workspace inside
+  pg-links, standalone builder section gone, palette, profile-wall text
+  gone, premium cards two-state model, mobile sticky bar, hidden pages
+  intact), history link_uuid.
+- Updated to the new reality (not weakened): phase38plus/39 UI markers,
+  core_revival core-profile expectations (workspace chain present, optional
+  engines still off), gaming_wte order-fragility fix (vless-only push
+  contract preserved).
+- **Full suite: 1032/1032 ×2 consecutive clean runs.** JS: 4/4 script
+  blocks `node --check` OK. compileall OK. secret scan clean.
+- **REAL boot gate 23/23** (`EMIX_PROFILE=core`, exact acceptance flows):
+  §34 VLESS+XHTTP+TLS+IRAN_DIRECT → تست سریع REAL (DNS 2.0/TCP 6.1/TLS
+  16.5ms) → تشخیص کامل → preview (no link) → generate → LIVE link → card
+  with routing metadata → RETEST real E2E (ws 18.8ms/e2e 25.3ms) → card
+  shows RUNTIME VERIFIED → QR local SVG. §35 international config real
+  usable (E2E ws 16.5ms/e2e 21.2ms). §36 IRAN_PROXY honestly blocked
+  (گیت‌وی اثبات‌شده‌ای موجود نیست).
+
 ## v12.3.0-ncc (2026-09-04) — 🛰 PHASE 39: EMIX Core Integration + Unified Network Control Center
 
 **Mandate:** «EMIX Core + EMIX-PRO Control Plane + Unified Network Control UI» —

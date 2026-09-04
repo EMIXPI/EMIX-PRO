@@ -166,12 +166,16 @@ def test_e1_nav_and_ncc_markers(client):
     r = client.get("/dashboard")
     assert r.status_code == 200
     html = r.text
-    # the existing «ساخت کانفیگ» nav item must open pg-builder…
-    assert re.search(r'data-pg="builder"[^>]*>\s*<i[^>]*></i>\s*✨?\s*ساخت کانفیگ', html) or \
-           ('data-pg="builder"' in html and 'ساخت کانفیگ' in html)
-    # …and pg-builder IS the Network Control Center now
-    assert 'id="pg-builder"' in html
-    assert "مرکز کنترل شبکه EMIX" in html          # NCC header title
+    # Phase 40: «ساخت کانفیگ» is not a competing nav page anymore — the nav
+    # item stays as a HIDDEN deep-link target and navTo('builder') opens the
+    # workspace INSIDE کانفیگ‌ها (pg-links + #ws-create overlay).
+    assert 'data-pg="builder"' in html and 'ساخت کانفیگ' in html
+    m = re.search(r'<div class="nav-it"[^>]*data-pg="builder"[^>]*>', html)
+    assert m and 'display:none' in m.group(0), "builder nav item must be hidden"
+    assert re.search(r"if\(name==='builder'\)\{[\s\S]*?openCreateWorkspace", html), \
+        "navTo('builder') must open the workspace"
+    # …and the workspace overlay IS the unified builder now
+    assert 'id="ws-create"' in html
     assert 'id="ncc-console"' in html              # live test panel
     assert 'id="ncc-routing"' in html              # routing cards
     assert 'id="ncc-protocols"' in html            # protocol cards
@@ -193,14 +197,19 @@ def test_e3_palette_routes_to_unified_builder(client):
     html = r.text
     m = re.search(r"\{t:'ساخت کانفیگ جدید',s:'([^']*)'", html)
     assert m, "palette entry missing"
-    assert "مرکز کنترل شبکه" in m.group(1)          # now describes the NCC
+    assert "ورک‌اسپیس" in m.group(1)               # describes the unified workspace
     assert "navTo('builder')" in html
+    assert "openCreateWorkspace" in html          # palette also routes directly
 
 
 def test_e4_no_second_config_page_created(client):
-    """No new competing page was added — the NCC replaced pg-builder in place."""
+    """Phase 40: no competing page — the standalone builder section is GONE;
+    the unified workspace overlay lives exactly once inside pg-links."""
     r = client.get("/dashboard")
     html = r.text
-    # pg-builder is unique: exactly one section carries the NCC console
-    assert html.count('id="pg-builder"') == 1
-    assert html.count('id="ncc-console"') == 1
+    assert html.count('id="pg-builder"') == 0     # standalone page removed
+    assert html.count('id="ncc-console"') == 1    # exactly one live-test console
+    assert html.count('id="ws-create"') == 1      # exactly one workspace overlay
+    # the overlay is INSIDE the links page section
+    pg_links = html.split('id="pg-links"')[1].split('id="pg-bridge"')[0]
+    assert 'id="ws-create"' in pg_links

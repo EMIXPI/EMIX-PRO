@@ -298,16 +298,18 @@ def test_dashboard_serves_builder_and_iranproxy_pages(authed):
     r = authed.get("/dashboard")
     assert r.status_code == 200
     html = r.text
-    # Phase 39: pg-builder is now the unified Network Control Center —
-    # element ids migrated bld-* → ncc-* for the card-based sections.
-    # bld-history / loadBuilderPage are intentionally retained.
-    for marker in ('id="pg-builder"', 'id="pg-iranproxy"',
-                   'data-pg="builder"', 'data-pg="iranproxy"',
+    # Phase 40: the builder is no longer a standalone page — it is the
+    # full-screen workspace (#ws-create) INSIDE pg-links (کانفیگ‌ها).
+    # element ids ncc-*/bld-* are intentionally retained inside the overlay.
+    for marker in ('id="pg-links"', 'id="ws-create"', 'id="pg-iranproxy"',
+                   'data-pg="links"', 'data-pg="iranproxy"',
                    'id="ncc-protocols"', 'id="ncc-routing"', 'id="ncc-console"',
                    'id="bld-history"',
                    'id="igw-list"', 'loadBuilderPage', 'loadIranProxyPage',
-                   'مرکز کنترل شبکه', 'کانفیگ‌های ساخته‌شده', 'پروکسی ایران', 'ساخت کانفیگ'):
+                   'openCreateWorkspace', 'کانفیگ‌های ساخته‌شده', 'پروکسی ایران', 'ساخت کانفیگ'):
         assert marker in html, marker
+    # the standalone builder page must be gone (no competing page — §33)
+    assert 'id="pg-builder"' not in html
 
 
 def test_builder_js_is_capability_driven_not_hardcoded(client):

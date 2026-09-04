@@ -64,6 +64,7 @@ class BuilderRequest(BaseModel):
     account_id: str = ""
     subscription_id: str = ""
     persist: bool = True
+    persist_link: bool = True
 
 ENGINE_VERSION = "1.0.0"
 HISTORY_BOUND = 200
@@ -75,6 +76,12 @@ CLIENT_FORMATS = ("uri", "xray-json", "sing-box", "subscription")
 _host_provider: Optional[Callable[[], str]] = None          # main.get_host
 _worker_domain_provider: Optional[Callable[[], str]] = None # gaming_boost worker domain
 _cdn_domain_provider: Optional[Callable[[], str]] = None
+# Phase 40 §25/§34 — زنجیره‌ی کانونی هم‌گرا: «ساخت نهایی» فقط خروجی‌مصنوع
+# نیست؛ همان pipeline یک لینکِ زنده‌ی قابل‌تست هم می‌سازد (از طریق
+# _create_link_core پنل — persistence + health probe + worker sync). بدون
+# این seam، کانفیگِ ساخته‌شده هرگز روی کارت‌ها ظاهر نمی‌شد و «Retest» واقعی
+# ناممکن بود.
+_link_factory: Optional[Callable] = None                     # main._create_link_core
 
 
 def set_host_provider(fn) -> None:
@@ -90,6 +97,14 @@ def set_worker_domain_provider(fn) -> None:
 def set_cdn_domain_provider(fn) -> None:
     global _cdn_domain_provider
     _cdn_domain_provider = fn
+
+
+def set_link_factory(fn) -> None:
+    """main.py این را وصل می‌کند: async fn(body: dict) -> dict — همان
+    مسیر واقعی ساخت لینک (persist + probe + sync). فقط generate استفاده
+    می‌کند؛ preview هرگز لینک نمی‌سازد."""
+    global _link_factory
+    _link_factory = fn
 
 
 def _panel_host() -> str:
@@ -134,6 +149,8 @@ class ConfigRequest:
     account_id: str = ""                 # optional ownership (accounts engine)
     subscription_id: str = ""
     persist: bool = True                 # write to history (preview → False)
+    persist_link: bool = True            # Phase 40: also create a LIVE link
+                                          # (panel node + non-custom endpoint only)
 
 
 # ── Node → endpoint resolution (honest, evidence-labeled) ────────────────────
@@ -337,6 +354,66 @@ async def build_config(req: ConfigRequest, for_preview: bool = False) -> dict:
     if for_preview and req.protocol == "shadowsocks" and not creds["ss_password"]:
         creds["ss_password"] = "preview-password"
         creds["credential_placeholder"] = True
+
+    # 5.b Phase 40 §25/§34 — LIVE LINK CREATION (generate only; never preview).
+    #     همان pipeline، همان کامپایلر — ولی «ساخت نهایی» حالا یک لینک زنده‌ی
+    #     قابل‌تست هم می‌سازد (persist + health-probe + worker-sync از مسیر
+    #     واقعی پنل). کانفیگ ساخته‌شده روی کارت‌ها ظاهر می‌شود و Retest واقعی
+    #     (تونل E2E) روی آن ممکن است. preview هرگز لینک نمی‌سازد.
+    link_result: Optional[dict] = None
+    link_note = ""
+    live_link = bool(
+        (not for_preview) and req.persist_link
+        and _link_factory is not None
+        and req.node_id == "panel"
+        and ep_res["mode"] != "custom"
+    )
+    if (not for_preview) and req.persist_link and not live_link:
+        if req.node_id != "panel":
+            link_note = (f"output-only: links live on the panel deployment — "
+                         f"node '{req.node_id}' configs are exported, not hosted here")
+        elif ep_res["mode"] == "custom":
+            link_note = ("output-only: custom endpoints are exported as artifacts; "
+                         "select an endpoint profile (or standard) to also create "
+                         "a live, testable link")
+    if live_link:
+        try:
+            body = {
+                "label": (req.name or f"{req.protocol}-{req.transport}")[:60],
+                "protocol": compat.compose(req.protocol, req.transport),
+                "alpn": req.alpn,
+                "fingerprint": req.fingerprint,
+                "sub_id": req.subscription_id or None,
+                "endpoint_profile_id": req.endpoint_profile_id or None,
+                "ss_cipher": req.ss_cipher,
+                "_builder_meta": {
+                    "routing_policy": req.routing_policy,
+                    "node_id": req.node_id,
+                    "transport": req.transport,
+                    "security": req.security,
+                    "client_format": req.client_format,
+                    "built_by": "config_builder",
+                    "builder_name": req.name,
+                },
+            }
+            link_result = await _link_factory(body)
+        except Exception as exc:  # honest failure — no half-built anything
+            events.log_event("CONFIG_GENERATED", severity="ERROR",
+                             stage="link", error=str(exc)[:200])
+            return {"ok": False,
+                    "errors": [f"live link creation failed: {type(exc).__name__}: "
+                               f"{str(exc)[:200]}"],
+                    "stage": "link"}
+        if link_result:
+            if req.protocol in ("vless", "trojan"):
+                creds["credential"] = link_result.get("uuid") or creds["credential"]
+            elif req.protocol == "shadowsocks":
+                creds["ss_password"] = (link_result.get("ss_password")
+                                        or creds["ss_password"])
+            elif req.protocol == "mtproto":
+                creds["credential"] = (link_result.get("mtproto_secret")
+                                       or creds.get("credential") or "")
+
     # write generated credentials back so HISTORY stores the real values and
     # regeneration is deterministic (same credential → same URI → same checksum)
     if not for_preview:
@@ -346,19 +423,24 @@ async def build_config(req: ConfigRequest, for_preview: bool = False) -> dict:
             req.ss_password = creds["ss_password"]
     if req.protocol == "mtproto" and not for_preview:
         # mtproto needs a public TCP-proxy host/port — explicit when missing
+        # (only when NO live link provided its real instance secret already)
         if not (req.credential or "").strip():
             req.credential = "ee" + _uuid.uuid4().hex[:30]
             creds["credential"] = req.credential
 
     # 6. compile — THE canonical compiler (this module never emits URIs)
+    _mt_host = ((link_result or {}).get("mtproto_public_host")
+                or req.custom_address or node_res["host"])
+    _mt_port = ((link_result or {}).get("mtproto_public_port")
+                or req.custom_port or 443)
     spec = cc.ConfigSpec(
         protocol=req.protocol, transport=req.transport, security=req.security,
         credential=creds["credential"], remark=req.remark or "EMIX",
         host=node_res["host"], cdn_domain="",
         endpoint=ep_res["endpoint"], alpn=req.alpn, fingerprint=req.fingerprint,
         ss_cipher=req.ss_cipher, ss_password=creds["ss_password"],
-        mtproto_public_host=req.custom_address or node_res["host"],
-        mtproto_public_port=req.custom_port or 443,
+        mtproto_public_host=_mt_host,
+        mtproto_public_port=_mt_port,
         requested_formats=("uri", "xray_json"),
     )
     compiled = cc.compile_config(spec)
@@ -407,6 +489,30 @@ async def build_config(req: ConfigRequest, for_preview: bool = False) -> dict:
         "qr": "/api/qr?data=" if compiled.uri else None,   # frontend appends the URI (LOCAL rendering)
         "generated_at": time.time(),
     }
+
+    # 8.b Phase 40 — the live-link block (two-state model, honest):
+    #     CONFIGURATION ✓ VALID + a REAL link the cards can show & retest.
+    if for_preview:
+        result["link"] = {"created": False,
+                          "reason": "preview — same compiler, no link created"}
+    elif link_result:
+        result["link"] = {
+            "created": True,
+            "uuid": link_result.get("uuid"),
+            "label": link_result.get("label"),
+            "protocol": link_result.get("protocol"),
+            "share_link": link_result.get("vless_link"),
+            "sub_url": link_result.get("sub_url"),
+            "routing_policy": req.routing_policy,
+            "runtime_state": "UNKNOWN until first real probe",
+        }
+        events.log_event("LINK_CREATED", name=link_result.get("label") or "",
+                         uuid=link_result.get("uuid"), protocol=link_result.get("protocol"),
+                         routing=req.routing_policy, source="config_builder")
+    else:
+        result["link"] = {"created": False, "reason": link_note or
+                          "output-only (persist_link=False)"}
+
     events.log_event("ROUTE_SELECTED", node=req.node_id, policy=req.routing_policy,
                      protocol=req.protocol, transport=req.transport,
                      reason="config-builder selection")
@@ -415,12 +521,14 @@ async def build_config(req: ConfigRequest, for_preview: bool = False) -> dict:
     if not for_preview and req.persist:
         entry = _history_append(req, result)
         entry["uri"] = compiled.uri      # server-side (LINKS-uuid trust domain)
+        entry["link_uuid"] = (link_result or {}).get("uuid")
         result["history_id"] = entry["history_id"]
         events.log_event("CONFIG_GENERATED", name=req.name or "(unnamed)",
                          protocol=compiled.protocol, transport=compiled.transport,
                          security=compiled.security, node=req.node_id,
                          routing=req.routing_policy, client=req.client_format,
-                         checksum=compiled.checksum, history_id=result["history_id"])
+                         checksum=compiled.checksum, history_id=result["history_id"],
+                         link_uuid=entry["link_uuid"])
     return result
 
 
@@ -506,6 +614,7 @@ def list_history(limit: int = 100, account_id: str = "") -> List[dict]:
             "created_at_iso": time.strftime("%Y-%m-%dT%H:%M:%SZ",
                                             time.gmtime(e["created_at"])),
             "status": e["status"], "checksum": e["checksum"],
+            "link_uuid": e.get("link_uuid"),
             **e["outputs_summary"], "account_id": e.get("account_id", ""),
         })
         if len(out) >= limit:
@@ -530,7 +639,9 @@ async def get_history_entry(history_id: str, reveal: bool = False) -> Optional[d
 
 async def regenerate(history_id: str) -> dict:
     """Regenerate from the stored spec — the SAME pipeline (compiler + routing).
-    Deterministic compiler + same credential → same output (checksum match)."""
+    Deterministic compiler + same credential → same output (checksum match).
+    Phase 40: outputs-only — a regenerated artifact never duplicates the live
+    link (the original link stays the single testable object)."""
     entry = await get_history_entry(history_id, reveal=True)
     if entry is None:
         return {"ok": False, "errors": [f"history entry '{history_id}' not found"]}
@@ -538,6 +649,7 @@ async def regenerate(history_id: str) -> dict:
             if k in ConfigRequest.__dataclass_fields__}
     req = ConfigRequest(**spec)
     req.persist = True
+    req.persist_link = False      # outputs-only; the live link is not duplicated
     result = await build_config(req, for_preview=False)
     if result.get("ok"):
         # record regeneration linkage
@@ -589,10 +701,11 @@ def restore_snapshot(data: dict) -> None:
 
 def reset_for_tests() -> None:
     _history.clear()
-    global _host_provider, _worker_domain_provider, _cdn_domain_provider
+    global _host_provider, _worker_domain_provider, _cdn_domain_provider, _link_factory
     _host_provider = None
     _worker_domain_provider = None
     _cdn_domain_provider = None
+    _link_factory = None
 
 
 # ── API (authed — spec §28) ─────────────────────────────────────────────────

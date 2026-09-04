@@ -1001,6 +1001,11 @@ def _wire_phase38_engines() -> None:
     config_builder.set_worker_domain_provider(_worker_domain)
     config_builder.set_cdn_domain_provider(lambda: CONFIG.get("cdn_domain", ""))
 
+    # Phase 40 §25/§34 — زنجیره‌ی هم‌گرا: «ساخت نهایی» از config_builder هم
+    # همان مسیر واقعی ساخت لینک را می‌رود (_create_link_core = persist +
+    # health-probe + worker-sync). کانفیگِ ساخته‌شده = کارت + Retest واقعی.
+    config_builder.set_link_factory(_create_link_core)
+
     # IRAN_PROXY gateway verdict → domestic engine (honest attribution)
     dre.set_gateway_status_fn(iran_gateway.iran_proxy_egress_status)
 
@@ -1146,6 +1151,19 @@ async def startup():
         _wire_domestic_core()
     except Exception as _dom_exc:
         logger.warning(f"[startup] domestic core wiring failed: {_dom_exc}")
+
+    # ─── Phase 40 — زنجیره‌ی هسته‌ی ورک‌اسپیس کانفیگ (هر پروفایلی) ───────────
+    # host + link-factory: حداقلِ DI هایی که سازنده‌ی کانفیگ برای ساختِ لینکِ
+    # زنده لازم دارد. مستقل از موتورهای اختیاری (egress/route/failover) —
+    # در پروفایل core هم ورک‌اسپیس کانفیگ واقعاً کار می‌کند (§32).
+    try:
+        import config_builder as _cb_core
+        _cb_core.set_host_provider(get_host)
+        _cb_core.set_cdn_domain_provider(lambda: CONFIG.get("cdn_domain", ""))
+        _cb_core.set_link_factory(_create_link_core)
+        logger.info("[phase40] config-workspace core wiring OK (host + link factory)")
+    except Exception as _cw_exc:
+        logger.warning(f"[startup] config-workspace core wiring failed: {_cw_exc}")
 
     # ─── Phase 38 wiring — route/failover/accounts/gateway ─────────────────
     # v12: در پروفایل core موتورهای اختیاری لود نمی‌شوند؛ wiring هم باید
@@ -3051,7 +3069,17 @@ async def _create_link_core(body: dict) -> dict:
             ss_cipher = DEFAULT_CIPHER
         link_data["ss_cipher"] = ss_cipher
         link_data["ss_password"] = secrets.token_urlsafe(16)
-    
+
+    # ── Phase 40 — metadata from the canonical config builder ─────────────
+    # فقط کلیدهای whitelisted از فراخوانِ server-side (config_builder)؛
+    # کلاینتِ بیرونی نمی‌تواند ساختار لینک را از این مسیر دستکاری کند.
+    _builder_meta = body.get("_builder_meta") or {}
+    if isinstance(_builder_meta, dict):
+        for _mk in ("routing_policy", "node_id", "transport", "security",
+                    "client_format", "built_by", "builder_name"):
+            if _builder_meta.get(_mk) is not None:
+                link_data[_mk] = _builder_meta[_mk]
+
     async with LINKS_LOCK:
         LINKS[uid] = link_data
 
@@ -4543,12 +4571,19 @@ else:
 # ماژول توربو — لینک‌های 0-RTT + تست A/B خودکار (کاملاً جدا از هسته — turbo_boost.py)
 # اگر این ماژول حذف شود، پنل و همه‌ی تونل‌ها بدون تغییر کار می‌کنند.
 # ══════════════════════════════════════════════════════════════════════════════
-# v12: موتور اختیاری — در پروفایل core خاموش (EMIX_PROFILE=full / EMIX_ENABLE=…)
+# Phase 40: هسته‌ی همیشه‌زنده — تست توربو A/B واقعی بخشی از پنل تأیید شبکه‌ی
+# ورک‌اسپیس کانفیگ است (EMIX_ENABLE/DISABLE همچنان قابل override است).
 # ══════════════════════════════════════════════════════════════════════════════
 if boot_profile.enabled("turbo_boost"):
-    import turbo_boost
-    turbo_boost.register_routes(app)
-    boot_profile.note("turbo_boost", True)
+    # Phase 40: هسته‌ی همیشه‌زنده — تست A/B واقعی توربو بخشی از ورک‌اسپیس
+    # کانفیگ است؛ fail-safe (خرابی‌اش هرگز بوت را نمی‌شکند).
+    try:
+        import turbo_boost
+        turbo_boost.register_routes(app)
+        boot_profile.note("turbo_boost", True)
+    except Exception as _exc:
+        logger.error(f"[bootstrap] turbo_boost بارگذاری نشد (نادیده گرفته شد): {_exc}")
+        boot_profile.note("turbo_boost", False)
 else:
     boot_profile.note("turbo_boost", False)
 
@@ -5758,7 +5793,7 @@ async def api_migrate_legacy_spoof():
 # تا قبل از لاگین هم قابل بررسی باشد. (از /api/version استفاده نمی‌کنیم چون
 # آن مسیر قبلاً برای بررسی به‌روزرسانی در نظر گرفته شده است.)
 # ══════════════════════════════════════════════════════════════════════════════
-EMIX_VERSION = "12.3.0-ncc"
+EMIX_VERSION = "12.4.0-workspace"
 EMIX_BUILD_DATE = "2026-09-04"
 
 @app.get("/api/boot-profile")

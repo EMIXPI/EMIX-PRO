@@ -3060,36 +3060,40 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
     <div><div class="logo-name">EMIX</div><div class="logo-sub" id="logo-ver-chip">Gateway · v11</div></div>
   </div>
   <div class="nav-wrap">
+    <!-- ═══ Phase 40 §30 — ناوبری ساده‌شده ═══
+         ساختار اصلی: داشبورد / کانفیگ‌ها (ورک‌اسپیس واحد شبکه) / حساب‌ها / سیستم / تشخیص+لاگ.
+         صفحات شبکه‌ایِ تکراری از ناوبری مخفی شده‌اند (HIDE — نه حذف): از طریق
+         command palette (Ctrl+K) و لینک‌های داخلیِ همان حوزه همچنان در دسترس‌اند.
+         تمام بک‌اند و JS صفحات مخفی دست‌نخورده باقی مانده (§31: هیچ کارکردی حذف نشد). -->
     <div class="nav-sec">پنل</div>
     <div class="nav-it on" data-pg="overview"><i class="ti ti-layout-dashboard"></i> داشبورد</div>
-    <div class="nav-it" data-pg="links"><i class="ti ti-link-plus"></i> کانفیگ‌ها <span class="nav-badge" id="links-nb">0</span></div>
-    <div class="nav-it" data-pg="builder" style="background:linear-gradient(135deg,rgba(167,139,250,.16),rgba(139,92,246,.08))"><i class="ti ti-wand" style="color:#A78BFA"></i> ✨ ساخت کانفیگ <span class="nav-badge" style="background:#A78BFA;color:#fff">یکپارچه</span></div>
-    <div class="nav-it" data-pg="bridge"><i class="ti ti-flag"></i> پل ایران <span class="nav-badge" id="bridge-nb" style="display:none">فعال</span></div>
-    <div class="nav-it" data-pg="zeus"><i class="ti ti-bolt" style="color:var(--amber-t)"></i> ⚡ ZEUS Pro <span class="nav-badge" id="zeus-nb" style="background:var(--amber-t);color:#fff">جدید</span></div>
-    <div class="nav-it" data-pg="gaming"><i class="ti ti-device-gamepad-2" style="color:#4cc9f0"></i> 🎮 گیمینگ <span class="nav-badge" id="gaming-nb" style="background:#4cc9f0;color:#08131f">پینگ</span></div>
-    <div class="nav-it" data-pg="multiloc" style="background:linear-gradient(135deg,rgba(16,185,129,.15),rgba(76,201,240,.08))"><i class="ti ti-world" style="color:#10B981"></i> 🌐 پل چندلوکیشن <span class="nav-badge" id="ml-nb" style="background:#10B981;color:#fff">v2</span></div>
-    <!-- Audit fix: VPN Pro بازگردانده شد با برچسب صادقانه — پنل فقط control-plane
-         است (روی Railway امکان میزبانی WG/OpenVPN runtime نیست؛ مدیریت نود VPS
-         و تولید کانفیگ کلاینت واقعی است). تولید کلیدها حالا در restart هم می‌ماند. -->
-    <div class="nav-it" data-pg="vpn"><i class="ti ti-shield-lock" style="color:#4ADE80"></i> 🛡 VPN Pro <span class="nav-badge" id="vpn-nb" style="background:#4ADE80;color:#14141C">WG+OVPN · کنترل-پلن</span></div>
-    <div class="nav-it" data-pg="routing"><i class="ti ti-route" style="color:#F97316"></i> 🇮🇷 مسیریابی هوشمند <span class="nav-badge" id="routing-nb" style="background:#F97316;color:#fff">Direct</span></div>
-    <div class="nav-it" data-pg="iranproxy"><i class="ti ti-flag" style="color:#EF4444"></i> 🇮🇷 پروکسی ایران <span class="nav-badge" id="iranproxy-nb" style="display:none">—</span></div>
-    <div class="nav-it" data-pg="accounts"><i class="ti ti-users" style="color:#38BDF8"></i> 👤 حساب‌ها <span class="nav-badge" id="accounts-nb">0</span></div>
+    <div class="nav-it" data-pg="links" style="background:linear-gradient(135deg,rgba(76,201,240,.14),rgba(139,92,246,.08))"><i class="ti ti-link-plus" style="color:#4cc9f0"></i> کانفیگ‌ها <span class="nav-badge" id="links-nb" style="background:#4cc9f0;color:#06121e">0</span></div>
+    <div class="nav-it" data-pg="accounts"><i class="ti ti-users" style="color:#38BDF8"></i> حساب‌ها <span class="nav-badge" id="accounts-nb">0</span></div>
     <div class="nav-it" data-pg="subgroups"><i class="ti ti-folders"></i> گروه‌های ساب <span class="nav-badge" id="subs-nb">0</span></div>
-    <div class="nav-it" data-pg="subscriptions"><i class="ti ti-rss"></i> سابسکریپشن</div>
-    <div class="nav-it" data-pg="traffic"><i class="ti ti-chart-area"></i> ترافیک</div>
-    <div class="nav-it" data-pg="connections"><i class="ti ti-plug-connected"></i> اتصالات <span class="nav-badge" id="conns-nb">0</span></div>
-    <div class="nav-it" data-pg="nodes"><i class="ti ti-topology-star-3"></i> نود <span class="nav-badge" id="nodes-nb">0</span></div>
     <div class="nav-sec">سیستم</div>
-    <div class="nav-it" data-pg="backup"><i class="ti ti-database-export"></i> بکاپ‌گیری</div>
+    <div class="nav-it" data-pg="settings"><i class="ti ti-settings"></i> تنظیمات</div>
     <div class="nav-it" data-pg="updates"><i class="ti ti-cloud-download"></i> نسخه و بروزرسانی <span class="nav-badge" id="update-nb" style="display:none">1</span></div>
+    <div class="nav-it" data-pg="backup"><i class="ti ti-database-export"></i> بکاپ‌گیری</div>
     <div class="nav-it" data-pg="support"><i class="ti ti-headset"></i> پشتیبانی <span class="nav-badge" id="support-nb" style="display:none">●</span></div>
+    <div class="nav-sec">تشخیص و لاگ</div>
+    <div class="nav-it" data-pg="diag"><i class="ti ti-activity-heartbeat" style="color:#10B981"></i> سلامت و تشخیص</div>
     <div class="nav-it" data-pg="logs"><i class="ti ti-history"></i> لاگ فعالیت‌ها</div>
     <div class="nav-it" data-pg="errors"><i class="ti ti-alert-triangle"></i> خطاها</div>
-    <div class="nav-it" data-pg="diag"><i class="ti ti-activity-heartbeat" style="color:#10B981"></i> 🩺 سلامت و تشخیص</div>
-    <div class="nav-it" data-pg="settings"><i class="ti ti-settings"></i> تنظیمات</div>
-    <div class="nav-it" data-pg="experimental" style="background:linear-gradient(135deg,rgba(139,92,246,.18),rgba(250,204,21,.10));border-top:1px solid rgba(139,92,246,.3);margin-top:8px"><i class="ti ti-flask" style="color:#8B5CF6"></i> 🧪 بخش آزمایشی <span class="nav-badge" id="exp-nb" style="background:#8B5CF6;color:#fff">جدید</span></div>
-    <div class="nav-it" data-pg="unified-configs"><i class="ti ti-grid-dots" style="color:#FACC15"></i> 🎯 همه‌ی کانفیگ‌ها</div>
+    <!-- ── مخفی (HIDE): صفحات شبکه‌ی تخصصی — از palette قابل دسترسی ── -->
+    <div class="nav-it" data-pg="builder" style="display:none"><i class="ti ti-wand"></i> ✨ ساخت کانفیگ <span class="nav-badge" id="builder-nb" style="display:none">—</span></div>
+    <div class="nav-it" data-pg="bridge" style="display:none"><i class="ti ti-flag"></i> پل ایران <span class="nav-badge" id="bridge-nb" style="display:none">فعال</span></div>
+    <div class="nav-it" data-pg="zeus" style="display:none"><i class="ti ti-bolt"></i> ⚡ ZEUS Pro <span class="nav-badge" id="zeus-nb" style="display:none">جدید</span></div>
+    <div class="nav-it" data-pg="gaming" style="display:none"><i class="ti ti-device-gamepad-2"></i> 🎮 گیمینگ <span class="nav-badge" id="gaming-nb" style="display:none">پینگ</span></div>
+    <div class="nav-it" data-pg="multiloc" style="display:none"><i class="ti ti-world"></i> 🌐 پل چندلوکیشن <span class="nav-badge" id="ml-nb" style="display:none">v2</span></div>
+    <div class="nav-it" data-pg="vpn" style="display:none"><i class="ti ti-shield-lock"></i> 🛡 VPN Pro <span class="nav-badge" id="vpn-nb" style="display:none">WG+OVPN</span></div>
+    <div class="nav-it" data-pg="routing" style="display:none"><i class="ti ti-route"></i> 🇮🇷 مسیریابی هوشمند <span class="nav-badge" id="routing-nb" style="display:none">Direct</span></div>
+    <div class="nav-it" data-pg="iranproxy" style="display:none"><i class="ti ti-flag"></i> 🇮🇷 پروکسی ایران <span class="nav-badge" id="iranproxy-nb" style="display:none">—</span></div>
+    <div class="nav-it" data-pg="subscriptions" style="display:none"><i class="ti ti-rss"></i> سابسکریپشن</div>
+    <div class="nav-it" data-pg="traffic" style="display:none"><i class="ti ti-chart-area"></i> ترافیک</div>
+    <div class="nav-it" data-pg="connections" style="display:none"><i class="ti ti-plug-connected"></i> اتصالات <span class="nav-badge" id="conns-nb">0</span></div>
+    <div class="nav-it" data-pg="nodes" style="display:none"><i class="ti ti-topology-star-3"></i> نود <span class="nav-badge" id="nodes-nb">0</span></div>
+    <div class="nav-it" data-pg="experimental" style="display:none"><i class="ti ti-flask"></i> 🧪 بخش آزمایشی <span class="nav-badge" id="exp-nb" style="display:none">جدید</span></div>
+    <div class="nav-it" data-pg="unified-configs" style="display:none"><i class="ti ti-grid-dots"></i> 🎯 همه‌ی کانفیگ‌ها</div>
   </div>
   <div class="sb-foot">
     <button class="theme-btn" onclick="toggleTheme()"><i class="ti ti-moon" id="theme-icon"></i> <span id="theme-label">تم روشن</span></button>
@@ -3210,28 +3214,32 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
   </div>
 </section>
 <section class="pg" id="pg-links">
-  <div class="topbar">
-    <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:16px;flex-wrap:wrap">
-      <button class="btn btn-p" onclick="openModal('modal-create-link')">
-        <i class="ti ti-square-rounded-plus"></i> ساخت کانفیگ جدید
-      </button>
-      <button class="btn btn-g" style="margin-right:14px" onclick="openModal('modal-bot-tcp-proxy');btpCheckTokenState()">
-        <i class="ti ti-server-2"></i> Bot tcp proxy
-      </button>
-      <button class="btn btn-g" id="zeus-nav-btn" style="margin-right:8px" onclick="openModal('modal-zeus-proxy');zpCheckTokenState()">
-        <i class="ti ti-bolt"></i> Zeus proxy
-      </button>
-      <button class="btn btn-g" id="ping-all-btn" style="margin-right:8px" onclick="pingAllLinks(this)">
-        <i class="ti ti-activity-heartbeat"></i> تست پینگ همه
+  <!-- ═════════════════════════════════════════════════════════════════════
+       PHASE 40 — کانفیگ‌ها = ورک‌اسپیس واحد شبکه
+       ساخت (ورک‌اسپیس تمام‌صفحه) · تست زنده‌ی واقعی · کارت‌های premium با
+       تفکیکِ CONFIG VALID از RUNTIME VERIFIED · مدیریت کامل — همه اینجا.
+       ═════════════════════════════════════════════════════════════════════ -->
+  <div class="ncw-hdr">
+    <div class="ncw-hdr-text">
+      <div class="ncw-hdr-title"><i class="ti ti-link-plus"></i> کانفیگ‌ها</div>
+      <div class="ncw-hdr-sub">ورک‌اسپیس واحد شبکه — ساخت، تست واقعی، تأیید و مدیریت کانفیگ</div>
+    </div>
+    <div class="ncw-hdr-actions">
+      <button class="btn btn-p" id="ncw-add-btn" onclick="openCreateWorkspace()">
+        <i class="ti ti-square-rounded-plus"></i> ساخت کانفیگ
       </button>
     </div>
-    <div class="tb-right">
-      <label class="links-selectall" id="links-selectall-wrap" style="display:none">
-        <div class="cfg-check" id="links-selectall-check" onclick="toggleSelectAllLinks()"><i class="ti ti-check"></i></div>
-        انتخاب همه
-      </label>
-      <span class="badge bg-blue" id="links-pg-cnt">۰ کانفیگ</span>
-    </div>
+  </div>
+
+  <div class="ncw-stats">
+    <div class="ncw-stat"><i class="ti ti-grid-dots"></i> کل <b id="ncw-total">۰</b></div>
+    <div class="ncw-stat ok" id="ncw-st-healthy"><i class="ti ti-shield-check"></i> تأییدشده <b id="ncw-healthy">۰</b></div>
+    <div class="ncw-stat" id="ncw-st-active"><i class="ti ti-toggle-right"></i> فعال <b id="ncw-active">۰</b></div>
+    <div class="ncw-stat" id="ncw-st-net"><i class="ti ti-activity-heartbeat"></i> شبکه: <b id="ncw-net">—</b></div>
+    <div class="ncw-stat-spacer"></div>
+    <button class="btn btn-o btn-sm" id="ping-all-btn" onclick="pingAllLinks(this)"><i class="ti ti-activity-heartbeat"></i> تست همه</button>
+    <button class="btn btn-o btn-sm" id="zeus-nav-btn" onclick="openModal('modal-zeus-proxy');zpCheckTokenState()" title="Zeus proxy"><i class="ti ti-bolt"></i></button>
+    <button class="btn btn-o btn-sm" onclick="openModal('modal-bot-tcp-proxy');btpCheckTokenState()" title="Bot TCP proxy (MTProto عمومی)"><i class="ti ti-server-2"></i></button>
   </div>
 
   <div class="links-bulkbar" id="links-bulkbar">
@@ -3241,10 +3249,22 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
       <button class="btn btn-sm btn-d" onclick="bulkDeleteLinks()"><i class="ti ti-trash"></i> حذف انتخاب‌شده‌ها</button>
     </div>
   </div>
+  <label class="links-selectall" id="links-selectall-wrap" style="display:none">
+    <div class="cfg-check" id="links-selectall-check" onclick="toggleSelectAllLinks()"><i class="ti ti-check"></i></div>
+    انتخاب همه
+  </label>
+
+  <!-- کارت‌های premium — CONFIG VALID در برابر RUNTIME VERIFIED -->
+  <div class="ncw-grid" id="links-grid"></div>
+  <div class="ncw-empty" id="links-empty" style="display:none">
+    <div class="ncw-empty-icon"><i class="ti ti-link-plus"></i></div>
+    <div class="ncw-empty-title">هنوز کانفیگی وجود ندارد</div>
+    <div class="ncw-empty-sub">اولین کانفیگ را در ورک‌اسپیس ساخت بسازید — تست زنده‌ی واقعی، تأیید مسیریابی و QR همراهِ همان تجربه.</div>
+    <button class="btn btn-p" onclick="openCreateWorkspace()"><i class="ti ti-square-rounded-plus"></i> ساخت کانفیگ</button>
+  </div>
 
   <div class="info-strip">
     <div class="info-item">
-      <!-- Audit fix: split up/down در stats وجود ندارد؛ برچسب به داده‌ی واقعی (ترافیک این ساعت) تغییر کرد -->
       <span class="info-item-label">ترافیک این ساعت</span>
       <span class="info-item-val"><i class="ti ti-clock-bolt"></i> <span id="info-sent-recv">0 B</span></span>
     </div>
@@ -3256,18 +3276,8 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
       <span class="info-item-label">مصرف کل از ابتدا</span>
       <span class="info-item-val"><i class="ti ti-history"></i> <span id="info-alltime">0 B</span></span>
     </div>
-    <div class="info-item">
-      <span class="info-item-label">تعداد این‌باندها</span>
-      <span class="info-item-val"><i class="ti ti-list-details"></i> <span id="info-inbounds">0</span></span>
-    </div>
-    <div class="info-item">
-      <span class="info-item-label">کلاینت‌ها</span>
-      <span class="info-item-val"><i class="ti ti-users"></i> <span class="info-badge" id="info-clients">0</span></span>
-    </div>
   </div>
-
-  <div class="cfg-grid" id="links-grid"></div>
-  <div class="empty" id="links-empty" style="display:none"><i class="ti ti-link-off"></i><p>هنوز کانفیگی وجود ندارد</p></div>
+  <span class="badge bg-blue" id="links-pg-cnt" style="display:none">۰ کانفیگ</span>
 
   <!-- ══ حقیقت مسیر از مرورگر شما — پینگ واقعی سمت کلاینت ══ -->
   <div class="card" id="ct-card" style="margin-top:18px">
@@ -3297,7 +3307,158 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
     </div>
     <div class="cl" style="margin-top:12px;font-size:11.5px;line-height:1.9">
       <i class="ti ti-info-circle"></i>
-      <span>هر سطر یک <b>WebSocket واقعی</b> از مرورگر شما تا مسیر ورودی کانفیگ‌ها باز می‌کند (TCP + TLS + هندشیک WS). اگر «مستقیم» قرمز و «گیت‌وی» سبز باشد، ISP شما مسیر Railway را بلاک کرده — کانفیگ‌های سالم را از <b>مسیر گیت‌وی</b> (مرکز گیمینگ → ساخت لینک پل) تحویل بگیرید. این همان دلیلی است که گاهی «همه‌ی کانفیگ‌ها قطع» دیده می‌شوند در حالی که سرور سالم است.</span>
+      <span>هر سطر یک <b>WebSocket واقعی</b> از مرورگر شما تا مسیر ورودی کانفیگ‌ها باز می‌کند (TCP + TLS + هندشیک WS). اگر «مستقیم» قرمز و «گیت‌وی» سبز باشد، ISP شما مسیر Railway را بلاک کرده — کانفیگ‌های سالم را از <b>مسیر گیت‌وی</b> (دسترسی سریع Ctrl+K → گیمینگ) تحویل بگیرید. این همان دلیلی است که گاهی «همه‌ی کانفیگ‌ها قطع» دیده می‌شوند در حالی که سرور سالم است.</span>
+    </div>
+  </div>
+
+  <!-- ═════════════════════════════════════════════════════════════════════
+       PHASE 40 §7-§8 — ورک‌اسپیس ساخت کانفیگ (تمام‌صفحه، داخل تجربه‌ی کانفیگ‌ها)
+       همان سازنده‌ی یکپارچه (مرحله‌ای + قابلیت‌محور + تست زنده‌ی واقعی) —
+       اینجا و فقط اینجا زندگی می‌کند. صفحه‌ی رقیب دیگری وجود ندارد.
+       ═════════════════════════════════════════════════════════════════════ -->
+  <div class="ws-overlay" id="ws-create" aria-hidden="true">
+    <div class="ws-sheet">
+      <div class="ws-hdr">
+        <div class="ws-hdr-text">
+          <div class="ws-hdr-title"><i class="ti ti-wand"></i> ساخت کانفیگ جدید</div>
+          <div class="ws-hdr-sub">هسته‌ی EMIX · کامپایلر کانونی · تست زنده‌ی واقعی — ساخت و تأیید، همه در یک ورک‌اسپیس</div>
+        </div>
+        <div class="ws-hdr-stats">
+          <div class="ncc-stat" id="ncc-st-core"><i class="ti ti-cpu"></i> Core <span class="ncc-dot" id="ncc-dot-core"></span><b id="ncc-val-core">…</b></div>
+          <div class="ncc-stat" id="ncc-st-backend"><i class="ti ti-server-2"></i> Backend <span class="ncc-dot" id="ncc-dot-backend"></span><b id="ncc-val-backend">…</b></div>
+          <div class="ncc-stat" id="ncc-st-node"><i class="ti ti-router"></i> <b id="ncc-val-node">…</b></div>
+          <div class="ncc-stat" id="ncc-st-lat"><i class="ti ti-activity-heartbeat"></i> <b id="ncc-val-lat">—</b></div>
+          <button class="btn btn-o btn-sm" onclick="loadBuilderPage()"><i class="ti ti-refresh"></i> رفرش</button>
+          <button class="btn btn-d btn-sm ws-close-btn" onclick="closeCreateWorkspace()"><i class="ti ti-x"></i> بستن</button>
+        </div>
+      </div>
+
+      <!-- استپر فشرده — پیشرفت شفاف (progressive disclosure) -->
+      <div class="ws-steps" id="ws-steps">
+        <span class="ws-step on" data-s="1">۱ پروتکل</span><i class="ti ti-chevron-left"></i>
+        <span class="ws-step" data-s="2">۲ نود</span><i class="ti ti-chevron-left"></i>
+        <span class="ws-step" data-s="3">۳ ترنسپورت</span><i class="ti ti-chevron-left"></i>
+        <span class="ws-step" data-s="4">۴ امنیت</span><i class="ti ti-chevron-left"></i>
+        <span class="ws-step" data-s="5">۵ اندپوینت/SNI</span><i class="ti ti-chevron-left"></i>
+        <span class="ws-step" data-s="6">۶ مسیریابی</span><i class="ti ti-chevron-left"></i>
+        <span class="ws-step" data-s="7">۷ کلاینت</span><i class="ti ti-chevron-left"></i>
+        <span class="ws-step" data-s="8">۸ تأیید شبکه</span><i class="ti ti-chevron-left"></i>
+        <span class="ws-step" data-s="9">۹ پیش‌نمایش</span><i class="ti ti-chevron-left"></i>
+        <span class="ws-step" data-s="10">۱۰ ساخت</span>
+      </div>
+
+      <div class="ws-body">
+        <div class="g2 ncc-grid" style="align-items:start">
+          <!-- ═══ ستون اول: سازنده (مرحله‌ای) ═══ -->
+          <div class="card ncc-build">
+            <div class="card-title"><i class="ti ti-list-check"></i> مراحل ساخت کانفیگ</div>
+
+            <div class="ncc-step"><div class="ncc-step-label">۱ · پروتکل <span class="ncc-step-note">— فقط پروتکل‌های واقعاً فعال روی این دیپلوی</span></div>
+              <div id="ncc-protocols" class="ncc-proto-cards"></div>
+              <div id="ncc-proto-hint" class="bld-hint"></div>
+            </div>
+
+            <div class="ncc-step"><div class="ncc-step-label">۲ · نود / اندپوینت سرور</div>
+              <div id="ncc-nodes" class="ncc-node-cards"></div>
+              <div id="ncc-node-detail" class="bld-hint"></div>
+            </div>
+
+            <div class="ncc-step"><div class="ncc-step-label">۳ · ترنسپورت</div>
+              <div id="ncc-transports" class="ncc-chips"></div>
+              <div id="ncc-tr-hint" class="bld-hint"></div>
+            </div>
+
+            <div class="ncc-step"><div class="ncc-step-label">۴ · امنیت (Security)</div>
+              <div id="ncc-security" class="ncc-chips"></div>
+              <div id="ncc-sec-hint" class="bld-hint"></div>
+            </div>
+
+            <div class="ncc-step"><div class="ncc-step-label">۵ · پروفایل اندپوینت (TLS/SNI — فقط معنای اتصال، نه مسیریابی)</div>
+              <select id="bld-ep" class="cm-input" onchange="builderOnEpChange()"></select>
+              <div id="bld-ep-custom" style="display:none;gap:8px;margin-top:8px">
+                <input id="bld-ep-address" class="cm-input" placeholder="آدرس اندپوینت (ورودی — دامنه یا IP)" style="direction:ltr;text-align:left;font-family:monospace">
+                <input id="bld-ep-sni" class="cm-input" placeholder="SNI (اختیاری — معنای TLS، نه جغرافیا)" style="direction:ltr;text-align:left;font-family:monospace">
+                <input id="bld-ep-port" class="cm-input" type="number" value="443" placeholder="پورت" style="direction:ltr">
+              </div>
+              <div class="bld-hint">SNI فقط معنای TLS/اندپوینت دارد — هرگز مسیریابی، هرگز خروج جغرافیایی، هرگز «IP ایران» نیست. SNI جعلی روی لینک = رفتار TLS در برابر فیلتر، بدون تغییر مسیر.</div>
+            </div>
+
+            <div class="ncc-step"><div class="ncc-step-label">۶ · مسیریابی (Routing Policy) <span class="ncc-step-note">— تقسیم ترافیک ایران / بین‌الملل</span></div>
+              <div id="ncc-routing" class="ncc-route-cards"></div>
+              <div id="ncc-routing-hint" class="bld-hint"></div>
+            </div>
+
+            <div class="ncc-step"><div class="ncc-step-label">۷ · خروجی کلاینت</div>
+              <div id="ncc-clients" class="ncc-client-cards"></div>
+              <div id="ncc-client-hint" class="bld-hint"></div>
+            </div>
+
+            <div class="ncc-step"><div class="ncc-step-label">نام و تنظیمات پیشرفته</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                <input id="bld-name" class="cm-input" placeholder="نام کانفیگ (تاریخچه)">
+                <input id="bld-remark" class="cm-input" placeholder="remark" style="direction:ltr;text-align:left;font-family:monospace">
+              </div>
+              <details class="ncc-adv" id="ncc-adv">
+                <summary><i class="ti ti-adjustments"></i> تنظیمات پیشرفته (ALPN / fingerprint / رمزنگاری SS)</summary>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+                  <input id="bld-alpn" class="cm-input" value="h2,http/1.1" placeholder="ALPN (مثلاً h2,http/1.1)" style="direction:ltr">
+                  <input id="bld-fingerprint" class="cm-input" value="chrome" placeholder="fingerprint" style="direction:ltr">
+                </div>
+                <div style="display:grid;grid-template-columns:1fr;gap:8px;margin-top:8px" id="ncc-ss-extra" hidden>
+                  <input id="bld-ss-cipher" class="cm-input" value="chacha20-ietf-poly1305" placeholder="SS cipher" style="direction:ltr">
+                </div>
+                <div class="bld-hint">پیش‌فرض‌ها امن و سازگارند — فقط اگر می‌دانید چه می‌کنید تغییر دهید.</div>
+              </details>
+            </div>
+
+            <div class="bld-actions">
+              <button class="btn btn-o" id="bld-preview-btn" onclick="builderPreview(this)"><i class="ti ti-eye"></i> پیش‌نمایش و اعتبارسنجی</button>
+              <button class="btn btn-p" id="bld-gen-btn" onclick="builderGenerate(this)"><i class="ti ti-wand"></i> ساخت نهایی</button>
+            </div>
+          </div>
+
+          <!-- ═══ ستون دوم: پنل تست زنده + خروجی ═══ -->
+          <div class="ncc-live">
+            <div class="card ncc-test-card">
+              <div class="card-title"><i class="ti ti-activity"></i> پنل تست زنده‌ی شبکه <span class="badge bg-purple" style="margin-inline-start:8px">واقعی</span></div>
+              <div class="ncc-test-target" id="ncc-test-target">هدف تست: <b>—</b></div>
+              <div class="ncc-test-btns">
+                <button class="btn btn-p btn-sm" onclick="nccTestQuick(this)"><i class="ti ti-bolt"></i> تست سریع</button>
+                <button class="btn btn-o btn-sm" onclick="nccTestTls(this)"><i class="ti ti-lock-square"></i> تست TLS</button>
+                <button class="btn btn-o btn-sm" onclick="nccTestSni(this)"><i class="ti ti-certificate"></i> تست SNI</button>
+                <button class="btn btn-o btn-sm" onclick="nccTestTunnel(this)"><i class="ti ti-tunnel"></i> تست تونل E2E</button>
+                <button class="btn btn-o btn-sm" onclick="nccTestTurbo(this)"><i class="ti ti-rocket"></i> توربو A/B</button>
+                <button class="btn btn-amber btn-sm" onclick="nccTestDiagnostic(this)"><i class="ti ti-stethoscope"></i> تشخیص کامل</button>
+              </div>
+              <div class="ncc-test-links">
+                <select id="ncc-link-sel" class="cm-input" onchange="nccOnLinkSel()"><option value="">— کانفیگ ساخته‌شده‌ای برای تست تونل/توربو انتخاب کنید —</option></select>
+              </div>
+              <div id="ncc-console" class="ncc-console"><div class="ncc-console-empty">برای شروع، یکی از دکمه‌های تست را بزنید — هر عدد از اندازه‌گیری واقعی می‌آید.</div></div>
+              <div id="ncc-browser" class="ncc-browser">
+                <div class="ncc-browser-title"><i class="ti ti-world"></i> حقیقت مسیر از مرورگر شما <button class="btn btn-o btn-sm" onclick="nccBrowserPing()"><i class="ti ti-refresh"></i></button></div>
+                <div id="ncc-browser-rows"></div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-title"><i class="ti ti-eye"></i> اعتبارسنجی و خروجی (از کامپایلر کانونی)</div>
+              <div id="bld-validation"></div>
+              <div id="bld-outputs"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title"><i class="ti ti-history"></i> کانفیگ‌های ساخته‌شده (تاریخچه)</div>
+          <div id="bld-history"><div class="bld-hint">—</div></div>
+        </div>
+      </div>
+
+      <!-- موبایل: نوار اقدام چسبان (Phase 40 §29) -->
+      <div class="ws-sticky">
+        <button class="btn btn-o" onclick="builderPreview(this)"><i class="ti ti-eye"></i> پیش‌نمایش</button>
+        <button class="btn btn-p" onclick="builderGenerate(this)"><i class="ti ti-wand"></i> ساخت نهایی</button>
+      </div>
     </div>
   </div>
 </section>
@@ -4018,131 +4179,11 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
      /api/config-builder/capabilities می‌آیند (قابلیت‌محور؛ هیچ فرضی در JS هاردکد
      نشده). پیش‌نمایش از همان کامپایلر کانونی است؛ ترکیب نامعتبر ساخته نمی‌شود.
      ════════════════════════════════════════════════════════════════════════════ -->
-<section class="pg" id="pg-builder">
-  <!-- ═════════ PHASE 39 — مرکز کنترل شبکه (Network Control Center) ═════════
-       تنها صفحه‌ی ساخت کانفیگ: پروتکل → نود → ترنسپورت → امنیت → اندپوینت →
-       مسیریابی → کلاینت + پنل تست زنده‌ی واقعی + پیش‌نمایش از کامپایلر کانونی.
-       همه‌ی گزینه‌ها از /api/config-builder/capabilities (قابلیت‌محور) می‌آیند. -->
-  <div class="ncc-hdr">
-    <div class="ncc-hdr-icon"><i class="ti ti-world-cog"></i></div>
-    <div class="ncc-hdr-text">
-      <div class="ncc-hdr-title">مرکز کنترل شبکه EMIX</div>
-      <div class="ncc-hdr-sub">هسته‌ی EMIX · کامپایلر کانونی · تست‌های زنده‌ی واقعی — ساخت و مدیریت کانفیگ، همه در یک صفحه</div>
-    </div>
-    <div class="ncc-hdr-stats">
-      <div class="ncc-stat" id="ncc-st-core"><i class="ti ti-cpu"></i> Core <span class="ncc-dot" id="ncc-dot-core"></span><b id="ncc-val-core">…</b></div>
-      <div class="ncc-stat" id="ncc-st-backend"><i class="ti ti-server-2"></i> Backend <span class="ncc-dot" id="ncc-dot-backend"></span><b id="ncc-val-backend">…</b></div>
-      <div class="ncc-stat" id="ncc-st-node"><i class="ti ti-router"></i> <b id="ncc-val-node">…</b></div>
-      <div class="ncc-stat" id="ncc-st-lat"><i class="ti ti-activity-heartbeat"></i> <b id="ncc-val-lat">—</b></div>
-      <button class="btn btn-o btn-sm" onclick="loadBuilderPage()"><i class="ti ti-refresh"></i> رفرش</button>
-    </div>
-  </div>
-
-  <div class="g2 ncc-grid" style="align-items:start">
-    <!-- ═══ ستون چپ: سازنده (مرحله‌ای) ═══ -->
-    <div class="card ncc-build">
-      <div class="card-title"><i class="ti ti-list-check"></i> مراحل ساخت کانفیگ</div>
-
-      <div class="ncc-step"><div class="ncc-step-label">۱ · پروتکل <span class="ncc-step-note">— فقط پروتکل‌های واقعاً فعال روی این دیپلوی</span></div>
-        <div id="ncc-protocols" class="ncc-proto-cards"></div>
-        <div id="ncc-proto-hint" class="bld-hint"></div>
-      </div>
-
-      <div class="ncc-step"><div class="ncc-step-label">۲ · نود / اندپوینت سرور</div>
-        <div id="ncc-nodes" class="ncc-node-cards"></div>
-        <div id="ncc-node-detail" class="bld-hint"></div>
-      </div>
-
-      <div class="ncc-step"><div class="ncc-step-label">۳ · ترنسپورت</div>
-        <div id="ncc-transports" class="ncc-chips"></div>
-        <div id="ncc-tr-hint" class="bld-hint"></div>
-      </div>
-
-      <div class="ncc-step"><div class="ncc-step-label">۴ · امنیت (Security)</div>
-        <div id="ncc-security" class="ncc-chips"></div>
-        <div id="ncc-sec-hint" class="bld-hint"></div>
-      </div>
-
-      <div class="ncc-step"><div class="ncc-step-label">۵ · پروفایل اندپوینت (TLS/SNI — فقط معنای اتصال، نه مسیریابی)</div>
-        <select id="bld-ep" class="cm-input" onchange="builderOnEpChange()"></select>
-        <div id="bld-ep-custom" style="display:none;gap:8px;margin-top:8px">
-          <input id="bld-ep-address" class="cm-input" placeholder="آدرس اندپوینت (ورودی — دامنه یا IP)" style="direction:ltr;text-align:left;font-family:monospace">
-          <input id="bld-ep-sni" class="cm-input" placeholder="SNI (اختیاری — معنای TLS، نه جغرافیا)" style="direction:ltr;text-align:left;font-family:monospace">
-          <input id="bld-ep-port" class="cm-input" type="number" value="443" placeholder="پورت" style="direction:ltr">
-        </div>
-        <div class="bld-hint">SNI فقط معنای TLS/اندپوینت دارد — هرگز مسیریابی، هرگز خروج جغرافیایی، هرگز «IP ایران» نیست. SNI جعلی روی لینک = رفتار TLS در برابر فیلتر، بدون تغییر مسیر.</div>
-      </div>
-
-      <div class="ncc-step"><div class="ncc-step-label">۶ · مسیریابی (Routing Policy) <span class="ncc-step-note">— تقسیم ترافیک ایران / بین‌الملل</span></div>
-        <div id="ncc-routing" class="ncc-route-cards"></div>
-        <div id="ncc-routing-hint" class="bld-hint"></div>
-      </div>
-
-      <div class="ncc-step"><div class="ncc-step-label">۷ · خروجی کلاینت</div>
-        <div id="ncc-clients" class="ncc-client-cards"></div>
-        <div id="ncc-client-hint" class="bld-hint"></div>
-      </div>
-
-      <div class="ncc-step"><div class="ncc-step-label">نام و تنظیمات پیشرفته</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-          <input id="bld-name" class="cm-input" placeholder="نام کانفیگ (تاریخچه)">
-          <input id="bld-remark" class="cm-input" placeholder="remark" style="direction:ltr;text-align:left;font-family:monospace">
-        </div>
-        <details class="ncc-adv" id="ncc-adv">
-          <summary><i class="ti ti-adjustments"></i> تنظیمات پیشرفته (ALPN / fingerprint / رمزنگاری SS)</summary>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
-            <input id="bld-alpn" class="cm-input" value="h2,http/1.1" placeholder="ALPN (مثلاً h2,http/1.1)" style="direction:ltr">
-            <input id="bld-fingerprint" class="cm-input" value="chrome" placeholder="fingerprint" style="direction:ltr">
-          </div>
-          <div style="display:grid;grid-template-columns:1fr;gap:8px;margin-top:8px" id="ncc-ss-extra" hidden>
-            <input id="bld-ss-cipher" class="cm-input" value="chacha20-ietf-poly1305" placeholder="SS cipher" style="direction:ltr">
-          </div>
-          <div class="bld-hint">پیش‌فرض‌ها امن و سازگارند — فقط اگر می‌دانید چه می‌کنید تغییر دهید.</div>
-        </details>
-      </div>
-
-      <div class="bld-actions">
-        <button class="btn btn-o" id="bld-preview-btn" onclick="builderPreview(this)"><i class="ti ti-eye"></i> پیش‌نمایش و اعتبارسنجی</button>
-        <button class="btn btn-p" id="bld-gen-btn" onclick="builderGenerate(this)"><i class="ti ti-wand"></i> ساخت نهایی</button>
-      </div>
-    </div>
-
-    <!-- ═══ ستون راست: پنل تست زنده + خروجی ═══ -->
-    <div class="ncc-live">
-      <div class="card ncc-test-card">
-        <div class="card-title"><i class="ti ti-activity"></i> پنل تست زنده‌ی شبکه <span class="badge bg-purple" style="margin-inline-start:8px">واقعی</span></div>
-        <div class="ncc-test-target" id="ncc-test-target">هدف تست: <b>—</b></div>
-        <div class="ncc-test-btns">
-          <button class="btn btn-p btn-sm" onclick="nccTestQuick(this)"><i class="ti ti-bolt"></i> تست سریع</button>
-          <button class="btn btn-o btn-sm" onclick="nccTestTls(this)"><i class="ti ti-lock-square"></i> تست TLS</button>
-          <button class="btn btn-o btn-sm" onclick="nccTestSni(this)"><i class="ti ti-certificate"></i> تست SNI</button>
-          <button class="btn btn-o btn-sm" onclick="nccTestTunnel(this)"><i class="ti ti-tunnel"></i> تست تونل E2E</button>
-          <button class="btn btn-o btn-sm" onclick="nccTestTurbo(this)"><i class="ti ti-rocket"></i> توربو A/B</button>
-          <button class="btn btn-amber btn-sm" onclick="nccTestDiagnostic(this)"><i class="ti ti-stethoscope"></i> تشخیص کامل</button>
-        </div>
-        <div class="ncc-test-links">
-          <select id="ncc-link-sel" class="cm-input" onchange="nccOnLinkSel()"><option value="">— کانفیگ ساخته‌شده‌ای برای تست تونل/توربو انتخاب کنید —</option></select>
-        </div>
-        <div id="ncc-console" class="ncc-console"><div class="ncc-console-empty">برای شروع، یکی از دکمه‌های تست را بزنید — هر عدد از اندازه‌گیری واقعی می‌آید.</div></div>
-        <div id="ncc-browser" class="ncc-browser">
-          <div class="ncc-browser-title"><i class="ti ti-world"></i> حقیقت مسیر از مرورگر شما <button class="btn btn-o btn-sm" onclick="nccBrowserPing()"><i class="ti ti-refresh"></i></button></div>
-          <div id="ncc-browser-rows"></div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-title"><i class="ti ti-eye"></i> اعتبارسنجی و خروجی (از کامپایلر کانونی)</div>
-        <div id="bld-validation"></div>
-        <div id="bld-outputs"></div>
-      </div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-title"><i class="ti ti-history"></i> کانفیگ‌های ساخته‌شده</div>
-    <div id="bld-history"><div class="bld-hint">—</div></div>
-  </div>
-</section>
+<!-- ═══ Phase 40 §33 — بخش builder مستقل حذف شد ═══
+     محتوای سازنده‌ی یکپارچه (مراحل + پنل تست زنده + تاریخچه) به‌صورت کامل
+     به ورک‌اسپیس تمام‌صفحه‌ی «ساخت کانفیگ» داخل همان صفحه‌ی کانفیگ‌ها منتقل شد
+     (#ws-create داخل #pg-links). navTo('builder') همان تجربه را باز می‌کند.
+     همه‌ی توابع JS (loadBuilderPage/ncc*/bld*) دست‌نخورده باقی مانده‌اند. -->
 
 <!-- ════════════════════════════════════════════════════════════════════════════
      🇮🇷 PHASE 38+ §13 — پروکسی ایران (IRAN_PROXY / Iran Gateway)
@@ -4348,6 +4389,114 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
   .ncc-test-btns{gap:6px}
   .ncc-test-btns .btn{flex:1 1 46%;justify-content:center}
 }
+/* ═══ PHASE 40 — کانفیگ‌ها: ورک‌اسپیس واحد شبکه (ncw- + ws-) ═════════════
+   Premium dark · glass · mobile-first. کارت = CONFIG VALID در برابر
+   RUNTIME VERIFIED (سبز فقط با شاهد واقعی). بدون نئون اضافی.
+   ════════════════════════════════════════════════════════════════════════ */
+.ncw-hdr{display:flex;align-items:center;gap:16px;padding:20px 22px;border-radius:20px;border:1px solid var(--card-b);
+  background:linear-gradient(140deg,rgba(76,201,240,.12) 0%,var(--card) 60%);margin-bottom:16px;position:relative;overflow:hidden;flex-wrap:wrap}
+.ncw-hdr::before{content:'';position:absolute;top:-90px;left:-50px;width:280px;height:280px;background:radial-gradient(circle,rgba(76,201,240,.16),transparent 70%);pointer-events:none}
+.ncw-hdr-text{flex:1;min-width:220px;position:relative;z-index:1}
+.ncw-hdr-title{font-size:19px;font-weight:800;color:var(--t1);letter-spacing:-.01em;display:flex;align-items:center;gap:10px}
+.ncw-hdr-title i{color:#4cc9f0;font-size:22px}
+.ncw-hdr-sub{font-size:11.5px;color:var(--t3);margin-top:4px;line-height:1.7}
+.ncw-hdr-actions{position:relative;z-index:1}
+.ncw-stats{display:flex;align-items:center;gap:9px;flex-wrap:wrap;padding:10px 14px;border-radius:16px;border:1px solid var(--card-b);background:rgba(0,0,0,.18);margin-bottom:16px}
+[data-theme="light"] .ncw-stats{background:rgba(255,255,255,.7)}
+.ncw-stat{display:flex;align-items:center;gap:6px;padding:7px 12px;border-radius:11px;border:1px solid var(--card-b);font-size:11.5px;color:var(--t2);background:rgba(0,0,0,.16)}
+[data-theme="light"] .ncw-stat{background:#fff}
+.ncw-stat i{color:var(--t3);font-size:13px}
+.ncw-stat b{color:var(--t1);font-weight:800;font-size:12.5px}
+.ncw-stat.ok i{color:#22c55e}
+.ncw-stat-spacer{flex:1}
+.ncw-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px}
+@media(max-width:640px){.ncw-grid{grid-template-columns:1fr}}
+.ncw-card{border:1px solid var(--card-b);border-radius:18px;padding:16px;background:linear-gradient(160deg,rgba(76,201,240,.05),transparent 40%),var(--card);
+  display:flex;flex-direction:column;gap:11px;transition:border-color .18s,transform .18s,box-shadow .18s;position:relative;overflow:hidden}
+.ncw-card:hover{border-color:rgba(76,201,240,.4);transform:translateY(-2px);box-shadow:0 10px 28px rgba(0,0,0,.28)}
+.ncw-card.selected{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.ncw-card.is-off{opacity:.62}
+.ncw-card.is-exp{border-color:rgba(245,158,11,.45)}
+.ncw-card-top{display:flex;align-items:center;gap:9px}
+.ncw-proto{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:10px;font-size:11px;font-weight:800;color:#a5ecff;
+  background:linear-gradient(135deg,rgba(76,201,240,.2),rgba(139,92,246,.14));border:1px solid rgba(76,201,240,.3);direction:ltr;flex-shrink:0;letter-spacing:.02em}
+.ncw-proto b{font-size:12px}
+.ncw-proto span{opacity:.75;font-weight:600}
+.ncw-title{flex:1;min-width:0;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ncw-label{font-size:13.5px;font-weight:700;color:var(--t1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.ncw-nodebadge{font-size:10px;color:var(--t3);border:1px solid var(--card-b);border-radius:8px;padding:2px 7px;display:inline-flex;gap:4px;align-items:center}
+.ncw-dot{width:9px;height:9px;border-radius:50%;background:#22c55e;box-shadow:0 0 9px rgba(34,197,94,.6);flex-shrink:0}
+.ncw-dot.off{background:var(--t3);box-shadow:none}
+.ncw-status{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.ncw-chip{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;padding:4px 10px;border-radius:9px;border:1px solid;cursor:pointer;direction:ltr}
+.ncw-chip.ok{color:#86efac;border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.1)}
+.ncw-chip.warn{color:#fcd34d;border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.1)}
+.ncw-chip.bad{color:#fca5a5;border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.1)}
+.ncw-mini{font-size:10px;color:var(--t3);padding:3px 8px;border-radius:8px;border:1px solid var(--card-b);direction:ltr}
+.ncw-mini.ok{color:#86efac;border-color:rgba(34,197,94,.25)}
+.ncw-routing{font-size:11px;color:var(--t2);display:flex;align-items:center;gap:6px;padding:7px 11px;border-radius:10px;background:rgba(0,0,0,.16);border:1px solid var(--card-b)}
+[data-theme="light"] .ncw-routing{background:rgba(255,255,255,.6)}
+.ncw-routing i{color:#f59e0b;font-size:13px}
+.ncw-routing b{color:var(--t1)}
+.ncw-routing-sub{color:var(--t3);font-size:10px}
+.ncw-actions{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.ncw-actions .tog{margin-inline-start:auto}
+.ncw-more{border-top:1px dashed var(--card-b);padding-top:11px;display:flex;flex-direction:column;gap:10px}
+.ncw-more-badges{display:flex;gap:6px;flex-wrap:wrap}
+.ncw-more-usage{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ncw-more-usage .ubar{flex:1;min-width:120px;height:7px;border-radius:6px;background:rgba(0,0,0,.3);overflow:hidden}
+.ncw-more-usage .ubar-f{height:100%;border-radius:6px;transition:width .3s}
+.ncw-more-usage .utxt{font-size:10.5px;color:var(--t3);display:flex;gap:4px}
+.ncw-created{font-size:10px;color:var(--t3)}
+.ncw-more-actions{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.ncw-more-btn i{transition:transform .18s}
+.ncw-empty{display:flex;flex-direction:column;align-items:center;gap:10px;padding:52px 20px;border:1px dashed var(--card-b);border-radius:20px;text-align:center;background:rgba(0,0,0,.1)}
+.ncw-empty-icon{width:58px;height:58px;border-radius:17px;background:linear-gradient(135deg,rgba(76,201,240,.16),rgba(139,92,246,.12));display:flex;align-items:center;justify-content:center}
+.ncw-empty-icon i{font-size:27px;color:#4cc9f0}
+.ncw-empty-title{font-size:15px;font-weight:800;color:var(--t1)}
+.ncw-empty-sub{font-size:11.5px;color:var(--t3);max-width:380px;line-height:1.9}
+/* ── ورک‌اسپیس تمام‌صفحه‌ی ساخت (ws-) ── */
+.ws-overlay{position:fixed;inset:0;z-index:1200;background:rgba(3,8,14,.72);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  display:none;align-items:flex-start;justify-content:center;overflow-y:auto;overscroll-behavior:contain;padding:0}
+.ws-overlay.open{display:flex}
+.ws-sheet{width:100%;max-width:1240px;min-height:100%;background:linear-gradient(180deg,rgba(10,16,26,.97),var(--bg2) 140px);
+  border-inline:1px solid var(--card-b);display:flex;flex-direction:column;animation:wsIn .22s ease}
+@keyframes wsIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.ws-hdr{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:14px;padding:15px 20px;flex-wrap:wrap;
+  background:rgba(8,13,22,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--card-b)}
+.ws-hdr-text{flex:1;min-width:200px}
+.ws-hdr-title{font-size:16px;font-weight:800;color:var(--t1);display:flex;align-items:center;gap:9px}
+.ws-hdr-title i{color:#a78bfa;font-size:19px}
+.ws-hdr-sub{font-size:10.5px;color:var(--t3);margin-top:3px}
+.ws-hdr-stats{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.ws-close-btn{flex-shrink:0}
+.ws-steps{display:flex;align-items:center;gap:4px;padding:10px 18px;overflow-x:auto;white-space:nowrap;border-bottom:1px solid var(--card-b);background:rgba(0,0,0,.14)}
+.ws-step{font-size:10.5px;font-weight:700;color:var(--t3);padding:5px 10px;border-radius:9px;border:1px solid transparent;flex-shrink:0}
+.ws-step.on{color:#a5b4fc;border-color:rgba(139,92,246,.4);background:rgba(139,92,246,.12)}
+.ws-step.done{color:#86efac;background:rgba(34,197,94,.1)}
+.ws-steps i{font-size:11px;color:var(--t3);opacity:.5;flex-shrink:0}
+.ws-body{padding:18px;flex:1}
+@media(max-width:640px){
+  .ncw-hdr{padding:15px}
+  .ncw-stats{padding:9px 10px}
+  .ncw-stat{padding:6px 9px;font-size:10.5px}
+  .ws-hdr{padding:12px 13px}
+  .ws-hdr-stats .ncc-stat{display:none}
+  .ws-hdr-stats .ws-close-btn{display:inline-flex}
+  .ws-body{padding:11px}
+  .ncw-card{padding:13px;gap:9px}
+  .ncw-actions .btn{flex:1 1 auto;justify-content:center}
+  .ws-sticky{display:flex}
+}
+.ws-sticky{display:none;position:sticky;bottom:0;z-index:60;padding:11px 14px;gap:9px;
+  background:rgba(8,13,22,.95);backdrop-filter:blur(10px);border-top:1px solid var(--card-b)}
+.ws-sticky .btn{flex:1;justify-content:center}
+/* پنل «کانفیگ زنده ساخته شد» در خروجی سازنده */
+.bld-link-ok{margin:10px 0;padding:13px 14px;border-radius:14px;border:1px solid rgba(34,197,94,.4);background:linear-gradient(140deg,rgba(34,197,94,.14),transparent 60%);font-size:12px;color:#bbf7d0;line-height:1.9}
+.bld-link-ok b{color:#86efac}
+.bld-link-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}
+.bld-link-actions .btn{font-size:11px}
+[data-theme="light"] .bld-link-ok{color:#166534;border-color:rgba(22,163,74,.35)}
 </style>
 
 <script>
@@ -4380,22 +4529,24 @@ async function loadBuilderPage(){
     nccLoadStatus(); nccBrowserPing();   // هسته: در هر پروفایلی کار می‌کنند
     var r=await authF('/api/config-builder/capabilities');
     if(!r.ok){
-      // دیپلوی در پروفایل core است — سازنده‌ی کانفیگ opt-in است (v12 boot profile).
-      // پنل تست زنده‌ی واقعی همچنان کار می‌کند (network_test = هسته).
+      // Phase 40 §32: زنجیره‌ی ساخت کانفیگ از v12.4 هسته است — این مسیر دیگر
+      // «دیوار پروفایل» نیست؛ فقط حالت خطای honest برای موتورِ لودنشده/خطادار.
       var host=document.getElementById('ncc-protocols');
       if(host)host.innerHTML='<div class="bld-hint" style="grid-column:1/-1;padding:14px;border:1px dashed var(--card-b);border-radius:12px">'+
-        '<b>سازنده‌ی کانفیگ در این دیپلوی فعال نیست.</b><br>'+
-        'این پنل در پروفایل <b>core</b> بوت شده (هسته‌ی همیشه‌زنده‌ی EMIX — پینگ/رله/ساب). '+
-        'برای فعال‌شدن سازنده‌ی یکپارچه: <code style="direction:ltr;display:inline-block">EMIX_PROFILE=full</code> '+
-        'یا <code style="direction:ltr;display:inline-block">EMIX_ENABLE=config_builder,capability_engine,iran_gateway</code> را در Railway تنظیم کنید.<br>'+
-        'پنل تست زنده‌ی شبکه (تست سریع/TLS/SNI/تشخیص کامل) همین حالا هم واقعی و فعال است.</div>';
+        '<b>موتور سازنده‌ی کانفیگ روی این دیپلوی در دسترس نیست.</b><br>'+
+        'زنجیره‌ی ساخت کانفیگ (config_builder + capability_engine) از نسخه‌ی v12.4 هسته‌ی همیشه‌زنده است — '+
+        'این پیام یعنی موتور در بوت لود نشده (خطای فنی، نه تنظیم پروفایل). '+
+        '<details style="margin-top:6px"><summary>جزئیات فنی</summary><code style="direction:ltr;display:block">GET /api/config-builder/capabilities → HTTP '+r.status+'</code> — '+
+        'لاگ بوت را در «تشخیص و لاگ» ببینید.</details>'+
+        '<br>پنل تست زنده‌ی شبکه (تست سریع/TLS/SNI/تشخیص کامل) همین حالا هم واقعی و فعال است.</div>';
       ['ncc-nodes','ncc-routing','ncc-clients'].forEach(function(id){var e=document.getElementById(id);if(e)e.innerHTML=''});
       return;
     }
     BLD_CAPS=await r.json();
     nccRenderProtocols(); nccRenderNodes(); nccRenderRouting(); nccRenderClients();
     bldLoadEndpointProfiles(); bldLoadHistory(); nccLoadLinks(); nccLoadMatrix();
-  }catch(e){netErr(e,'مرکز کنترل شبکه')}
+    wsStepAuto();   // استپر پیشرفت بعد از اولین رندر
+  }catch(e){netErr(e,'ورک‌اسپیس ساخت کانفیگ')}
 }
 
 // ── هدر: وضعیت Core / Backend / Node / Latency — از داده‌ی واقعی ──
@@ -4670,6 +4821,7 @@ function nccUpdateTarget(){
   var link=NCC_SEL_LINK?((BLD_LINKS||[]).filter(function(l){return l.uuid===NCC_SEL_LINK})[0]||{}):{};
   el.innerHTML='هدف تست: <b>'+esc(t.address||'—')+':'+esc(String(t.port))+'</b>'+(t.sni?(' · SNI: <b>'+esc(t.sni)+'</b>'):'')+(t.tls?' · TLS':' · بدون TLS')+
     (NCC_SEL_LINK?(' · تونل: <b>'+esc(link.label||NCC_SEL_LINK.slice(0,8))+'</b>'):'');
+  wsStepAuto();   // Phase 40: استپر پیشرفت از انتخاب‌های واقعی
 }
 
 // ── payload کامپایلر کانونی (همان مسیر preview و generate) ──
@@ -4705,13 +4857,28 @@ function bldRenderResult(j){
   if(!j.ok){
     v.innerHTML='<div class="bld-valid-bad">⛔ <b>INVALID</b> — مرحله: '+esc(j.stage||'?')+'<br>'+ (j.errors||[]).map(esc).join('<br>') +'</div>'+
       '<div class="bld-hint">ترکیب انتخاب‌شده صادقانه ساخته نشد — از ماتریس قابلیت‌ها (مراحل بالا) یک ترکیب SUPPORTED انتخاب کنید.</div>';
-    o.innerHTML=''; return;
+    o.innerHTML=''; wsStep(10,false); return;
   }
   var rtBadge=nccRuntimeBadge();
   v.innerHTML='<div class="bld-valid-ok">✓ <b>CONFIGURATION: VALID</b> — '+esc(j.preview.protocol)+' / '+esc(j.preview.transport)+' / '+esc(j.preview.security)+' · نود: '+esc(j.preview.node.label||j.preview.node.node_id)+' · مسیریابی: '+esc(j.preview.routing)+'</div>'+
     '<div style="margin-top:8px">'+rtBadge+' <span class="bld-hint" style="display:inline">— کنترل‌پلین ≠ دیتاپلین: تست واقعی را از پنل تست زنده بزنید.</span></div>'+
     (j.credential_placeholder?'<div class="bld-hint">credential پیش‌نمایش: جای‌نگهدار — در ساخت نهایی واقعی ساخته می‌شود.</div>':'');
   var out=j.outputs||{}; var h='';
+  // ═══ Phase 40 §34 — پنل لینک زنده‌ی ساخته‌شده (کارت + Retest) ═══
+  var L=j.link;
+  if(L&&L.created){
+    window.__bldLink=L;
+    h+='<div class="bld-link-ok"><i class="ti ti-circle-check"></i> <b>کانفیگ زنده ساخته شد</b> — روی کارت‌های «کانفیگ‌ها» ظاهر می‌شود و قابل Retest واقعی است'+
+      '<div class="bld-link-actions">'+
+      '<button class="btn btn-sm btn-g" onclick="navigator.clipboard.writeText(window.__bldLink.share_link).then(function(){toast(\'لینک کپی شد\',\'ok\')})"><i class="ti ti-copy"></i> کپی لینک</button>'+
+      '<button class="btn btn-sm btn-o" onclick="showQR(window.__bldLink.share_link)"><i class="ti ti-qrcode"></i> QR (محلی)</button>'+
+      '<button class="btn btn-sm btn-o" onclick="navigator.clipboard.writeText(window.__bldLink.sub_url).then(function(){toast(\'Sub کپی شد\',\'ok\')})"><i class="ti ti-rss"></i> کپی Sub</button>'+
+      '<button class="btn btn-sm btn-p" onclick="closeCreateWorkspace()"><i class="ti ti-arrow-back-up"></i> بازگشت به کانفیگ‌ها</button>'+
+      '</div><div class="bld-hint">UUID: <span style="direction:ltr;display:inline-block;font-family:monospace">'+esc(L.uuid||'')+'</span> · مسیریابی: '+esc(NCW_ROUTE_FA[L.routing_policy]||L.routing_policy||'')+' — وضعیت RUNTIME بعد از اولین تست واقعی مشخص می‌شود.</div></div>';
+    wsStep(10,true);
+  } else if(L&&!L.created&&L.reason){
+    h+='<div class="bld-hint">خروجی فقط-artifact: '+esc(L.reason)+'</div>';
+  }
   if(out.uri){h+='<div class="bld-out"><b>URI</b> <button class="btn btn-sm btn-o" onclick="bldCopy(this)">کپی</button> <button class="btn btn-sm btn-o" onclick="showQR(window.__bldUri)">QR (محلی)</button><code>'+esc(out.uri)+'</code></div>';window.__bldUri=out.uri}
   if(out.xray_json){h+='<div class="bld-out"><b>Xray JSON</b><code>'+esc(JSON.stringify(out.xray_json,null,1))+'</code></div>'}
   if(out.subscription){h+='<div class="bld-out"><b>Subscription (base64)</b><code>'+esc(out.subscription)+'</code></div>'}
@@ -4743,7 +4910,10 @@ async function builderGenerate(btn){
   try{
     var r=await authF('/api/config-builder/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(bldPayload())});
     var j=await r.json(); bldRenderResult(j);
-    if(j.ok){toast('کانفیگ ساخته شد ✓','ok');bldLoadHistory()}else{toast('ساخت ناموفق — '+((j.errors||[''])[0]).slice(0,60),'err')}
+    if(j.ok){
+      toast(j.link&&j.link.created?('کانفیگ ساخته شد ✓ — روی کارت‌ها ظاهر شد'):'کانفیگ ساخته شد ✓ (خروجی)','ok');
+      bldLoadHistory(); nccLoadLinks();   // لینک جدید همان‌جا برای تست تونل/توربو قابل انتخاب است
+    }else{toast('ساخت ناموفق — '+((j.errors||[''])[0]).slice(0,60),'err')}
   }catch(e){netErr(e,'ساخت کانفیگ')}finally{bldBusy(btn,false)}
 }
 
@@ -6523,7 +6693,7 @@ function toast(msg,type=''){
 let cpItems=[],cpSel=0,cpOpen=false;
 function cpActions(){
   return [
-    {t:'ساخت کانفیگ جدید',s:'مرکز کنترل شبکه — ساخت یکپارچه کانفیگ',i:'ti-square-rounded-plus',run:()=>{navTo('builder')}}, {t:'ساخت کانفیگ سریع (کانفیگ‌ها)',s:'مودال سریع صفحه‌ی مدیریت کانفیگ‌ها',i:'ti-square-rounded-plus',run:()=>{navTo('links');setTimeout(()=>openModal('modal-create-link'),350)}},
+    {t:'ساخت کانفیگ جدید',s:'ورک‌اسپیس واحد — پروتکل/نود/مسیریابی/تست زنده/تولید',i:'ti-square-rounded-plus',run:()=>{navTo('builder')}}, {t:'ساخت کانفیگ (از کانفیگ‌ها)',s:'ورک‌اسپیس ساخت داخل صفحه‌ی کانفیگ‌ها',i:'ti-link-plus',run:()=>{navTo('links');setTimeout(openCreateWorkspace,350)}},
     {t:'تست پینگ همه کانفیگ‌ها',s:'بررسی سلامت همه به‌صورت هم‌زمان',i:'ti-activity-heartbeat',run:()=>{navTo('links');setTimeout(()=>{const b=document.getElementById('ping-all-btn');if(b)pingAllLinks(b)},350)}},
     {t:'پیشنهاد هوشمند — سریع‌ترین کانفیگ',s:'تست زنده و رتبه‌بندی همه کانفیگ‌ها',i:'ti-trophy',run:()=>{navTo('overview');setTimeout(()=>bestConfigTest(),400)}},
     {t:'صفحه کانفیگ‌ها',s:'مدیریت لینک‌ها',i:'ti-link-plus',run:()=>navTo('links')},
@@ -6643,12 +6813,54 @@ document.getElementById('open-sb').addEventListener('click',openSb);
 document.getElementById('close-sb').addEventListener('click',closeSb);
 overlay.addEventListener('click',closeSb);
 function navTo(name){
+  // ═══ Phase 40 §33 — «ساخت کانفیگ» دیگر صفحه‌ی رقیب نیست ═══
+  // navTo('builder') همان تجربه‌ی کانفیگ‌ها را باز می‌کند + ورک‌اسپیس ساخت.
+  // هیچ مسیر قدیمی نمی‌شکند (palette/لینک‌های داخلی/بوکمارک‌ها).
+  if(name==='builder'){
+    navTo('links');
+    setTimeout(openCreateWorkspace,140);
+    return;
+  }
   document.querySelectorAll('.nav-it').forEach(n=>n.classList.toggle('on',n.dataset.pg===name));
   document.querySelectorAll('.pg').forEach(p=>p.classList.toggle('on',p.id==='pg-'+name));
   // ورود پلکانی کارت‌ها فقط هنگام سوییچ صفحه
   if(name==='links'){document.body.classList.add('cascade');setTimeout(()=>document.body.classList.remove('cascade'),650)}
-  const loaders={links:loadLinks,bridge:loadBridgePage,connections:loadConns,errors:loadErrs,subscriptions:loadSubsPage,subgroups:loadSubs,logs:loadActivity,updates:loadVersion,support:loadSupportMsgs,nodes:loadNodesPage,zeus:loadZeusPage,gaming:loadGamingPage,multiloc:loadMultilocPage,vpn:loadVPNPage,experimental:loadExperimentalPage,'unified-configs':loadUnifiedConfigsPage,diag:loadDiagPage,routing:loadRoutingPage,accounts:loadAccountsPage,builder:loadBuilderPage,iranproxy:loadIranProxyPage};  if(loaders[name])loaders[name]();
+  const loaders={links:loadLinks,bridge:loadBridgePage,connections:loadConns,errors:loadErrs,subscriptions:loadSubsPage,subgroups:loadSubs,logs:loadActivity,updates:loadVersion,support:loadSupportMsgs,nodes:loadNodesPage,zeus:loadZeusPage,gaming:loadGamingPage,multiloc:loadMultilocPage,vpn:loadVPNPage,experimental:loadExperimentalPage,'unified-configs':loadUnifiedConfigsPage,diag:loadDiagPage,routing:loadRoutingPage,accounts:loadAccountsPage,iranproxy:loadIranProxyPage};  if(loaders[name])loaders[name]();
   closeSb();window.scrollTo({top:0,behavior:'smooth'});
+}
+// ═══ Phase 40 §7 — ورک‌اسپیس ساخت کانفیگ (داخل تجربه‌ی کانفیگ‌ها) ═══
+function openCreateWorkspace(){
+  const ws=document.getElementById('ws-create');
+  if(!ws)return;
+  ws.classList.add('open');ws.setAttribute('aria-hidden','false');
+  document.body.style.overflow='hidden';
+  loadBuilderPage();          // همان سازنده‌ی یکپارچه — قابلیت‌محور و واقعی
+}
+function closeCreateWorkspace(){
+  const ws=document.getElementById('ws-create');
+  if(!ws)return;
+  ws.classList.remove('open');ws.setAttribute('aria-hidden','true');
+  document.body.style.overflow='';
+  loadLinks();                // کارتِ کانفیگِ تازه‌ساخته‌شده بلافاصله ظاهر می‌شود
+}
+// ═══ Phase 40 §8 — استپر پیشرفت: از انتخاب‌های واقعی کاربر تغذیه می‌شود ═══
+function wsStep(n,done){
+  const host=document.getElementById('ws-steps'); if(!host)return;
+  host.querySelectorAll('.ws-step').forEach(el=>{
+    const s=+el.dataset.s;
+    el.classList.toggle('done',s<n||(s===n&&done===true));
+    el.classList.toggle('on',s===n&&!done);
+  });
+}
+function wsStepAuto(){
+  // نزدیک‌ترین مرحله‌ی «فعال» از روی وضعیت انتخاب‌ها
+  if(typeof BLD_SEL==='undefined')return;
+  var n=1;
+  if(BLD_SEL.client)n=8; else if(BLD_SEL.routing)n=6; else if(BLD_SEL.security)n=5;
+  else if(BLD_SEL.transport)n=4; else if(BLD_SEL.node&&BLD_SEL.node!=='panel')n=3; else if(BLD_SEL.protocol)n=2;
+  var done=false;
+  try{ done=!!(window.__bldLink&&window.__bldLink.created); }catch(e){}
+  wsStep(n,done?10:false);
 }
 document.querySelectorAll('.nav-it').forEach(el=>el.addEventListener('click',()=>navTo(el.dataset.pg)));
 function openModal(id){
@@ -9189,6 +9401,123 @@ async function brShowNginx(){
     if(r.ok){bridgeScriptCache=await r.text();document.getElementById('br-script').textContent=bridgeScriptCache;toast('نسخه nginx نمایش داده شد','ok')}
   }catch(e){toast('خطا در دریافت نسخه nginx','err')}
 }
+
+// ════════════════════════════════════════════════════════════════════════════
+// Phase 40 §6 — کارت premium کانفیگ: تفکیک CONFIG VALID از RUNTIME VERIFIED
+// هر چیزی که نمایش داده می‌شود از داده‌ی واقعی می‌آید (last_ping/health).
+// هیچ «سالم» بدون شاهد نمایش داده نمی‌شود.
+// ════════════════════════════════════════════════════════════════════════════
+const NCW_ROUTE_FA={ALL_VPN:'همه از تونل VPN',IRAN_DIRECT:'ایران مستقیم (Direct)',IRAN_PROXY:'پروکسی ایران (گیت‌وی اثبات‌شده)',INTERNATIONAL:'بین‌الملل از VPN',IRAN_BLOCK:'مسدودکردن مصرف داخلی'};
+function ncwProtoParts(p){
+  p=p||'';
+  if(p.startsWith('xhttp-')) return ['VLESS','XHTTP · '+p.replace('xhttp-','')];
+  if(p.startsWith('trojan-xhttp-')) return ['TROJAN','XHTTP · '+p.replace('trojan-xhttp-','')];
+  if(p==='trojan-ws') return ['TROJAN','WebSocket'];
+  if(p==='vless-ws') return ['VLESS','WebSocket'];
+  if(p==='shadowsocks') return ['SS','WebSocket'];
+  if(p==='mtproto') return ['MTProto','TCP'];
+  return [p.toUpperCase(),''];
+}
+function ncwRuntime(l){
+  const p=l.last_ping;
+  if(!p) return {cls:'warn',txt:'تست نشده',tip:'RUNTIME NOT VERIFIED — هنوز تست واقعی نشده. دکمه‌ی Test را بزنید.'};
+  if(p.ok){
+    const ms=p.e2e_ms!=null?Math.round(p.e2e_ms):(p.ws_ms!=null?Math.round(p.ws_ms):null);
+    return {cls:'ok',txt:'VERIFIED ✓',ms,tip:'RUNTIME VERIFIED — تونل E2E واقعی پاسخ داد ('+(p.test||'')+' · '+(p.checked_at?new Date(p.checked_at).toLocaleString('fa-IR'):'')+')'};
+  }
+  return {cls:'bad',txt:'FAILED ✗',tip:'آخرین تست واقعی ناموفق: '+(p.detail||'قطع')};
+}
+function ncwToggleMore(uuid){
+  const el=document.getElementById('ncw-more-'+uuid);
+  if(!el)return;
+  const open=el.style.display!=='none';
+  el.style.display=open?'none':'block';
+  const btn=document.querySelector('.ncw-card[data-uuid="'+uuid+'"] .ncw-more-btn i');
+  if(btn)btn.style.transform=open?'':'rotate(180deg)';
+}
+function ncwCardHtml(l, subMap){
+  const isNode=!!l._nodeId;
+  const isMt=l.protocol==='mtproto';
+  const lim=l.limit_bytes===0?'∞':fmtB(l.limit_bytes);
+  const pct=l.limit_bytes===0?0:Math.min(100,l.used_bytes/l.limit_bytes*100);
+  const bc=pct>90?'var(--red)':pct>70?'var(--amber)':'var(--accent)';
+  const allowed=l.active&&!l.expired;
+  const [pName,pTrans]=ncwProtoParts(l.protocol);
+  const rt=ncwRuntime(l);
+  const hasTls=!isMt;   // TLS معنا دارد برای تونل‌های wss (پروب E2E شامل TLS است)
+  const tlsOk=rt.cls==='ok';
+  const idChip=isMt
+    ? `<span class="cfg-uuid-mini" onclick="navigator.clipboard.writeText('${esc(l.mtproto_secret||'')}').then(()=>toast('سکرت کپی شد ✓','ok'))" title="سکرت کامل: ${esc(l.mtproto_secret||'')}"><i class="ti ti-key"></i> ${esc((l.mtproto_secret||'').slice(0,10))}…</span>`
+    : `<span class="cfg-uuid-mini" onclick="navigator.clipboard.writeText('${l.uuid}').then(()=>toast('UUID کپی شد','ok'))" title="${l.uuid}"><i class="ti ti-fingerprint"></i> ${l.uuid.slice(0,10)}…</span>`;
+  const routeLine=l.routing_policy
+    ? `<div class="ncw-routing"><i class="ti ti-route"></i> Routing: <b>${esc(NCW_ROUTE_FA[l.routing_policy]||l.routing_policy)}</b>${(l.routing_policy==='IRAN_DIRECT'||l.routing_policy==='IRAN_PROXY')?' <span class="ncw-routing-sub">— قواعد split در ساب IR-Direct کلاینت</span>':''}</div>`
+    : '';
+  const subGroupChip=(l.sub_id&&subMap[l.sub_id])?`<span class="cfg-sub-tag"><i class="ti ti-folder"></i> ${esc(subMap[l.sub_id])}</span>`:'';
+  const spoofChip=(l.spoof_sni_enabled&&l.spoof_sni)?`<span class="cfg-sub-tag" style="background:linear-gradient(135deg,rgba(139,92,246,.18),rgba(250,204,21,.12));color:#FFD1C2;border:1px solid rgba(139,92,246,.25)" title="SNI جعلی فعال — SNI ارسالی در TLS Handshake: ${esc(l.spoof_sni)} (فقط معنای TLS، نه مسیریابی)"><i class="ti ti-mask"></i> 🎭 ${esc(l.spoof_sni)}</span>`:'';
+  const mtChips=(
+    (isMt&&l.ad_tag)?`<span class="cfg-sub-tag"><i class="ti ti-speakerphone"></i> تبلیغ فعال</span>`:''
+  )+(
+    (isMt&&l.mtproto_public_host)?`<span class="cfg-sub-tag"><i class="ti ti-route"></i> ${esc(l.mtproto_public_host)}:${l.mtproto_public_port}</span>`:''
+  )+(
+    (isMt&&!l.mtproto_public_host&&l.mtproto_public_pending)?`<span class="cfg-sub-tag" style="color:var(--amber-t)"><i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i> در حال ساخت TCP Proxy عمومی...</span>`:''
+  )+(
+    (isMt&&!l.mtproto_public_host&&!l.mtproto_public_pending&&!l.mtproto_manual_port)?`<span class="cfg-sub-tag" style="color:var(--red-t)"><i class="ti ti-alert-triangle"></i> بدون TCP Proxy عمومی — لینک کار نمی‌کند</span>`:''
+  );
+  return `<div class="ncw-card ${(!l.active?'is-off':(l.expired?'is-exp':''))}${isNode?' is-node':''} ${selectedLinkUuids.has(l.uuid)?'selected':''}" data-uuid="${l.uuid}">
+    <div class="ncw-card-top">
+      ${isNode?'<span style="width:20px;flex-shrink:0"></span>':`<div class="cfg-check ${selectedLinkUuids.has(l.uuid)?'checked':''}" onclick="toggleLinkSelect('${l.uuid}',this)"><i class="ti ti-check"></i></div>`}
+      <div class="ncw-proto"><b>${esc(pName)}</b>${pTrans?` <span>•</span> <span>${esc(pTrans)}</span>`:''}</div>
+      <div class="ncw-title">
+        <span class="ncw-label">${esc(l.label)}</span>
+        ${isNode?`<span class="ncw-nodebadge"><i class="ti ti-topology-star-3"></i> ${esc(l._nodeName)}</span>`:''}
+        ${idChip}
+      </div>
+      <span class="ncw-dot ${allowed?'':'off'}" title="${l.active?'فعال':'غیرفعال'}${l.expired?' · منقضی':''}"></span>
+    </div>
+    <div class="ncw-status">
+      <span class="ncw-chip ok" title="CONFIGURATION VALID — کامپایل و ذخیره شده (کنترل‌پلین)"><i class="ti ti-circle-check"></i> CONFIG ✓</span>
+      <span class="ncw-chip ${rt.cls}" id="pb-${l.uuid}" onclick="pingLink('${l.uuid}',this)" title="${esc(rt.tip)}"><i class="ti ${rt.cls==='ok'?'ti-shield-check':(rt.cls==='bad'?'ti-wifi-off':'ti-help')}"></i> RUNTIME ${esc(rt.txt)}${rt.ms!=null?(' · '+toFa(rt.ms)+'ms'):''}</span>
+      ${hasTls?`<span class="ncw-mini ${tlsOk?'ok':''}" title="${tlsOk?'TLS در پروب E2E واقعی برقرار شد':'تا تأیید، وضعیت TLS نامشخص — تست بزنید'}">TLS ${tlsOk?'✓':'—'}</span>`:''}
+      <span class="ncw-mini ${rt.cls==='ok'?'ok':''}">تونل ${rt.cls==='ok'?'✓':'—'}</span>
+    </div>
+    ${routeLine}
+    <div class="ncw-actions">
+      ${!isNode?`<button class="btn btn-sm btn-g" onclick="pingLink('${l.uuid}',this)" title="تست واقعی تونل (E2E)"><i class="ti ti-activity"></i> تست</button>`
+               :`<button class="btn btn-sm btn-g" onclick="pingNodeLink('${l.uuid}',this,'${l._nodeId}')" title="تست واقعی روی نود"><i class="ti ti-activity"></i> تست</button>`}
+      <button class="btn btn-sm btn-o" onclick="navigator.clipboard.writeText('${esc(l.vless_link)}').then(()=>toast('لینک کپی شد','ok'))" title="کپی لینک"><i class="ti ti-copy"></i> کپی</button>
+      <button class="btn btn-sm btn-o" onclick="showQR('${esc(l.vless_link)}')" title="QR (محلی)"><i class="ti ti-qrcode"></i> QR</button>
+      ${!isNode?`<button class="btn btn-sm btn-o" onclick="openEditLink('${l.uuid}')" title="ویرایش"><i class="ti ti-edit"></i></button>`
+               :`<button class="btn btn-sm btn-o" onclick="openEditLink('${l.uuid}','${l._nodeId}')" title="ویرایش از راه دور"><i class="ti ti-edit"></i></button>`}
+      <button class="btn btn-sm btn-o ncw-more-btn" onclick="ncwToggleMore('${l.uuid}')" title="جزئیات و اقدامات بیشتر"><i class="ti ti-chevron-down"></i></button>
+    </div>
+    <div class="ncw-more" id="ncw-more-${l.uuid}" style="display:none">
+      <div class="ncw-more-badges">
+        ${subGroupChip}${spoofChip}${mtChips}
+      </div>
+      <div class="ncw-more-usage">
+        <div class="ubar"><div class="ubar-f" style="width:${pct}%;background:${bc}"></div></div>
+        <div class="utxt"><span>${fmtB(l.used_bytes)}</span><span>از ${lim}</span></div>
+        <div class="ncw-exp">${expChip(l.expires_at,l.expired)}</div>
+        <span class="ncw-created">${new Date(l.created_at).toLocaleDateString('fa-IR')}</span>
+      </div>
+      <div class="ncw-more-actions">
+        <button class="tog${allowed?' on':''}" onclick="toggleActive('${l.uuid}',${!l.active}${isNode?`,'${l._nodeId}'`:''})" title="فعال/غیرفعال"></button>
+        ${!isNode&&(l.protocol==='vless-ws'||l.protocol==='trojan-ws')?`<button class="btn btn-sm btn-g" onclick="turboTest('${l.uuid}',this)" title="تست توربو 0-RTT — یک RTT کمتر + کپی لینک توربو"><i class="ti ti-rocket"></i> توربو</button>`:''}
+        ${!isNode&&isMt?`<button class="btn btn-sm btn-pur" onclick="openAdTagModal('${l.uuid}','${esc(l.label)}','${esc(l.ad_tag||'')}')" title="تنظیم تبلیغ"><i class="ti ti-speakerphone"></i></button>`:''}
+        ${isMt
+          ? `<button class="btn btn-sm btn-g" onclick="openMtInfoModal('${esc(l.label)}','${esc(l.mtproto_secret||'')}','${esc(l.vless_link)}',${!!l.mtproto_public_host})" title="اطلاعات پروکسی"><i class="ti ti-info-circle"></i> اطلاعات</button>`
+          : `<button class="btn btn-sm btn-g" onclick="navigator.clipboard.writeText('${esc(l.sub_url)}').then(()=>toast('Sub کپی شد','ok'))" title="Sub URL"><i class="ti ti-rss"></i> Sub</button>`}
+        ${!isMt&&l.sub_json_urls?`<button class="btn btn-sm btn-pur" onclick="navigator.clipboard.writeText(window.location.origin+'${esc(l.sub_json_urls.singbox)}').then(()=>toast('ساب IR-Direct (sing-box) کپی شد','ok'))" title="ساب IR-Direct — داخلی‌کردن مصرف (sing-box)"><i class="ti ti-route"></i></button>
+        <button class="btn btn-sm btn-pur" onclick="navigator.clipboard.writeText(window.location.origin+'${esc(l.sub_json_urls.xray)}').then(()=>toast('ساب IR-Direct (xray) کپی شد','ok'))" title="ساب IR-Direct (xray)"><i class="ti ti-router"></i></button>
+        ${l.sub_json_urls.singbox_ir?`<button class="btn btn-sm btn-amber" onclick="navigator.clipboard.writeText(window.location.origin+'${esc(l.sub_json_urls.singbox_ir)}').then(()=>toast('ساب Iran-Exit — IP همیشه ایران (sing-box) کپی شد','ok'))" title="ساب Iran-Exit: کل ترافیک با IP ایران (از گیت‌وی اثبات‌شده؛ sing-box)"><i class="ti ti-flag"></i></button>
+        <button class="btn btn-sm btn-amber" onclick="navigator.clipboard.writeText(window.location.origin+'${esc(l.sub_json_urls.xray_ir)}').then(()=>toast('ساب Iran-Exit — IP همیشه ایران (xray) کپی شد','ok'))" title="ساب Iran-Exit (xray)"><i class="ti ti-flag-filled"></i></button>`:''}`:''}
+        <button class="btn btn-sm btn-g" onclick="resetUsage('${l.uuid}'${isNode?`,'${l._nodeId}'`:''})" title="ریست مصرف"><i class="ti ti-rotate"></i></button>
+        <button class="btn btn-sm btn-d" onclick="deleteLink('${l.uuid}'${isNode?`,'${l._nodeId}'`:''})" title="حذف"><i class="ti ti-trash"></i> حذف</button>
+      </div>
+    </div>
+  </div>`;
+}
+
 async function loadLinks(){
   try{
     const [lr,sr,nr,zr]=await Promise.all([authF('/api/links'),authF('/api/subs'),authF('/api/nodes/aggregate').catch(()=>null),authF('/api/zeus-proxy/status').catch(()=>null)]);
@@ -9215,9 +9544,24 @@ async function loadLinks(){
       toast('دامنه‌ی عمومی فعال نیست — Railway → Settings → Networking → Generate Domain','warn');
     }
     allSubsList=subs;allLinksList=links;
-    document.getElementById('info-inbounds').textContent = toFa(links.length);
-    document.getElementById('info-clients').textContent = toFa(links.filter(l=>l.active).length);
-    document.getElementById('info-alltime').textContent = fmtB(links.reduce((s,l)=>s+l.used_bytes,0));
+    // Phase 40: آمار ورک‌اسپیس (همه از داده‌ی واقعی — بدون «سالم» بدون شاهد)
+    const _set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v};
+    _set('info-alltime',fmtB(links.reduce((s,l)=>s+l.used_bytes,0)));
+    _set('ncw-total',toFa(links.length));
+    const _verified=links.filter(l=>l.last_ping&&l.last_ping.ok).length;
+    const _failed=links.filter(l=>l.last_ping&&!l.last_ping.ok).length;
+    const _untested=links.length-_verified-_failed;
+    _set('ncw-healthy',toFa(_verified));
+    _set('ncw-active',toFa(links.filter(l=>l.active).length));
+    const _netEl=document.getElementById('ncw-net');
+    if(_netEl){
+      if(!links.length){_netEl.textContent='—';_netEl.style.color=''}
+      else if(_verified>0){_netEl.textContent='سالم ('+toFa(_verified)+')';_netEl.style.color='var(--green-t)'}
+      else if(_failed>0){_netEl.textContent='قطع ('+toFa(_failed)+')';_netEl.style.color='var(--red-t)'}
+      else{_netEl.textContent='تست نشده';_netEl.style.color='var(--amber-t)'}
+    }
+    const _hsEl=document.getElementById('ncw-st-healthy');
+    if(_hsEl)_hsEl.title='VERIFIED = تونل E2E واقعی جواب داد · تست‌نشده: '+toFa(_untested)+' · ناموفق: '+toFa(_failed);
     const nlSub=document.getElementById('nl-sub');
     nlSub.innerHTML='<option value="">— بدون گروه —</option>'+subs.map(s=>`<option value="${esc(s.sub_id)}">${esc(s.name)}</option>`).join('');
     const nlTarget=document.getElementById('nl-target'), nlTargetWrap=document.getElementById('nl-target-wrap');
@@ -9241,75 +9585,7 @@ async function loadLinks(){
     if(!links.length && !zeusExists){grid.innerHTML='';empty.style.display='block';const ls1=document.getElementById('lsummary');if(ls1)ls1.innerHTML='<div class="empty"><i class="ti ti-link-off"></i><p>کانفیگی وجود ندارد</p></div>';updateBulkBar();return}
     empty.style.display='none';
     const subMap=Object.fromEntries(subs.map(s=>[s.sub_id,s.name]));
-    grid.innerHTML=(zeusExists?zeusCardHtml(zeusStatus):'')+links.map(l=>{
-  const isNode=!!l._nodeId;
-  const lim=l.limit_bytes===0?'∞':fmtB(l.limit_bytes);
-  const pct=l.limit_bytes===0?0:Math.min(100,l.used_bytes/l.limit_bytes*100);
-  const bc=pct>90?'var(--red)':pct>70?'var(--amber)':'var(--accent)';
-  const allowed=l.active&&!l.expired;
-  const cardCls=(!l.active?'is-off':(l.expired?'is-exp':''))+(isNode?' is-node':'');
-  const isMt = l.protocol === 'mtproto';
-  const adBtn = isMt
-    ? `<button class="btn btn-sm btn-pur btn-icon" onclick="openAdTagModal('${l.uuid}','${esc(l.label)}','${esc(l.ad_tag||'')}')" title="تنظیم تبلیغ کانال"><i class="ti ti-speakerphone"></i></button>`
-    : '';
-  const idChip = isMt
-    ? `<span class="cfg-uuid-mini" onclick="navigator.clipboard.writeText('${esc(l.mtproto_secret||'')}').then(()=>toast('سکرت کپی شد ✓','ok'))" title="سکرت کامل: ${esc(l.mtproto_secret||'')}"><i class="ti ti-key"></i> ${esc((l.mtproto_secret||'').slice(0,10))}…</span>`
-    : `<span class="cfg-uuid-mini" onclick="navigator.clipboard.writeText('${l.uuid}').then(()=>toast('UUID کپی شد','ok'))" title="${l.uuid}"><i class="ti ti-fingerprint"></i> ${l.uuid.slice(0,10)}…</span>`;
-  const nodeBadge = isNode ? `<span class="node-origin" style="margin-left:6px"><i class="ti ti-topology-star-3"></i> نود: ${esc(l._nodeName)}</span>` : '';
-  return `<div class="cfg-card ${cardCls} ${selectedLinkUuids.has(l.uuid)?'selected':''}" data-uuid="${l.uuid}">
-    <div class="cfg-row">
-      ${isNode?'<span style="width:18px;flex-shrink:0"></span>':`<div class="cfg-check ${selectedLinkUuids.has(l.uuid)?'checked':''}" onclick="toggleLinkSelect('${l.uuid}',this)"><i class="ti ti-check"></i></div>`}
-      <span class="cfg-status-dot ${allowed?'pulse':''}"></span>
-      <div class="cfg-identity">
-        <div class="cfg-label">${esc(l.label)} ${nodeBadge}</div>
-        <div class="cfg-sub-meta">
-          ${idChip}
-          <span>${new Date(l.created_at).toLocaleDateString('fa-IR')}</span>
-        </div>
-      </div>
-      <div class="cfg-divider-v"></div>
-      <div class="cfg-usage-col">
-        <div class="ubar"><div class="ubar-f" style="width:${pct}%;background:${bc}"></div></div>
-        <div class="utxt"><span>${fmtB(l.used_bytes)}</span><span>از ${lim}</span></div>
-      </div>
-      <div class="cfg-divider-v"></div>
-      <div class="cfg-exp-col">${expChip(l.expires_at,l.expired)}</div>
-      <div class="cfg-divider-v"></div>
-      <div class="cfg-badges-col">
-        ${protoBadge(l.protocol)}
-        ${pingBadgeHtml(l)}
-        ${l.spoof_sni_enabled && l.spoof_sni ? `<span class="cfg-sub-tag" style="background:linear-gradient(135deg,rgba(139,92,246,.18),rgba(250,204,21,.12));color:#FFD1C2;padding:3px 9px;border-radius:20px;border:1px solid rgba(139,92,246,.25);font-weight:700" title="SNI جعلی فعال — SNI ارسالی در TLS Handshake: ${esc(l.spoof_sni)}"><i class="ti ti-mask" style="color:#FFD1C2"></i> 🎭 ${esc(l.spoof_sni)}</span>` : ''}
-        ${isMt && l.ad_tag ? `<span class="cfg-sub-tag" style="background:linear-gradient(135deg,rgba(168,85,247,.18),rgba(202,138,4,.12));color:#FFB199;padding:3px 9px;border-radius:20px;border:1px solid rgba(168,85,247,.25);font-weight:700"><i class="ti ti-speakerphone" style="color:#FFB199"></i> تبلیغ فعال</span>` : ''}
-        ${isMt && l.mtproto_public_host ? `<span class="cfg-sub-tag"><i class="ti ti-route"></i> ${esc(l.mtproto_public_host)}:${l.mtproto_public_port}</span>` : ''}
-        ${isMt && !l.mtproto_public_host && l.mtproto_public_pending ? `<span class="cfg-sub-tag" style="color:var(--amber-t)"><i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i> در حال ساخت TCP Proxy عمومی...</span>` : ''}
-        ${isMt && !l.mtproto_public_host && !l.mtproto_public_pending && !l.mtproto_manual_port ? `<span class="cfg-sub-tag" style="color:var(--red-t)"><i class="ti ti-alert-triangle"></i> بدون TCP Proxy عمومی — لینک کار نمی‌کند</span>` : ''}
-        ${l.sub_id&&allSubsList.find(s=>s.sub_id===l.sub_id)?`<span class="cfg-sub-tag"><i class="ti ti-folder"></i> ${esc(allSubsList.find(s=>s.sub_id===l.sub_id).name)}</span>`:''}
-      </div>
-      <div class="cfg-divider-v"></div>
-      <div class="cfg-actions">
-        <div class="cfg-actions">
-        <button class="tog${allowed?' on':''}" onclick="toggleActive('${l.uuid}',${!l.active}${isNode?`,'${l._nodeId}'`:''})" title="فعال/غیرفعال"></button>
-        ${!isNode?adBtn:''}
-        ${!isNode?`<button class="btn btn-sm btn-g btn-icon" onclick="pingLink('${l.uuid}',this)" title="تست پینگ و سلامت تونل"><i class="ti ti-activity"></i></button>`:`<button class="btn btn-sm btn-g btn-icon" onclick="pingNodeLink('${l.uuid}',this,'${l._nodeId}')" title="تست پینگ روی نود"><i class="ti ti-activity"></i></button>`}
-        ${!isNode&&(l.protocol==='vless-ws'||l.protocol==='trojan-ws')?`<button class="btn btn-sm btn-g btn-icon" onclick="turboTest('${l.uuid}',this)" title="تست توربو 0-RTT — یک RTT کمتر در هر اتصال + کپی لینک توربو"><i class="ti ti-rocket"></i></button>`:''}
-        <button class="btn btn-sm btn-g btn-icon" onclick="navigator.clipboard.writeText('${esc(l.vless_link)}').then(()=>toast('لینک کپی شد','ok'))" title="کپی لینک"><i class="ti ti-copy"></i></button>
-        ${isMt
-          ? `<button class="btn btn-sm btn-g btn-icon" onclick="openMtInfoModal('${esc(l.label)}','${esc(l.mtproto_secret||'')}','${esc(l.vless_link)}',${!!l.mtproto_public_host})" title="اطلاعات پروکسی"><i class="ti ti-info-circle"></i></button>`
-          : `<button class="btn btn-sm btn-g btn-icon" onclick="navigator.clipboard.writeText('${esc(l.sub_url)}').then(()=>toast('Sub کپی شد','ok'))" title="Sub URL"><i class="ti ti-rss"></i></button>
-        ${l.sub_json_urls ? `<button class="btn btn-sm btn-pur btn-icon" onclick="navigator.clipboard.writeText(window.location.origin+'${esc(l.sub_json_urls.singbox)}').then(()=>toast('ساب IR-Direct (sing-box) کپی شد','ok'))" title="ساب IR-Direct — داخلی‌کردن مصرف (sing-box)"><i class="ti ti-route"></i></button>
-        <button class="btn btn-sm btn-pur btn-icon" onclick="navigator.clipboard.writeText(window.location.origin+'${esc(l.sub_json_urls.xray)}').then(()=>toast('ساب IR-Direct (xray) کپی شد','ok'))" title="ساب IR-Direct — داخلی‌کردن مصرف (xray)"><i class="ti ti-router"></i></button>
-        ${l.sub_json_urls.singbox_ir ? `<button class="btn btn-sm btn-amber btn-icon" onclick="navigator.clipboard.writeText(window.location.origin+'${esc(l.sub_json_urls.singbox_ir)}').then(()=>toast('ساب Iran-Exit — IP همیشه ایران (sing-box) کپی شد','ok'))" title="ساب Iran-Exit: کل ترافیک با IP ایران (از گیت‌وی ایرانی؛ sing-box)"><i class="ti ti-flag"></i></button>
-        <button class="btn btn-sm btn-amber btn-icon" onclick="navigator.clipboard.writeText(window.location.origin+'${esc(l.sub_json_urls.xray_ir)}').then(()=>toast('ساب Iran-Exit — IP همیشه ایران (xray) کپی شد','ok'))" title="ساب Iran-Exit: کل ترافیک با IP ایران (xray)"><i class="ti ti-flag-filled"></i></button>` : ''}` : ''}
-        <button class="btn btn-sm btn-g btn-icon" onclick="showQR('${esc(l.vless_link)}')" title="QR"><i class="ti ti-qrcode"></i></button>`
-        }
-        ${!isNode?`<button class="btn btn-sm btn-amber btn-icon" onclick="openEditLink('${l.uuid}')" title="ویرایش"><i class="ti ti-edit"></i></button>`:`<button class="btn btn-sm btn-amber btn-icon" onclick="openEditLink('${l.uuid}','${l._nodeId}')" title="ویرایش از راه دور"><i class="ti ti-edit"></i></button>`}
-        <button class="btn btn-sm btn-g btn-icon" onclick="resetUsage('${l.uuid}'${isNode?`,'${l._nodeId}'`:''})" title="ریست مصرف"><i class="ti ti-rotate"></i></button>
-        <button class="btn btn-sm btn-d btn-icon" onclick="deleteLink('${l.uuid}'${isNode?`,'${l._nodeId}'`:''})" title="حذف"><i class="ti ti-trash"></i></button>
-      </div>
-      </div>
-    </div>
-  </div>`;
-}).join('');
+    grid.innerHTML=(zeusExists?`<div class="cfg-grid" style="grid-column:1/-1;margin:0">${zeusCardHtml(zeusStatus)}</div>`:'') + links.map(l=>ncwCardHtml(l, subMap)).join('');
     const ls2=document.getElementById('lsummary'); if(ls2)ls2.innerHTML=links.slice(0,6).map(l=>`<div class="sr"><span class="sr-k" style="gap:5px"><i class="ti ${l.expired?'ti-calendar-x':l.active?'ti-circle-check':'ti-circle-x'}" style="color:${l.expired?'var(--amber)':l.active?'var(--green)':'var(--red)'}"></i>${esc(l.label)}</span><span class="sr-v" style="font-size:10px">${fmtB(l.used_bytes)} / ${l.limit_bytes===0?'∞':fmtB(l.limit_bytes)}</span></div>`).join('');
     updateBulkBar();
     // ── Auto-ping background ───────────────────────────────────────────

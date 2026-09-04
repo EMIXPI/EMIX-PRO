@@ -111,16 +111,29 @@ def test_core_profile_core_surface_fully_registered():
 
 
 def test_core_profile_optional_engines_not_loaded():
-    """پیش‌فرض production = core: هیچ موتور اختیاری لود/ثبت نمی‌شود و
-    هیچ‌کدام هم «fail» حساب نمی‌شوند (خاموشی انتخاب است، نه خطا)."""
+    """پیش‌فرض production = core: موتورهای «اختیاری» لود/ثبت نمی‌شوند و
+    هیچ‌کدام هم «fail» حساب نمی‌شوند (خاموشی انتخاب است، نه خطا).
+    Phase 40 §32: زنجیره‌ی ساخت کانفیگ (config_builder/capability_engine/
+    iran_gateway/…/structured_events/account_manager/turbo_boost) هسته‌ی
+    همیشه‌زنده است — دیوار «EMIX_PROFILE=full» برداشته شد؛ آنها در این
+    تست must-be-present حساب می‌شوند، نه absent."""
     info = _boot_with_profile({"EMIX_PROFILE": "core"})
     assert info["profile"] == "core"
+    # ALWAYS_ON engines are excluded from the optional engines summary —
+    # so the "optional engines off" contract still holds as before
     assert info["summary"]["engines_enabled"] == 0
     assert info["summary"]["engines_failed"] == 0
-    for absent_marker in ("/api/egress/verify", "/api/events",
-                          "/api/vpn/nodes", "/api/security/sni/profiles"):
+    for absent_marker in ("/api/egress/verify", "/api/vpn/nodes",
+                          "/api/security/sni/profiles"):
         assert absent_marker not in info["paths"], (
             f"{absent_marker} must NOT be registered in core profile")
+    # Phase 40: the configuration workspace chain IS part of core now
+    for present_marker in ("/api/config-builder/capabilities",
+                           "/api/config-builder/preview",
+                           "/api/config-builder/generate",
+                           "/api/events"):
+        assert present_marker in info["paths"], (
+            f"{present_marker} must be registered in core profile (workspace chain)")
 
 
 def test_granular_enable_brings_single_engine_back():
@@ -260,7 +273,7 @@ def test_deployment_version_reports_core_profile_and_stable_identity():
         r = client.get("/api/deployment-version")
         assert r.status_code == 200
         body = r.json()
-    assert body["version"] == "12.3.0-ncc"  # v12.3.0: NCC on top of iran-exit
+    assert body["version"] == "12.4.0-workspace"  # v12.4.0: کانفیگ‌ها = single workspace
     # پروفایل گزارش‌شده باید با پروفایل واقعی بوت یکی باشد (تست‌سایت: full)
     assert body["boot_profile"] == boot_profile.current_profile()
     ident = body["identity"]
