@@ -1,5 +1,40 @@
 # CHANGELOG — EMIX-PRO
 
+## v12.4.3-health-core (2026-09-04) — 🩺 PHASE 43: «بخش سلامت پنل» از دیوار پروفایل آزاد شد
+
+**Mandate:** گزارش واقعی کاربر روی دیپلوی core: «بخش سلامت پنل از کار افتاده و
+نتیجه نمی‌دهد». تحقیق زنده روی production نشان داد چهار سطح سلامت زیر UI بدون
+gate رندر می‌شوند ولی موتورهایشان در `EMIX_PROFILE=core` خاموش‌اند → 404 بی‌صدا:
+
+| سطح UI | اندپوینت | وضعیت قبل | وضعیت بعد |
+|---|---|---|---|
+| دکمه «بررسی سلامت همه‌چیز» (کارت سلامت کلی پنل) | `/api/system/health-all` | **404** (railway_infra خاموش) | ✅ هسته |
+| بنر/محافظ volume (هشدار از دست رفتن دیتا) | `/api/system/infra/status` | **404** | ✅ هسته |
+| کارت «کیفیت IP» (صفحه سلامت و تشخیص) | `/api/ip-quality/summary` | **404** → «—» ابدی | ✅ هسته |
+| دکمه «تست همه‌ی کانفیگ‌ها» (صفحه تشخیص) | `/api/exp/route/configs/probe-all` | **404 بی‌صدا** (smart_route خاموش) | ✅ به مسیر هسته‌ای |
+
+### ROOT CAUSE
+همان نقضی که Phase 40 §32 برای زنجیره‌ی ساخت کانفیگ حل کرد — «دیوار پروفایل» —
+این بار بخش سلامت را گرفته بود: `railway_infra` و `ip_quality` از v12.0.0-core
+به بعد فقط در full لود می‌شدند، ولی داشبورد/صفحه تشخیص بدون هیچ قیدی دکمه‌شان را
+نمایش می‌داد. `diagProbeAll` هم به اندپوینت smart_route (خاموش در core) وصل بود
+و 404 را بی‌صدا می‌خورد — دقیقاً «دکمه‌ای که نتیجه نمی‌دهد».
+
+### FIX (minimal — همان الگوی §40-32)
+1. **boot_profile.py:** `railway_infra` + `ip_quality` به `ALWAYS_ON` اضافه شدند
+   (هر دو fail-safe با ثبت try/except؛ pure-python بدون شبکه در import).
+   بدون تغییر در خودِ موتورها، Route Engine، PORT، DNS یا SNI Management.
+2. **pages.py `diagProbeAll`:** دکمه «تست همه‌ی کانفیگ‌ها» به اندپوینت بدون
+   gate هسته (`/api/links/ping-all` — پینگ واقعی مسیر کلاینت، همان که صفحه‌ی
+   کانفیگ‌ها استفاده می‌کند) وصل شد + نتیجه‌ی واقعی (X از Y سالم) به‌صورت
+   toast فارسی نمایش داده می‌شود.
+
+### تأیید زنده (پس از دیپلوی)
+`/api/system/health-all` → 200 با گزارش کامل بخش‌ها (panel/volume/links/
+modules/proxies/gateway/bridge)؛ بنر volume فعال؛ کارت کیفیت IP زنده؛ دکمه‌ی
+تست همه → «۱۸ از ۱۸ سالم». ورود مستقیم ایران همچنان NOT TESTABLE از این
+sandbox (فیلتر hostname وابسته به vantage — ریشه Phase 42 دست‌نخورده).
+
 ## v12.4.2-iran-access (2026-09-04) — 🌐 PHASE 42: Iran Accessibility & Config-Connectivity — Root-Cause Report + Test-D Honest Pinging
 
 **Mandate:** find out — from the ordinary-Iran-internet vantage — why the

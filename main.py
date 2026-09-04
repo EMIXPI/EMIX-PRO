@@ -5812,7 +5812,7 @@ async def api_migrate_legacy_spoof():
 # تا قبل از لاگین هم قابل بررسی باشد. (از /api/version استفاده نمی‌کنیم چون
 # آن مسیر قبلاً برای بررسی به‌روزرسانی در نظر گرفته شده است.)
 # ══════════════════════════════════════════════════════════════════════════════
-EMIX_VERSION = "12.4.2-iran-access"
+EMIX_VERSION = "12.4.3-health-core"
 EMIX_BUILD_DATE = "2026-09-04"
 
 @app.get("/api/boot-profile")

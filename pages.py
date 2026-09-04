@@ -6511,11 +6511,17 @@ async function loadDiagPage(){
   }catch(e){ console.error('diag load failed', e); }
 }
 async function diagProbeAll(){
+  // Phase 43: قبلاً اندپوینتِ probe-all مسیر smart_route را صدا می‌زد که در
+  // پروفایل core خاموش است → 404 بی‌صدا می‌شد و دکمه «نتیجه‌ای نمی‌داد».
+  // حالا همان تستِ واقعیِ هسته: پینگ End-to-End همه‌ی کانفیگ‌ها از مسیر کلاینت
+  // (link_health — بدون gate) + نتیجه‌ی قابل‌دیدن به کاربر.
   try{
-    const r = await authF('/api/exp/route/configs/probe-all',{method:'POST'});
+    const r = await authF('/api/links/ping-all',{method:'POST'});
+    if(!r.ok){toast('خطا در تست کانفیگ‌ها','err');return}
     const j = await r.json();
-    if(j.ok!==false){ loadDiagPage(); }
-  }catch(e){ console.error(e); }
+    toast(`تست واقعی همه‌ی کانفیگ‌ها: ${toFa(j.ok)} از ${toFa(j.total)} سالم`, j.ok>0?'ok':'err');
+    loadDiagPage();
+  }catch(e){ console.error(e); toast('خطا در تست کانفیگ‌ها','err'); }
 }
 </script>
 <section class="pg" id="pg-updates">
