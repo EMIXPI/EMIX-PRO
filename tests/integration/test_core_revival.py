@@ -260,7 +260,7 @@ def test_deployment_version_reports_core_profile_and_stable_identity():
         r = client.get("/api/deployment-version")
         assert r.status_code == 200
         body = r.json()
-    assert body["version"] == "12.1.0-ir-direct"
+    assert body["version"] == "12.2.0-iran-exit"
     # پروفایل گزارش‌شده باید با پروفایل واقعی بوت یکی باشد (تست‌سایت: full)
     assert body["boot_profile"] == boot_profile.current_profile()
     ident = body["identity"]

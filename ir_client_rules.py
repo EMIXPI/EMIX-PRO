@@ -33,9 +33,16 @@ import ipaddress
 from typing import Callable, Dict, List, Optional
 from urllib.parse import parse_qs, unquote, urlparse
 
-IR_CLIENT_RULES_VERSION = "1.0.0"
+IR_CLIENT_RULES_VERSION = "1.2.0"
 
 SUPPORTED_CLIENTS = ("singbox", "xray")
+
+# ── حالت خروج (v12.2 Iran-Exit) ─────────────────────────────────────────────
+#   auto : داخلی → DIRECT از ISP کاربر · بین‌الملل → تونل EMIX (IP خارجِ خروجی)
+#   ir   : داخلی → DIRECT از ISP (باز هم IP ایران) · بین‌الملل → تونل EMIX →
+#          «گیت‌وی ایرانی» (hop http/socks5 با VERIFIED_IRAN_EGRESS اندازه‌گیری‌شده)
+#          ⇒ IP ظاهری کاربر در همه‌جا ایران می‌ماند.
+EXIT_MODES = ("auto", "ir")
 
 # پروتکل‌هایی که کانفیگ کامل کلاینت‌شان قابل ساخت است (تورنت/MTProto خیر).
 # xhttp فقط برای xray — برای singbox در زمان build صادقانه رد می‌شود.
@@ -74,7 +81,8 @@ _deps: Dict[str, Callable] = {}
 
 
 def set_deps(get_link_fn, is_allowed_fn, share_link_fn, host_fn,
-             headers_fn, prefixes_fn, default_protocol) -> None:
+             headers_fn, prefixes_fn, default_protocol,
+             gateway_fn=None) -> None:
     _deps.clear()
     _deps.update({
         "get_link": get_link_fn,           # async (uid) -> link | None
@@ -84,6 +92,9 @@ def set_deps(get_link_fn, is_allowed_fn, share_link_fn, host_fn,
         "headers": headers_fn,             # build_sub_headers(label, used, limit, expires)
         "prefixes": prefixes_fn,           # () -> list[str] normalized IR prefixes
         "default_protocol": default_protocol,
+        # () -> dict | None  — بهترین گیت‌وی VERIFIED_IRAN_EGRESS قابل-dial
+        # (endpoint/port/protocol/username/password) یا None
+        "gateway": gateway_fn or (lambda: None),
     })
 
 
@@ -221,6 +232,36 @@ def _proxy_outbound_xray(p: dict) -> dict:
 
 # ── سازنده‌های کانفیگ کامل ───────────────────────────────────────────────────
 
+def _gateway_outbound_singbox(gw: dict) -> dict:
+    """hop گیت‌وی ایرانی برای sing-box — با detour=proxy یعنی اتصال به گیت‌وی
+    از «داخل» تونل EMIX برقرار می‌شود (مسیر کلاینت→EMIX→گیت‌وی→اینترنت)."""
+    ob: dict = {
+        "tag": "ir-gateway",
+        "type": "socks" if gw["protocol"] == "socks5" else "http",
+        "server": gw["endpoint"], "server_port": int(gw["port"]),
+        "detour": "proxy",
+    }
+    if gw.get("username"):
+        ob["username"] = gw["username"]
+        ob["password"] = gw.get("password") or ""
+    return ob
+
+
+def _gateway_outbound_xray(gw: dict) -> dict:
+    """hop گیت‌وی ایرانی برای xray — زنجیره با sockopt.dialerProxy=proxy."""
+    users = ([{"user": gw["username"], "pass": gw.get("password") or ""}]
+             if gw.get("username") else [])
+    ob: dict = {
+        "tag": "ir-gateway",
+        "protocol": "socks" if gw["protocol"] == "socks5" else "http",
+        "settings": {"servers": [{"address": gw["endpoint"], "port": int(gw["port"])}]},
+        "streamSettings": {"sockopt": {"dialerProxy": "proxy"}},
+    }
+    if users:
+        ob["settings"]["servers"][0]["users"] = users
+    return ob
+
+
 def _normalize_prefixes(prefixes: List[str]) -> List[str]:
     out, seen = [], set()
     for p in prefixes:
@@ -236,12 +277,18 @@ def _normalize_prefixes(prefixes: List[str]) -> List[str]:
 
 async def build_client_rules_config_async(uid: str, client: str, *,
                                           geosite: bool = False,
-                                          label: str = "EMIX") -> tuple[dict, dict]:
-    """(config_dict, meta) — meta برای هدرها و لاگ."""
+                                          label: str = "EMIX",
+                                          exit_mode: str = "auto") -> tuple[dict, dict]:
+    """(config_dict, meta) — meta برای هدرها و لاگ.
+    exit_mode: "auto" (پیش‌فرض) یا "ir" (IP ظاهری همیشه ایران — Iran-Exit)."""
     client = (client or "singbox").strip().lower()
     if client not in SUPPORTED_CLIENTS:
         raise IrRulesError("SPLIT_TUNNEL_NOT_SUPPORTED",
                            f"client {client!r} نامعتبر است — singbox | xray")
+    exit_mode = (exit_mode or "auto").strip().lower()
+    if exit_mode not in EXIT_MODES:
+        raise IrRulesError("INVALID_EXIT_MODE",
+                           f"exit {exit_mode!r} نامعتبر است — auto | ir")
 
     link = await _deps["get_link"](uid)
     if not link or not _deps["is_allowed"](link):
@@ -253,9 +300,23 @@ async def build_client_rules_config_async(uid: str, client: str, *,
     p = _parse_share_uri(uri)
 
     prefixes = _normalize_prefixes(_deps["prefixes"]())
+
+    # ── Iran-Exit: گیت‌وی ایرانی باید VERIFIED (اندازه‌گیری‌شده) باشد ────────
+    gateway: Optional[dict] = None
+    if exit_mode == "ir":
+        gateway = _deps["gateway"]()
+        if not gateway:
+            raise IrRulesError(
+                "NO_VERIFIED_IRAN_GATEWAY",
+                "برای Iran-Exit به یک گیت‌وی ایرانی با VERIFIED_IRAN_EGRESS "
+                "نیاز است (بخش Iran Gateway → افزودن گیت‌وی socks5/http → "
+                "Check تا خروجی ایرانی «اندازه‌گیری» شود). CONFIGURED کافی نیست.")
+
     meta = {"client": client, "protocol": protocol, "host": host,
             "prefix_count": len(prefixes), "geosite": bool(geosite),
-            "sni": p["sni"] or p["host"], "insecure": p["insecure"]}
+            "sni": p["sni"] or p["host"], "insecure": p["insecure"],
+            "exit": exit_mode,
+            "gateway": (gateway or {}).get("endpoint") if exit_mode == "ir" else None}
 
     domain_rule: dict = {"outbound": "direct", "domain_suffix": list(IR_DOMAIN_SUFFIXES)}
     ip_rule: dict = {"outbound": "direct", "ip_cidr": prefixes}
@@ -267,10 +328,20 @@ async def build_client_rules_config_async(uid: str, client: str, *,
         if geosite:
             route_sets.append({"type": "remote", "tag": "geosite-ir",
                                "format": "binary", "url": _SINGBOX_GEOSITE_IR,
-                               "download_detour": "proxy"})
+                               "download_detour": "proxy" if exit_mode != "ir" else "ir-gateway"})
             rules.append({"rule_set": ["geosite-ir"], "outbound": "direct"})
         if prefixes:
             rules.append(ip_rule)
+        outbounds = [proxy_ob,
+                     {"type": "direct", "tag": "direct"},
+                     {"type": "block", "tag": "block"},
+                     {"type": "dns", "tag": "dns-out"}]
+        route_final = "proxy"
+        if exit_mode == "ir":
+            # گیت‌وی ایرانی اول باشد (تفاوت catuarda ندارد در sing-box؛
+            # ترتیب فقط برای خوانایی است — final تعیین‌کننده است)
+            outbounds.insert(0, _gateway_outbound_singbox(gateway))
+            route_final = "ir-gateway"   # کل ترافیک نامتعارض از گیت‌وی ایران
         config = {
             "log": {"level": "warn"},
             "dns": {
@@ -289,16 +360,11 @@ async def build_client_rules_config_async(uid: str, client: str, *,
                 "type": "mixed", "tag": "mixed-in",
                 "listen": "127.0.0.1", "listen_port": 2080,
             }],
-            "outbounds": [
-                proxy_ob,
-                {"type": "direct", "tag": "direct"},
-                {"type": "block", "tag": "block"},
-                {"type": "dns", "tag": "dns-out"},
-            ],
+            "outbounds": outbounds,
             "route": {
                 "rules": [r for r in rules if r],
                 "rule_set": route_sets,
-                "final": "proxy",
+                "final": route_final,
                 "auto_detect_interface": True,
             },
         }
@@ -316,6 +382,13 @@ async def build_client_rules_config_async(uid: str, client: str, *,
                           "outboundTag": "direct"})
     if prefixes:
         xrules.append({"type": "field", "ip": prefixes, "outboundTag": "direct"})
+    outbounds_x = [proxy_ob,
+                   {"tag": "direct", "protocol": "freedom", "settings": {}},
+                   {"tag": "block", "protocol": "blackhole", "settings": {}}]
+    if exit_mode == "ir":
+        # در xray ترافیک بدون-قاعده به «اولین» outbound می‌رود → گیت‌وی ایران
+        # باید اول باشد؛ قواعد IR→direct بالاتر از آن زده می‌شوند.
+        outbounds_x.insert(0, _gateway_outbound_xray(gateway))
     config = {
         "log": {"loglevel": "warning"},
         "inbounds": [
@@ -324,11 +397,7 @@ async def build_client_rules_config_async(uid: str, client: str, *,
             {"tag": "http-in", "listen": "127.0.0.1", "port": 10809,
              "protocol": "http", "settings": {"auth": "noauth"}},
         ],
-        "outbounds": [
-            proxy_ob,
-            {"tag": "direct", "protocol": "freedom", "settings": {}},
-            {"tag": "block", "protocol": "blackhole", "settings": {}},
-        ],
+        "outbounds": outbounds_x,
         "routing": {
             "domainStrategy": "IPIfNonMatch",
             "rules": xrules,
@@ -340,26 +409,30 @@ async def build_client_rules_config_async(uid: str, client: str, *,
 # ── ثبت اندپوینت‌ها (DI — بدون وابستگی به import main) ──────────────────────
 
 def register_routes(app, *, get_link_fn, is_allowed_fn, share_link_fn, host_fn,
-                    headers_fn, prefixes_fn, default_protocol) -> None:
-    """`GET /sub-json/{uuid}?client=singbox|xray&geosite=0|1` — عمومی مثل /sub
-    (کلید راز همان UUID لینک است). خروجی: کانفیگ کامل با قواعد IR-Direct."""
+                    headers_fn, prefixes_fn, default_protocol,
+                    gateway_fn=None) -> None:
+    """`GET /sub-json/{uuid}?client=singbox|xray&geosite=0|1&exit=auto|ir`
+    — عمومی مثل /sub (کلید راز همان UUID لینک است). خروجی: کانفیگ کامل با
+    قواعد IR-Direct؛ exit=ir → کل ترافیک نامتعارض از گیت‌وی ایران (IP ایران)."""
     set_deps(get_link_fn, is_allowed_fn, share_link_fn, host_fn,
-             headers_fn, prefixes_fn, default_protocol)
+             headers_fn, prefixes_fn, default_protocol, gateway_fn=gateway_fn)
 
     @app.get("/sub-json/{uuid}")
     async def sub_json(uuid: str, request: Request,
-                       client: str = "singbox", geosite: int = 0):
+                       client: str = "singbox", geosite: int = 0,
+                       exit: str = "auto"):
         link = await get_link_fn(uuid)
         if not link or not is_allowed_fn(link):
             raise HTTPException(status_code=404, detail="not found or inactive")
         try:
             config, meta = await build_client_rules_config_async(
-                uuid, client, geosite=bool(geosite),
+                uuid, client, geosite=bool(geosite), exit_mode=exit,
                 label=str(link.get("label") or "EMIX"))
         except IrRulesError as exc:
             return JSONResponse(status_code=422, content={
                 "ok": False, "error": exc.code, "detail": exc.detail,
                 "supported_clients": list(SUPPORTED_CLIENTS),
+                "exit_modes": list(EXIT_MODES),
             })
         headers = headers_fn(link.get("label", "EMIX"),
                              link.get("used_bytes", 0),
@@ -367,8 +440,9 @@ def register_routes(app, *, get_link_fn, is_allowed_fn, share_link_fn, host_fn,
                              link.get("expires_at"))
         headers.update({
             "content-disposition":
-                f'attachment; filename="emix-ir-direct-{client}.json"',
-            "x-emix-ir-rules": f"prefixes={meta['prefix_count']};v={IR_CLIENT_RULES_VERSION}",
+                f'attachment; filename="emix-ir-{exit}-{client}.json"',
+            "x-emix-ir-rules": (f"prefixes={meta['prefix_count']};exit={meta['exit']}"
+                                f";v={IR_CLIENT_RULES_VERSION}"),
             "profile-web-page-url": str(request.url),
         })
         return JSONResponse(content=config, headers=headers)

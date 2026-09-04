@@ -38,7 +38,15 @@ XHTTP_URI = ("vless://aaa1b2c3-d4e5-f6a7-b8c9-d0e1f2a3b4c5@test.example.com:443"
 PREFIXES = ["5.144.128.0/17", "188.121.96.0/19", "2a06:2b00::/29"]
 
 
-def _setup(uri: str):
+GW_SOCKS = {"gateway_id": "gw-t", "name": "Tehran", "endpoint": "5.144.1.2",
+            "port": 1080, "protocol": "socks5", "username": "u1",
+            "password": "p1", "egress_ip": "5.144.1.2"}
+GW_HTTP = {"gateway_id": "gw-h", "name": "Tabriz", "endpoint": "gw.example.ir",
+           "port": 8080, "protocol": "http", "username": "",
+           "password": "", "egress_ip": "2.1.2.3"}
+
+
+def _setup(uri: str, gateway: dict | None = None):
     link = {"label": "t", "protocol": "vless-ws", "active": True,
             "used_bytes": 0, "limit_bytes": 0, "expires_at": None}
     icr.set_deps(
@@ -49,6 +57,7 @@ def _setup(uri: str):
         headers_fn=lambda *a, **k: {"profile-title": "t"},
         prefixes_fn=lambda: list(PREFIXES),
         default_protocol="vless-ws",
+        gateway_fn=lambda: gateway,
     )
     return link
 
@@ -57,10 +66,12 @@ async def _async(v):
     return v
 
 
-def _build(client: str, uri: str = VLESS_URI, geosite: bool = False):
-    _setup(uri)
+def _build(client: str, uri: str = VLESS_URI, geosite: bool = False,
+           exit_mode: str = "auto", gateway: dict | None = None):
+    _setup(uri, gateway=gateway)
     return asyncio.run(icr.build_client_rules_config_async(
-        "aaa1b2c3-d4e5-f6a7-b8c9-d0e1f2a3b4c5", client, geosite=geosite))
+        "aaa1b2c3-d4e5-f6a7-b8c9-d0e1f2a3b4c5", client, geosite=geosite,
+        exit_mode=exit_mode))
 
 
 # ── §1 sing-box ──────────────────────────────────────────────────────────────
@@ -157,3 +168,59 @@ def test_client_rules_supported_matrix():
     assert not icr.client_rules_supported("shadowsocks")
     assert not icr.client_rules_supported("mtproto")
     assert not icr.client_rules_supported("")
+
+
+# ── §6 Iran-Exit (v12.2) — «IP من با کانفیگ همچنان ایران» ────────────────────
+
+def test_singbox_ir_exit_chains_through_gateway():
+    cfg, meta = _build("singbox", exit_mode="ir", gateway=GW_SOCKS)
+    gw_ob = next(o for o in cfg["outbounds"] if o["tag"] == "ir-gateway")
+    assert gw_ob["type"] == "socks"
+    assert gw_ob["server"] == "5.144.1.2" and gw_ob["server_port"] == 1080
+    assert gw_ob["detour"] == "proxy"          # زنجیره: کلاینت→EMIX→گیت‌وی
+    assert gw_ob["username"] == "u1" and gw_ob["password"] == "p1"
+    assert cfg["route"]["final"] == "ir-gateway"  # همه‌ی ترافیک نامتعارض از ایران
+    # قواعد IR-Direct سر جایشان: داخلی از ISP کاربر (باز IP ایران)
+    dom = next(r for r in cfg["route"]["rules"] if "domain_suffix" in r)
+    assert dom["outbound"] == "direct"
+    assert meta["exit"] == "ir" and meta["gateway"] == "5.144.1.2"
+
+
+def test_singbox_ir_exit_http_gateway_no_auth():
+    cfg, _ = _build("singbox", exit_mode="ir", gateway=GW_HTTP)
+    gw_ob = next(o for o in cfg["outbounds"] if o["tag"] == "ir-gateway")
+    assert gw_ob["type"] == "http" and "username" not in gw_ob
+    assert gw_ob["detour"] == "proxy"
+
+
+def test_xray_ir_exit_dialer_proxy_first_outbound():
+    cfg, meta = _build("xray", exit_mode="ir", gateway=GW_SOCKS)
+    first = cfg["outbounds"][0]
+    assert first["tag"] == "ir-gateway" and first["protocol"] == "socks"
+    assert first["streamSettings"]["sockopt"]["dialerProxy"] == "proxy"
+    assert first["settings"]["servers"][0]["users"][0]["user"] == "u1"
+    # در xray ترافیک بدون-قاعده به اولین outbound می‌رود → ایران
+    dom = next(r for r in cfg["routing"]["rules"] if "domain" in r)
+    assert dom["outboundTag"] == "direct"
+    assert meta["exit"] == "ir"
+
+
+def test_ir_exit_without_verified_gateway_is_honest():
+    for client in ("singbox", "xray"):
+        with pytest.raises(icr.IrRulesError) as ei:
+            _build(client, exit_mode="ir", gateway=None)
+        assert ei.value.code == "NO_VERIFIED_IRAN_GATEWAY"
+        assert "VERIFIED" in ei.value.detail
+
+
+def test_invalid_exit_mode_rejected():
+    with pytest.raises(icr.IrRulesError) as ei:
+        _build("singbox", exit_mode="banana")
+    assert ei.value.code == "INVALID_EXIT_MODE"
+
+
+def test_auto_mode_ignores_gateway():
+    cfg, meta = _build("singbox", exit_mode="auto", gateway=GW_SOCKS)
+    assert "ir-gateway" not in [o["tag"] for o in cfg["outbounds"]]
+    assert cfg["route"]["final"] == "proxy"
+    assert meta["exit"] == "auto"
