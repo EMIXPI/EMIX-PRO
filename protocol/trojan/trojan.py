@@ -63,7 +63,17 @@ class _TrojanHashCache:
         async with LINKS_LOCK:
             if len(LINKS) != self._snapshot_len:
                 self._rebuild(LINKS)
-            return self._cache.get(pw_hash)
+            found = self._cache.get(pw_hash)
+            if found is None:
+                # EMIX-PRO v13.1 (Phase 45): باگ پنهان پایه — وقتی یک لینک حذف و
+                # هم‌زمان یکی ساخته بشه، طول dict تغییری نمی‌کنه و cache کهنه
+                # می‌ماند؛ لینکِ جدیدِ Trojan هش خودش را در cache پیدا نمی‌کند و
+                # auth با «trojan auth failed» می‌شکند (کانفیگ ظاهراً سالم ولی قطع).
+                # درمان: در صورت miss، یک‌بار rebuild صادقانه و دوباره جست‌وجو.
+                # (هزینه: فقط یک rebuild اضافه به‌ازای هر miss واقعی — ناچیز.)
+                self._rebuild(LINKS)
+                found = self._cache.get(pw_hash)
+            return found
 
 
 _hash_cache = _TrojanHashCache()

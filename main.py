@@ -2756,6 +2756,18 @@ async def dashboard(request: Request):
 async def test_ws_redirect():
     return HTMLResponse(content="<script>location.href='/dashboard'</script>")
 
+# ══════════════════════════════════════════════════════════════════════════════
+# EMIX-PRO v13.1 — ادغام ویژگی‌های سالم روی هسته‌ی EMIX (فقط افزودنی)
+# ─────────────────────────────────────────────────────────────────────────────
+# هسته‌ی EMIX (05f2f2c) بایت‌به‌بایت دست‌نخورده است؛ این دو ماژول مستقل فقط
+# اندپوینت افزودنی ثبت می‌کنند: تست واقعی پینگ (مسیر کلاینت) + گزارش سلامت.
+# اگر حذف شوند، پنل و تونل‌ها مثل قبل کار می‌کنند (وابستگی یک‌طرفه).
+# ══════════════════════════════════════════════════════════════════════════════
+import emix_pro          # noqa: E402
+import link_health       # noqa: E402
+emix_pro.register_routes(app)
+link_health.register_routes(app)
+
 if __name__ == "__main__":
     uvicorn.run(
         app,

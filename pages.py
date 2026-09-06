@@ -2635,6 +2635,7 @@ html,body{max-width:100%;overflow-x:hidden}
     <div class="tb-right">
       <span class="badge bg-green"><span class="dot dg pulse"></span> فعال</span>
       <span class="badge bg-blue" id="uptime-badge">—</span>
+      <button class="btn btn-g btn-sm" onclick="openHealth()"><i class="ti ti-heartbeat"></i> سلامت سیستم</button>
       <button class="btn btn-p btn-sm" onclick="refreshAll()"><i class="ti ti-refresh"></i> رفرش</button>
     </div>
   </div>
@@ -2696,6 +2697,9 @@ html,body{max-width:100%;overflow-x:hidden}
       </button>
       <button class="btn btn-g" id="zeus-nav-btn" style="margin-right:8px" onclick="openModal('modal-zeus-proxy');zpCheckTokenState()">
         <i class="ti ti-bolt"></i> Zeus proxy
+      </button>
+      <button class="btn btn-o" id="ping-all-btn" style="margin-right:8px" onclick="pingAll(this)">
+        <i class="ti ti-activity"></i> تست همه‌ی کانفیگ‌ها
       </button>
     </div>
     <div class="tb-right">
@@ -3380,6 +3384,7 @@ async function loadLinks(){
       <div class="cfg-divider-v"></div>
       <div class="cfg-badges-col">
         ${protoBadge(l.protocol)}
+        ${pingBadge(l)}
         ${isMt && l.ad_tag ? `<span class="cfg-sub-tag" style="background:linear-gradient(135deg,rgba(255,122,61,.18),rgba(232,89,12,.12));color:#FFB199;padding:3px 9px;border-radius:20px;border:1px solid rgba(255,122,61,.25);font-weight:700"><i class="ti ti-speakerphone" style="color:#FFB199"></i> تبلیغ فعال</span>` : ''}
         ${isMt && l.mtproto_public_host ? `<span class="cfg-sub-tag"><i class="ti ti-route"></i> ${esc(l.mtproto_public_host)}:${l.mtproto_public_port}</span>` : ''}
         ${isMt && !l.mtproto_public_host && l.mtproto_public_pending ? `<span class="cfg-sub-tag" style="color:var(--amber-t)"><i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i> در حال ساخت TCP Proxy عمومی...</span>` : ''}
@@ -3391,6 +3396,7 @@ async function loadLinks(){
         <div class="cfg-actions">
         <button class="tog${allowed?' on':''}" onclick="toggleActive('${l.uuid}',${!l.active}${isNode?`,'${l._nodeId}'`:''})" title="فعال/غیرفعال"></button>
         ${!isNode?adBtn:''}
+        ${!isNode?`<button class="btn btn-sm btn-g btn-icon" onclick="pingLink('${l.uuid}',this)" title="تست واقعی اتصال"><i class="ti ti-activity"></i></button>`:''}
         <button class="btn btn-sm btn-g btn-icon" onclick="navigator.clipboard.writeText('${esc(l.vless_link)}').then(()=>toast('لینک کپی شد','ok'))" title="کپی لینک"><i class="ti ti-copy"></i></button>
         ${isMt
           ? `<button class="btn btn-sm btn-g btn-icon" onclick="openMtInfoModal('${esc(l.label)}','${esc(l.mtproto_secret||'')}','${esc(l.vless_link)}',${!!l.mtproto_public_host})" title="اطلاعات پروکسی"><i class="ti ti-info-circle"></i></button>`
@@ -5778,7 +5784,153 @@ async function loadNodes(fresh){
 }
 
 function loadNodesPage(){ loadNodeKeys(); loadNodes(); }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   EMIX-PRO v13.1 — تست واقعی پینگ + سلامت سیستم (افزودنی؛ هسته دست‌نخورده)
+   ═══════════════════════════════════════════════════════════════════════════ */
+function pingBadge(l){
+  const lp=l.last_ping;
+  if(!lp||typeof lp!=='object') return '';
+  if(lp.ok){
+    const ms=(lp.e2e_ms!=null?lp.e2e_ms:lp.ws_ms);
+    const fb=lp.fallback==='local'?' · مسیر محلی':'';
+    return `<span class="cfg-sub-tag" style="color:var(--green-t)" title="${esc(lp.reply||'')}"><i class="ti ti-circle-check"></i> تست‌شده ✓ ${toFa(ms)}ms${fb}</span>`;
+  }
+  const d=String(lp.detail||'خطا').slice(0,44);
+  return `<span class="cfg-sub-tag" style="color:var(--red-t)" title="${esc(lp.detail||'')}"><i class="ti ti-circle-x"></i> قطع در تست · ${esc(d)}</span>`;
+}
+async function pingLink(uuid,btn){
+  if(btn){btn.disabled=true;btn.innerHTML='<i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i>';}
+  try{
+    const r=await authF('/api/links/'+uuid+'/ping',{method:'POST'});
+    const d=await r.json();
+    if(d.ok){
+      const ms=(d.e2e_ms!=null?d.e2e_ms:d.ws_ms);
+      toast(`تست واقعی موفق ✓ ${toFa(ms)}ms${d.fallback==='local'?' (مسیر محلی)':''}`,'ok');
+    }else{
+      toast('تست ناموفق — '+(d.detail||'').slice(0,70),'err');
+    }
+    loadLinks();
+  }catch(e){
+    toast('خطا در اجرای تست','err');
+    if(btn){btn.disabled=false;btn.innerHTML='<i class="ti ti-activity"></i>';}
+  }
+}
+let pingAllBusy=false;
+async function pingAll(btn){
+  if(pingAllBusy) return;
+  pingAllBusy=true;
+  const old=btn?btn.innerHTML:'';
+  if(btn){btn.disabled=true;btn.innerHTML='<i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i> در حال تست همه...';}
+  toast('تست واقعی همه‌ی کانفیگ‌ها شروع شد (مرحله‌ای: اتصال → هندشیک → پروتکل → پاسخ تونل)...','');
+  try{
+    const r=await authF('/api/links/ping-all',{method:'POST'});
+    const d=await r.json();
+    const allOk=d.ok===d.total&&d.total>0;
+    toast(`تست واقعی همه‌ی کانفیگ‌ها: ${toFa(d.ok)} از ${toFa(d.total)} سالم`,allOk?'ok':'err');
+    loadLinks();
+  }catch(e){ toast('خطا در تست گروهی','err'); }
+  if(btn){btn.disabled=false;btn.innerHTML=old;}
+  pingAllBusy=false;
+}
+async function healthTestAll(){
+  const btn=document.getElementById('health-test-btn');
+  if(btn){btn.disabled=true;btn.innerHTML='<i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i> در حال تست...';}
+  try{
+    const r=await authF('/api/links/ping-all',{method:'POST'});
+    const d=await r.json();
+    renderHealthPingRows(d);
+  }catch(e){ toast('خطا در تست گروهی','err'); }
+  if(btn){btn.disabled=false;btn.innerHTML='<i class="ti ti-activity"></i> تست واقعی همه‌ی کانفیگ‌ها';}
+}
+function renderHealthPingRows(d){
+  const el=document.getElementById('health-ping-rows');
+  if(!el) return;
+  if(!d||!d.results||!d.results.length){
+    el.innerHTML='<div class="sr"><span class="sr-k">کانفیگی برای تست وجود ندارد</span></div>';
+    return;
+  }
+  const rows=d.results.map(r=>{
+    const p=r.result||{};
+    const ok=!!p.ok;
+    const ms=(p.e2e_ms!=null?p.e2e_ms:p.ws_ms);
+    const ws=p.ws_ms!=null?toFa(p.ws_ms)+'ms':'—';
+    const e2=p.e2e_ms!=null?toFa(p.e2e_ms)+'ms':'—';
+    const fb=p.fallback==='local'?' <span style="color:var(--amber-t)">(مسیر محلی)</span>':'';
+    const det=ok?'':`<span style="color:var(--red-t);font-size:10.5px"> — ${esc(String(p.detail||'').slice(0,52))}</span>`;
+    return `<div class="sr">
+      <span class="sr-k" style="gap:6px"><i class="ti ${ok?'ti-circle-check':'ti-circle-x'}" style="color:${ok?'var(--green)':'var(--red)'}"></i>${esc(r.label||'')} <span style="font-size:10px;color:var(--t3)">${esc(p.protocol||'')}</span></span>
+      <span class="sr-v" style="font-size:10.5px">${ok?`هندشیک ${ws} · رفت‌وبرگشت ${e2}${fb}`:'تست ناموفق'}${det}</span>
+    </div>`;
+  }).join('');
+  const summ=`<div style="display:flex;align-items:center;gap:8px;margin:4px 0 10px">
+    <span class="badge ${d.ok===d.total?'bg-green':'bg-amber'}">${toFa(d.ok)} / ${toFa(d.total)} سالم</span>
+    <span style="font-size:10.5px;color:var(--t3)">مراحل: اتصال → هندشیک WS/TLS → پروتکل → پاسخ واقعی تونل</span>
+  </div>`;
+  el.innerHTML=summ+rows;
+}
+function hRow(icon,label,val,ok){
+  const color=ok===false?'var(--red-t)':'var(--green-t)';
+  const ic=ok===false?'ti-alert-triangle':'ti-circle-check';
+  return `<div class="sr"><span class="sr-k"><i class="ti ${ic}" style="color:${color}"></i> ${label}</span><span class="sr-v" style="max-width:60%;text-align:left;direction:ltr">${val||'—'}</span></div>`;
+}
+function renderHealth(d){
+  const el=document.getElementById('health-body');
+  const s=(d&&d.sections)||{};
+  const panel=s.panel||{}, links=s.links||{}, egress=s.egress||{}, volume=s.volume||{}, runtime=s.runtime||{}, protos=s.protocols||{};
+  let h='';
+  h+=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+    <span class="badge ${d.ok?'bg-green':'bg-amber'}">${d.ok?'همه‌ی بخش‌ها سالم':'برخی بخش‌ها مشکل دارند'}</span>
+    <span style="font-size:10.5px;color:var(--t3)">${esc(d.version||'')} · بررسی در ${toFa(d.took_ms||0)}ms</span>
+  </div>`;
+  h+='<div class="card-title" style="font-size:12px;margin:8px 0 2px"><i class="ti ti-server-2"></i> پنل</div>';
+  h+=hRow('','نسخه / هسته',esc(panel.version||'?')+' <span style="font-size:10px;color:var(--t3)">روی '+esc(panel.base_panel||'EMIX')+'</span>',panel.ok);
+  h+=hRow('','آپتایم · اتصالات زنده',esc(panel.uptime||'—')+' · '+toFa(panel.live_connections||0));
+  h+=hRow('','هاست عمومی',esc(panel.host||'—'));
+  h+='<div class="card-title" style="font-size:12px;margin:12px 0 2px"><i class="ti ti-link"></i> کانفیگ‌ها</div>';
+  h+=hRow('','کل / فعال',toFa(links.total||0)+' / '+toFa(links.active||0),links.ok);
+  h+=hRow('','شواهد تست واقعی موفق',toFa(links.healthy_evidence||0)+' <span style="font-size:10px;color:var(--t3)">(آخرین تست: '+esc(links.last_real_check?String(links.last_real_check).slice(0,16).replace('T',' '):'—')+')</span>');
+  const pp=links.per_protocol||{};
+  h+=hRow('','توزیع پروتکل',Object.keys(pp).map(k=>`${esc(k)}: ${toFa(pp[k])}`).join(' · ')||'—');
+  h+='<div class="card-title" style="font-size:12px;margin:12px 0 2px"><i class="ti ti-world"></i> خروج واقعی (اندازه‌گیری بیرونی)</div>';
+  h+=hRow('','IP خروج / لوکیشن',egress.ok?esc(egress.exit_ip||'')+' · '+esc(egress.country||'')+' '+esc(egress.city||''):esc(egress.error||'اندازه‌گیری ناموفق'),egress.ok);
+  if(egress.ok) h+=hRow('','ISP / AS',esc(egress.isp||'—')+' · '+esc(egress.asn||'—'));
+  h+='<div class="card-title" style="font-size:12px;margin:12px 0 2px"><i class="ti ti-database"></i> دیسک و زمان اجرا</div>';
+  h+=hRow('','Volume پایدار',(volume.ok?'قابل نوشتن ✓':'نوشتن ناموفق ✗')+' <span style="font-size:10px;color:var(--t3)">'+esc(volume.data_dir||'')+' · '+toFa(Math.round((volume.state_file_bytes||0)/1024))+'KB</span>',volume.ok);
+  h+=hRow('','زمان اجرا','Python '+esc(runtime.python||'—')+' · '+esc(runtime.platform||'')+' · '+esc(runtime.event_loop||''));
+  h+='<div class="card-title" style="font-size:12px;margin:12px 0 2px"><i class="ti ti-activity"></i> تست واقعی کانفیگ‌ها (مسیر کلاینت)</div>';
+  h+='<div id="health-ping-rows"><div class="sr"><span class="sr-k" style="color:var(--t3)">برای تست واقعی همه‌ی کانفیگ‌ها، دکمه‌ی پایین را بزنید — هر کانفیگ با پروتکل واقعی خودش از بیرون آزمایش می‌شود.</span></div></div>';
+  el.innerHTML=h;
+}
+async function openHealth(){
+  openModal('modal-health');
+  const el=document.getElementById('health-body');
+  el.innerHTML='<div style="padding:16px;color:var(--t3)"><i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i> در حال بررسی سلامت همه‌ی بخش‌ها...</div>';
+  try{
+    const r=await authF('/api/system/health-all');
+    const d=await r.json();
+    renderHealth(d);
+  }catch(e){
+    el.innerHTML='<div style="padding:16px;color:var(--red-t)">خطا در دریافت گزارش سلامت — دوباره تلاش کنید</div>';
+  }
+}
 </script>
+
+<div class="modal-bg" id="modal-health" style="z-index:9999">
+  <div class="modal-v2" style="max-width:560px;display:flex;flex-direction:column;max-height:88vh;overflow:hidden">
+    <div class="modal-v2-head" style="background:linear-gradient(155deg,rgba(34,197,94,.16) 0%,transparent 65%)">
+      <button class="modal-v2-close" onclick="closeModal('modal-health')"><i class="ti ti-x"></i></button>
+      <div class="modal-v2-icon" style="background:linear-gradient(135deg,#22c55e,#4ade80)"><i class="ti ti-heartbeat"></i></div>
+      <div class="modal-v2-title">سلامت سیستم</div>
+      <div class="modal-v2-sub">گزارش جامع همه‌ی بخش‌ها + تست واقعی کانفیگ‌ها</div>
+    </div>
+    <div class="modal-v2-body" style="flex:1;overflow-y:auto" id="health-body">در حال بارگذاری...</div>
+    <div class="modal-v2-footer" style="display:flex;gap:8px;justify-content:flex-start">
+      <button class="btn btn-p" id="health-test-btn" onclick="healthTestAll()"><i class="ti ti-activity"></i> تست واقعی همه‌ی کانفیگ‌ها</button>
+      <button class="btn btn-g" onclick="openHealth()"><i class="ti ti-refresh"></i> رفرش</button>
+    </div>
+  </div>
+</div>
 </body></html>"""
 
 
