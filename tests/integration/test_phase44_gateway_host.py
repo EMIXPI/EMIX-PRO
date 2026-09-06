@@ -145,12 +145,13 @@ def test_variable_value_validation(client):
 def test_variable_upsert_uses_saved_token_and_shapes(client, monkeypatch):
     monkeypatch.setenv("RAILWAY_SERVICE_ID", "svc-1")
     monkeypatch.setenv("RAILWAY_ENVIRONMENT_ID", "env-1")
+    monkeypatch.setenv("RAILWAY_PROJECT_ID", "prj-1")
     called = []
 
     async def fake_gql(token, query, variables):
-        called.append((query, variables))
-        if "input" in variables and "{ id name }" in query:
-            raise RuntimeError("خطای GraphQL: selection not allowed")
+        called.append((token, query, variables))
+        if "projectId" not in str(variables):
+            raise RuntimeError("خطای GraphQL: projectId required")
         return {"variableUpsert": True}
 
     monkeypatch.setattr(railway_infra, "_gql", fake_gql)
@@ -161,16 +162,23 @@ def test_variable_upsert_uses_saved_token_and_shapes(client, monkeypatch):
     assert r.status_code == 200, r.text
     body = r.json()
     assert body["ok"] is True and body["value"] == "gate.workers.dev"
-    assert body["shape"] == 2, "should fall through to the flat shape"
-    # token actually passed as bearer
-    assert all(c_ == "tok" for c_ in [c[0] for c in called]) or True
-    assert len(called) == 2, "first shape rejected → second attempted"
-    assert called[1][1]["name"] == "RAILWAY_PUBLIC_DOMAIN"
+    assert body["shape"] == 1, "verified introspected shape must be tried first"
+    # token passed as bearer + verified input shape incl. required projectId
+    tok, query, variables = called[0]
+    assert tok == "tok"
+    assert variables["input"]["projectId"] == "prj-1"
+    assert variables["input"]["environmentId"] == "env-1"
+    assert variables["input"]["serviceId"] == "svc-1"
+    assert variables["input"]["name"] == "RAILWAY_PUBLIC_DOMAIN"
+    assert variables["input"]["value"] == "gate.workers.dev"
+    # Boolean return — no selection set in the mutation document
+    assert "{ id name }" not in query
 
 
 def test_variable_upsert_no_token_honest_error(client, monkeypatch):
     monkeypatch.setenv("RAILWAY_SERVICE_ID", "svc-1")
     monkeypatch.setenv("RAILWAY_ENVIRONMENT_ID", "env-1")
+    monkeypatch.setenv("RAILWAY_PROJECT_ID", "prj-1")
     monkeypatch.setattr(railway_infra.bottokentcpproxy, "load_token", lambda: None)
     r = client.post("/api/system/infra/variable",
                     json={"name": "RAILWAY_PUBLIC_DOMAIN", "value": "g.workers.dev"})
@@ -180,14 +188,15 @@ def test_variable_upsert_no_token_honest_error(client, monkeypatch):
 
 def test_variables_listing_masks_non_whitelisted(client, monkeypatch):
     monkeypatch.setenv("RAILWAY_SERVICE_ID", "svc-1")
+    monkeypatch.setenv("RAILWAY_ENVIRONMENT_ID", "env-1")
+    monkeypatch.setenv("RAILWAY_PROJECT_ID", "prj-1")
 
     async def fake_gql(token, query, variables):
-        return {"service": {"serviceInstances": {"edges": [
-            {"node": {"id": "si", "variables": {"edges": [
-                {"node": {"name": "RAILWAY_PUBLIC_DOMAIN", "value": "gate.workers.dev"}},
-                {"node": {"name": "DATABASE_URL", "value": "postgres://secret"}},
-            ]}}},
-        ]}}}
+        assert variables["projectId"] == "prj-1"
+        return {"variables": {
+            "RAILWAY_PUBLIC_DOMAIN": "gate.workers.dev",
+            "DATABASE_URL": "postgres://secret",
+        }}
 
     monkeypatch.setattr(railway_infra, "_gql", fake_gql)
     monkeypatch.setattr(railway_infra.bottokentcpproxy, "load_token", lambda: "tok")

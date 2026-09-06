@@ -68,7 +68,12 @@ def _service_ids() -> dict:
 
 
 async def _gql(token: str, query: str, variables: dict) -> dict:
-    """فراخوانی GraphQL ریلوی — خطا به‌صورت Exception با پیام فارسی"""
+    """فراخوانی GraphQL ریلوی — خطا به‌صورت Exception با پیام فارسی.
+
+    Phase 44: خطاهای 4xx از GraphQL با بدنه‌ی JSON واقعی برمی‌گردند (مثل
+    «Cannot query field…») — قبلاً raise_for_status پیام را می‌بلعید و علت
+    واقعی مخفی می‌شد. حالا بدنه خوانده می‌شود تا خطا صادقانه گزارش شود.
+    """
     async with httpx.AsyncClient(timeout=25.0) as cli:
         r = await cli.post(
             GRAPHQL_URL,
@@ -77,7 +82,14 @@ async def _gql(token: str, query: str, variables: dict) -> dict:
         )
     if r.status_code == 401:
         raise RuntimeError("توکن Railway نامعتبر است یا دسترسی کافی ندارد")
-    r.raise_for_status()
+    if r.status_code >= 400:
+        # GraphQL گاهی خطای validation را با HTTP 400 + بدنه‌ی JSON می‌فرستد
+        try:
+            data = r.json()
+            msgs = "; ".join(e.get("message", "") for e in data.get("errors") or [])
+        except Exception:
+            msgs = ""
+        raise RuntimeError(f"خطای GraphQL (HTTP {r.status_code}): {msgs or r.text[:200]}")
     data = r.json()
     if data.get("errors"):
         msgs = "; ".join(e.get("message", "") for e in data["errors"])
@@ -341,49 +353,41 @@ _VARIABLE_WHITELIST = {
 
 # فرم‌های احتمالی mutation متغیر در API ریلوی (بسته به نسخه‌ی schema) —
 # به‌ترتیب امتحان می‌شوند؛ خطای validation یعنی mutation اجرا نشده (امن برای
-# امتحان فرم بعدی) و فقط یکی از فرم‌ها در schema وجود دارد.
+# امتحان فرم بعدی).
+# شکل ۱ = همان که با introspection از schema واقعی ریلوی تأیید شده است:
+#   variableUpsert(input: VariableUpsertInput!): Boolean
+#   VariableUpsertInput: environmentId!, name!, projectId!, serviceId?,
+#                        skipDeploys?, value!
+# (projectId اجباری است؛ skipDeploys ست نمی‌شود تا ریلوی بعد از تغییر متغیر
+# خودش redeploy کند — همان رفتار دلخواه اپراتور.)
 _MUTATION_VAR_UPSERT = [
-    (
-        """mutation VariableUpsert($input: VariableUpsertInput!) {
-          variableUpsert(input: $input) { id name }
-        }""",
-        lambda ids, name, value: {"input": {
-            "environmentId": ids["environment_id"], "serviceId": ids["service_id"],
-            "name": name, "value": value}},
-    ),
-    (
-        """mutation VariableUpsert($environmentId: String!, $serviceId: String!,
-                                    $name: String!, $value: String!) {
-          variableUpsert(environmentId: $environmentId, serviceId: $serviceId,
-                         name: $name, value: $value)
-        }""",
-        lambda ids, name, value: {
-            "environmentId": ids["environment_id"], "serviceId": ids["service_id"],
-            "name": name, "value": value},
-    ),
     (
         """mutation VariableUpsert($input: VariableUpsertInput!) {
           variableUpsert(input: $input)
         }""",
         lambda ids, name, value: {"input": {
-            "environmentId": ids["environment_id"], "serviceId": ids["service_id"],
-            "name": name, "value": value}},
+            "environmentId": ids["environment_id"], "projectId": ids["project_id"],
+            "serviceId": ids["service_id"], "name": name, "value": value}},
+    ),
+    # fallback برای schema-drift آینده (فرم legacy flat — اگر روزی برگردد)
+    (
+        """mutation VariableUpsert($environmentId: String!, $projectId: String!,
+                                    $serviceId: String!, $name: String!, $value: String!) {
+          variableUpsert(environmentId: $environmentId, projectId: $projectId,
+                         serviceId: $serviceId, name: $name, value: $value)
+        }""",
+        lambda ids, name, value: {
+            "environmentId": ids["environment_id"], "projectId": ids["project_id"],
+            "serviceId": ids["service_id"], "name": name, "value": value},
     ),
 ]
 
+# خواندن متغیرها — با introspection تأیید شده:
+#   variables(environmentId: String!, projectId: String!, serviceId: String):
+#     EnvironmentVariables (مپ name→value)
 _QUERY_SERVICE_VARIABLES = """
-query ServiceVariables($serviceId: String!) {
-  service(id: $serviceId) {
-    id
-    serviceInstances {
-      edges {
-        node {
-          id
-          variables { edges { node { name value } } }
-        }
-      }
-    }
-  }
+query ServiceVariables($environmentId: String!, $projectId: String!, $serviceId: String) {
+  variables(environmentId: $environmentId, projectId: $projectId, serviceId: $serviceId)
 }
 """
 
@@ -407,30 +411,27 @@ async def _upsert_variable(ids: dict, name: str, value: str) -> dict:
 
 async def _list_variables(ids: dict) -> dict:
     token = bottokentcpproxy.load_token()
-    if not token or not ids["service_id"]:
+    if not token or not all([ids["environment_id"], ids["project_id"], ids["service_id"]]):
         return {"ok": True, "variables": [],
-                "note": "توکن/شناسه‌ی سرویس در این runtime موجود نیست"}
+                "note": "توکن/شناسه‌های سرویس در این runtime موجود نیست"}
     try:
-        data = await _gql(token, _QUERY_SERVICE_VARIABLES,
-                          {"serviceId": ids["service_id"]})
+        data = await _gql(token, _QUERY_SERVICE_VARIABLES, {
+            "environmentId": ids["environment_id"],
+            "projectId": ids["project_id"],
+            "serviceId": ids["service_id"],
+        })
     except RuntimeError as exc:
         return {"ok": False, "error": str(exc)[:300]}
     out: list = []
-    try:
-        for edge in ((data.get("service") or {}).get("serviceInstances") or {}).get("edges") or []:
-            node = edge.get("node") or {}
-            for ve in (node.get("variables") or {}).get("edges") or []:
-                vn = ve.get("node") or {}
-                nm, vl = vn.get("name"), vn.get("value")
-                if nm:
-                    safe = nm in _VARIABLE_WHITELIST
-                    out.append({
-                        "name": nm,
-                        "value": vl if safe else "••• (مخفی)",
-                        "safe": safe,
-                    })
-    except Exception as exc:
-        return {"ok": False, "error": f"پاسخ غیرمنتظره از API ریلوی: {exc}"}
+    raw = data.get("variables")
+    if isinstance(raw, dict):
+        for nm, vl in sorted(raw.items()):
+            safe = nm in _VARIABLE_WHITELIST
+            out.append({
+                "name": nm,
+                "value": vl if safe else "••• (مخفی)",
+                "safe": safe,
+            })
     return {"ok": True, "variables": out, "whitelist": dict(_VARIABLE_WHITELIST)}
 
 
@@ -494,10 +495,10 @@ def register_routes(app) -> None:
                 status_code=400,
                 detail="مقدار باید یک hostname معتبر باشد (مثل my-gate.workers.dev)")
         ids = _service_ids()
-        if not all([ids["environment_id"], ids["service_id"]]):
+        if not all([ids["environment_id"], ids["service_id"], ids["project_id"]]):
             raise HTTPException(
                 status_code=400,
-                detail="شناسه‌های سرویس/محیط Railway در این runtime موجود نیست")
+                detail="شناسه‌های سرویس/محیط/پروژه Railway در این runtime موجود نیست")
         res = await asyncio.wait_for(
             _upsert_variable(ids, name, value), timeout=40.0)
         if not res.get("ok"):
