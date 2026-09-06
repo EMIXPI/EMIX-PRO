@@ -3136,6 +3136,20 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
       <button class="btn btn-g" id="health-all-btn" onclick="runHealthAll(this)"><i class="ti ti-stethoscope"></i> بررسی سلامت همه‌چیز</button>
     </div>
     <div id="health-all-result" style="display:none"></div>
+    <div style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--card-b)">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <i class="ti ti-world" style="color:var(--blue-t)"></i>
+        <div style="flex:1;min-width:200px">
+          <div style="font-weight:700;font-size:12.5px">دامنه‌ی عمومی لینک‌ها (RAILWAY_PUBLIC_DOMAIN)</div>
+          <div style="font-size:10.5px;color:var(--t3);line-height:1.7">اگر ingress مستقیم Railway از شبکه‌ی شما فیلتر است، دامنه‌ی گیت‌وی Cloudflare را بگذارید تا پنل و همه‌ی کانفیگ‌ها از همان مسیر صادر شوند</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+        <input id="pubhost-input" dir="ltr" placeholder="مثلاً my-gate.workers.dev" style="flex:1;min-width:220px;direction:ltr;text-align:left;font-size:12px" class="in">
+        <button class="btn btn-blue" id="pubhost-btn" onclick="savePublicHost(this)"><i class="ti ti-device-floppy"></i> ذخیره و redeploy</button>
+      </div>
+      <div id="pubhost-cur" style="font-size:11px;color:var(--t3);margin-top:6px;direction:ltr;text-align:left">—</div>
+    </div>
   </div>
 
   <div class="metrics">
@@ -7095,6 +7109,7 @@ function handleSupportDevDismiss(){
 }
 let prevTraf=0,ch1,ch2,ch3;
 async function fetchStats(){
+  loadPublicHost(); /* Phase 44 — وضعیت دامنه‌ی عمومی روی کارت سلامت */
   try{
     const r=await authF('/stats'),d=await r.json();
     document.getElementById('m-conns').textContent=d.active_connections;
@@ -8024,6 +8039,34 @@ async function runHealthAll(btn){
     toast(j.ok?'همه‌ی بخش‌ها سالم هستند':'برخی بخش‌ها مشکل دارند — جزئیات در کارت',j.ok?'ok':'err');
   }catch(e){box.innerHTML='<span style="color:var(--red-t);font-size:12px">خطا در بررسی سلامت</span>'}
   finally{ic.className='ti ti-stethoscope';ic.style.animation='';btn.disabled=false}
+}
+/* ═════════════════ Phase 44: دامنه‌ی عمومی لینک‌ها (host routing) ═════════════════ */
+async function loadPublicHost(){
+  try{
+    const r=await authF('/api/system/infra/variables');
+    if(!r.ok)return;
+    const j=await r.json();
+    const cur=document.getElementById('pubhost-cur');
+    if(!cur)return;
+    const row=(j.variables||[]).find(v=>v.name==='RAILWAY_PUBLIC_DOMAIN');
+    if(row){cur.innerHTML='فعلی: <b style="color:var(--blue-t)">'+(row.value||'(خالی)')+'</b>';}
+    else{cur.innerHTML='تنظیم‌نشده — لینک‌ها از دامنه‌ی خودآموخته صادر می‌شوند';}
+  }catch(e){}
+}
+async function savePublicHost(btn){
+  const inp=document.getElementById('pubhost-input');
+  const val=(inp.value||'').trim().toLowerCase();
+  if(!val||!val.includes('.')){toast('یک hostname معتبر وارد کنید (مثل my-gate.workers.dev)','err');return}
+  const ic=btn.querySelector('i');ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite';btn.disabled=true;
+  try{
+    const r=await authF('/api/system/infra/variable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'RAILWAY_PUBLIC_DOMAIN',value:val})});
+    const j=await r.json().catch(()=>({detail:'پاسخ نامعتبر'}));
+    if(r.ok&&j.ok){
+      toast('ذخیره شد — ریلوی redeploy می‌کند؛ ۱-۲ دقیقه صبر کنید','ok');
+      document.getElementById('pubhost-cur').innerHTML='در حال اعمال: <b style="color:var(--amber-t)">'+val+'</b>';
+    }else{toast((j.detail)||'خطا در ذخیره‌ی متغیر','err')}
+  }catch(e){toast('خطا','err')}
+  finally{ic.className='ti ti-device-floppy';ic.style.animation='';btn.disabled=false}
 }
 /* تست همه‌ی کانفیگ‌ها از مسیر گیت‌وی کلادفلر (پینگ واقعی خروجی) */
 async function pingAllViaWorker(){

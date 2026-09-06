@@ -16,6 +16,8 @@
 #   GET  /api/system/infra/status        → volume + سرویس + پروکسی‌ها
 #   POST /api/system/infra/ensure-volume → ساخت volume روی DATA_DIR (اگر نباشد)
 #   GET  /api/system/health-all          → سلامت همه‌ی بخش‌های پنل تا خروجی
+#   GET  /api/system/infra/variables     → متغیرهای سرویس (مقادیر مخفی جز whitelist)
+#   POST /api/system/infra/variable      → ست‌کردن متغیر whitelist‌شده (host routing)
 # ══════════════════════════════════════════════════════════════════════════════
 
 import asyncio
@@ -24,7 +26,7 @@ import time
 from pathlib import Path
 
 import httpx
-from fastapi import Depends, Request
+from fastapi import Depends, HTTPException, Request
 from fastapi.responses import JSONResponse
 
 from main import (
@@ -318,6 +320,120 @@ async def health_all() -> dict:
 # register_routes
 # ══════════════════════════════════════════════════════════════════════════════
 
+# ══════════════════════════════════════════════════════════════════════════════
+# Phase 44 — Public host routing (operator, whitelist-gated)
+# ══════════════════════════════════════════════════════════════════════════════
+# ریشه‌ی Phase 44 (اندازه‌گیری زنده از نودهای ایران): IP ingress مستقیم پنل
+# (69.46.46.22) در TCP از ایران blackhole است؛ دامنه‌ی EMIX (‎.45) و لبه‌ی
+# Cloudflare در دسترس‌اند. راه‌حل واقعی: get_host() دامنه‌ی قابل‌دسترسِ کاربر را
+# برگرداند → همه‌ی لینک‌ها/ساب‌ها از آن صادر شوند. RAILWAY_PUBLIC_DOMAIN
+# دقیقاً همین اولویت را دارد (env > learned > CONFIG) — فقط باید ست شود.
+# این اندپوینت همان ست‌کردن را با توکن ذخیره‌شده برای اپراتور انجام می‌دهد.
+
+_VARIABLE_WHITELIST = {
+    "RAILWAY_PUBLIC_DOMAIN": (
+        "دامنه‌ی عمومی که در همه‌ی لینک‌ها/ساب‌ها نوشته می‌شود — "
+        "مثلاً دامنه‌ی گیت‌وی Cloudflare (‎*.workers.dev) وقتی ingress مستقیم "
+        "Railway از شبکه‌ی کاربر فیلتر است"
+    ),
+    "EMIX_CDN_DOMAIN": "دامنه‌ی CDN برای مسیر Mode A لینک‌های SNI-spoof",
+}
+
+# فرم‌های احتمالی mutation متغیر در API ریلوی (بسته به نسخه‌ی schema) —
+# به‌ترتیب امتحان می‌شوند؛ خطای validation یعنی mutation اجرا نشده (امن برای
+# امتحان فرم بعدی) و فقط یکی از فرم‌ها در schema وجود دارد.
+_MUTATION_VAR_UPSERT = [
+    (
+        """mutation VariableUpsert($input: VariableUpsertInput!) {
+          variableUpsert(input: $input) { id name }
+        }""",
+        lambda ids, name, value: {"input": {
+            "environmentId": ids["environment_id"], "serviceId": ids["service_id"],
+            "name": name, "value": value}},
+    ),
+    (
+        """mutation VariableUpsert($environmentId: String!, $serviceId: String!,
+                                    $name: String!, $value: String!) {
+          variableUpsert(environmentId: $environmentId, serviceId: $serviceId,
+                         name: $name, value: $value)
+        }""",
+        lambda ids, name, value: {
+            "environmentId": ids["environment_id"], "serviceId": ids["service_id"],
+            "name": name, "value": value},
+    ),
+    (
+        """mutation VariableUpsert($input: VariableUpsertInput!) {
+          variableUpsert(input: $input)
+        }""",
+        lambda ids, name, value: {"input": {
+            "environmentId": ids["environment_id"], "serviceId": ids["service_id"],
+            "name": name, "value": value}},
+    ),
+]
+
+_QUERY_SERVICE_VARIABLES = """
+query ServiceVariables($serviceId: String!) {
+  service(id: $serviceId) {
+    id
+    serviceInstances {
+      edges {
+        node {
+          id
+          variables { edges { node { name value } } }
+        }
+      }
+    }
+  }
+}
+"""
+
+
+async def _upsert_variable(ids: dict, name: str, value: str) -> dict:
+    token = bottokentcpproxy.load_token()
+    if not token:
+        return {"ok": False, "error": "توکن Railway ذخیره نشده است"}
+    errors: list = []
+    for i, (query, mk_vars) in enumerate(_MUTATION_VAR_UPSERT):
+        try:
+            await _gql(token, query, mk_vars(ids, name, value))
+            return {"ok": True, "shape": i + 1}
+        except RuntimeError as exc:
+            errors.append(f"فرم {i + 1}: {str(exc)[:200]}")
+        except Exception as exc:  # شبکه/HTTP
+            return {"ok": False, "error": f"ارتباط با API ریلوی ناموفق: {exc}"}
+    return {"ok": False, "error": "mutation متغیر در API ریلوی پذیرفته نشد",
+            "detail": errors}
+
+
+async def _list_variables(ids: dict) -> dict:
+    token = bottokentcpproxy.load_token()
+    if not token or not ids["service_id"]:
+        return {"ok": True, "variables": [],
+                "note": "توکن/شناسه‌ی سرویس در این runtime موجود نیست"}
+    try:
+        data = await _gql(token, _QUERY_SERVICE_VARIABLES,
+                          {"serviceId": ids["service_id"]})
+    except RuntimeError as exc:
+        return {"ok": False, "error": str(exc)[:300]}
+    out: list = []
+    try:
+        for edge in ((data.get("service") or {}).get("serviceInstances") or {}).get("edges") or []:
+            node = edge.get("node") or {}
+            for ve in (node.get("variables") or {}).get("edges") or []:
+                vn = ve.get("node") or {}
+                nm, vl = vn.get("name"), vn.get("value")
+                if nm:
+                    safe = nm in _VARIABLE_WHITELIST
+                    out.append({
+                        "name": nm,
+                        "value": vl if safe else "••• (مخفی)",
+                        "safe": safe,
+                    })
+    except Exception as exc:
+        return {"ok": False, "error": f"پاسخ غیرمنتظره از API ریلوی: {exc}"}
+    return {"ok": True, "variables": out, "whitelist": dict(_VARIABLE_WHITELIST)}
+
+
 def register_routes(app) -> None:
 
     @app.get("/api/system/infra/status")
@@ -349,4 +465,50 @@ def register_routes(app) -> None:
     async def infra_health_all(_=Depends(require_auth)):
         return await asyncio.wait_for(health_all(), timeout=45.0)
 
-    logger.info("[infra] ماژول زیرساخت ریلوی فعال شد — volume خودکار + سلامت‌سنجی کامل")
+    @app.get("/api/system/infra/variables")
+    async def infra_variables(_=Depends(require_auth)):
+        """متغیرهای سرویس — مقادیر فقط برای whitelist نمایش داده می‌شوند."""
+        return await _list_variables(_service_ids())
+
+    @app.post("/api/system/infra/variable")
+    async def infra_set_variable(request: Request, _=Depends(require_auth)):
+        """ست‌کردن متغیر whitelist‌شده (host routing) با توکن ذخیره‌شده.
+
+        تغییر متغیر → ریلوی سرویس را redeploy می‌کند؛ بعد از بالا آمدن،
+        get_host() دامنه‌ی جدید را برمی‌گرداند و همه‌ی لینک‌ها/ساب‌ها/QR
+        از همان صادر می‌شوند.
+        """
+        try:
+            body = await request.json()
+        except Exception:
+            body = {}
+        name = str(body.get("name", "")).strip()
+        value = str(body.get("value", "")).strip().lower()
+        if name not in _VARIABLE_WHITELIST:
+            raise HTTPException(
+                status_code=403,
+                detail=f"تنها این متغیرها مجازند: {', '.join(sorted(_VARIABLE_WHITELIST))}")
+        if not value or "." not in value or not all(
+                c.isalnum() or c in ".-" for c in value):
+            raise HTTPException(
+                status_code=400,
+                detail="مقدار باید یک hostname معتبر باشد (مثل my-gate.workers.dev)")
+        ids = _service_ids()
+        if not all([ids["environment_id"], ids["service_id"]]):
+            raise HTTPException(
+                status_code=400,
+                detail="شناسه‌های سرویس/محیط Railway در این runtime موجود نیست")
+        res = await asyncio.wait_for(
+            _upsert_variable(ids, name, value), timeout=40.0)
+        if not res.get("ok"):
+            detail = res.get("error", "")
+            extra = "; ".join(res.get("detail", []) or [])
+            raise HTTPException(status_code=502, detail=f"{detail} — {extra}"[:500])
+        return {
+            "ok": True, "name": name, "value": value, "shape": res.get("shape"),
+            "note": ("متغیر ذخیره شد — ریلوی سرویس را redeploy می‌کند (۱-۲ دقیقه). "
+                     "بعد از بالا آمدن همه‌ی لینک‌ها/ساب‌ها از دامنه‌ی جدید صادر می‌شوند؛ "
+                     "کلاینت‌ها را با ساب‌لینک دوباره ایمپورت کنید."),
+        }
+
+    logger.info("[infra] ماژول زیرساخت ریلوی فعال شد — volume خودکار + سلامت‌سنجی کامل + host routing")

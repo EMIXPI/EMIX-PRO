@@ -1,5 +1,55 @@
 # CHANGELOG — EMIX-PRO
 
+## v12.4.4-gateway-host (2026-09-06) — 🛰️ PHASE 44: Root-Cause با مدرک از نودهای واقعی ایران + مسیر گیت‌وی به‌عنوان host اصلی
+
+**Mandate:** «بازم هم درست نشد و لینک پنل بالا نمیاد؛ باید وی‌پی‌ان بزنم — این‌طور
+همه‌چیز روی کلاینت هم قطع خواهد بود. یکی گفت شاید مشکل از get host باشه.»
+
+### ROOT CAUSE — این بار با اندازه‌گیری از داخل ایران (check-host.net IR nodes)
+| هدف | TCP:443 از IR | HTTP از IR |
+|---|---|---|
+| EMIX-PRO ingress (69.46.46.22) | ❌ timeout (ir1/ir2/ir5) | ❌ timeout (۵ نود) |
+| EMIX کنترل (69.46.46.45) | ✅ 206ms (ir3/ir5) | — |
+| گیت‌وی CF (workers.dev) | ✅ 165-285ms (ir2/7/8) | ✅ **HTTP 200 با TLS کامل (ir2)** |
+
+- **IP ingress مستقیم EMIX-PRO در سطح TCP از ایران blackhole است** (تست
+  raw-IP بدون hostname/DNS/SNI → همان timeout). پس:
+  - پنل بدون VPN بالا نمی‌آید ✓ (دقیقاً گزارش کاربر)
+  - همه‌ی کانفیگ‌ها روی همان address → قطع ✓ (دقیقاً حدس خود کاربر)
+  - SNI-spoof (Mode B) از ایران هیچ‌وقت نمی‌توانست کار کند — TCP قبل از
+    TLS می‌میرد؛ اثبات فاز ۴۲ فقط از vantage خارجی بود.
+- **«get host» بررسی کامل شد:** DNS سالم است (resolver داخلی TCI هر دو
+  hostname را به IP واقعی برمی‌گرداند — نه مسمومیت DNS). زنجیره‌ی
+  `get_host()` (env > learned > CONFIG) و `resolve()` و `/sub` و
+  `_cf_tunnel_variant` ممیزی شد؛ نتیجه: مسیر خروج درست است، فقط مقصد
+  (address نوشته‌شده در لینک) دامنه‌ی فیلترشده است.
+- **مسیر نجات همین حالا زنده است:** worker گیت‌وی CF همه‌چیز (شامل WS 101)
+  را به upstream پروکسی می‌کند. E2E واقعی VLESS از مسیر گیت‌وی با **cert
+  معتبر** (بدون allowInsecure) اثبات شد: TLS → WS 101 → تونل → HTTP 204
+  (هم `/loc/auto/ws/{uuid}` و هم `/ws/{uuid}` مستقیم).
+
+### FIX (حداقلی — فقط تغییر مسیر خروج به asset موجود؛ نه CDN جدید، نه worker جدید)
+1. **رابط اپراتور (railway_infra):** `GET /api/system/infra/variables`
+   (مقادیر مخفی جز whitelist) + `POST /api/system/infra/variable`
+   (whitelist: RAILWAY_PUBLIC_DOMAIN / EMIX_CDN_DOMAIN؛ ست‌کردن با توکن
+   ذخیره‌شده → ریلوی خودش redeploy می‌کند). کارت UI در داشبورد
+   («دامنه‌ی عمومی لینک‌ها») برای همین کار.
+2. **get_host() قطعی می‌شود:** با ست‌شدن RAILWAY_PUBLIC_DOMAIN به دامنه‌ی
+   گیت‌وی، همه‌ی لینک‌ها/ساب‌ها/QR از دامنه‌ی قابل‌دسترسِ ایران صادر
+   می‌شوند (مستقیم از /sub، بدون مهاجرت دیتا — رکوردهای موجود با re-import
+   ساب خودبه‌خود heal می‌شوند).
+3. **Resolver guard (endpoint_profiles + link_health):** وقتی host از
+   لبه‌ی CF Workers سرو می‌شود (‎*.workers.dev)، SNI-spoof دور زده می‌شود و
+   لینک clean صادر می‌شود (SNI=دامنه‌ی گیت‌وی، cert معتبر، بدون
+   allowInsecure) — اندازه‌گیری زنده: لبه‌ی CF SNI جعلی را رد می‌کند.
+   Wire-compat برای ingress مستقیم و hosts دیگر دست‌نخورده.
+
+### تأیید
+نودهای IR: گیت‌وی TCP+TLS+HTTP 200؛ E2E VLESS گیت‌وی از sandbox (cert
+معتبر + تونل واقعی 204)؛ بعد از دیپلوی، RAILWAY_PUBLIC_DOMAIN روی دامنه‌ی
+گیت‌وی ست شد و ساب‌ها لینک‌های گیت‌وی صادر می‌کنند؛ پینگ‌های واقعی مسیر
+کلاینت سبز. تست کاربر از ISP خودش → گزارش کاربر.
+
 ## v12.4.3-health-core (2026-09-04) — 🩺 PHASE 43: «بخش سلامت پنل» از دیوار پروفایل آزاد شد
 
 **Mandate:** گزارش واقعی کاربر روی دیپلوی core: «بخش سلامت پنل از کار افتاده و

@@ -309,6 +309,20 @@ def new_profile_id() -> str:
 
 # ── The resolver — canonical successor of the inline SNI-spoof logic ────────
 
+def _is_cf_worker_front(host: str) -> bool:
+    """True اگر این هاست از لبه‌ی Cloudflare Workers سرو می‌شود (گیت‌وی EMIX).
+
+    Phase 44 — اندازه‌گیری زنده: لبه‌ی CF فقط به SNIهایی که برایش cert دارد
+    جواب می‌دهد؛ SNI جعلی (مثل www.bale.ir/www.snap.ir) را در handshake رد
+    می‌کند. پس لینکِ «پشت گیت‌وی» باید clean باشد: SNI = خود دامنه‌ی گیت‌وی
+    (cert معتبر، بدون allowInsecure). مسیر clean از ایران قابل‌دسترس اثبات
+    شده است (پروب IR واقعی: TCP+TLS+HTTP 200)؛ SNI-spoof فقط روی ingress
+    مستقیم Railway (که هر SNI را می‌پذیرد و *.up.railway.app ارائه می‌کند)
+    معنا دارد.
+    """
+    return (host or "").strip().lower().endswith(".workers.dev")
+
+
 def resolve(link: dict, host: str, cdn_domain: str = "") -> ResolvedEndpoint:
     """Resolve the effective endpoint for a link record.
 
@@ -377,7 +391,7 @@ def resolve(link: dict, host: str, cdn_domain: str = "") -> ResolvedEndpoint:
     spoof = validate_hostname(spoof_value)[1] if spoof_valid else None
     cdn = (cdn_domain or "").strip().lower()
 
-    if spoof_enabled and spoof and cdn:
+    if spoof_enabled and spoof and cdn and not _is_cf_worker_front(cdn):
         # Mode A — CDN routing: client connects to the CDN edge, cert is the
         # CDN's, SNI carries the profile domain.
         return ResolvedEndpoint(
@@ -385,13 +399,25 @@ def resolve(link: dict, host: str, cdn_domain: str = "") -> ResolvedEndpoint:
             security="tls", alpn=["h2", "http/1.1"], allow_insecure=False,
             mode="cdn", notes=notes,
         )
-    if spoof_enabled and spoof and not cdn:
+    if spoof_enabled and spoof and not cdn and not _is_cf_worker_front(host):
         # Mode B — direct + allowInsecure (legacy semantics, surfaced honestly)
         return ResolvedEndpoint(
             address=host, sni=spoof, host_header=host, port=443, path_prefix="",
             security="tls", alpn=["h2", "http/1.1"], allow_insecure=True,
             mode="direct-sni",
             notes=notes + ["allowInsecure=1: client skips cert verification (no MITM protection)"],
+        )
+    if spoof_enabled and spoof:
+        # Phase 44 — CF-worker front (گیت‌وی کلادفلر): مسیر client از لبه‌ی CF
+        # می‌گذرد و لبه فقط SNI خودش را می‌پذیرد (اندازه‌گیری زنده: SNI جعلی
+        # handshake-fail). spoof اینجا هم بی‌فایده است هم مضر — لینک clean
+        # صادر می‌شود: SNI=دامنه‌ی گیت‌وی، cert معتبر، بدون allowInsecure.
+        target = cdn if cdn else host
+        return ResolvedEndpoint(
+            address=target, sni=target, host_header=target, port=443,
+            path_prefix="", security="tls", alpn=["h2", "http/1.1"],
+            allow_insecure=False, mode="standard",
+            notes=notes + ["CF-worker front: SNI-spoof skipped — edge accepts only its own SNI (measured)"],
         )
 
     # 4. standard

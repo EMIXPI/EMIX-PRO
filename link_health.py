@@ -374,11 +374,18 @@ def _link_spoof_sni(link: dict) -> str | None:
 
     حالت CDN (EMIX_CDN_DOMAIN ست شده → Mode A) عمداً None برمی‌گرداند: در آن حالت
     مسیر کلاینت دامنه‌ی CDN است نه دامنه‌ی پنل، و این پروب برایش معنا ندارد.
+    Phase 44: وقتی هاستِ پنل از گیت‌وی Cloudflare (‎*.workers.dev) سرو می‌شود
+    هم None برمی‌گردد — resolver لینک را clean صادر می‌کند (لبه‌ی CF فقط SNI
+    خودش را می‌پذیرد) پس مسیر واقعیِ کلاینت همان clean است؛ پروب spoof باعث
+    قرمزِ کاذب می‌شد.
     """
     import os
     if os.environ.get("EMIX_CDN_DOMAIN", "").strip():
         return None
     if not link.get("spoof_sni_enabled"):
+        return None
+    panel_host = (get_host() or "").strip().lower()
+    if panel_host.endswith(".workers.dev"):
         return None
     return _validate_sni(link.get("spoof_sni"))
 
