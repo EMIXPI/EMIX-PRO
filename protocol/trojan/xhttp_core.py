@@ -18,7 +18,6 @@ from datetime import datetime, timezone
 
 from fastapi import Request, HTTPException
 
-from protocol.net_connect import open_connection_v4first, apply_weak_link_tuning
 from main import (
     LINKS,
     LINKS_LOCK,
@@ -27,7 +26,6 @@ from main import (
     logger,
     is_link_allowed,
     save_state,
-    schedule_save,
 )
 from protocol.vless.vless import check_and_use
 from protocol.trojan.trojan import parse_trojan_header, find_uuid_by_trojan_hash
@@ -39,7 +37,7 @@ TROJAN_SESSION_IDLE_TIMEOUT_ACTIVE = 90
 TROJAN_REAPER_INTERVAL = 10
 TROJAN_TCP_CONNECT_TIMEOUT = 10.0
 
-TROJAN_SOCK_BUF_SIZE = 512 * 1024   # پروفایل ضعیف-لینک RVG v11.0.2 (ضد bufferbloat)
+TROJAN_SOCK_BUF_SIZE = 4 * 1024 * 1024
 
 # ── AdaptiveFlow (AIMD) مخصوص Trojan-XHTTP ────────────────────────────────────
 TROJAN_FLOW_MIN_HW = 256 * 1024
@@ -81,13 +79,17 @@ def _resp_headers(fp: str) -> dict:
 
 
 def _tune_socket(writer: asyncio.StreamWriter):
-    """پروفایل ضعیف-لینک net_connect (RVG v11.0.2): بافر 512KB + TCP_USER_TIMEOUT 20s."""
+    """TCP_NODELAY + بافرهای بزرگ‌تر سوکت مخصوص Trojan-XHTTP."""
     sock = writer.transport.get_extra_info("socket")
     if not sock:
         return
     try:
-        apply_weak_link_tuning(sock)
-    except Exception as e:
+        sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, TROJAN_SOCK_BUF_SIZE)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, TROJAN_SOCK_BUF_SIZE)
+        if hasattr(socket, "TCP_QUICKACK"):
+            sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_QUICKACK, 1)
+    except OSError as e:
         logger.warning(f"Trojan-XHTTP _tune_socket failed: {e}")
 
 
@@ -176,7 +178,9 @@ async def _open_tcp_from_trojan_header(first_chunk: bytes):
         raise ValueError("trojan auth failed")
 
     try:
-        reader, writer = await open_connection_v4first(address, port, timeout=TROJAN_TCP_CONNECT_TIMEOUT)
+        reader, writer = await asyncio.wait_for(
+            asyncio.open_connection(address, port), timeout=TROJAN_TCP_CONNECT_TIMEOUT
+        )
     except asyncio.TimeoutError:
         logger.error(f"Trojan-XHTTP TCP connect TIMEOUT -> {address}:{port} (>{TROJAN_TCP_CONNECT_TIMEOUT}s)")
         raise
@@ -280,15 +284,11 @@ async def _reaper():
 
 
 _reaper_started = False
-_reaper_lock = asyncio.Lock()
 
 
-async def ensure_reaper():
-    """Guarantee exactly one reaper task per process (Phase 1.6 — race fix)."""
+def ensure_reaper():
     global _reaper_started
-    async with _reaper_lock:
-        if _reaper_started:
-            return
+    if not _reaper_started:
         asyncio.create_task(_reaper())
         _reaper_started = True
 
@@ -340,7 +340,7 @@ async def _open_tcp_for_session(session_id: str, uuid: str, sess: dict, first_ch
     sess["downlink_task"] = asyncio.create_task(
         _pump_tcp_to_queue(session_id, uuid, reader, sess["down_q"], conn_id=sess["conn_id"])
     )
-    asyncio.create_task(schedule_save())
+    asyncio.create_task(save_state())
 
 
 def _downstream_gen(sess: dict):

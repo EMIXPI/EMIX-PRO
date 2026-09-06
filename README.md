@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://capsule-render.vercel.app/api?type=waving&color=0:0f2027,50:203a43,100:2c5364&height=220&section=header&text=EMIX%20PRO&fontSize=56&fontColor=ffffff&animation=fadeIn&fontAlignY=38&desc=Multi-Protocol%20Proxy%20Management%20Panel&descAlignY=58&descSize=18" width="100%"/>
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:0f2027,50:203a43,100:2c5364&height=220&section=header&text=EMIX&fontSize=60&fontColor=ffffff&animation=fadeIn&fontAlignY=38&desc=Multi-Protocol%20Proxy%20Management%20Panel&descAlignY=58&descSize=18" width="100%"/>
 
 <a href="#-english"><img src="https://img.shields.io/badge/🇬🇧-English-0f2027?style=for-the-badge" /></a>
 <a href="#-فارسی"><img src="https://img.shields.io/badge/🇮🇷-فارسی-203a43?style=for-the-badge" /></a>
@@ -16,18 +16,10 @@
 [![Railway](https://img.shields.io/badge/Deploy-Railway-0B0D0E?style=for-the-badge&logo=railway&logoColor=white)](https://railway.app)
 [![License](https://img.shields.io/badge/License-Custom-red?style=for-the-badge)](./LICENSE)
 
-<br/>
-
-<a href="https://railway.com/new/template?template=https://github.com/EMIXPI/EMIX-PRO">
-  <img src="https://railway.com/button.svg" alt="Deploy on Railway" width="180"/>
-</a>
-
-**⬆️ One-Click Deploy** — Railway auto-configures the port (`PORT`), start command, and healthcheck (`/api/ping`) from `railway.toml`. After deploy, just hit **Settings → Networking → Generate Domain** and open `/dashboard`.
-
-![Stars](https://img.shields.io/github/stars/EMIXPI/EMIX-PRO?style=social)
-![Forks](https://img.shields.io/github/forks/EMIXPI/EMIX-PRO?style=social)
-![Last Commit](https://img.shields.io/github/last-commit/EMIXPI/EMIX-PRO?color=2c5364)
-![Repo Size](https://img.shields.io/github/repo-size/EMIXPI/EMIX-PRO?color=0f2027)
+![Stars](https://img.shields.io/github/stars/your-username/EMIX?style=social)
+![Forks](https://img.shields.io/github/forks/your-username/EMIX?style=social)
+![Last Commit](https://img.shields.io/github/last-commit/your-username/EMIX?color=2c5364)
+![Repo Size](https://img.shields.io/github/repo-size/your-username/EMIX?color=0f2027)
 
 </div>
 
@@ -36,7 +28,7 @@
 ---
 
 <div align="center">
-<h1>🇬🇧 EMIX PRO — English</h1>
+<h1>🇬🇧 English</h1>
 </div>
 
 ## 📖 Table of Contents
@@ -59,15 +51,11 @@
 
 ## 🚀 Overview
 
-**EMIX PRO** is a fast, modern, self-hosted **multi-protocol proxy management panel**, built with **Python + FastAPI**, designed to deploy in minutes on **Railway**.
-
-> 🏗️ **v12.0.0-core revival (2026-09-04):** the panel now boots on the **EMIX base-protocol core** — ping / relays (VLESS · Trojan · Shadowsocks · MTProto) / subs / dashboard are an *always-alive core surface* (self-checked at boot), while 27 PRO engines are **opt-in** (`EMIX_PROFILE=full` or `EMIX_ENABLE=…`). Config identity is stable across redeploys even without a Volume. Full story: [`REVIVAL.md`](./REVIVAL.md). IR-Direct split-tunneling ships as **`/sub-json/{uuid}`** (full sing-box/xray client config: Iranian destinations → DIRECT via the user's ISP) plus **`&exit=ir`** — chain all traffic through a VERIFIED Iranian gateway so the apparent IP stays Iran everywhere. Tests: **985/985 green**.
+**EMIX** is a fast, modern, self-hosted **multi-protocol proxy management panel**, built with **Python + FastAPI**, designed to deploy in minutes on **Railway**.
 
 It gives you a beautiful admin dashboard to create, monitor, and manage proxy links across multiple protocols — with per-link traffic quotas, live connection stats, and QR code generation — all from a single lightweight service.
 
-> 💡 Originally built around a simple VLESS-over-WebSocket relay, EMIX has evolved into a **self-diagnosing network orchestration platform**: what it claims is backed by evidence.
-
-> ✅ **Verification status (v11.1.0-audit):** 642/642 tests green, honest 7-level test classification, full audit trail in [`AUDIT_REPORT_FINAL.md`](./AUDIT_REPORT_FINAL.md), [`PRODUCTION_READINESS_REPORT.md`](./PRODUCTION_READINESS_REPORT.md), [`PROTOCOL_MATRIX_FINAL.md`](./PROTOCOL_MATRIX_FINAL.md), [`TRANSPORT_MATRIX_FINAL.md`](./TRANSPORT_MATRIX_FINAL.md), [`SECURITY_AUDIT_FINAL.md`](./SECURITY_AUDIT_FINAL.md), [`PERFORMANCE_AUDIT_FINAL.md`](./PERFORMANCE_AUDIT_FINAL.md), [`ARCHITECTURE_FINAL.md`](./ARCHITECTURE_FINAL.md), [`MIGRATION_GUIDE_FINAL.md`](./MIGRATION_GUIDE_FINAL.md). This README describes **verified functionality only**.
+> 💡 Originally built around a simple VLESS-over-WebSocket relay, EMIX has evolved into a full multi-protocol gateway with authentication, quota tracking, and a polished management UI.
 
 <br/>
 
@@ -77,104 +65,42 @@ It gives you a beautiful admin dashboard to create, monitor, and manage proxy li
 <tr>
 <td width="50%">
 
-### 🔌 Core Gateway (verified)
-- VLESS over WebSocket (TLS 443) — in-process relay, 0-RTT early-data
-- Trojan (SHA224 auth), Shadowsocks AEAD (aes-256-gcm / chacha20)
-- XHTTP with 2 uplink modes (packet-up / stream-up), AIMD flow control
-- MTProto via the **official MTProxy binary** (compiled, supervised, auto-restart with backoff)
-- Internal HTTP Proxy + SOCKS5 (Zeus)
-- gRPC = experimental envelope only; HTTPUpgrade = not implemented (honest — see TRANSPORT_MATRIX_FINAL.md)
+### 🔌 Core Gateway
+- VLESS over WebSocket (TLS 443)
+- Trojan, Shadowsocks (AEAD / aes-256-gcm)
+- MTProto proxy via `mtg` binary
+- Internal HTTP Proxy
+- xHTTP / gRPC / HTTPUpgrade transports
 
 </td>
-<td width="50%">
-
-### 🧠 Network Intelligence (v11 engines)
-- **Config Compiler** — self-verifying emission (parse-back + checksum)
-- **Network Health Engine** — 10-layer, evidence-only, expiring (UNKNOWN ≠ PASS)
-- **Diagnostics Center** — request IDs, structured errors, job telemetry
-- **Node Manager + Runtime Supervisor** — heartbeats, crash detection, backoff
-- **Smart Route v3** — health-weighted ranking with `ranking_reason`
-- **IP Quality Engine** — facet-based, honest UNKNOWNs, provider abstraction
-- **Egress & Route Truth Engine (v11.2+)** — `CUSTOM_IP ≠ REAL_EGRESS_IP`, `SNI ≠ ROUTING`: node roles (CONTROL_PLANE / EXIT_NODE / RELAY / EDGE), egress classification (**VERIFIED_EGRESS / CONFIGURED_ONLY / UNKNOWN**, measured IPs only), 9-step route validation (`ROUTE_MISMATCH`, `NO_EXIT_NODE_AVAILABLE`), labeled latencies (control-plane / node / route / protocol-handshake RTT)
-- **Route / Failover Engines (v11.3)** — first-class route objects (entry→relay→exit, expected-vs-observed) and **never-blind failover** (drain → explainable replacement scoring → verify health → verify route → verify egress → re-point; verdicts `FAILOVER_SUCCESS / FAILED / NO_REPLACEMENT`)
-- **Accounts / Devices / Subscriptions (v11.3)** — PBKDF2-hashed accounts, one-time device tokens, backend-enforced device/session/quota limits, subscription lifecycle (`ACTIVE/EXPIRED/REVOKED/SUSPENDED/DRAINING`) with a single connection gate
-- **🇮🇷 Iran Domestic Direct Routing (v11.3)** — split tunneling with a real **RIPEstat prefix dataset (2,528 prefixes, checksummed, daily atomic updates)**: Iranian destinations go DIRECT via the user's ISP (`USER_ISP`), international via the EMIX route; Cloudflare/Railway are never classified as Iranian egress; clients that cannot enforce split tunneling get an honest `SPLIT_TUNNEL_NOT_SUPPORTED`
-
-</td>
-</tr>
-<tr>
-<td width="50%">
-
-### 🚪 Egress & Routing Honesty (v11.3.0-network)
-- The panel **never** displays a configured/advertised IP as the actual egress — only measured evidence (`/api/egress/verify`)
-- Selecting a country without a real exit node returns **NO_EXIT_NODE_AVAILABLE** — the location is not faked
-- Expected ≠ observed country ⇒ **ROUTE_MISMATCH**, never a healthy verdict
-- "Custom IP" field renamed **Endpoint Address** — it only sets where the client connects; it never changes the exit IP
-- Health split into APPLICATION / NODE / ROUTE / **PROTOCOL** / EGRESS health — a healthy Railway API says nothing about VPN egress
-- Node states include **DRAINING / QUARANTINED**; drained nodes stop taking new assignments
-- Domestic DIRECT traffic is labeled **USER_ISP** — never Railway, never Cloudflare, never an EMIX node
-
-### ✨ Unified Config Builder & IRAN_PROXY (v11.4.0-builder)
-- **ساخت کانفیگ** — the ONE canonical 9-step builder; every option renders from `/api/config-builder/capabilities` (zero protocol-support hardcoding in JS); invalid combos are rejected with an explicit reason before anything is generated
-- **Deployment capability model** — RAILWAY_EDGE / RAILWAY_DEPLOYMENT / RAILWAY_OUTBOUND / ACTUAL_EGRESS are never conflated; UDP-dependent protocols are never exposed as Railway-native
-- **کانفیگ‌های ساخته‌شده** — generated-config history: view (credential-masked), copy/QR (local), deterministic regenerate, delete
-- **🇮🇷 پروکسی ایران (IRAN_PROXY)** — a real Iranian gateway registry with measured-evidence verification (`VERIFIED_IRAN_EGRESS`); a typed Iranian IP is CONFIGURED, never VERIFIED
-- **INTERNATIONAL_VVPN** policy — domestic traffic is refused (BLOCK) so it never enters the tunnel; **IRAN_PROXY/IRAN_DIRECT/ALL_VPN** complete the five-policy vocabulary
-- **Railway validation matrix** — honest stages (CONFIG_VALID / RUNTIME_STARTED / LISTENER_REACHABLE real; CLIENT_CONNECTED+ labeled NOT_TESTABLE_WITHOUT_REAL_CLIENT)
-- **Structured events** — CONFIG_GENERATED / ROUTE_SELECTED / ROUTE_MISMATCH / FAILOVER_TRIGGERED / IRAN_GATEWAY_CHECK … with central secret-scrubbing (`/api/events`)
-
-</td>
-</tr>
-<tr>
 <td width="50%">
 
 ### 📊 Management Dashboard
-- Real-time traffic charts, trend indicators, live connection monitoring
+- Real-time traffic charts & trend indicators
+- Live connection monitoring
 - Unlimited link creation with per-link quotas (MB/GB)
 - Instant enable / disable per link
-- **Local QR generation** — links/private keys never leave your panel
-- Impossible protocol combinations blocked at the UI (compat matrix API)
-- Live service status from real diagnostics (no fake widgets)
-
-</td>
-<td width="50%">
-
-### 🛡️ Security (tested)
-- Session auth + login brute-force guard (5 fails / 15 min / IP)
-- SSRF-guarded proxy (private ranges + metadata IP + redirect re-check)
-- Atomic state persistence — survives Railway redeploys (sessions included)
-- No credential phone-home; no third-party QR; plaintext IP provider off by default
-- Backup export/import with validate → stage → rollback → commit
+- QR Code export for every link
 
 </td>
 </tr>
 <tr>
 <td width="50%">
 
-### 🤖 Automation & Resilience
-- 7 bounded background jobs (health sweep, expiry, node heartbeat, runtime supervision, stats, lifecycle reconcile)
+### 🛡️ Security & Reliability
+- Strict UUID validation
+- Session-based authentication
+- TLS fingerprint spoofing (Chrome)
+- Optimized relay buffers (512KB, `TCP_NODELAY`, `SO_KEEPALIVE`)
+
+</td>
+<td width="50%">
+
+### 🤖 Automation
+- Telegram-bot-integrated proxy management
+- Domain suggestion via Cloudflare Worker
 - Automated TCP proxy dispatch with blacklist targeting
-- Self-healing gaming bridge (VPS down → auto fallback to CF edge)
 - One-click Railway deployment
-
-</td>
-<td width="50%">
-
-### 🚀 Turbo & Health (real probes)
-- Real end-to-end config testing (edge → TLS → auth → target → HTTP reply)
-- Per-config ping button + live color-coded badges
-- **0-RTT Turbo links** (early-data `ed=2048`) with automatic A/B testing
-- Health score 0–100 with documented formula; results expire after 15 min
-- Config lifecycle states (CREATED → HEALTHY/DEGRADED → EXPIRED/REVOKED)
-
-</td>
-<td width="50%">
-
-### 🌉 Iran Bridge (billing + speed)
-- Domestic traffic routing (1x instead of 2.7x)
-- Free mode: Iranian CDN (ArvanCloud) — no server needed
-- VPS mode: auto-install script (socat + systemd + BBR)
-- Real TLS chain test + savings calculator
 
 </td>
 </tr>
@@ -186,18 +112,11 @@ It gives you a beautiful admin dashboard to create, monitor, and manage proxy li
 
 | Protocol | Transport | Status |
 |---|---|:---:|
-| VLESS | WebSocket / xHTTP (packet-up, stream-up) | ✅ PRODUCTION |
-| VLESS | TCP / gRPC | 🟡 EXPERIMENTAL (link emission only) |
-| Trojan | WebSocket / xHTTP (packet-up, stream-up) | ✅ PRODUCTION |
-| Trojan | TCP | 🟡 EXPERIMENTAL |
-| Shadowsocks | WebSocket (AEAD aes-256-gcm / chacha20) | ✅ PRODUCTION |
-| MTProto | TCP (official MTProxy binary, supervised) | ✅ PRODUCTION |
-| VMess / VLESS-Reality / SS-2022 | link emission | 🟡 BETA (config-gen only) |
-| WireGuard / OpenVPN | control-plane (keys, configs, QR) | 🟡 BETA — no runtime on Railway |
-| SOCKS5 (Zeus) / HTTP Proxy | in-process | ✅ PRODUCTION |
-| Hysteria2 / TUIC / NaiveProxy / SSH | — | ⛔ honestly deferred (refuses to fake) |
-
-Full machine-readable matrix: `GET /api/config-matrix` — one source of truth (compat.py), consumed by backend, frontend and tests. Details: [TRANSPORT_MATRIX_FINAL.md](./TRANSPORT_MATRIX_FINAL.md).
+| VLESS | WebSocket / xHTTP / gRPC | ✅ |
+| Trojan | WebSocket / HTTPUpgrade | ✅ |
+| Shadowsocks | AEAD (aes-256-gcm) | ✅ |
+| MTProto | `mtg` v2.1.7 | ✅ |
+| HTTP Proxy | Internal | ✅ |
 
 <br/>
 
@@ -240,20 +159,6 @@ EMIX/
 
 ## ⚡ Quick Start (Railway Deploy)
 
-### Option 1 — One-Click (recommended)
-
-[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/new/template?template=https://github.com/EMIXPI/EMIX-PRO)
-
-1. Click the button above — Railway opens with this repo pre-loaded
-2. **Deploy** — everything is auto-configured from `railway.toml`:
-   - ✅ Port: `PORT` env is set by Railway automatically (app binds `0.0.0.0:$PORT`)
-   - ✅ Start command: `python main.py`
-   - ✅ Healthcheck: `GET /api/ping` (auto-restart on crash)
-3. **Generate Domain**: Railway → Settings → Networking → **Generate Domain** (sets `RAILWAY_PUBLIC_DOMAIN` automatically — the panel shows a reminder toast if you forget)
-4. Open `https://your-app.up.railway.app/dashboard` 🎉
-
-### Option 2 — Manual
-
 <table>
 <tr>
 <td width="60px" align="center">1️⃣</td>
@@ -262,7 +167,7 @@ EMIX/
 **Fork this repository**
 
 ```
-https://github.com/EMIXPI/EMIX-PRO/fork
+https://github.com/your-username/EMIX/fork
 ```
 
 </td>
@@ -313,7 +218,7 @@ Copy the default VLESS link and import it into your client (v2rayNG, NekoBox, St
 
 ```bash
 # Clone your fork
-git clone https://github.com/EMIXPI/EMIX-PRO.git
+git clone https://github.com/<your-username>/EMIX.git
 cd EMIX
 
 # Create a virtual environment
@@ -392,7 +297,7 @@ If this project helped you, consider supporting its development:
 [![Donate](https://img.shields.io/badge/Donate-PayPal-blue.svg?style=for-the-badge&logo=paypal)]([https://your-donate-link.com](https://your-donate-link.com))
 [![Wallets](https://img.shields.io/badge/Crypto-Wallets-f7931a?style=for-the-badge&logo=bitcoin)]([https://wallets.example.com](https://your-donate-link.com))
 
-**Made with ❤️ by [EMIX PRO](https://github.com/your-username)**
+**Made with ❤️ by [EMIX](https://github.com/your-username)**
 
 </div>
 
@@ -403,7 +308,7 @@ If this project helped you, consider supporting its development:
 <br/>
 
 <div align="center" dir="rtl">
-<h1>🇮🇷 EMIX PRO — فارسی</h1>
+<h1>🇮🇷 فارسی</h1>
 </div>
 
 ## 📖 فهرست مطالب
@@ -425,7 +330,7 @@ If this project helped you, consider supporting its development:
 
 ## 🚀 معرفی
 
-**EMIX PRO** یک پنل مدیریت پروکسی چندپروتکلی، سریع و مدرن است که با **Python + FastAPI** ساخته شده و در چند دقیقه روی **Railway** قابل دیپلوی است.
+**EMIX** یک پنل مدیریت پروکسی چندپروتکلی، سریع و مدرن است که با **Python + FastAPI** ساخته شده و در چند دقیقه روی **Railway** قابل دیپلوی است.
 
 این پروژه یک داشبورد مدیریتی زیبا در اختیارتان می‌گذارد تا لینک‌های پروکسی را در پروتکل‌های مختلف بسازید، مانیتور کنید و مدیریت کنید — همراه با محدودیت ترافیک اختصاصی برای هر لینک، آمار اتصالات زنده و خروجی QR Code، همه از طریق یک سرویس سبک و یکپارچه.
 
@@ -478,26 +383,6 @@ If this project helped you, consider supporting its development:
 
 </td>
 </tr>
-<tr>
-<td width="50%">
-
-### 🚀 توربو و سلامت
-- تست واقعی end-to-end هر کانفیگ (edge → TLS → احراز هویت → مقصد → پاسخ HTTP)
-- دکمه‌ی پینگ برای هر کانفیگ + بج رنگی لحظه‌ای
-- **لینک‌های توربو 0-RTT** (early-data با `ed=2048`) + تست A/B خودکار
-- «تست همه» با پیشرفت زنده
-
-</td>
-<td width="50%">
-
-### 🌉 پل ایران (صورت‌حساب + سرعت)
-- مسیر داخلی برای ترافیک (ضریب ۱ به‌جای ۲.۷)
-- حالت رایگان: CDN ایرانی (ابَر آروان) — بدون خرید سرور
-- حالت VPS: اسکریپت نصب خودکار (socat + systemd + BBR)
-- تست واقعی زنجیره TLS + محاسبه‌گر صرفه‌جویی
-
-</td>
-</tr>
 </table>
 
 <br/>
@@ -506,16 +391,11 @@ If this project helped you, consider supporting its development:
 
 | پروتکل | ترنسپورت | وضعیت |
 |---|---|:---:|
-| VLESS | WebSocket / xHTTP (دو مود) | ✅ PRODUCTION |
-| Trojan | WebSocket / xHTTP (دو مود) | ✅ PRODUCTION |
-| Shadowsocks | WebSocket (AEAD) | ✅ PRODUCTION |
-| MTProto | TCP (باینری رسمی MTProxy، تحت نظارت) | ✅ PRODUCTION |
-| VMess / Reality / SS-2022 | تولید لینک | 🟡 BETA (فقط config-gen) |
-| WireGuard / OpenVPN | control-plane (کلید + کانفیگ + QR) | 🟡 BETA — روی Railway ران‌تایم ندارد |
-| SOCKS5 / HTTP Proxy | درون-پروسه | ✅ PRODUCTION |
-| Hysteria2 / TUIC / NaiveProxy / SSH | — | ⛔ صادقانه deferred (فیک نمی‌سازد) |
-
-ماتریس کامل ماشین‌خوان: `GET /api/config-matrix` — تک‌منبع حقیقت (compat.py).
+| VLESS | WebSocket / xHTTP / gRPC | ✅ |
+| Trojan | WebSocket / HTTPUpgrade | ✅ |
+| Shadowsocks | AEAD (aes-256-gcm) | ✅ |
+| MTProto | `mtg` v2.1.7 | ✅ |
+| HTTP Proxy | داخلی | ✅ |
 
 <br/>
 
@@ -558,20 +438,6 @@ EMIX/
 
 ## ⚡ شروع سریع (دیپلوی روی Railway)
 
-### روش ۱ — یک‌کلیکی (پیشنهادی) 🚀
-
-[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/new/template?template=https://github.com/EMIXPI/EMIX-PRO)
-
-1. روی دکمه‌ی بالا کلیک کنید — Railway با همین ریپو باز می‌شود
-2. **Deploy** بزنید — همه‌چیز از `railway.toml` خودکار تنظیم می‌شود:
-   - ✅ پورت: متغیر `PORT` را Railway خودش ست می‌کند (اپ روی `0.0.0.0` گوش می‌دهد)
-   - ✅ دستور اجرا: `python main.py`
-   - ✅ سلامت‌سنجی: `GET /api/ping` (ری‌استارت خودکار در صورت کرش)
-3. **ساخت دامنه**: Railway → Settings → Networking → **Generate Domain** (متغیر `RAILWAY_PUBLIC_DOMAIN` خودکار ست می‌شود — اگر فراموش کنید، خود پنل یادآوری می‌کند)
-4. `https://your-app.up.railway.app/dashboard` را باز کنید 🎉
-
-### روش ۲ — دستی
-
 <table dir="rtl">
 <tr>
 <td width="60px" align="center">1️⃣</td>
@@ -580,7 +446,7 @@ EMIX/
 **فورک کردن این ریپازیتوری**
 
 ```
-https://github.com/EMIXPI/EMIX-PRO/fork
+https://github.com/your-username/EMIX/fork
 ```
 
 </td>
@@ -631,7 +497,7 @@ https://your-app.up.railway.app/dashboard
 
 ```bash
 # کلون کردن فورک شما
-git clone https://github.com/EMIXPI/EMIX-PRO.git
+git clone https://github.com/<your-username>/EMIX.git
 cd EMIX
 
 # ساخت محیط مجازی

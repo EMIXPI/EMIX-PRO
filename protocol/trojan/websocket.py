@@ -5,7 +5,6 @@
 # ══════════════════════════════════════════════════════════════════════════════
 
 import asyncio
-import base64
 import secrets
 from datetime import datetime, timezone
 
@@ -21,7 +20,6 @@ from main import (
     schedule_save,
     log_activity,
 )
-from protocol.net_connect import open_connection_v4first
 from protocol.trojan.trojan import (
     RELAY_BUF,
     WRITE_HIGH_WATER,
@@ -31,18 +29,6 @@ from protocol.trojan.trojan import (
     _resolve_and_authorize,
 )
 from protocol.vless.vless import check_and_use
-
-
-def _early_data_chunk(ws: WebSocket) -> bytes:
-    """Early-Data (0-RTT): بار اولیه از هندشیک (Sec-WebSocket-Protocol، base64url بدون padding — طبق xray ed=2048).
-    اگر هدر نبود خروجی خالی است و مسیر عادی (اولین فریم) طی می‌شود — سازگار با کلاینت‌های فعلی."""
-    try:
-        val = (ws.headers.get("sec-websocket-protocol") or "").split(",")[0].strip()
-        if not val:
-            return b""
-        return base64.urlsafe_b64decode(val + "=" * (-len(val) % 4))
-    except Exception:
-        return b""
 
 
 async def _relay_ws_to_tcp(ws: WebSocket, writer: asyncio.StreamWriter, conn_id: str, uuid: str):
@@ -104,19 +90,15 @@ async def trojan_ws_tunnel(ws: WebSocket):
     """
     await ws.accept()
     ip = _ws_client_ip(ws)
-    is_ping_test = (ws.headers.get("x-emix-ping") == "1")
     conn_id = secrets.token_urlsafe(6)
     writer = None
     uuid = None
 
     try:
-        # Early-Data (0-RTT): بار اولیه از هندشیک، در صورت ارسال توسط کلاینت (ed=2048)
-        first_chunk = _early_data_chunk(ws)
-        if not first_chunk:
-            first_msg = await asyncio.wait_for(ws.receive(), timeout=15.0)
-            if first_msg["type"] == "websocket.disconnect":
-                return
-            first_chunk = first_msg.get("bytes") or (first_msg.get("text") or "").encode()
+        first_msg = await asyncio.wait_for(ws.receive(), timeout=15.0)
+        if first_msg["type"] == "websocket.disconnect":
+            return
+        first_chunk = first_msg.get("bytes") or (first_msg.get("text") or "").encode()
         if not first_chunk:
             return
 
@@ -137,8 +119,7 @@ async def trojan_ws_tunnel(ws: WebSocket):
             "bytes": 0,
         }
         logger.info(f"✅ Trojan-WS [{conn_id}] uuid={uuid[:8]}… ip={ip} total={len(connections)}")
-        if not is_ping_test:
-            log_activity("connection", f"اتصال Trojan جدید از {ip} (کانفیگ {link.get('label','?')})", "info")
+        log_activity("connection", f"اتصال Trojan جدید از {ip} (کانفیگ {link.get('label','?')})", "info")
 
         if not await check_and_use(uuid, hlen):
             await ws.close(code=1008, reason="quota/disabled")
@@ -148,22 +129,9 @@ async def trojan_ws_tunnel(ws: WebSocket):
         connections[conn_id]["bytes"] += hlen
         logger.info(f"➡️  [{conn_id}] Trojan → {address}:{port}")
 
-        # ── FAST PING PATH ───────────────────────────────────────────────
-        # وقتی کلاینت هدر X-EMIX-Ping: 1 می‌فرستد (تست سلامت خود پنل)،
-        # فقط تأیید می‌کنیم که: ۱) WS وصل شد  ۲) هش تروجان معتبر است  ۳) لینک فعال است.
-        # بدون باز کردن TCP واقعی به مقصد — سریع و قابل‌اتکا.
-        if is_ping_test:
-            try:
-                # پاسخ Synthetic HTTP — probe با دیدن "HTTP" در خط اول، موفق می‌شمارد
-                await ws.send_bytes(b"HTTP/1.1 200 OK\r\nContent-Length: 0\r\nX-EMIX-Ping: ok\r\n\r\n")
-            except Exception:
-                pass
-            await ws.close()
-            connections.pop(conn_id, None)
-            return
-        # ──────────────────────────────────────────────────────────────────
-
-        reader, writer = await open_connection_v4first(address, port, timeout=10.0)
+        reader, writer = await asyncio.wait_for(
+            asyncio.open_connection(address, port), timeout=10.0
+        )
         _tune_socket(writer)
 
         if payload:

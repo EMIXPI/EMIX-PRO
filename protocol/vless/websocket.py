@@ -5,7 +5,6 @@
 # ══════════════════════════════════════════════════════════════════════════════
 
 import asyncio
-import base64
 import secrets
 from datetime import datetime, timezone
 
@@ -20,7 +19,6 @@ from main import (
     logger,
     is_link_allowed,
     save_state,
-    schedule_save,
     log_activity,
 )
 from protocol.vless.vless import (
@@ -31,21 +29,6 @@ from protocol.vless.vless import (
     relay_ws_to_tcp,
     relay_tcp_to_ws,
 )
-from protocol.net_connect import open_connection_v4first
-
-
-def _early_data_chunk(ws: WebSocket) -> bytes:
-    """Early-Data (0-RTT): بار اولیه از هندشیک خوانده می‌شود
-    (هدر Sec-WebSocket-Protocol، base64url بدون padding — طبق xray ed=2048).
-    اگر هدر نبود، خروجی خالی است و مسیر عادی (اولین فریم WS) طی می‌شود —
-    ۱۰۰٪ سازگار با کلاینت‌های فعلی که ed ندارند."""
-    try:
-        val = (ws.headers.get("sec-websocket-protocol") or "").split(",")[0].strip()
-        if not val:
-            return b""
-        return base64.urlsafe_b64decode(val + "=" * (-len(val) % 4))
-    except Exception:
-        return b""
 
 
 async def websocket_tunnel(ws: WebSocket, uuid: str):
@@ -60,7 +43,6 @@ async def websocket_tunnel(ws: WebSocket, uuid: str):
         return
 
     ip = _ws_client_ip(ws)
-    is_ping_test = (ws.headers.get("x-emix-ping") == "1")
     conn_id = secrets.token_urlsafe(6)
     connections[conn_id] = {
         "uuid": uuid,
@@ -70,19 +52,14 @@ async def websocket_tunnel(ws: WebSocket, uuid: str):
         "bytes": 0,
     }
     logger.info(f"✅ WS [{conn_id}] uuid={uuid[:8]}… ip={ip} total={len(connections)}")
-    if not is_ping_test:
-        log_activity("connection", f"اتصال جدید از {ip} (کانفیگ {link.get('label','?')})", "info")
+    log_activity("connection", f"اتصال جدید از {ip} (کانفیگ {link.get('label','?')})", "info")
     writer = None
 
     try:
-        # Early-Data (0-RTT): اگر کلاینت بار اولیه را در هندشیک فرستاده باشد،
-        # بدون صبر برای اولین فریم ادامه می‌دهیم؛ در غیر این صورت مسیر عادی.
-        first_chunk = _early_data_chunk(ws)
-        if not first_chunk:
-            first_msg = await asyncio.wait_for(ws.receive(), timeout=15.0)
-            if first_msg["type"] == "websocket.disconnect":
-                return
-            first_chunk = first_msg.get("bytes") or (first_msg.get("text") or "").encode()
+        first_msg = await asyncio.wait_for(ws.receive(), timeout=15.0)
+        if first_msg["type"] == "websocket.disconnect":
+            return
+        first_chunk = first_msg.get("bytes") or (first_msg.get("text") or "").encode()
         if not first_chunk:
             return
 
@@ -96,21 +73,10 @@ async def websocket_tunnel(ws: WebSocket, uuid: str):
         connections[conn_id]["bytes"] += len(first_chunk)
         logger.info(f"➡️  [{conn_id}] → {address}:{port}")
 
-        # ── FAST PING PATH ───────────────────────────────────────────────
-        # اگر اینجا هدر X-EMIX-Ping فرستاده شده، فقط هدر VLESS پارس شده،
-        # یعنی UUID معتبر و لینک فعال است. بدون TCP واقعی، پاسخ synthetic می‌فرستیم.
-        if is_ping_test:
-            try:
-                await ws.send_bytes(b"HTTP/1.1 200 OK\r\nContent-Length: 0\r\nX-EMIX-Ping: ok\r\n\r\n")
-            except Exception:
-                pass
-            await ws.close()
-            connections.pop(conn_id, None)
-            return
-        # ──────────────────────────────────────────────────────────────────
-
-        # IPv4-first egress — فیکس Errno 101 روی Railway (بدون خروجی IPv6)
-        reader, writer = await open_connection_v4first(address, port, timeout=10.0)
+        reader, writer = await asyncio.wait_for(
+            asyncio.open_connection(address, port),
+            timeout=10.0
+        )
         _tune_socket(writer)
 
         if payload:
@@ -131,7 +97,7 @@ async def websocket_tunnel(ws: WebSocket, uuid: str):
             except asyncio.CancelledError:
                 pass
 
-        asyncio.create_task(schedule_save())
+        asyncio.create_task(save_state())
 
     except WebSocketDisconnect:
         pass

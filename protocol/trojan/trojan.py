@@ -3,9 +3,8 @@
 # Trojan Relay — بهینه‌شده برای حداکثر throughput
 #  بهبودها نسبت به نسخه‌ی قبل:
 #   1. _TrojanHashCache: هش UUID‌ها رو cache می‌کنه → دیگه هر بار SHA224 محاسبه نمی‌شه
-#   2. RELAY_BUF / WRITE_HIGH_WATER / SOCK_BUF از پروفایل ضعیف-لینک net_connect.py
-#      (پورت RVG v11.0.2: 256KB/128KB/512KB — رفاه لینک پرتاخیر/موبایل)
-#   3. SO_SNDBUF / SO_RCVBUF روی سوکت TCP + TCP_USER_TIMEOUT 20s
+#   2. RELAY_BUF: 256KB → 1MB (4× بیشتر)
+#   3. SO_SNDBUF / SO_RCVBUF بزرگ روی سوکت TCP
 #   4. _QuotaGate تطبیقی (از xhttp_siz10) به‌جای check_and_use به‌ازای هر chunk
 #   5. relay_ws_to_tcp: drain فقط وقتی بافر پر بشه، نه هر بار
 #   6. relay_tcp_to_ws: خواندن با read(RELAY_BUF) بدون await اضافه
@@ -25,13 +24,10 @@ from main import (
     is_link_allowed,
 )
 from protocol.vless.vless import check_and_use
-from protocol.net_connect import (
-    RELAY_BUF,
-    SOCK_BUF,
-    WRITE_HIGH_WATER,
-    apply_weak_link_tuning,
-)
 
+RELAY_BUF = 1024 * 1024          # 1 MB — 4× نسبت به قبل
+SOCK_BUF = 4 * 1024 * 1024       # 4 MB بافر سوکت سطح OS
+WRITE_HIGH_WATER = 512 * 1024    # drain فقط وقتی بیشتر از 512KB در بافر باشه
 TROJAN_HEADER_MIN = 56 + 2 + 1 + 1 + 1 + 2 + 2
 
 # تنظیمات QuotaGate تطبیقی
@@ -46,33 +42,26 @@ QUOTA_CHECK_INTERVAL = 0.25
 # ══════════════════════════════════════════════════════════════════════════════
 
 class _TrojanHashCache:
-    """UUID → trojan_hash cache with content-based invalidation (Phase 6.12 fix).
-
-    OLD behavior: invalidate when ``len(LINKS)`` changes.
-      Bug: delete link A and add link B → len unchanged → cache stays stale
-      → wrong UUID returned for an existing password hash → potential auth
-      bypass or auth failure for the legitimate user.
-
-    NEW behavior: invalidate when the set of UUIDs changes.
-      Stored as ``frozenset`` snapshot under the lock. ``!=`` on frozensets
-      is O(min(|A|,|B|)) — cheap. SHA224 work only happens when the set
-      actually changes.
+    """
+    UUID → trojan_hash رو cache می‌کنه.
+    هر بار که LINKS تغییر کنه (UUID اضافه/حذف بشه) باید invalidate بشه.
+    از اونجا که LINKS یه dict ساده‌ست و تغییراتش نادره، ما فقط
+    snapshot اندازه رو نگه می‌داریم و اگه عوض شد rebuild می‌کنیم.
     """
     def __init__(self):
         self._cache: dict[str, str] = {}   # hash → uuid
-        self._snapshot_keys: frozenset = frozenset()
+        self._snapshot_len: int = -1
 
     def _rebuild(self, links_snapshot: dict):
         self._cache = {
             hashlib.sha224(uid.encode()).hexdigest(): uid
             for uid in links_snapshot
         }
-        self._snapshot_keys = frozenset(links_snapshot.keys())
+        self._snapshot_len = len(links_snapshot)
 
     async def find_uuid(self, pw_hash: str) -> str | None:
         async with LINKS_LOCK:
-            current_keys = frozenset(LINKS.keys())
-            if current_keys != self._snapshot_keys:
+            if len(LINKS) != self._snapshot_len:
                 self._rebuild(LINKS)
             return self._cache.get(pw_hash)
 
@@ -150,13 +139,17 @@ async def find_uuid_by_trojan_hash(pw_hash: str) -> str | None:
 
 
 def _tune_socket(writer: asyncio.StreamWriter):
-    """پروفایل ضعیف-لینک net_connect (RVG v11.0.2): بافر 512KB + TCP_USER_TIMEOUT."""
+    """TCP_NODELAY + بافرهای بزرگ برای کاهش overhead سیستم‌عامل."""
     sock = writer.transport.get_extra_info("socket")
     if not sock:
         return
     try:
-        apply_weak_link_tuning(sock)
-    except Exception as e:
+        sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, SOCK_BUF)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, SOCK_BUF)
+        if hasattr(socket, "TCP_QUICKACK"):
+            sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_QUICKACK, 1)
+    except OSError as e:
         logger.warning(f"Trojan _tune_socket failed: {e}")
 
 

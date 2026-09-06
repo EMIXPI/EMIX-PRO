@@ -1,29 +1,28 @@
-# pages.py  -  EMIX v9.7.0
+# pages.py  -  EMIX v9.2
 # شامل: LOGIN_HTML, DASHBOARD_HTML, get_public_page_html()
 
 LOGIN_HTML = r"""<!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ورود · EMIX PRO</title>
-<link rel="preload" href="/assets/fonts.css" as="style" onerror="this.remove()">
-<link rel="stylesheet" href="/assets/fonts.css" onerror="this.remove()">
-<link rel="stylesheet" href="/assets/tabler-icons.min.css" onerror="this.href='https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css'">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" media="print" onload="this.media='all'">
+<title>ورود · EMIX</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{
-  --bg:#0A0A0F;--bg2:#14141C;--card:rgba(20,20,28,0.72);--card-in:rgba(255,255,255,0.04);
-  --accent:#8B5CF6;--accent2:#FACC15;--signal:#A855F7;
-  --text:#FFFFFF;--dim:#6B7280;--mid:#9CA3AF;--border:rgba(139,92,246,0.22);
-  --glow:rgba(139,92,246,.28);--glow-signal:rgba(250,204,21,.20);
-  --danger:#EF4444;
+  --bg:#0A0810;--bg2:#14101A;--card:rgba(24,18,28,0.78);--card-in:rgba(255,255,255,0.03);
+  --accent:#FF4D2E;--accent2:#FF8A3D;--signal:#FF5A3C;
+  --text:#FFF1EC;--dim:#9A7368;--mid:#D2A296;--border:rgba(255,77,46,0.18);
+  --glow:rgba(255,61,46,.30);--glow-signal:rgba(255,138,61,.22);
+  --danger:#FB7185;
 }
 [data-theme="light"]{
-  --bg:#F5F5F7;--bg2:#FFFFFF;--card:rgba(255,255,255,0.92);--card-in:rgba(139,92,246,0.04);
-  --accent:#7C3AED;--accent2:#CA8A04;--signal:#9333EA;
-  --text:#0A0A0F;--dim:#6B7280;--mid:#4B5563;--border:rgba(124,58,237,0.18);
-  --glow:rgba(124,58,237,.18);--glow-signal:rgba(202,138,4,.14);
+  --bg:#F8F1EF;--bg2:#F0E4E0;--card:rgba(255,255,255,0.9);--card-in:rgba(255,77,46,0.03);
+  --accent:#E23E1E;--accent2:#F05A2A;--signal:#E8590C;
+  --text:#331510;--dim:#A07F77;--mid:#6E4A42;--border:rgba(226,62,30,0.16);
+  --glow:rgba(226,62,30,.16);--glow-signal:rgba(232,89,12,.14);
 }
 html,body{height:100%;overflow:hidden}
 body{
@@ -42,8 +41,8 @@ body{
   50%{filter:hue-rotate(8deg) brightness(1.05)}
 }
 .grid{position:fixed;inset:0;z-index:0;background-image:
-  linear-gradient(rgba(139,92,246,0.04) 1px,transparent 1px),
-  linear-gradient(90deg,rgba(139,92,246,0.04) 1px,transparent 1px);
+  linear-gradient(rgba(255,77,46,0.055) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(255,77,46,0.055) 1px,transparent 1px);
   background-size:44px 44px;
   mask-image:radial-gradient(ellipse 62% 62% at 50% 42%,black 25%,transparent 85%);
   animation:gridpan 30s linear infinite}
@@ -114,8 +113,8 @@ body{
 @keyframes rotang{to{--ang:360deg}}
 @property --ang{syntax:'<angle>';inherits:false;initial-value:0deg}
 
-.brand{display:flex;flex-direction:column;align-items:center;gap:12px;margin-bottom:24px;text-align:center}
-.brand-img{width:64px;height:64px;border-radius:16px;overflow:hidden;border:1px solid var(--border);flex-shrink:0;position:relative;box-shadow:0 0 0 4px var(--card-in);animation:brandpulse 3.2s ease-in-out infinite}
+.brand{display:flex;align-items:center;gap:13px;margin-bottom:28px}
+.brand-img{width:46px;height:46px;border-radius:13px;overflow:hidden;border:1px solid var(--border);flex-shrink:0;position:relative;box-shadow:0 0 0 4px var(--card-in);animation:brandpulse 3.2s ease-in-out infinite}
 @keyframes brandpulse{0%,100%{box-shadow:0 0 0 4px var(--card-in)}50%{box-shadow:0 0 0 6px var(--glow-signal)}}
 .brand-img img{width:100%;height:100%;object-fit:cover;display:block}
 .brand-name{font-size:15.5px;font-weight:800;color:var(--text);letter-spacing:-.01em}
@@ -134,7 +133,7 @@ h1{font-size:21px;font-weight:800;color:var(--text);margin-bottom:5px;letter-spa
 .hint-label{font-size:11px;color:var(--dim);flex:1}
 .hint-val{
   font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;color:var(--signal);
-  background:var(--glow-signal);border:1px solid rgba(250,204,21,0.35);padding:4px 11px;border-radius:7px;
+  background:var(--glow-signal);border:1px solid rgba(255,138,61,0.35);padding:4px 11px;border-radius:7px;
   cursor:pointer;transition:.18s;letter-spacing:.06em
 }
 .hint-val:hover{filter:brightness(1.15);transform:translateY(-1px) scale(1.04)}
@@ -147,9 +146,9 @@ input[type=password],input[type=text]{
   width:100%;padding:13px 44px 13px 44px;border-radius:12px;border:1px solid var(--border);
   background:rgba(0,0,0,.18);color:var(--text);font-family:inherit;font-size:14.5px;outline:none;transition:.2s
 }
-[data-theme="light"] input[type=password],[data-theme="light"] input[type=text]{background:rgba(124,58,237,.04)}
+[data-theme="light"] input[type=password],[data-theme="light"] input[type=text]{background:rgba(226,62,30,.04)}
 input::placeholder{color:var(--dim)}
-input:focus{border-color:var(--accent);background:rgba(139,92,246,.07);box-shadow:0 0 0 4px var(--glow)}
+input:focus{border-color:var(--accent);background:rgba(255,77,46,.07);box-shadow:0 0 0 4px var(--glow)}
 .ic-lock{position:absolute;right:15px;top:50%;transform:translateY(-50%);color:var(--dim);font-size:17px;pointer-events:none;transition:.2s}
 input:focus~.ic-lock{color:var(--accent2);animation:wiggle .4s ease}
 @keyframes wiggle{0%,100%{transform:translateY(-50%) rotate(0)}25%{transform:translateY(-50%) rotate(-12deg)}75%{transform:translateY(-50%) rotate(12deg)}}
@@ -165,9 +164,9 @@ input:focus~.ic-lock{color:var(--accent2);animation:wiggle .4s ease}
 
 .btn{
   width:100%;padding:13.5px;border-radius:999px;border:none;cursor:pointer;
-  background:linear-gradient(135deg,#8B5CF6 0%,#A855F7 50%,#FACC15 100%);background-size:200% 200%;
+  background:linear-gradient(135deg,#FF4D2E,#FF8A3D);background-size:200% 200%;
   color:#fff;font-family:inherit;font-size:14.5px;font-weight:700;
-  display:flex;align-items:center;justify-content:center;gap:9px;box-shadow:0 10px 26px -6px rgba(139,92,246,.5);
+  display:flex;align-items:center;justify-content:center;gap:9px;box-shadow:0 10px 26px -6px rgba(255,61,46,.5);
   transition:all .22s;position:relative;overflow:hidden;margin-top:6px;
   animation:btngrad 4s ease infinite,fadeup .5s cubic-bezier(.16,1,.3,1) .36s backwards
 }
@@ -175,7 +174,7 @@ input:focus~.ic-lock{color:var(--accent2);animation:wiggle .4s ease}
 .btn::before{content:'';position:absolute;inset:0;background:linear-gradient(120deg,transparent,rgba(255,255,255,.25),transparent);width:50%;transform:translateX(-160%)}
 .btn:hover::before{animation:btnsheen 1s ease}
 @keyframes btnsheen{to{transform:translateX(260%)}}
-.btn:hover{transform:translateY(-2px);box-shadow:0 14px 32px -6px rgba(168,85,247,.6)}
+.btn:hover{transform:translateY(-2px);box-shadow:0 14px 32px -6px rgba(255,122,61,.6)}
 .btn:active{transform:translateY(0) scale(.98)}
 .btn:disabled{opacity:.55;cursor:not-allowed;transform:none;animation:btngrad 4s ease infinite}
 .btn:focus-visible,input:focus-visible,.theme-btn:focus-visible,.hint-val:focus-visible{outline:2px solid var(--signal);outline-offset:2px}
@@ -183,15 +182,6 @@ input:focus~.ic-lock{color:var(--accent2);animation:wiggle .4s ease}
 .footer{margin-top:22px;padding-top:18px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:center;gap:8px;font-size:11.5px;color:var(--dim);animation:fadeup .5s cubic-bezier(.16,1,.3,1) .42s backwards}
 .footer a{color:var(--accent2);font-weight:700;text-decoration:none;display:flex;align-items:center;gap:5px;transition:.18s}
 .footer a:hover{filter:brightness(1.25);transform:translateY(-1px)}
-
-/* ══════ هشدار Caps Lock ══════ */
-.caps-warn{display:none;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.3);border-radius:10px;padding:9px 13px;margin-bottom:14px;font-size:11.5px;color:#FCD34D;align-items:center;gap:8px}
-.caps-warn.show{display:flex;animation:fadeup .25s ease}
-
-/* ══════ بج‌های قابلیت — حس محصول حرفه‌ای ══════ */
-.features{display:flex;gap:7px;justify-content:center;margin-top:20px;flex-wrap:wrap;animation:fadeup .5s cubic-bezier(.16,1,.3,1) .48s backwards}
-.feat{display:inline-flex;align-items:center;gap:5px;font-size:9.5px;font-weight:600;color:var(--mid);background:var(--card-in);border:1px solid var(--border);border-radius:999px;padding:5px 11px;letter-spacing:.02em}
-.feat i{font-size:12px;color:var(--accent2)}
 
 @keyframes spin{to{transform:rotate(360deg)}}
 
@@ -203,9 +193,6 @@ input:focus~.ic-lock{color:var(--accent2);animation:wiggle .4s ease}
 @media (prefers-reduced-motion:reduce){
   *{animation-duration:.001s !important;animation-iteration-count:1 !important}
 }
-
-
-
 </style>
 </head>
 <body>
@@ -235,24 +222,29 @@ input:focus~.ic-lock{color:var(--accent2);animation:wiggle .4s ease}
   <div class="card" id="card">
     <div class="brand">
       <div class="brand-img"><svg viewBox="0 0 100 100" width="100%" height="100%" role="img" aria-label="EMIX logo"><rect width="100" height="100" fill="#030303"/><circle cx="50" cy="48" r="45" fill="#0B0B0B" stroke="#5A160E" stroke-width="2"/><circle cx="50" cy="48" r="42" fill="none" stroke="#FF3B24" stroke-width="1" opacity=".7"/><path d="M72 24H39C29 24 23 30 23 40V61C23 71 29 77 39 77H73M39 50H64C72 50 76 46 80 39" fill="none" stroke="#7A170F" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" opacity=".6"/><path d="M72 24H39C29 24 23 30 23 40V61C23 71 29 77 39 77H73M39 50H64C72 50 76 46 80 39" fill="none" stroke="#FF4028" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/><text x="50" y="91" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" font-weight="800" letter-spacing="3" fill="#FF3B24">EMIX</text></svg></div>
-      <div><div class="brand-name">EMIX <span style="background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">PRO</span></div><div class="brand-sub">Multi-Protocol Gateway <span class="mono" id="login-ver-chip">· v11</span></div></div>
+      <div><div class="brand-name">EMIX</div><div class="brand-sub">Gateway <span class="mono">· v9.2</span></div></div>
     </div>
-    <h1>ورود به مرکز مدیریت</h1>
+    <h1>ورود به پنل</h1>
+    <p class="sub">رمز عبور را برای دسترسی به داشبورد مدیریت وارد کنید</p>
 
     <div class="err" id="err" role="alert"><i class="ti ti-alert-circle"></i><span id="err-text"></span></div>
 
-    <div class="caps-warn" id="caps-warn"><i class="ti ti-letter-case-upper"></i> کلید Caps Lock روشن است</div>
+    <div class="hint">
+      <i class="ti ti-info-circle"></i>
+      <span class="hint-label">رمز پیش‌فرض سیستم</span>
+      <span class="hint-val" tabindex="0" role="button" onclick="fillDefault()" onkeydown="if(event.key==='Enter')fillDefault()">123456</span>
+    </div>
 
     <form id="form" novalidate>
       <div class="field">
         <label for="pw">رمز عبور</label>
         <div class="inp-wrap">
-          <input type="password" id="pw" placeholder="رمز پیشفرض ۱۲۳۴۵۶ هستش" autofocus required autocomplete="current-password">
+          <input type="password" id="pw" placeholder="رمز عبور را وارد کنید" autofocus required autocomplete="current-password">
           <i class="ti ti-lock ic-lock"></i>
           <i class="ti ti-eye ic-eye" id="eye-toggle" onclick="togglePw()" role="button" tabindex="0" aria-label="نمایش رمز عبور"></i>
         </div>
       </div>
-      <button class="btn" type="submit" id="btn"><i class="ti ti-shield-check"></i> ورود امن به داشبورد</button>
+      <button class="btn" type="submit" id="btn"><i class="ti ti-login-2"></i> ورود به داشبورد</button>
     </form>
 
     <div class="footer">کانال رسمی<a href="https://t.me/emixpi" target="_blank" rel="noopener"><i class="ti ti-brand-telegram"></i>@emixpi</a></div>
@@ -290,15 +282,6 @@ function togglePw(){
   eye.className = 'ti ' + (show ? 'ti-eye-off' : 'ti-eye') + ' ic-eye';
 }
 
-/* تشخیص Caps Lock — بازخورد حرفه‌ای */
-document.getElementById('pw').addEventListener('keyup', e => {
-  const on = e.getModifierState && e.getModifierState('CapsLock');
-  document.getElementById('caps-warn').classList.toggle('show', !!on);
-});
-document.getElementById('pw').addEventListener('blur', () => {
-  document.getElementById('caps-warn').classList.remove('show');
-});
-
 /* ذرات شناور پس‌زمینه */
 (function(){
   const box = document.getElementById('particles');
@@ -315,14 +298,6 @@ document.getElementById('pw').addEventListener('blur', () => {
     p.style.animationDelay = (Math.random()*14)+'s';
     box.appendChild(p);
   }
-})();
-
-/* Audit fix: نسخه‌ی واقعی روی صفحه‌ی ورود (بدون احراز هویت) — قبلاً «v9.5» hardcoded بود */
-(function(){
-  fetch('/api/deployment-version',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(dv=>{
-    const chip=document.getElementById('login-ver-chip');
-    if(chip&&dv&&dv.version)chip.textContent='· v'+dv.version;
-  }).catch(()=>{});
 })();
 
 /* افکت تیلت سه‌بعدی روی کارت با موس */
@@ -346,17 +321,16 @@ document.getElementById('form').addEventListener('submit', async e => {
   e.preventDefault();
   const btn = document.getElementById('btn'), err = document.getElementById('err'), et = document.getElementById('err-text');
   err.classList.remove('show'); btn.disabled = true;
-  btn.innerHTML = '<i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i> در حال احراز هویت...';
+  btn.innerHTML = '<i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i> در حال ورود...';
   try{
     const r = await fetch('/api/login', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({password: document.getElementById('pw').value})});
     if(!r.ok){ const d = await r.json().catch(()=>({})); throw new Error(d.detail || 'خطا در ورود'); }
-    btn.innerHTML = '<i class="ti ti-circle-check"></i> خوش آمدید';
     location.href = '/dashboard';
   }catch(e){
     et.textContent = e.message;
     err.classList.add('show');
     btn.disabled = false;
-    btn.innerHTML = '<i class="ti ti-shield-check"></i> ورود امن به داشبورد';
+    btn.innerHTML = '<i class="ti ti-login-2"></i> ورود به داشبورد';
   }
 });
 </script>
@@ -366,152 +340,95 @@ DASHBOARD_HTML = r"""<!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EMIX PRO</title>
-<link rel="preload" href="/assets/fonts.css" as="style" onerror="this.remove()">
-<link rel="stylesheet" href="/assets/fonts.css" onerror="this.remove()">
-<link rel="stylesheet" href="/assets/tabler-icons.min.css" onerror="this.href='https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css'">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap" media="print" onload="this.media='all'">
-<script src="/assets/chart.umd.js" onerror="this.remove();var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js';document.head.appendChild(s)"></script>
+<title>EMIX</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
-  /* ═══════════════════════════════════════════════════════════════════════════
-     EMIX PRO v9.9 — NixHD-inspired Design System
-     پالت: مشکی عمیق + بنفش + زرد + glassmorphism
-     مرجع: داشبورد NixHD — violet #8B5CF6 / yellow #FACC15 / deep black #0A0A0F
-     ═══════════════════════════════════════════════════════════════════════════ */
-  --bg:#0A0A0F;          /* پس‌زمینه‌ی اصلی — مشکی عمیق */
-  --bg2:#14141C;        /* سایدبار/هدر تیره‌تر */
-  --bg3:#1E1E28;        /* کارت‌های بالا‌تر */
-  /* شیشه‌ی مات — layering تا حدی شفاف برای depth */
-  --card:rgba(20,20,28,0.55);
-  --card-b:rgba(139,92,246,0.16);
-  --card-bh:rgba(139,92,246,0.32);
-  --card-solid:#14141C;          /* کارت‌های سفید-مات */
-  --card-elevated:#1E1E28;        /* هدر/تاپ‌بار */
-  --glass-blur:18px;
-  --glass-shadow:0 8px 32px 0 rgba(0,0,0,0.45);
-  --glass-shadow-lg:0 20px 50px rgba(0,0,0,0.55);
-  /* اکسنت بنفش — رنگ برند NixHD */
-  --accent:#8B5CF6;
-  --accent2:#FACC15;
-  --accent-d:rgba(139,92,246,0.12);
-  --accent-glow:rgba(139,92,246,0.32);
-  --accent-violet:#A855F7;          /* درخشان‌تر برای فعال‌ها */
-  /* گرادینت ویژه: violet → yellow (کارتی برای امتیاز/متریک‌های برجسته) */
-  --grad-vy:linear-gradient(135deg,#A855F7 0%,#FACC15 100%);
-  /* رنگ‌های وضعیت */
-  --green:#22C55E;--green-bg:rgba(34,197,94,0.12);--green-t:#4ADE80;
-  --red:#EF4444;--red-bg:rgba(239,68,68,0.12);--red-t:#F87171;
-  --amber:#FACC15;--amber-bg:rgba(250,204,21,0.12);--amber-t:#FDE047;
-  --purple:#8B5CF6;--purple-bg:rgba(139,92,246,0.16);--purple-t:#A78BFA;
-  --blue:#60A5FA;--blue-bg:rgba(96,165,250,0.12);
-  /* متن */
-  --t1:#FFFFFF;       /* اصلی — سفید */
-  --t2:#9CA3AF;       /* ثانویه — خاکستری */
-  --t3:#6B7280;       /* کم‌رنگ */
-  /* متریک‌ها */
-  --sidebar-w:260px;--radius:16px;
-  --radius-sm:10px;--radius-lg:24px;--radius-xl:32px;
-  --shadow:0 8px 24px rgba(0,0,0,0.45);
-  --shadow-sm:0 2px 8px rgba(0,0,0,0.30);
-  --shadow-glow:0 0 24px var(--accent-glow);
-  /* dot-matrix indicator (سال‌ها سالم/قطع) */
-  --dot-on:var(--accent-violet);
-  --dot-off:rgba(139,92,246,0.18);
+  --bg:#07070D;--bg2:#0D0C15;--bg3:#14121E;
+  --card:rgba(20,17,26,0.72);--card-b:rgba(255,77,46,0.13);--card-bh:rgba(255,77,46,0.3);
+  --accent:#FF4D2E;--accent2:#FF8A3D;--accent-d:rgba(255,77,46,0.11);
+  --green:#10B981;--green-bg:rgba(16,185,129,0.1);--green-t:#34D399;
+  --red:#EF4444;--red-bg:rgba(239,68,68,0.1);--red-t:#F87171;
+  --amber:#F59E0B;--amber-bg:rgba(245,158,11,0.1);--amber-t:#FCD34D;
+  --purple:#FF7A3D;--purple-bg:rgba(255,122,61,0.12);
+  --t1:#FFF0EA;--t2:#CBB0A6;--t3:#8A6A60;
+  --sidebar-w:248px;--radius:16px;
+  --shadow:0 4px 24px rgba(0,0,0,0.35);
 }
 [data-theme="light"]{
-  --bg:#F5F5F7;--bg2:#FFFFFF;--bg3:#E8EAF0;
-  --card:rgba(255,255,255,0.80);
-  --card-b:rgba(124,58,237,0.12);
-  --card-bh:rgba(124,58,237,0.26);
-  --card-solid:#FFFFFF;--card-elevated:#F5F5F7;
-  --accent:#7C3AED;--accent2:#CA8A04;--accent-d:rgba(124,58,237,0.10);
-  --accent-glow:rgba(124,58,237,0.22);--accent-violet:#8B5CF6;
-  --green:#16A34A;--green-bg:rgba(22,163,74,0.10);--green-t:#15803D;
-  --red:#DC2626;--red-bg:rgba(220,38,38,0.10);--red-t:#B91C1C;
-  --amber:#CA8A04;--amber-bg:rgba(202,138,4,0.10);--amber-t:#A16207;
-  --purple:#7C3AED;--purple-bg:rgba(124,58,237,0.10);--purple-t:#6D28D9;
-  --blue:#2563EB;--blue-bg:rgba(37,99,235,0.10);
-  --t1:#0A0A0F;--t2:#4B5563;--t3:#9CA3AF;
-  --shadow:0 4px 20px rgba(0,0,0,0.08);
-  --shadow-sm:0 1px 4px rgba(0,0,0,0.04);
+  --bg:#F7EFEC;--bg2:#F0E3DF;--bg3:#E7D4CE;
+  --card:#FFFFFF;--card-b:rgba(226,62,30,0.16);--card-bh:rgba(226,62,30,0.32);
+  --accent:#E23E1E;--accent2:#C73A1B;--accent-d:rgba(226,62,30,0.08);
+  --green:#059669;--green-bg:rgba(5,150,105,0.08);--green-t:#065F46;
+  --red:#DC2626;--red-bg:rgba(220,38,38,0.08);--red-t:#991B1B;
+  --amber:#D97706;--amber-bg:rgba(217,119,6,0.08);--amber-t:#92400E;
+  --purple:#E8590C;--purple-bg:rgba(232,89,12,0.08);
+  --t1:#2A1410;--t2:#5C3A32;--t3:#8A6A60;
+  --shadow:0 4px 20px rgba(0,0,0,0.1);
 }
 html,body{height:100%}
-body{font-family:'Vazirmatn','Inter',sans-serif;background:var(--bg);color:var(--t1);min-height:100vh;display:flex;font-size:14px;transition:background .3s,color .3s;position:relative;overflow-x:hidden}
-/* نویز و افکت جلوه‌ی شیشه‌ای روی پس‌زمینه */
-body::before{content:'';position:fixed;inset:0;z-index:-1;background:
-  radial-gradient(circle at 20% 30%,rgba(245,158,11,0.10) 0%,transparent 50%),
-  radial-gradient(circle at 80% 70%,rgba(96,165,250,0.08) 0%,transparent 50%),
-  radial-gradient(circle at 50% 100%,rgba(167,139,250,0.05) 0%,transparent 60%);
-  pointer-events:none;
-}
-[data-theme="light"] body::before{opacity:.5}
-::-webkit-scrollbar{width:6px;height:6px}
-::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:var(--card-b);border-radius:3px}
-::-webkit-scrollbar-thumb:hover{background:var(--accent)}
+body{font-family:'Vazirmatn',sans-serif;background:var(--bg);color:var(--t1);min-height:100vh;display:flex;font-size:14px;transition:background .3s,color .3s}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--bg3);border-radius:3px}
 a{color:inherit;text-decoration:none}
-/* سایدبار — شیشه‌ای تیره با border ظریف */
-.sidebar{width:var(--sidebar-w);min-height:100vh;background:rgba(10,10,15,0.85);backdrop-filter:blur(var(--glass-blur)) saturate(140%);-webkit-backdrop-filter:blur(var(--glass-blur)) saturate(140%);border-left:1px solid var(--card-b);display:flex;flex-direction:column;flex-shrink:0;position:fixed;right:0;top:0;bottom:0;z-index:200;transition:transform .25s cubic-bezier(.4,0,.2,1),background .3s,border-color .3s;box-shadow:-4px 0 24px rgba(0,0,0,0.20)}
-[data-theme="light"] .sidebar{background:rgba(255,255,255,0.80)}
-.logo{display:flex;align-items:center;gap:12px;padding:22px 18px 18px;border-bottom:1px solid var(--card-b);position:relative}
-.logo::after{content:'';position:absolute;bottom:-1px;right:18px;width:36px;height:2px;background:var(--accent);border-radius:2px;box-shadow:0 0 12px var(--accent-glow)}
-.logo-img{width:42px;height:42px;border-radius:12px;overflow:hidden;border:1px solid var(--card-b);box-shadow:0 0 18px var(--accent-glow),inset 0 1px 0 rgba(255,255,255,0.10);flex-shrink:0;background:linear-gradient(135deg,#0A0A0F 0%,#1E1E28 50%,#2D1B4E 100%)}
+.sidebar{width:var(--sidebar-w);min-height:100vh;background:var(--bg2);border-left:1px solid var(--card-b);display:flex;flex-direction:column;flex-shrink:0;position:fixed;right:0;top:0;bottom:0;z-index:200;transition:transform .25s cubic-bezier(.4,0,.2,1),background .3s,border-color .3s}
+.logo{display:flex;align-items:center;gap:12px;padding:20px 16px 16px;border-bottom:1px solid var(--card-b)}
+.logo-img{width:38px;height:38px;border-radius:10px;overflow:hidden;border:1px solid var(--card-b);box-shadow:0 0 14px var(--accent-d);flex-shrink:0}
 .logo-img img{width:100%;height:100%;object-fit:cover}
-.logo-name{font-size:15px;font-weight:800;color:var(--t1);letter-spacing:-.01em}
-.logo-sub{font-size:10px;color:var(--accent);margin-top:2px;font-weight:600;letter-spacing:.05em}
-.sb-close{display:none;position:absolute;left:12px;top:22px;background:var(--accent-d);border:1px solid var(--card-b);color:var(--t2);width:30px;height:30px;border-radius:8px;font-size:16px;align-items:center;justify-content:center;cursor:pointer}
-.nav-wrap{flex:1;overflow-y:auto;padding:10px 0 12px}
-.nav-sec{padding:16px 18px 6px;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--t3);font-weight:700}
-.nav-it{display:flex;align-items:center;gap:10px;padding:10px 14px;color:var(--t2);font-size:13px;cursor:pointer;border-right:2px solid transparent;transition:all .18s ease;margin:2px 8px;border-radius:10px;position:relative}
-.nav-it i{font-size:17px;width:20px;text-align:center;flex-shrink:0;color:var(--t3);transition:color .18s}
-.nav-it:hover{background:var(--accent-d);color:var(--t1)}
-.nav-it:hover i{color:var(--accent)}
-.nav-it.on{background:linear-gradient(90deg,var(--accent-d) 0%,transparent 100%);color:var(--t1);border-right-color:var(--accent);font-weight:600;box-shadow:inset 0 1px 0 rgba(255,255,255,0.04)}
-.nav-it.on i{color:var(--accent);text-shadow:0 0 8px var(--accent-glow)}
-.nav-badge{margin-right:auto;background:var(--accent-d);color:var(--accent);font-size:9px;padding:2px 7px;border-radius:20px;font-weight:700;border:1px solid var(--card-b)}
-.sb-foot{padding:14px 16px;border-top:1px solid var(--card-b);display:flex;flex-direction:column;gap:8px}
-.tg-btn{display:flex;align-items:center;justify-content:center;gap:8px;background:linear-gradient(135deg,#2daee6,#1976d2);color:#fff;border-radius:10px;padding:11px;font-size:12.5px;font-weight:700;font-family:inherit;border:none;cursor:pointer;width:100%;transition:.18s;box-shadow:0 4px 14px rgba(25,118,210,0.30)}
-.tg-btn:hover{filter:brightness(1.12);transform:translateY(-1px)}
-.theme-btn{display:flex;align-items:center;justify-content:center;gap:7px;background:var(--accent-d);color:var(--t2);border-radius:10px;padding:9px;font-size:12px;font-weight:600;font-family:inherit;border:1px solid var(--card-b);cursor:pointer;width:100%;transition:.18s}
+.logo-name{font-size:13.5px;font-weight:700;color:var(--t1)}
+.logo-sub{font-size:10px;color:var(--t3);margin-top:1px}
+.sb-close{display:none;position:absolute;left:12px;top:20px;background:var(--accent-d);border:1px solid var(--card-b);color:var(--t2);width:30px;height:30px;border-radius:8px;font-size:16px;align-items:center;justify-content:center;cursor:pointer}
+.nav-wrap{flex:1;overflow-y:auto;padding:6px 0 8px}
+.nav-sec{padding:14px 14px 4px;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--t3);font-weight:700}
+.nav-it{display:flex;align-items:center;gap:9px;padding:9px 14px;color:var(--t3);font-size:12.5px;cursor:pointer;border-right:2px solid transparent;transition:all .15s;margin:1px 6px}
+.nav-it i{font-size:16px;width:18px;text-align:center;flex-shrink:0}
+.nav-it:hover{background:var(--accent-d);color:var(--t2)}
+.nav-it.on{background:var(--accent-d);color:var(--t1);border-right-color:var(--accent);font-weight:600}
+.nav-badge{margin-right:auto;background:rgba(255,77,46,0.15);color:var(--accent2);font-size:9px;padding:1px 6px;border-radius:20px;font-weight:700}
+.sb-foot{padding:12px 14px;border-top:1px solid var(--card-b)}
+.tg-btn{display:flex;align-items:center;justify-content:center;gap:8px;background:linear-gradient(135deg,#0098e6,#0077bb);color:#fff;border-radius:9px;padding:10px;font-size:12.5px;font-weight:600;font-family:inherit;border:none;cursor:pointer;width:100%;transition:.15s}
+.tg-btn:hover{filter:brightness(1.1)}
+.theme-btn{display:flex;align-items:center;justify-content:center;gap:7px;background:var(--accent-d);color:var(--t2);border-radius:9px;padding:8px;font-size:12px;font-weight:500;font-family:inherit;border:1px solid var(--card-b);cursor:pointer;width:100%;transition:.15s;margin-bottom:7px}
 .theme-btn:hover{background:var(--card-b);color:var(--t1)}
-.logout-btn{display:flex;align-items:center;justify-content:center;gap:7px;background:var(--red-bg);color:var(--red-t);border-radius:10px;padding:9px;font-size:12px;font-weight:600;font-family:inherit;border:1px solid rgba(239,68,68,0.20);cursor:pointer;width:100%;transition:.18s}
-.logout-btn:hover{background:rgba(239,68,68,0.18);transform:translateY(-1px)}
-.mob-top{display:none;position:fixed;top:0;right:0;left:0;height:56px;background:rgba(10,10,15,0.85);backdrop-filter:blur(var(--glass-blur));-webkit-backdrop-filter:blur(var(--glass-blur));border-bottom:1px solid var(--card-b);z-index:150;align-items:center;justify-content:space-between;padding:0 16px;transition:background .3s}
-[data-theme="light"] .mob-top{background:rgba(255,255,255,0.80)}
+.logout-btn{display:flex;align-items:center;justify-content:center;gap:7px;background:var(--red-bg);color:var(--red-t);border-radius:9px;padding:8px;font-size:12px;font-weight:500;font-family:inherit;border:1px solid rgba(239,68,68,0.2);cursor:pointer;width:100%;transition:.15s;margin-top:6px}
+.logout-btn:hover{background:rgba(239,68,68,0.2)}
+.mob-top{display:none;position:fixed;top:0;right:0;left:0;height:52px;background:var(--bg2);border-bottom:1px solid var(--card-b);z-index:150;align-items:center;justify-content:space-between;padding:0 14px;transition:background .3s}
 .mob-top .ml{display:flex;align-items:center;gap:9px}
-.mob-logo{width:30px;height:30px;border-radius:8px;overflow:hidden;border:1px solid var(--card-b)}
+.mob-logo{width:28px;height:28px;border-radius:7px;overflow:hidden}
 .mob-logo img{width:100%;height:100%;object-fit:cover}
-.mob-title{color:var(--t1);font-size:14px;font-weight:800}
+.mob-title{color:var(--t1);font-size:13px;font-weight:700}
 .mob-right{display:flex;gap:6px}
-.menu-btn,.theme-mob{background:var(--accent-d);border:1px solid var(--card-b);color:var(--t2);width:36px;height:36px;border-radius:9px;font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.18s}
-.menu-btn:hover,.theme-mob:hover{color:var(--accent);border-color:var(--accent)}
-.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:190;backdrop-filter:blur(4px)}
-.overlay.show{display:block;animation:fi .2s}
-.main{margin-right:var(--sidebar-w);flex:1;padding:30px 32px 80px;min-width:0;transition:margin .25s;position:relative}
+.menu-btn,.theme-mob{background:var(--accent-d);border:1px solid var(--card-b);color:var(--t2);width:34px;height:34px;border-radius:8px;font-size:17px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.15s}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:190;backdrop-filter:blur(3px)}
+.overlay.show{display:block}
+.main{margin-right:var(--sidebar-w);flex:1;padding:28px 28px 60px;min-width:0;transition:margin .25s}
 .pg{display:none}
-.pg.on{display:block;animation:fi .25s ease}
-@keyframes fi{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-.topbar{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:26px;flex-wrap:wrap;gap:14px}
-.tb-title{font-size:22px;font-weight:800;color:var(--t1);display:flex;align-items:center;gap:10px;letter-spacing:-.02em}
-.tb-title i{color:var(--accent);font-size:22px;text-shadow:0 0 12px var(--accent-glow)}
-.tb-sub{font-size:11.5px;color:var(--t3);margin-top:5px}
+.pg.on{display:block;animation:fi .2s ease}
+@keyframes fi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.topbar{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:22px;flex-wrap:wrap;gap:12px}
+.tb-title{font-size:18px;font-weight:700;color:var(--t1);display:flex;align-items:center;gap:8px;letter-spacing:-.02em}
+.tb-title i{color:var(--accent);font-size:20px}
+.tb-sub{font-size:11px;color:var(--t3);margin-top:4px}
 .tb-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .badge{font-size:10px;padding:3px 10px;border-radius:20px;font-weight:700;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
-.bg-green{background:var(--green-bg);color:var(--green-t);border:1px solid rgba(16,185,129,0.18)}
-.bg-blue{background:var(--blue-bg);color:#7dd3fc;border:1px solid rgba(96,165,250,0.18)}
-.bg-amber{background:var(--amber-bg);color:var(--amber-t);border:1px solid rgba(245,158,11,0.18)}
-.bg-red{background:var(--red-bg);color:var(--red-t);border:1px solid rgba(239,68,68,0.18)}
-.bg-purple{background:var(--purple-bg);color:#c4b5fd;border:1px solid rgba(167,139,250,0.18)}
+.bg-green{background:var(--green-bg);color:var(--green-t)}
+.bg-blue{background:var(--accent-d);color:var(--accent2)}
+.bg-amber{background:var(--amber-bg);color:var(--amber-t)}
+.bg-red{background:var(--red-bg);color:var(--red-t)}
+.bg-purple{background:var(--purple-bg);color:#FFB199}
 .dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;display:inline-block}
 .dg{background:var(--green)}.dr{background:var(--red)}.da{background:var(--amber)}.db{background:var(--accent)}
 .pulse{animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
 .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:13px;margin-bottom:18px}
-.metric{background:var(--card);border:1px solid var(--card-b);border-radius:var(--radius);padding:18px 18px 15px;transition:all .25s;position:relative;overflow:hidden;cursor:default;backdrop-filter:blur(var(--glass-blur));-webkit-backdrop-filter:blur(var(--glass-blur));box-shadow:var(--shadow-sm)}
-.metric::after{content:'';position:absolute;top:0;right:0;width:3px;height:100%;background:var(--accent);opacity:0;transition:.25s}
-.metric:hover{border-color:var(--card-bh);transform:translateY(-2px);box-shadow:var(--shadow),0 0 24px var(--accent-d)}
+.metric{background:var(--card);border:1px solid var(--card-b);border-radius:var(--radius);padding:17px 17px 14px;transition:all .2s;position:relative;overflow:hidden;cursor:default}
+.metric::after{content:'';position:absolute;top:0;right:0;width:3px;height:100%;background:var(--accent);opacity:0;transition:.2s}
+.metric:hover{border-color:var(--card-bh);transform:translateY(-2px);box-shadow:var(--shadow)}
 .metric:hover::after{opacity:1}
 .metric.suc::after{background:var(--green)}
 .metric.dan::after{background:var(--red)}
@@ -545,7 +462,7 @@ a{color:inherit;text-decoration:none}
 .traf-legend-dot{width:8px;height:8px;border-radius:3px}
 .traf-range-tabs{display:flex;gap:4px;background:var(--accent-d);padding:3px;border-radius:10px;border:1px solid var(--card-b)}
 .traf-range-tab{padding:6px 13px;border-radius:8px;font-size:10.5px;font-weight:700;color:var(--t3);cursor:pointer;transition:.15s;border:none;background:transparent;font-family:inherit}
-.traf-range-tab.on{background:var(--accent);color:#fff;box-shadow:0 2px 8px rgba(139,92,246,.35)}
+.traf-range-tab.on{background:var(--accent);color:#fff;box-shadow:0 2px 8px rgba(255,77,46,.35)}
 .traf-chart-body{height:320px;margin-top:14px;position:relative}
 
 /* ══════ ALPN & Fingerprint — کارت‌های جدید ══════ */
@@ -554,7 +471,7 @@ a{color:inherit;text-decoration:none}
   transition:.18s;text-align:center;background:rgba(0,0,0,.1);position:relative}
 [data-theme="light"] .fp-card{background:#fff}
 .fp-card:hover{border-color:var(--card-bh);transform:translateY(-1px)}
-.fp-card.active{border-color:var(--accent);background:var(--accent-d);box-shadow:0 0 0 3px rgba(139,92,246,.1)}
+.fp-card.active{border-color:var(--accent);background:var(--accent-d);box-shadow:0 0 0 3px rgba(255,77,46,.1)}
 .fp-card-icon{width:28px;height:28px;border-radius:8px;background:var(--accent-d);color:var(--accent);
   display:flex;align-items:center;justify-content:center;font-size:14px;margin:0 auto 6px}
 .fp-card.active .fp-card-icon{background:var(--accent);color:#fff}
@@ -599,48 +516,32 @@ a{color:inherit;text-decoration:none}
 .vl-code{background:rgba(0,0,0,.18);border:1px solid var(--card-b);border-radius:9px;padding:13px 15px;font-size:11px;font-family:ui-monospace,monospace;color:var(--accent2);word-break:break-all;line-height:1.8;letter-spacing:.01em}
 [data-theme="light"] .vl-code{background:rgba(0,0,0,.04)}
 .vl-actions{display:flex;gap:8px;margin-top:13px;flex-wrap:wrap}
-.btn{font-family:inherit;font-size:12.5px;font-weight:600;border-radius:10px;padding:9px 14px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;border:none;transition:all .18s;white-space:nowrap;position:relative;overflow:hidden}
+.btn{font-family:inherit;font-size:12px;font-weight:500;border-radius:9px;padding:8px 14px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;border:none;transition:all .15s;white-space:nowrap}
 .btn i{font-size:13px}
 .btn:disabled{opacity:.4;cursor:not-allowed}
-.btn-p{background:linear-gradient(135deg,var(--accent) 0%,var(--accent2) 100%);color:#14141C;box-shadow:0 4px 14px var(--accent-glow)}
-.btn-p:hover{filter:brightness(1.08);box-shadow:0 6px 18px var(--accent-glow)}
+.btn-p{background:var(--accent);color:#fff;box-shadow:0 2px 12px rgba(255,77,46,.3)}
+.btn-p:hover{background:#E23E1E;box-shadow:0 4px 18px rgba(255,77,46,.4)}
 .btn-o{background:transparent;border:1px solid var(--card-b);color:var(--t2)}
-.btn-o:hover{background:var(--accent-d);border-color:var(--accent);color:var(--t1)}
-.btn-g{background:linear-gradient(135deg,var(--accent) 0%,var(--accent2) 100%);color:#14141C;border:1px solid var(--accent);box-shadow:0 4px 14px var(--accent-glow)}
-.btn-g:hover{filter:brightness(1.08);box-shadow:0 6px 18px var(--accent-glow)}
-.btn-d{background:var(--red-bg);color:var(--red-t);border:1px solid rgba(239,68,68,.20)}
-.btn-d:hover{background:rgba(239,68,68,.18)}
-.btn-pur{background:var(--purple-bg);color:#c4b5fd;border:1px solid rgba(167,139,250,.20)}
-.btn-pur:hover{background:rgba(167,139,250,.18)}
-.btn-amber{background:var(--amber-bg);color:var(--amber-t);border:1px solid rgba(245,158,11,.20)}
-.btn-amber:hover{background:rgba(245,158,11,.18)}
-.btn-sm{padding:6px 10px;font-size:10.5px;border-radius:8px}
-.btn-icon{width:30px;height:30px;padding:0;justify-content:center;border-radius:6px}
-.card{background:var(--card);border:1px solid var(--card-b);border-radius:var(--radius);padding:18px 20px;transition:border-color .25s,background .3s,transform .25s,box-shadow .25s;backdrop-filter:blur(var(--glass-blur));-webkit-backdrop-filter:blur(var(--glass-blur));box-shadow:var(--shadow-sm)}
+.btn-o:hover{background:var(--accent-d);border-color:rgba(255,77,46,.3)}
+.btn-g{background:var(--accent-d);color:var(--accent2);border:1px solid rgba(255,77,46,.15)}
+.btn-g:hover{background:rgba(255,77,46,.22)}
+.btn-d{background:var(--red-bg);color:var(--red-t);border:1px solid rgba(239,68,68,.2)}
+.btn-d:hover{background:rgba(239,68,68,.2)}
+.btn-pur{background:var(--purple-bg);color:#FFB199;border:1px solid rgba(255,122,61,.2)}
+.btn-pur:hover{background:rgba(255,122,61,.22)}
+.btn-amber{background:var(--amber-bg);color:var(--amber-t);border:1px solid rgba(245,158,11,.2)}
+.btn-amber:hover{background:rgba(245,158,11,.22)}
+.btn-sm{padding:5px 9px;font-size:10.5px;border-radius:7px}
+.btn-icon{width:30px;height:30px;padding:0;justify-content:center;border-radius:5px}
+.card{background:var(--card);border:1px solid var(--card-b);border-radius:var(--radius);padding:18px 20px;transition:border-color .2s,background .3s}
 .card:hover{border-color:var(--card-bh)}
-/* ─── ورودی‌های شیشه‌ای یکپارچه — همه‌ی input/select/textarea همین استایل را می‌گیرند ─── */
-input[type=text],input[type=password],input[type=number],input[type=email],input[type=url],
-input[type=tel],input[type=search],input:not([type]),select,textarea{
-  width:100%;padding:10px 14px;border-radius:10px;border:1px solid var(--card-b);
-  background:rgba(0,0,0,.15);color:var(--t1);font-family:inherit;font-size:12.5px;outline:none;transition:.18s;
-  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
-}
-[data-theme="light"] input[type=text],[data-theme="light"] input[type=password],[data-theme="light"] input[type=number],
-[data-theme="light"] select,[data-theme="light"] textarea{background:rgba(255,255,255,0.80)}
-input::placeholder,textarea::placeholder{color:var(--t3)}
-input:focus,select:focus,textarea:focus{border-color:var(--accent);background:rgba(0,0,0,.25);box-shadow:0 0 0 3px var(--accent-d)}
-[data-theme="light"] input:focus,[data-theme="light"] select:focus,[data-theme="light"] textarea:focus{background:#fff}
-select{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>");background-repeat:no-repeat;background-position:left 12px center;padding-left:32px;cursor:pointer}
-[data-theme="light"] select{background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>")}
-select option{background:#0A0A0F;color:var(--t1)}
-[data-theme="light"] select option{background:#fff;color:#14141C}
 .card-title{font-size:12.5px;font-weight:700;color:var(--t1);margin-bottom:15px;display:flex;align-items:center;gap:7px}
 .card-title i{font-size:16px;color:var(--accent)}
 .ml-auto{margin-right:auto}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-bottom:16px}
 .g3{display:grid;grid-template-columns:2fr 1fr;gap:13px;margin-bottom:16px}
 .mb16{margin-bottom:16px}
-.sr{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(139,92,246,0.05);font-size:12px}
+.sr{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(255,77,46,0.05);font-size:12px}
 .sr:last-child{border-bottom:none}
 .sr-k{color:var(--t2);display:flex;align-items:center;gap:6px}
 .sr-k i{font-size:13px;color:var(--t3)}
@@ -663,29 +564,29 @@ select option{background:#0A0A0F;color:var(--t1)}
 .fi,.fs{padding:9px 12px;border-radius:9px;border:1px solid var(--card-b);background:rgba(0,0,0,.18);color:var(--t1);font-family:inherit;font-size:12px;outline:none;transition:.15s;min-width:100px}
 [data-theme="light"] .fi,[data-theme="light"] .fs{background:rgba(0,0,0,.04)}
 .fi::placeholder{color:var(--t3)}
-.fi:focus,.fs:focus{border-color:rgba(139,92,246,.45);background:rgba(0,0,0,.25);box-shadow:0 0 0 3px rgba(139,92,246,.08)}
+.fi:focus,.fs:focus{border-color:rgba(255,77,46,.45);background:rgba(0,0,0,.25);box-shadow:0 0 0 3px rgba(255,77,46,.08)}
 .fs option{background:var(--bg2)}
 [data-theme="light"] .fs option{background:#fff}
-.cl{background:var(--accent-d);border:1px solid rgba(139,92,246,.15);border-radius:10px;padding:11px 13px;font-size:11px;color:var(--t2);display:flex;gap:9px;align-items:flex-start;line-height:1.8;margin-top:12px}
+.cl{background:var(--accent-d);border:1px solid rgba(255,77,46,.15);border-radius:10px;padding:11px 13px;font-size:11px;color:var(--t2);display:flex;gap:9px;align-items:flex-start;line-height:1.8;margin-top:12px}
 .cl i{font-size:15px;color:var(--accent);margin-top:1px;flex-shrink:0}
 .cl.amber{background:var(--amber-bg);border-color:rgba(245,158,11,.2);color:var(--amber-t)}
 /* ══════ پنل ساخت کانفیگ - طراحی جدید ══════ */
 .create-panel{background:linear-gradient(155deg,var(--bg3) 0%,var(--card) 55%);border:1px solid var(--card-b);border-radius:22px;padding:0;overflow:hidden;box-shadow:var(--shadow);margin-bottom:16px;position:relative}
 .create-panel::before{content:'';position:absolute;top:-60px;left:-60px;width:220px;height:220px;background:radial-gradient(circle,var(--accent-d),transparent 70%);pointer-events:none}
 .cp-head{display:flex;align-items:center;gap:13px;padding:22px 24px 18px;position:relative;z-index:1}
-.cp-head-icon{width:44px;height:44px;border-radius:13px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;flex-shrink:0;box-shadow:0 6px 18px rgba(139,92,246,.35)}
+.cp-head-icon{width:44px;height:44px;border-radius:13px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;flex-shrink:0;box-shadow:0 6px 18px rgba(255,77,46,.35)}
 .cp-head-text{flex:1;min-width:0}
 .cp-head-title{font-size:15px;font-weight:800;color:var(--t1);letter-spacing:-.01em}
 .cp-head-sub{font-size:11px;color:var(--t3);margin-top:2px}
 .cp-body{padding:2px 24px 22px;position:relative;z-index:1}
 .cp-row{display:grid;grid-template-columns:1.3fr 1fr;gap:14px;margin-bottom:16px}
 .cp-block{background:rgba(0,0,0,.14);border:1px solid var(--card-b);border-radius:14px;padding:14px 16px}
-[data-theme="light"] .cp-block{background:rgba(124,58,237,.03)}
+[data-theme="light"] .cp-block{background:rgba(226,62,30,.03)}
 .cp-block-label{font-size:10px;font-weight:800;color:var(--t2);text-transform:uppercase;letter-spacing:.08em;display:flex;align-items:center;gap:6px;margin-bottom:11px}
 .cp-block-label i{color:var(--accent);font-size:14px}
 .cp-input-full{width:100%;padding:10px 13px;border-radius:10px;border:1px solid var(--card-b);background:rgba(0,0,0,.18);color:var(--t1);font-family:inherit;font-size:12.5px;outline:none;transition:.15s}
 [data-theme="light"] .cp-input-full{background:#fff}
-.cp-input-full:focus{border-color:rgba(139,92,246,.5);box-shadow:0 0 0 3px rgba(139,92,246,.1)}
+.cp-input-full:focus{border-color:rgba(255,77,46,.5);box-shadow:0 0 0 3px rgba(255,77,46,.1)}
 .cp-input-full::placeholder{color:var(--t3)}
 .cp-mini-row{display:flex;gap:8px;margin-top:9px}
 .cp-quota-inputs{display:flex;gap:8px}
@@ -693,8 +594,8 @@ select option{background:#0A0A0F;color:var(--t1)}
 .cp-quota-inputs select.cp-input-full{flex:0 0 76px}
 .chip-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
 .chip{font-size:10.5px;font-weight:700;padding:5px 12px;border-radius:8px;background:var(--accent-d);color:var(--t2);border:1px solid var(--card-b);cursor:pointer;transition:.15s;white-space:nowrap}
-.chip:hover{background:rgba(139,92,246,.18);color:var(--accent2)}
-.chip.active{background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:0 3px 10px rgba(139,92,246,.35)}
+.chip:hover{background:rgba(255,77,46,.18);color:var(--accent2)}
+.chip.active{background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:0 3px 10px rgba(255,77,46,.35)}
 .proto-tabs{display:flex;gap:8px;flex-wrap:wrap}
 .proto-step-label{font-size:10px;font-weight:800;color:var(--t2);text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;gap:6px;margin-bottom:9px}
 .proto-step-label i{color:var(--accent);font-size:14px}
@@ -703,7 +604,7 @@ select option{background:#0A0A0F;color:var(--t1)}
 .proto-base-card{border:1.5px solid var(--card-b);border-radius:13px;padding:14px 12px;cursor:pointer;transition:.18s;text-align:center;position:relative;background:rgba(0,0,0,.1)}
 [data-theme="light"] .proto-base-card{background:#fff}
 .proto-base-card:hover{border-color:var(--card-bh);transform:translateY(-1px)}
-.proto-base-card.active{border-color:var(--accent);background:var(--accent-d);box-shadow:0 0 0 3px rgba(139,92,246,.1)}
+.proto-base-card.active{border-color:var(--accent);background:var(--accent-d);box-shadow:0 0 0 3px rgba(255,77,46,.1)}
 .proto-base-icon{width:34px;height:34px;border-radius:9px;background:var(--accent-d);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:17px;margin:0 auto 8px}
 .proto-base-card.active .proto-base-icon{background:var(--accent);color:#fff}
 .proto-base-title{font-size:12px;font-weight:800;color:var(--t1)}
@@ -713,7 +614,7 @@ select option{background:#0A0A0F;color:var(--t1)}
 .proto-t-card{border:1.5px solid var(--card-b);border-radius:13px;padding:13px 10px;cursor:pointer;transition:.18s;text-align:center;position:relative;background:rgba(0,0,0,.1)}
 [data-theme="light"] .proto-t-card{background:#fff}
 .proto-t-card:hover{border-color:var(--card-bh);transform:translateY(-1px)}
-.proto-t-card.active{border-color:var(--accent);background:var(--accent-d);box-shadow:0 0 0 3px rgba(139,92,246,.1)}
+.proto-t-card.active{border-color:var(--accent);background:var(--accent-d);box-shadow:0 0 0 3px rgba(255,77,46,.1)}
 .proto-t-icon{width:30px;height:30px;border-radius:9px;background:var(--accent-d);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:15px;margin:0 auto 7px}
 .proto-t-card.active .proto-t-icon{background:var(--accent);color:#fff}
 .proto-t-title{font-size:10.5px;font-weight:800;color:var(--t1)}
@@ -726,13 +627,13 @@ select option{background:#0A0A0F;color:var(--t1)}
   padding:11px 10px;border-radius:12px;border:1.5px solid var(--card-b);background:rgba(0,0,0,.1);
   color:var(--t2);font-family:inherit;font-size:11.5px;font-weight:700;cursor:pointer;transition:.15s}
 .proto-tab.active{border-color:var(--accent);background:var(--accent-d);color:var(--accent2);
-  box-shadow:0 0 0 3px rgba(139,92,246,.1)}
+  box-shadow:0 0 0 3px rgba(255,77,46,.1)}
 .proto-submodes{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
 .proto-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
 .proto-card{border:1.5px solid var(--card-b);border-radius:13px;padding:13px 12px;cursor:pointer;transition:.18s;text-align:center;position:relative;background:rgba(0,0,0,.1)}
 [data-theme="light"] .proto-card{background:#fff}
 .proto-card:hover{border-color:var(--card-bh);transform:translateY(-1px)}
-.proto-card.active{border-color:var(--accent);background:var(--accent-d);box-shadow:0 0 0 3px rgba(139,92,246,.1)}
+.proto-card.active{border-color:var(--accent);background:var(--accent-d);box-shadow:0 0 0 3px rgba(255,77,46,.1)}
 .proto-card.active .proto-card-check{opacity:1;transform:scale(1)}
 .proto-card-check{position:absolute;top:7px;left:7px;width:16px;height:16px;border-radius:50%;background:var(--accent);color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;opacity:0;transform:scale(.5);transition:.18s}
 .proto-card-icon{width:32px;height:32px;border-radius:9px;background:var(--accent-d);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:16px;margin:0 auto 8px}
@@ -742,8 +643,8 @@ select option{background:#0A0A0F;color:var(--t1)}
 .cp-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:16px;border-top:1px solid var(--card-b);flex-wrap:wrap}
 .cp-footer-note{display:flex;align-items:center;gap:8px;font-size:10.5px;color:var(--t3);line-height:1.7;flex:1;min-width:220px}
 .cp-footer-note i{color:var(--accent);font-size:15px;flex-shrink:0}
-.cp-submit-btn{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:13px;padding:13px 26px;font-family:inherit;font-size:13px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:8px;box-shadow:0 6px 20px rgba(139,92,246,.35);transition:.18s;white-space:nowrap}
-.cp-submit-btn:hover{transform:translateY(-2px);box-shadow:0 10px 26px rgba(139,92,246,.45)}
+.cp-submit-btn{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:13px;padding:13px 26px;font-family:inherit;font-size:13px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:8px;box-shadow:0 6px 20px rgba(255,77,46,.35);transition:.18s;white-space:nowrap}
+.cp-submit-btn:hover{transform:translateY(-2px);box-shadow:0 10px 26px rgba(255,77,46,.45)}
 .cp-submit-btn:active{transform:translateY(0) scale(.98)}
 @media(max-width:760px){
   .cp-row{grid-template-columns:1fr}
@@ -755,13 +656,13 @@ select option{background:#0A0A0F;color:var(--t1)}
 .srv-panel{background:linear-gradient(155deg,var(--bg3) 0%,var(--card) 60%);border:1px solid var(--card-b);border-radius:22px;overflow:hidden;box-shadow:var(--shadow);position:relative}
 .srv-panel::before{content:'';position:absolute;top:-60px;left:-60px;width:200px;height:200px;background:radial-gradient(circle,var(--accent-d),transparent 70%);pointer-events:none}
 .srv-hero{display:flex;align-items:center;gap:14px;padding:22px 24px;position:relative;z-index:1;border-bottom:1px solid var(--card-b)}
-.srv-hero-icon{width:50px;height:50px;border-radius:14px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;color:#fff;font-size:22px;flex-shrink:0;box-shadow:0 6px 18px rgba(139,92,246,.35)}
+.srv-hero-icon{width:50px;height:50px;border-radius:14px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;color:#fff;font-size:22px;flex-shrink:0;box-shadow:0 6px 18px rgba(255,77,46,.35)}
 .srv-hero-text{flex:1;min-width:0}
 .srv-hero-domain{font-size:15px;font-weight:800;color:var(--t1);word-break:break-all}
 .srv-hero-sub{font-size:10.5px;color:var(--t3);margin-top:4px;display:flex;align-items:center;gap:6px}
 .srv-tiles{display:grid;grid-template-columns:1fr 1fr;gap:11px;padding:20px 22px 22px;position:relative;z-index:1}
 .srv-tile{display:flex;align-items:center;gap:11px;background:rgba(0,0,0,.14);border:1px solid var(--card-b);border-radius:13px;padding:12px 14px;transition:.18s}
-[data-theme="light"] .srv-tile{background:rgba(124,58,237,.03)}
+[data-theme="light"] .srv-tile{background:rgba(226,62,30,.03)}
 .srv-tile:hover{border-color:var(--card-bh);transform:translateY(-1px)}
 .srv-tile-icon{width:34px;height:34px;border-radius:10px;background:var(--accent-d);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
 .srv-tile-text{min-width:0}
@@ -772,7 +673,7 @@ select option{background:#0A0A0F;color:var(--t1)}
 .pw-panel{background:linear-gradient(155deg,var(--bg3) 0%,var(--card) 60%);border:1px solid var(--card-b);border-radius:22px;overflow:hidden;box-shadow:var(--shadow);position:relative}
 .pw-panel::before{content:'';position:absolute;top:-60px;right:-60px;width:200px;height:200px;background:radial-gradient(circle,var(--purple-bg),transparent 70%);pointer-events:none}
 .pw-hero{display:flex;align-items:center;gap:14px;padding:22px 24px 18px;position:relative;z-index:1}
-.pw-hero-icon{width:50px;height:50px;border-radius:14px;background:linear-gradient(135deg,var(--purple),#0EA5E9);display:flex;align-items:center;justify-content:center;color:#fff;font-size:22px;flex-shrink:0;box-shadow:0 6px 18px rgba(168,85,247,.35)}
+.pw-hero-icon{width:50px;height:50px;border-radius:14px;background:linear-gradient(135deg,var(--purple),#0EA5E9);display:flex;align-items:center;justify-content:center;color:#fff;font-size:22px;flex-shrink:0;box-shadow:0 6px 18px rgba(255,122,61,.35)}
 .pw-hero-text{flex:1;min-width:0}
 .pw-hero-title{font-size:15px;font-weight:800;color:var(--t1)}
 .pw-hero-sub{font-size:10.5px;color:var(--t3);margin-top:3px}
@@ -781,7 +682,7 @@ select option{background:#0A0A0F;color:var(--t1)}
 .pw-field label{display:block;font-size:10px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:7px}
 .pw-input{width:100%;padding:11px 42px 11px 14px;border-radius:11px;border:1px solid var(--card-b);background:rgba(0,0,0,.18);color:var(--t1);font-family:inherit;font-size:12.5px;outline:none;transition:.15s}
 [data-theme="light"] .pw-input{background:#fff}
-.pw-input:focus{border-color:rgba(168,85,247,.5);box-shadow:0 0 0 3px rgba(168,85,247,.1)}
+.pw-input:focus{border-color:rgba(255,122,61,.5);box-shadow:0 0 0 3px rgba(255,122,61,.1)}
 .pw-eye{position:absolute;left:12px;top:34px;background:none;border:none;color:var(--t3);cursor:pointer;font-size:16px;padding:4px;display:flex}
 .pw-eye:hover{color:var(--purple)}
 .pw-strength{height:4px;border-radius:3px;background:var(--accent-d);margin-top:8px;overflow:hidden;display:flex;gap:3px}
@@ -790,8 +691,8 @@ select option{background:#0A0A0F;color:var(--t1)}
 .pw-reqs{display:flex;flex-wrap:wrap;gap:6px;margin-top:11px;margin-bottom:16px}
 .pw-req{font-size:9.5px;padding:4px 10px;border-radius:7px;background:var(--accent-d);color:var(--t3);font-weight:600;display:flex;align-items:center;gap:4px;transition:.18s}
 .pw-req.met{background:var(--green-bg);color:var(--green-t)}
-.pw-submit{width:100%;justify-content:center;background:linear-gradient(135deg,var(--purple),#0EA5E9);color:#fff;border:none;border-radius:12px;padding:12px;font-family:inherit;font-size:13px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:8px;box-shadow:0 6px 18px rgba(168,85,247,.32);transition:.18s}
-.pw-submit:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(168,85,247,.42)}
+.pw-submit{width:100%;justify-content:center;background:linear-gradient(135deg,var(--purple),#0EA5E9);color:#fff;border:none;border-radius:12px;padding:12px;font-family:inherit;font-size:13px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:8px;box-shadow:0 6px 18px rgba(255,122,61,.32);transition:.18s}
+.pw-submit:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(255,122,61,.42)}
 .pw-submit:active{transform:translateY(0) scale(.98)}
 
 /* ══════ اتصالات فعال - نسخه پیشرفته ══════ */
@@ -813,15 +714,6 @@ select option{background:#0A0A0F;color:var(--t1)}
 .conn-live-badge{display:flex;align-items:center;gap:6px;font-size:10.5px;font-weight:700;color:var(--green-t);background:var(--green-bg);padding:5px 12px;border-radius:20px;border:1px solid rgba(16,185,129,.2)}
 .conn-live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 1.6s infinite}
 
-.rt-mode-card{padding:14px 16px;border-radius:14px;border:1.5px solid var(--card-b);background:var(--bg);cursor:pointer;transition:all .18s ease;position:relative}
-.rt-mode-card:hover{transform:translateY(-2px);border-color:var(--accent)}
-.rt-mode-card.sel{border-color:var(--accent);background:linear-gradient(135deg,rgba(249,115,22,.12),rgba(76,201,240,.06));box-shadow:0 0 0 1px var(--accent)}
-.rt-mode-title{font-size:13px;font-weight:800;margin-bottom:6px}
-.rt-mode-sub{font-size:11.5px;color:var(--t3);line-height:1.8}
-.rt-mode-tag{position:absolute;top:10px;left:12px;font-size:10px;font-family:monospace;color:var(--t3);opacity:.8}
-.ac-card{padding:16px;border-radius:14px;border:1px solid var(--card-b);background:var(--bg)}
-.ac-dev-row{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;background:var(--card);margin-bottom:6px;font-size:12px}
-.ac-status-chip{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:700}
 .conn-grid-v2{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
 .conn-card-v2{background:var(--card);border:1px solid var(--card-b);border-radius:18px;padding:0;overflow:hidden;transition:all .22s cubic-bezier(.4,0,.2,1);position:relative}
 .conn-card-v2:hover{border-color:var(--card-bh);transform:translateY(-3px);box-shadow:0 14px 32px rgba(0,0,0,.22)}
@@ -856,20 +748,11 @@ select option{background:#0A0A0F;color:var(--t1)}
 .conn-empty-v2-sub{font-size:11px;color:var(--t3)}
 
 @media(max-width:760px){.conn-hero{grid-template-columns:1fr 1fr}}
-@media(max-width:500px){.rt-mode-card{padding:14px 16px;border-radius:14px;border:1.5px solid var(--card-b);background:var(--bg);cursor:pointer;transition:all .18s ease;position:relative}
-.rt-mode-card:hover{transform:translateY(-2px);border-color:var(--accent)}
-.rt-mode-card.sel{border-color:var(--accent);background:linear-gradient(135deg,rgba(249,115,22,.12),rgba(76,201,240,.06));box-shadow:0 0 0 1px var(--accent)}
-.rt-mode-title{font-size:13px;font-weight:800;margin-bottom:6px}
-.rt-mode-sub{font-size:11.5px;color:var(--t3);line-height:1.8}
-.rt-mode-tag{position:absolute;top:10px;left:12px;font-size:10px;font-family:monospace;color:var(--t3);opacity:.8}
-.ac-card{padding:16px;border-radius:14px;border:1px solid var(--card-b);background:var(--bg)}
-.ac-dev-row{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;background:var(--card);margin-bottom:6px;font-size:12px}
-.ac-status-chip{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:700}
-.conn-grid-v2{grid-template-columns:1fr}}
+@media(max-width:500px){.conn-grid-v2{grid-template-columns:1fr}}
 
 @media(max-width:560px){.srv-tiles{grid-template-columns:1fr}}
 .cl.amber i{color:var(--amber)}
-.sub-box{background:rgba(168,85,247,.07);border:1px solid rgba(168,85,247,.2);border-radius:10px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:11px}
+.sub-box{background:rgba(255,122,61,.07);border:1px solid rgba(255,122,61,.2);border-radius:10px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:11px}
 .sub-url{font-family:ui-monospace,monospace;font-size:10.5px;color:#FFB199;word-break:break-all;flex:1}
 .spbar{height:4px;border-radius:3px;background:var(--accent-d);margin-top:5px;overflow:hidden}
 .spfill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width 1s}
@@ -880,16 +763,16 @@ select option{background:#0A0A0F;color:var(--t1)}
 .subs-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;flex-wrap:wrap}
 .subs-search{flex:1;min-width:200px;position:relative}
 .subs-search input{width:100%;padding:11px 40px 11px 15px;border-radius:12px;border:1px solid var(--card-b);background:var(--card);color:var(--t1);font-family:inherit;font-size:12.5px;outline:none;transition:.15s}
-.subs-search input:focus{border-color:rgba(168,85,247,.5);box-shadow:0 0 0 3px rgba(168,85,247,.1)}
+.subs-search input:focus{border-color:rgba(255,122,61,.5);box-shadow:0 0 0 3px rgba(255,122,61,.1)}
 .subs-search i{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--t3);font-size:15px}
 
 .sub-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px;margin-bottom:18px}
 .sub-card{background:var(--card);border:1px solid var(--card-b);border-radius:20px;padding:0;overflow:hidden;transition:all .25s cubic-bezier(.4,0,.2,1);position:relative}
 .sub-card:hover{border-color:var(--card-bh);transform:translateY(-4px);box-shadow:0 16px 36px rgba(0,0,0,.24)}
 .sub-card-top{background:linear-gradient(155deg,var(--purple-bg) 0%,transparent 65%);padding:20px 20px 16px;position:relative}
-.sub-card-top::before{content:'';position:absolute;top:-30px;left:-30px;width:130px;height:130px;background:radial-gradient(circle,rgba(168,85,247,.14),transparent 70%);pointer-events:none}
+.sub-card-top::before{content:'';position:absolute;top:-30px;left:-30px;width:130px;height:130px;background:radial-gradient(circle,rgba(255,122,61,.14),transparent 70%);pointer-events:none}
 .sub-card-head-v2{display:flex;align-items:flex-start;gap:13px;position:relative;z-index:1}
-.sub-card-icon{width:46px;height:46px;border-radius:14px;background:linear-gradient(135deg,var(--purple),#0EA5E9);display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;flex-shrink:0;box-shadow:0 6px 16px rgba(168,85,247,.35)}
+.sub-card-icon{width:46px;height:46px;border-radius:14px;background:linear-gradient(135deg,var(--purple),#0EA5E9);display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;flex-shrink:0;box-shadow:0 6px 16px rgba(255,122,61,.35)}
 .sub-card-titles{flex:1;min-width:0}
 .sub-card-name-v2{font-size:15.5px;font-weight:800;color:var(--t1);letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sub-card-desc-v2{font-size:11px;color:var(--t3);margin-top:3px;line-height:1.6;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
@@ -904,7 +787,7 @@ select option{background:#0A0A0F;color:var(--t1)}
 .sub-card-stat-val{font-size:15px;font-weight:800;color:var(--t1);line-height:1.2}
 .sub-card-stat-label{font-size:8.5px;color:var(--t3);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-top:4px}
 
-.sub-card-url-row{margin:14px 20px 0;background:rgba(168,85,247,.08);border:1px dashed rgba(168,85,247,.25);border-radius:11px;padding:9px 12px;display:flex;align-items:center;gap:8px}
+.sub-card-url-row{margin:14px 20px 0;background:rgba(255,122,61,.08);border:1px dashed rgba(255,122,61,.25);border-radius:11px;padding:9px 12px;display:flex;align-items:center;gap:8px}
 .sub-card-url-text{font-family:ui-monospace,monospace;font-size:9.5px;color:#FFB199;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sub-card-url-copy{background:none;border:none;color:var(--purple);cursor:pointer;font-size:13px;padding:3px;display:flex;flex-shrink:0;transition:.15s}
 .sub-card-url-copy:hover{color:#FFB199;transform:scale(1.1)}
@@ -919,11 +802,11 @@ select option{background:#0A0A0F;color:var(--t1)}
 
 /* ══════ مودال ساخت گروه - نسخه فشرده ══════ */
 .modal-v2{background:var(--card);border:1px solid var(--card-b);border-radius:22px;padding:0;max-width:430px;width:calc(100% - 32px);max-height:92vh;overflow-y:auto;position:relative;animation:fi .2s ease;box-shadow:0 24px 70px rgba(0,0,0,.5)}
-.modal-v2-head{background:linear-gradient(155deg,rgba(168,85,247,.14) 0%,transparent 65%);padding:18px 22px 14px;position:relative;overflow:hidden}
-.modal-v2-head::before{content:'';position:absolute;top:-50px;left:-50px;width:160px;height:160px;background:radial-gradient(circle,rgba(168,85,247,.2),transparent 70%);pointer-events:none}
+.modal-v2-head{background:linear-gradient(155deg,rgba(255,122,61,.14) 0%,transparent 65%);padding:18px 22px 14px;position:relative;overflow:hidden}
+.modal-v2-head::before{content:'';position:absolute;top:-50px;left:-50px;width:160px;height:160px;background:radial-gradient(circle,rgba(255,122,61,.2),transparent 70%);pointer-events:none}
 .modal-v2-close{position:absolute;top:14px;left:14px;background:var(--accent-d);border:1px solid var(--card-b);color:var(--t2);width:30px;height:30px;border-radius:9px;font-size:15px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2;transition:.15s}
 .modal-v2-close:hover{background:var(--red-bg);color:var(--red-t);border-color:rgba(239,68,68,.25)}
-.modal-v2-icon{width:42px;height:42px;border-radius:13px;background:linear-gradient(135deg,var(--purple),#0EA5E9);display:flex;align-items:center;justify-content:center;color:#fff;font-size:19px;margin-bottom:10px;position:relative;z-index:1;box-shadow:0 8px 18px rgba(168,85,247,.4)}
+.modal-v2-icon{width:42px;height:42px;border-radius:13px;background:linear-gradient(135deg,var(--purple),#0EA5E9);display:flex;align-items:center;justify-content:center;color:#fff;font-size:19px;margin-bottom:10px;position:relative;z-index:1;box-shadow:0 8px 18px rgba(255,122,61,.4)}
 .modal-v2-title{font-size:15.5px;font-weight:800;color:var(--t1);position:relative;z-index:1;letter-spacing:-.01em}
 .modal-v2-sub{font-size:10.5px;color:var(--t3);margin-top:3px;position:relative;z-index:1;line-height:1.6}
 .modal-v2-body{padding:16px 22px 20px;border-top:1px solid var(--card-b)}
@@ -935,10 +818,10 @@ select option{background:#0A0A0F;color:var(--t1)}
 .modal-v2-input{width:100%;padding:9px 38px 9px 13px;border-radius:11px;border:1px solid var(--card-b);background:rgba(0,0,0,.2);color:var(--t1);font-family:inherit;font-size:12.5px;outline:none;transition:.18s}
 [data-theme="light"] .modal-v2-input{background:rgba(8,145,178,.04)}
 .modal-v2-input::placeholder{color:var(--t3)}
-.modal-v2-input:focus{border-color:rgba(168,85,247,.55);box-shadow:0 0 0 3px rgba(168,85,247,.12);background:rgba(0,0,0,.28)}
+.modal-v2-input:focus{border-color:rgba(255,122,61,.55);box-shadow:0 0 0 3px rgba(255,122,61,.12);background:rgba(0,0,0,.28)}
 [data-theme="light"] .modal-v2-input:focus{background:#fff}
 .modal-v2-input:focus~i{color:var(--purple)}
-.modal-v2-hint{background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.18);border-radius:11px;padding:9px 12px;font-size:10px;color:var(--t2);display:flex;gap:7px;align-items:flex-start;line-height:1.6;margin-top:2px}
+.modal-v2-hint{background:rgba(255,77,46,.08);border:1px solid rgba(255,77,46,.18);border-radius:11px;padding:9px 12px;font-size:10px;color:var(--t2);display:flex;gap:7px;align-items:flex-start;line-height:1.6;margin-top:2px}
 .modal-v2-hint i{font-size:14px;color:var(--accent);margin-top:1px;flex-shrink:0}
 .modal-v2-footer{display:flex;gap:8px;margin-top:15px}
 .sdev-grid{display:flex;flex-direction:column;gap:10px;margin-top:4px}
@@ -953,24 +836,24 @@ select option{background:#0A0A0F;color:var(--t1)}
 .sdev-go{font-size:15px;color:var(--dim);flex-shrink:0}
 .modal-v2-btn-cancel{flex:.75;justify-content:center;padding:10px;border-radius:11px;background:transparent;border:1px solid var(--card-b);color:var(--t2);font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;transition:.15s;display:flex;align-items:center}
 .modal-v2-btn-cancel:hover{background:var(--accent-d);color:var(--t1)}
-.modal-v2-btn-submit{flex:1;justify-content:center;padding:10px;border-radius:11px;background:linear-gradient(135deg,var(--purple),#0EA5E9);color:#fff;border:none;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 6px 18px rgba(168,85,247,.4);transition:.18s}
-.modal-v2-btn-submit:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(168,85,247,.5)}
+.modal-v2-btn-submit{flex:1;justify-content:center;padding:10px;border-radius:11px;background:linear-gradient(135deg,var(--purple),#0EA5E9);color:#fff;border:none;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 6px 18px rgba(255,122,61,.4);transition:.18s}
+.modal-v2-btn-submit:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(255,122,61,.5)}
 .modal-v2-btn-submit:active{transform:translateY(0) scale(.98)}
 
 /* ══════ مودال انتخاب کانفیگ - نسخه پیشرفته ══════ */
 .lmodal-head{background:linear-gradient(155deg,var(--accent-d) 0%,transparent 70%);padding:22px 24px 18px;position:relative;border-bottom:1px solid var(--card-b)}
 .lmodal-icon-row{display:flex;align-items:center;gap:12px;position:relative;z-index:1}
-.lmodal-icon{width:44px;height:44px;border-radius:13px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;color:#fff;font-size:19px;flex-shrink:0;box-shadow:0 6px 16px rgba(139,92,246,.35)}
+.lmodal-icon{width:44px;height:44px;border-radius:13px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;color:#fff;font-size:19px;flex-shrink:0;box-shadow:0 6px 16px rgba(255,77,46,.35)}
 .lmodal-title-v2{font-size:14.5px;font-weight:800;color:var(--t1)}
 .lmodal-sub-v2{font-size:10.5px;color:var(--t3);margin-top:2px}
 .lmodal-search{margin-top:14px;position:relative}
 .lmodal-search input{width:100%;padding:10px 38px 10px 13px;border-radius:11px;border:1px solid var(--card-b);background:rgba(0,0,0,.2);color:var(--t1);font-family:inherit;font-size:12px;outline:none}
 [data-theme="light"] .lmodal-search input{background:#fff}
-.lmodal-search input:focus{border-color:rgba(139,92,246,.5);box-shadow:0 0 0 3px rgba(139,92,246,.1)}
+.lmodal-search input:focus{border-color:rgba(255,77,46,.5);box-shadow:0 0 0 3px rgba(255,77,46,.1)}
 .lmodal-search i{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--t3);font-size:14px}
 .lmodal-quickbar{display:flex;gap:8px;margin-top:11px;position:relative;z-index:1}
 .lmodal-qbtn{font-size:10px;font-weight:700;padding:5px 11px;border-radius:8px;background:var(--accent-d);color:var(--accent2);border:1px solid var(--card-b);cursor:pointer;transition:.15s;font-family:inherit}
-.lmodal-qbtn:hover{background:rgba(139,92,246,.2)}
+.lmodal-qbtn:hover{background:rgba(255,77,46,.2)}
 .lmodal-count{margin-right:auto;font-size:10.5px;color:var(--t3);display:flex;align-items:center}
 
 .lmodal-list{padding:10px 14px;max-height:360px;overflow-y:auto}
@@ -979,7 +862,7 @@ select option{background:#0A0A0F;color:var(--t1)}
 #modal-links .lmodal-list{max-height:none;flex:1;min-height:0}
 .lrow-v2{display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:13px;cursor:pointer;transition:.15s;margin-bottom:4px;border:1px solid transparent}
 .lrow-v2:hover{background:var(--accent-d)}
-.lrow-v2.checked{background:rgba(139,92,246,.1);border-color:rgba(139,92,246,.25)}
+.lrow-v2.checked{background:rgba(255,77,46,.1);border-color:rgba(255,77,46,.25)}
 .lrow-v2-check{width:20px;height:20px;border-radius:7px;border:2px solid var(--card-b);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:.15s;background:rgba(0,0,0,.14)}
 .lrow-v2.checked .lrow-v2-check{background:var(--accent);border-color:var(--accent)}
 .lrow-v2-check i{font-size:12px;color:#fff;opacity:0;transform:scale(.5);transition:.15s}
@@ -1006,7 +889,7 @@ select option{background:#0A0A0F;color:var(--t1)}
 .modal-close{position:absolute;top:14px;left:14px;background:var(--accent-d);border:1px solid var(--card-b);color:var(--t2);width:30px;height:30px;border-radius:8px;font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:none}
 .modal-title{font-size:16px;font-weight:700;color:var(--t1);margin-bottom:18px;display:flex;align-items:center;gap:8px}
 .modal-title i{color:var(--accent)}
-.lrow{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid rgba(139,92,246,.05)}
+.lrow{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid rgba(255,77,46,.05)}
 .lrow:last-child{border-bottom:none}
 .lrow-check{width:16px;height:16px;border-radius:4px;cursor:pointer;accent-color:var(--accent)}
 .lrow-label{flex:1;font-size:12px;color:var(--t1)}
@@ -1061,10 +944,10 @@ select option{background:#0A0A0F;color:var(--t1)}
 .cfg-label{font-size:13.5px;font-weight:700;color:var(--t1);display:flex;align-items:center;gap:7px}
 .cfg-sub-meta{display:flex;align-items:center;gap:8px;font-size:10px;color:var(--t3)}
 .cfg-uuid-mini{font-family:ui-monospace,monospace;font-size:9.5px;color:var(--accent2);background:var(--accent-d);padding:2px 7px;border-radius:5px;cursor:pointer;transition:.15s}
-.cfg-uuid-mini:hover{background:rgba(139,92,246,.2)}
+.cfg-uuid-mini:hover{background:rgba(255,77,46,.2)}
 .cfg-divider-v{width:1px;align-self:stretch;background:var(--card-b);flex-shrink:0}
 .cfg-usage-col{flex:1;min-width:160px;display:flex;flex-direction:column;gap:5px}
-.ubar{height:5px;border-radius:4px;background:rgba(139,92,246,0.1);overflow:hidden}
+.ubar{height:5px;border-radius:4px;background:rgba(255,77,46,0.1);overflow:hidden}
 .ubar-f{height:100%;border-radius:4px;transition:width .4s ease}
 .utxt{font-size:10px;color:var(--t3);display:flex;justify-content:space-between}
 .cfg-exp-col{flex-shrink:0;min-width:110px}
@@ -1088,10 +971,10 @@ select option{background:#0A0A0F;color:var(--t1)}
 .cfg-check.checked{background:var(--accent);border-color:var(--accent)}
 .cfg-check i{font-size:11px;color:#fff;opacity:0;transform:scale(.5);transition:.15s}
 .cfg-check.checked i{opacity:1;transform:scale(1)}
-.cfg-card.selected{border-color:rgba(139,92,246,.5);box-shadow:0 0 0 2px rgba(139,92,246,.14)}
+.cfg-card.selected{border-color:rgba(255,77,46,.5);box-shadow:0 0 0 2px rgba(255,77,46,.14)}
 .links-selectall{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--t3);cursor:pointer;user-select:none;padding:6px 4px;transition:.15s}
 .links-selectall:hover{color:var(--t1)}
-.links-bulkbar{display:none;align-items:center;gap:12px;background:var(--card);border:1px solid rgba(139,92,246,.3);border-radius:14px;padding:10px 16px;margin-bottom:12px;animation:bulkbarIn .18s ease}
+.links-bulkbar{display:none;align-items:center;gap:12px;background:var(--card);border:1px solid rgba(255,77,46,.3);border-radius:14px;padding:10px 16px;margin-bottom:12px;animation:bulkbarIn .18s ease}
 .links-bulkbar.show{display:flex}
 @keyframes bulkbarIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
 .links-bulkbar-count{font-size:12px;font-weight:700;color:var(--t1);display:flex;align-items:center;gap:6px;white-space:nowrap}
@@ -1105,7 +988,7 @@ select option{background:#0A0A0F;color:var(--t1)}
 @keyframes nodefloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
 
 .node-hero{position:relative;overflow:hidden;border-radius:18px;border:1px solid var(--card-b);
-  background:linear-gradient(160deg,rgba(139,92,246,.11) 0%,rgba(168,85,247,.07) 48%,var(--card) 100%);
+  background:linear-gradient(160deg,rgba(255,77,46,.11) 0%,rgba(255,122,61,.07) 48%,var(--card) 100%);
   padding:18px 20px 16px;margin-bottom:14px;isolation:isolate}
 .node-hero-net{position:absolute;inset:0;z-index:0;opacity:.65;pointer-events:none}
 .node-hero-net svg{width:100%;height:100%}
@@ -1115,22 +998,11 @@ select option{background:#0A0A0F;color:var(--t1)}
 .node-hero-title{display:flex;align-items:center;gap:14px}
 .node-hero-icon{width:48px;height:48px;border-radius:15px;flex-shrink:0;position:relative;
   background:linear-gradient(135deg,var(--accent),var(--purple));display:flex;align-items:center;justify-content:center;
-  color:#fff;font-size:22px;box-shadow:0 10px 22px -4px rgba(124,58,237,.45);animation:nodefloat 4.5s ease-in-out infinite}
+  color:#fff;font-size:22px;box-shadow:0 10px 22px -4px rgba(226,62,30,.45);animation:nodefloat 4.5s ease-in-out infinite}
 .node-hero-icon::after{content:'';position:absolute;inset:-6px;border-radius:18px;border:1.5px solid rgba(34,211,238,.4);animation:nodering 2.6s ease-out infinite}
 .node-hero .tb-title{font-size:18px}
 .node-hero .tb-sub{max-width:420px}
 .node-hero-metrics{position:relative;z-index:1;display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:16px}
-/* ─── ریسپانسیو بخش گیمینگ/ZEUS — جلوگیری از overlap و overflow موبایل ─── */
-@media(max-width:900px){.node-hero-metrics{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:520px){
-  .node-hero-metrics{grid-template-columns:1fr}
-  .node-hero-top{flex-direction:column;align-items:flex-start;gap:10px}
-  .node-metric-val{font-size:13px !important;word-break:break-all}
-  #gaming-scan-table table{font-size:10px}
-  #gaming-scan-table th,#gaming-scan-table td{padding:4px 4px !important}
-  #pg-gaming pre{max-height:200px;font-size:9px}
-  #gaming-loc-list-box>div{width:100%}
-}
 .node-metric{background:rgba(0,0,0,.14);border:1px solid var(--card-b);border-radius:12px;padding:10px 12px;transition:.2s}
 .node-metric:hover{border-color:var(--card-bh);transform:translateY(-2px)}
 .node-metric-top{display:flex;align-items:center;gap:7px;margin-bottom:8px}
@@ -1140,11 +1012,11 @@ select option{background:#0A0A0F;color:var(--t1)}
 .node-metric-sub{font-size:9.5px;color:var(--t3);margin-top:6px}
 
 /* ── کلیدهای صادرشده (مینیمال) ── */
-.node-keys-card{position:relative;border-radius:16px;padding:1px;background:linear-gradient(135deg,rgba(139,92,246,.28),rgba(168,85,247,.2));margin-bottom:16px}
+.node-keys-card{position:relative;border-radius:16px;padding:1px;background:linear-gradient(135deg,rgba(255,77,46,.28),rgba(255,122,61,.2));margin-bottom:16px}
 .node-keys-card>.card{border-radius:15px;margin:0;border:none;background:var(--card)}
-.node-key-row{display:flex;align-items:center;gap:11px;padding:11px 8px;border-bottom:1px solid rgba(139,92,246,.07);transition:.15s}
+.node-key-row{display:flex;align-items:center;gap:11px;padding:11px 8px;border-bottom:1px solid rgba(255,77,46,.07);transition:.15s}
 .node-key-row:last-child{border-bottom:none}
-.node-key-row:hover{background:rgba(139,92,246,.035)}
+.node-key-row:hover{background:rgba(255,77,46,.035)}
 .node-key-row.off{opacity:.55}
 .node-key-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;box-shadow:0 0 0 3px var(--green-bg)}
 .node-key-row.off .node-key-dot{background:var(--t3);box-shadow:0 0 0 3px rgba(0,0,0,.12)}
@@ -1176,7 +1048,7 @@ select option{background:#0A0A0F;color:var(--t1)}
 .node-card{background:var(--card);border:1px solid var(--card-b);border-radius:18px;overflow:hidden;
   display:flex;flex-direction:column;transition:.25s cubic-bezier(.2,.8,.3,1);position:relative;isolation:isolate}
 .node-card::before{content:'';position:absolute;inset:0;z-index:0;opacity:0;transition:.25s;
-  background:radial-gradient(120% 90% at 0% 0%,rgba(139,92,246,.08),transparent 60%)}
+  background:radial-gradient(120% 90% at 0% 0%,rgba(255,77,46,.08),transparent 60%)}
 .node-card:hover{transform:translateY(-4px);border-color:var(--card-bh);box-shadow:0 16px 32px -14px rgba(0,0,0,.35)}
 .node-card:hover::before{opacity:1}
 .node-card-bar{height:3px;background:linear-gradient(90deg,var(--green),var(--accent2),var(--purple));background-size:200% 100%;animation:nodebarflow 4s linear infinite}
@@ -1189,7 +1061,7 @@ select option{background:#0A0A0F;color:var(--t1)}
 
 .node-head{display:flex;align-items:flex-start;gap:12px}
 .node-avatar{width:42px;height:42px;border-radius:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;
-  background:linear-gradient(135deg,var(--accent),var(--purple));box-shadow:0 6px 16px -4px rgba(124,58,237,.4)}
+  background:linear-gradient(135deg,var(--accent),var(--purple));box-shadow:0 6px 16px -4px rgba(226,62,30,.4)}
 .node-avatar i{font-size:19px;color:#fff}
 .node-card.is-off .node-avatar,.node-card.is-err .node-avatar{background:linear-gradient(135deg,var(--t3),#555);box-shadow:none}
 .node-card.is-err .node-avatar{background:linear-gradient(135deg,var(--red),#B91C1C)}
@@ -1218,19 +1090,19 @@ select option{background:#0A0A0F;color:var(--t1)}
 .node-perms{display:flex;flex-wrap:wrap;gap:6px}
 .node-perm{display:flex;align-items:center;gap:5px;font-size:9.5px;color:var(--t3);background:rgba(0,0,0,.12);border:1px solid var(--card-b);border-radius:18px;padding:4px 9px 4px 5px;cursor:pointer;user-select:none;transition:.15s}
 .node-perm:hover{border-color:var(--accent);color:var(--t2)}
-.node-perm.on{color:var(--t1);border-color:rgba(139,92,246,.35);background:var(--accent-d)}
+.node-perm.on{color:var(--t1);border-color:rgba(255,77,46,.35);background:var(--accent-d)}
 .node-perm .cfg-check{width:13px;height:13px;border-radius:4px;border-width:2px}
 .node-perm .cfg-check i{font-size:7.5px}
 
 .node-foot{display:flex;align-items:center;gap:8px;border-top:1px solid var(--card-b);padding:11px 17px;background:rgba(0,0,0,.12);position:relative;z-index:1}
 .node-foot .btn{flex:1;justify-content:center}
-.node-origin{background:linear-gradient(135deg,rgba(168,85,247,.18),rgba(202,138,4,.12));color:#FFB199;padding:3px 9px;border-radius:20px;border:1px solid rgba(168,85,247,.25);font-weight:700;font-size:10px;display:inline-flex;align-items:center;gap:4px}
+.node-origin{background:linear-gradient(135deg,rgba(255,122,61,.18),rgba(232,89,12,.12));color:#FFB199;padding:3px 9px;border-radius:20px;border:1px solid rgba(255,122,61,.25);font-weight:700;font-size:10px;display:inline-flex;align-items:center;gap:4px}
 
 /* ── دسترسی‌ها در مودال ساخت کلید: کاشی‌های انتخابی ── */
 .nk-perm-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
 .nk-perm-tile{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:13px;border:1px solid var(--card-b);background:rgba(0,0,0,.16);cursor:pointer;transition:.16s;user-select:none}
 .nk-perm-tile:hover{border-color:var(--accent);transform:translateY(-1px)}
-.nk-perm-tile.on{border-color:rgba(139,92,246,.5);background:var(--accent-d)}
+.nk-perm-tile.on{border-color:rgba(255,77,46,.5);background:var(--accent-d)}
 .nk-perm-tile .nk-perm-tile-ic{width:30px;height:30px;border-radius:9px;background:rgba(0,0,0,.22);display:flex;align-items:center;justify-content:center;color:var(--t3);font-size:14px;flex-shrink:0;transition:.16s}
 .nk-perm-tile.on .nk-perm-tile-ic{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff}
 .nk-perm-tile-txt{min-width:0}
@@ -1285,7 +1157,7 @@ select option{background:#0A0A0F;color:var(--t1)}
 
 /* ══════ لاگ فعالیت‌ها ══════ */
 .log-timeline{display:flex;flex-direction:column}
-.log-item{display:flex;gap:12px;padding:11px 0;border-bottom:1px solid rgba(139,92,246,.05);position:relative}
+.log-item{display:flex;gap:12px;padding:11px 0;border-bottom:1px solid rgba(255,77,46,.05);position:relative}
 .log-item:last-child{border-bottom:none}
 .log-ic{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
 .log-ic.ok{background:var(--green-bg);color:var(--green-t)}
@@ -1296,7 +1168,7 @@ select option{background:#0A0A0F;color:var(--t1)}
 .log-msg{font-size:12.5px;color:var(--t1);line-height:1.6}
 .log-time{font-size:9.5px;color:var(--t3);margin-top:2px;display:flex;align-items:center;gap:5px}
 .log-kind{font-size:8.5px;padding:1px 7px;border-radius:10px;background:var(--accent-d);color:var(--accent2);font-weight:700;text-transform:uppercase;letter-spacing:.04em}
-.erow{padding:9px 0;border-bottom:1px solid rgba(139,92,246,.05)}
+.erow{padding:9px 0;border-bottom:1px solid rgba(255,77,46,.05)}
 .erow:last-child{border-bottom:none}
 .etime{color:var(--t3);font-size:9.5px;margin-bottom:3px;display:flex;align-items:center;gap:4px}
 .emsg{color:var(--red-t);font-family:ui-monospace,monospace;background:var(--red-bg);padding:6px 9px;border-radius:6px;word-break:break-all;font-size:10.5px}
@@ -1317,14 +1189,14 @@ select option{background:#0A0A0F;color:var(--t1)}
 }
 /* ══════ نسخه و بروزرسانی — دیزاین جدید ══════ */
 .upd-hero{background:linear-gradient(150deg,var(--bg3) 0%,var(--card) 65%);border:1px solid var(--card-b);border-radius:24px;padding:26px 26px 22px;position:relative;overflow:hidden;box-shadow:var(--shadow);margin-bottom:16px}
-.upd-hero-glow{position:absolute;top:-70px;left:-70px;width:260px;height:260px;background:radial-gradient(circle,rgba(139,92,246,.14),transparent 70%);pointer-events:none}
+.upd-hero-glow{position:absolute;top:-70px;left:-70px;width:260px;height:260px;background:radial-gradient(circle,rgba(255,77,46,.14),transparent 70%);pointer-events:none}
 .upd-hero-top{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;position:relative;z-index:1;flex-wrap:wrap;margin-bottom:14px}
 .upd-hero-cur{display:flex;align-items:center;gap:14px}
-.upd-hero-icon{width:52px;height:52px;border-radius:16px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;color:#fff;font-size:24px;flex-shrink:0;box-shadow:0 8px 22px rgba(139,92,246,.35)}
+.upd-hero-icon{width:52px;height:52px;border-radius:16px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;color:#fff;font-size:24px;flex-shrink:0;box-shadow:0 8px 22px rgba(255,77,46,.35)}
 .upd-hero-label{font-size:10.5px;color:var(--t3);font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
 .upd-hero-ver{font-size:26px;font-weight:800;color:var(--t1);letter-spacing:-.02em}
 .upd-hero-desc{font-size:12.5px;color:var(--t2);line-height:1.8;position:relative;z-index:1;margin-bottom:14px;background:rgba(0,0,0,.14);border:1px solid var(--card-b);border-radius:12px;padding:12px 14px}
-[data-theme="light"] .upd-hero-desc{background:rgba(124,58,237,.03)}
+[data-theme="light"] .upd-hero-desc{background:rgba(226,62,30,.03)}
 .upd-hero-meta{display:flex;gap:8px;flex-wrap:wrap;position:relative;z-index:1}
 .upd-meta-chip{display:flex;align-items:center;gap:6px;font-size:10.5px;font-weight:700;color:var(--t2);background:var(--accent-d);border:1px solid var(--card-b);padding:6px 12px;border-radius:20px}
 .upd-meta-chip i{color:var(--accent);font-size:13px}
@@ -1397,7 +1269,7 @@ select option{background:#0A0A0F;color:var(--t1)}
 .sup-wrap{max-width:1450px;background:var(--card);border:1px solid var(--card-b);border-radius:24px;overflow:hidden;box-shadow:var(--shadow);position:relative}
 .sup-wrap::before{content:'';position:absolute;top:-60px;left:-60px;width:200px;height:200px;background:radial-gradient(circle,var(--accent-d),transparent 70%);pointer-events:none;z-index:0}
 .sup-head{display:flex;align-items:center;gap:13px;padding:18px 22px;border-bottom:1px solid var(--card-b);background:linear-gradient(155deg,var(--accent-d) 0%,transparent 75%);position:relative;z-index:1}
-.sup-head-icon{width:42px;height:42px;border-radius:13px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;color:#fff;font-size:19px;flex-shrink:0;box-shadow:0 6px 16px rgba(139,92,246,.35);position:relative}
+.sup-head-icon{width:42px;height:42px;border-radius:13px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;color:#fff;font-size:19px;flex-shrink:0;box-shadow:0 6px 16px rgba(255,77,46,.35);position:relative}
 .sup-head-icon::after{content:'';position:absolute;inset:-5px;border-radius:16px;border:1.5px solid var(--accent);opacity:.4;animation:supBreathe 2.4s ease-in-out infinite}
 @keyframes supBreathe{0%,100%{transform:scale(1);opacity:.4}50%{transform:scale(1.1);opacity:0}}
 .sup-head-text{flex:1;min-width:0}
@@ -1447,14 +1319,14 @@ select option{background:#0A0A0F;color:var(--t1)}
    هم باید داخل cm-modal درست اسکرول شوند و هدرشان فشرده/همپوشان نشود */
 .cm-modal.modal-v2 .modal-v2-head{flex-shrink:0}
 .cm-modal.modal-v2 .modal-v2-body{flex:1;overflow-y:auto;min-height:0}
-.cm-head{background:linear-gradient(155deg,rgba(139,92,246,.14) 0%,transparent 70%);
+.cm-head{background:linear-gradient(155deg,rgba(255,77,46,.14) 0%,transparent 70%);
   padding:26px 28px 20px;position:relative;border-bottom:1px solid var(--card-b);flex-shrink:0}
 .cm-head::before{content:'';position:absolute;top:-60px;left:-60px;width:200px;height:200px;
-  background:radial-gradient(circle,rgba(139,92,246,.18),transparent 70%);pointer-events:none}
+  background:radial-gradient(circle,rgba(255,77,46,.18),transparent 70%);pointer-events:none}
 .cm-head-row{display:flex;align-items:center;gap:14px;position:relative;z-index:1}
 .cm-head-icon{width:46px;height:46px;border-radius:14px;background:linear-gradient(135deg,var(--accent),var(--accent2));
   display:flex;align-items:center;justify-content:center;color:#fff;font-size:21px;flex-shrink:0;
-  box-shadow:0 8px 20px rgba(139,92,246,.35)}
+  box-shadow:0 8px 20px rgba(255,77,46,.35)}
 .cm-head-title{font-size:16.5px;font-weight:800;color:var(--t1);letter-spacing:-.01em}
 .cm-head-sub{font-size:11px;color:var(--t3);margin-top:3px}
 .cm-close{position:absolute;top:18px;left:18px;background:rgba(0,0,0,.18);border:1px solid var(--card-b);
@@ -1472,15 +1344,15 @@ select option{background:#0A0A0F;color:var(--t1)}
 .cm-field label{display:block;font-size:11px;font-weight:700;color:var(--t2);margin-bottom:7px}
 .cm-input{width:100%;padding:11px 14px;border-radius:11px;border:1px solid var(--card-b);
   background:rgba(0,0,0,.18);color:var(--t1);font-family:inherit;font-size:12.8px;outline:none;transition:.15s}
-[data-theme="light"] .cm-input{background:rgba(124,58,237,.03)}
-.cm-input:focus{border-color:rgba(139,92,246,.5);box-shadow:0 0 0 3px rgba(139,92,246,.1)}
+[data-theme="light"] .cm-input{background:rgba(226,62,30,.03)}
+.cm-input:focus{border-color:rgba(255,77,46,.5);box-shadow:0 0 0 3px rgba(255,77,46,.1)}
 .cm-input::placeholder{color:var(--t3)}
 .cm-row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 
 /* ── آکاردئون کشویی انتخاب پروتکل / ترابرد ── */
 .cm-dd{border:1px solid var(--card-b);border-radius:14px;overflow:hidden;background:rgba(0,0,0,.1);transition:.18s}
 [data-theme="light"] .cm-dd{background:#fff}
-.cm-dd.open{border-color:var(--card-bh);box-shadow:0 0 0 3px rgba(139,92,246,.08)}
+.cm-dd.open{border-color:var(--card-bh);box-shadow:0 0 0 3px rgba(255,77,46,.08)}
 .cm-dd-trigger{display:flex;align-items:center;gap:12px;padding:13px 15px;cursor:pointer;user-select:none}
 .cm-dd-icon{width:38px;height:38px;border-radius:11px;background:var(--accent-d);color:var(--accent);
   display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;transition:.18s}
@@ -1496,7 +1368,7 @@ select option{background:#0A0A0F;color:var(--t1)}
 .cm-dd-list{border-top:1px solid var(--card-b);padding:6px}
 .cm-opt{display:flex;align-items:center;gap:11px;padding:10px 11px;border-radius:10px;cursor:pointer;transition:.14s;margin-bottom:2px}
 .cm-opt:hover{background:var(--accent-d)}
-.cm-opt.sel{background:rgba(139,92,246,.12)}
+.cm-opt.sel{background:rgba(255,77,46,.12)}
 .cm-opt-radio{width:18px;height:18px;border-radius:50%;border:2px solid var(--card-b);flex-shrink:0;
   display:flex;align-items:center;justify-content:center;transition:.14s}
 .cm-opt.sel .cm-opt-radio{border-color:var(--accent)}
@@ -1516,7 +1388,7 @@ select option{background:#0A0A0F;color:var(--t1)}
 .cm-pill{padding:6px 13px;border-radius:20px;font-size:10.5px;font-weight:700;color:var(--t2);
   background:transparent;border:1px solid var(--card-b);cursor:pointer;transition:.15s;font-family:inherit}
 .cm-pill:hover{background:var(--accent-d)}
-.cm-pill.active{background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:0 3px 10px rgba(139,92,246,.3)}
+.cm-pill.active{background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:0 3px 10px rgba(255,77,46,.3)}
 
 .cm-note{font-size:10.5px;color:var(--t3);display:flex;align-items:flex-start;gap:7px;
   background:var(--accent-d);border-radius:10px;padding:10px 13px;line-height:1.7;margin-top:4px}
@@ -1526,14 +1398,14 @@ select option{background:#0A0A0F;color:var(--t1)}
   background:var(--card)}
 
 /* ── تم اختصاصی فیروزه‌ای برای مودال Bot TCP Proxy (تمایز بصری از بقیه مودال‌ها) ── */
-#modal-bot-tcp-proxy .cm-head{background:linear-gradient(155deg,rgba(139,92,246,.16) 0%,transparent 70%)}
-#modal-bot-tcp-proxy .cm-head::before{background:radial-gradient(circle,rgba(139,92,246,.2),transparent 70%)}
-#modal-bot-tcp-proxy .cm-head-icon{background:linear-gradient(135deg,#14b8a6,#0d9488);box-shadow:0 8px 20px rgba(139,92,246,.35)}
+#modal-bot-tcp-proxy .cm-head{background:linear-gradient(155deg,rgba(255,77,46,.16) 0%,transparent 70%)}
+#modal-bot-tcp-proxy .cm-head::before{background:radial-gradient(circle,rgba(255,77,46,.2),transparent 70%)}
+#modal-bot-tcp-proxy .cm-head-icon{background:linear-gradient(135deg,#14b8a6,#0d9488);box-shadow:0 8px 20px rgba(255,77,46,.35)}
 #modal-bot-tcp-proxy .cm-section-label i{color:#14b8a6}
-#modal-bot-tcp-proxy .cm-pill.active{background:#14b8a6;border-color:#14b8a6;box-shadow:0 3px 10px rgba(139,92,246,.3)}
-#modal-bot-tcp-proxy .cm-input:focus{border-color:rgba(139,92,246,.5);box-shadow:0 0 0 3px rgba(139,92,246,.1)}
+#modal-bot-tcp-proxy .cm-pill.active{background:#14b8a6;border-color:#14b8a6;box-shadow:0 3px 10px rgba(255,77,46,.3)}
+#modal-bot-tcp-proxy .cm-input:focus{border-color:rgba(255,77,46,.5);box-shadow:0 0 0 3px rgba(255,77,46,.1)}
 #modal-bot-tcp-proxy #btp-status-note{background:var(--accent-d);border:1px solid var(--card-b);border-radius:12px;padding:12px 14px;transition:.2s}
-#modal-bot-tcp-proxy #btp-status-note.st-run{background:rgba(139,92,246,.1);border-color:rgba(139,92,246,.3)}
+#modal-bot-tcp-proxy #btp-status-note.st-run{background:rgba(255,77,46,.1);border-color:rgba(255,77,46,.3)}
 #modal-bot-tcp-proxy #btp-status-note.st-run #btp-status-icon{color:#14b8a6}
 #modal-bot-tcp-proxy #btp-status-note.st-ok{background:var(--green-bg);border-color:rgba(34,197,94,.3)}
 #modal-bot-tcp-proxy #btp-status-note.st-ok #btp-status-icon{color:var(--green-t)}
@@ -1543,7 +1415,7 @@ select option{background:#0A0A0F;color:var(--t1)}
 #modal-bot-tcp-proxy #btp-status-note.st-warn #btp-status-icon{color:var(--amber-t)}
 #modal-bot-tcp-proxy #btp-status-text{color:var(--t1);font-weight:600}
 #modal-bot-tcp-proxy #btp-ping-status-note{background:var(--accent-d);border:1px solid var(--card-b);border-radius:12px;padding:12px 14px;transition:.2s}
-#modal-bot-tcp-proxy #btp-ping-status-note.st-run{background:rgba(139,92,246,.1);border-color:rgba(139,92,246,.3)}
+#modal-bot-tcp-proxy #btp-ping-status-note.st-run{background:rgba(255,77,46,.1);border-color:rgba(255,77,46,.3)}
 #modal-bot-tcp-proxy #btp-ping-status-note.st-run #btp-ping-status-icon{color:#14b8a6}
 #modal-bot-tcp-proxy #btp-ping-status-note.st-ok{background:var(--green-bg);border-color:rgba(34,197,94,.3)}
 #modal-bot-tcp-proxy #btp-ping-status-note.st-ok #btp-ping-status-icon{color:var(--green-t)}
@@ -1557,8 +1429,8 @@ select option{background:#0A0A0F;color:var(--t1)}
 .cm-btn-submit{flex:1;justify-content:center;padding:12px;border-radius:12px;
   background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;
   font-family:inherit;font-size:13px;font-weight:800;cursor:pointer;display:flex;align-items:center;
-  gap:7px;box-shadow:0 6px 18px rgba(139,92,246,.4);transition:.18s}
-.cm-btn-submit:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(139,92,246,.5)}
+  gap:7px;box-shadow:0 6px 18px rgba(255,77,46,.4);transition:.18s}
+.cm-btn-submit:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(255,77,46,.5)}
 .cm-btn-submit:active{transform:translateY(0) scale(.98)}
 
 /* دسکتاپ بزرگ‌تر */
@@ -1593,46 +1465,46 @@ body{background:transparent}
 body::before{
   content:'';position:fixed;inset:0;z-index:-2;pointer-events:none;
   background:
-    radial-gradient(ellipse 52% 42% at 12% 6%,rgba(139,92,246,.15),transparent 66%),
-    radial-gradient(ellipse 46% 40% at 92% 90%,rgba(168,85,247,.12),transparent 63%),
-    radial-gradient(ellipse 34% 30% at 78% 12%,rgba(202,138,4,.08),transparent 62%),
+    radial-gradient(ellipse 52% 42% at 12% 6%,rgba(255,61,46,.15),transparent 66%),
+    radial-gradient(ellipse 46% 40% at 92% 90%,rgba(255,122,61,.12),transparent 63%),
+    radial-gradient(ellipse 34% 30% at 78% 12%,rgba(232,89,12,.08),transparent 62%),
     var(--bg);
   transition:background .3s;
 }
 body::after{
   content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.55;
   background-image:
-    linear-gradient(rgba(139,92,246,0.035) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(139,92,246,0.035) 1px,transparent 1px);
+    linear-gradient(rgba(255,77,46,0.035) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,77,46,0.035) 1px,transparent 1px);
   background-size:46px 46px;
   mask-image:radial-gradient(ellipse 72% 72% at 50% 38%,black 18%,transparent 90%);
 }
 [data-theme="light"] body::before{
   background:
-    radial-gradient(ellipse 52% 42% at 12% 6%,rgba(124,58,237,.10),transparent 66%),
-    radial-gradient(ellipse 46% 40% at 92% 90%,rgba(202,138,4,.07),transparent 63%),
+    radial-gradient(ellipse 52% 42% at 12% 6%,rgba(226,62,30,.10),transparent 66%),
+    radial-gradient(ellipse 46% 40% at 92% 90%,rgba(232,89,12,.07),transparent 63%),
     var(--bg);
 }
 [data-theme="light"] body::after{opacity:.4}
 ::-webkit-scrollbar{width:5px;height:5px}
 ::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:rgba(139,92,246,.35);border-radius:3px}
+::-webkit-scrollbar-thumb{background:rgba(255,77,46,.35);border-radius:3px}
 
 /* ── سايدبار شيشه‌اي با هاله‌ي نئوني ── */
-.sidebar{background:rgba(15,12,20,0.66);backdrop-filter:blur(26px);-webkit-backdrop-filter:blur(26px);border-left:1px solid rgba(139,92,246,.16);box-shadow:0 0 46px -20px rgba(139,92,246,.4)}
-[data-theme="light"] .sidebar{background:rgba(255,255,255,0.7);box-shadow:0 0 46px -22px rgba(124,58,237,.25)}
-.logo{border-bottom-color:rgba(139,92,246,.12)}
-.logo-img{border-color:rgba(139,92,246,.35);box-shadow:0 0 18px -2px rgba(139,92,246,.5)}
+.sidebar{background:rgba(15,12,20,0.66);backdrop-filter:blur(26px);-webkit-backdrop-filter:blur(26px);border-left:1px solid rgba(255,77,46,.16);box-shadow:0 0 46px -20px rgba(255,61,46,.4)}
+[data-theme="light"] .sidebar{background:rgba(255,255,255,0.7);box-shadow:0 0 46px -22px rgba(226,62,30,.25)}
+.logo{border-bottom-color:rgba(255,77,46,.12)}
+.logo-img{border-color:rgba(255,77,46,.35);box-shadow:0 0 18px -2px rgba(255,61,46,.5)}
 .logo-sub,.nav-sec{color:#7E5F56}
 .nav-it{border-radius:11px;margin:1px 10px;padding:9px 12px}
-.nav-it:hover{background:rgba(139,92,246,.10);color:#E8C9C0}
-.nav-it.on{background:linear-gradient(135deg,rgba(139,92,246,.24),rgba(202,138,4,.10));color:#fff;border-right:2px solid #8B5CF6;box-shadow:0 0 22px -6px rgba(139,92,246,.55),inset 0 0 0 1px rgba(139,92,246,.28)}
-[data-theme="light"] .nav-it.on{background:linear-gradient(135deg,rgba(124,58,237,.16),rgba(202,138,4,.06));color:#B23A1C;box-shadow:inset 0 0 0 1px rgba(124,58,237,.22)}
-.nav-badge{background:rgba(139,92,246,.2);color:#FFB199}
-.sb-foot{border-top-color:rgba(139,92,246,.12)}
-.mob-top{background:rgba(15,12,20,0.8);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid rgba(139,92,246,.15)}
+.nav-it:hover{background:rgba(255,77,46,.10);color:#E8C9C0}
+.nav-it.on{background:linear-gradient(135deg,rgba(255,77,46,.24),rgba(232,89,12,.10));color:#fff;border-right:2px solid #FF4D2E;box-shadow:0 0 22px -6px rgba(255,61,46,.55),inset 0 0 0 1px rgba(255,77,46,.28)}
+[data-theme="light"] .nav-it.on{background:linear-gradient(135deg,rgba(226,62,30,.16),rgba(232,89,12,.06));color:#B23A1C;box-shadow:inset 0 0 0 1px rgba(226,62,30,.22)}
+.nav-badge{background:rgba(255,77,46,.2);color:#FFB199}
+.sb-foot{border-top-color:rgba(255,77,46,.12)}
+.mob-top{background:rgba(15,12,20,0.8);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,77,46,.15)}
 [data-theme="light"] .mob-top{background:rgba(255,255,255,0.82)}
-.menu-btn,.theme-mob,.sb-close{background:rgba(139,92,246,.10);border-color:rgba(139,92,246,.2);color:#D9A99B}
+.menu-btn,.theme-mob,.sb-close{background:rgba(255,77,46,.10);border-color:rgba(255,77,46,.2);color:#D9A99B}
 
 /* ── سطوح شيشه‌اي ── */
 .card,.metric,.traf-mini,.traf-chart-card,.vless-box,.conn-hero,.srv-panel,.pw-panel,.node-hero,.sup-wrap,.links-bulkbar{
@@ -1642,77 +1514,77 @@ body::after{
   box-shadow:0 18px 50px -24px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,255,255,.05);
 }
 [data-theme="light"] .card,[data-theme="light"] .metric,[data-theme="light"] .traf-mini,[data-theme="light"] .traf-chart-card,[data-theme="light"] .vless-box,[data-theme="light"] .conn-hero,[data-theme="light"] .srv-panel,[data-theme="light"] .pw-panel,[data-theme="light"] .node-hero,[data-theme="light"] .sup-wrap,[data-theme="light"] .links-bulkbar{background:rgba(255,255,255,0.78)}
-.card:hover,.metric:hover,.traf-mini:hover{border-color:rgba(139,92,246,.35);box-shadow:0 18px 50px -24px rgba(0,0,0,.65),0 0 30px -12px rgba(139,92,246,.35),inset 0 1px 0 rgba(255,255,255,.05)}
-.metric::after{background:linear-gradient(180deg,#8B5CF6,#E8590C)}
-.traf-main-stat{background:linear-gradient(155deg,rgba(30,22,34,0.8) 0%,rgba(20,20,28,0.55) 60%);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px)}
-.traf-main-stat::before{background:radial-gradient(circle,rgba(139,92,246,.18),transparent 70%)}
-.m-icon,.traf-mini-icon,.cp-head-icon,.mob-logo,.srv-tile-icon,.node-metric-icon{background:rgba(139,92,246,.12);color:#FF7A4D}
-.traf-mini-icon.pk{background:rgba(202,138,4,.14);color:#FACC15}
-.traf-mini-icon.lo{background:rgba(168,85,247,.12);color:#FFB199}
+.card:hover,.metric:hover,.traf-mini:hover{border-color:rgba(255,77,46,.35);box-shadow:0 18px 50px -24px rgba(0,0,0,.65),0 0 30px -12px rgba(255,61,46,.35),inset 0 1px 0 rgba(255,255,255,.05)}
+.metric::after{background:linear-gradient(180deg,#FF4D2E,#E8590C)}
+.traf-main-stat{background:linear-gradient(155deg,rgba(30,22,34,0.8) 0%,rgba(20,17,26,0.55) 60%);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px)}
+.traf-main-stat::before{background:radial-gradient(circle,rgba(255,61,46,.18),transparent 70%)}
+.m-icon,.traf-mini-icon,.cp-head-icon,.mob-logo,.srv-tile-icon,.node-metric-icon{background:rgba(255,77,46,.12);color:#FF7A4D}
+.traf-mini-icon.pk{background:rgba(232,89,12,.14);color:#FF8A3D}
+.traf-mini-icon.lo{background:rgba(255,122,61,.12);color:#FFB199}
 .metric.suc::after{background:linear-gradient(180deg,#10B981,#059669)}
 .metric.dan::after{background:linear-gradient(180deg,#EF4444,#B91C1C)}
 
 /* ── دكمه‌هاي قرصي قرمز-نارنجي ── */
-.btn-p{background:linear-gradient(135deg,#8B5CF6,#FACC15);border-radius:999px;border:none;box-shadow:0 6px 22px -6px rgba(139,92,246,.55);color:#fff}
-.btn-p:hover{background:linear-gradient(135deg,#FF5C3F,#FF9A55);box-shadow:0 10px 28px -6px rgba(139,92,246,.7);color:#fff}
+.btn-p{background:linear-gradient(135deg,#FF4D2E,#FF8A3D);border-radius:999px;border:none;box-shadow:0 6px 22px -6px rgba(255,61,46,.55);color:#fff}
+.btn-p:hover{background:linear-gradient(135deg,#FF5C3F,#FF9A55);box-shadow:0 10px 28px -6px rgba(255,61,46,.7);color:#fff}
 .btn-o{border-radius:999px}
-.btn-g{background:rgba(139,92,246,.12);color:#FFB199;border:1px solid rgba(139,92,246,.25);border-radius:999px}
-.btn-g:hover{background:rgba(139,92,246,.22);color:#FFD1C2}
-.btn-pur{background:rgba(168,85,247,.12);color:#FFB199;border:1px solid rgba(168,85,247,.28);border-radius:999px}
-.btn-pur:hover{background:rgba(168,85,247,.22)}
+.btn-g{background:rgba(255,77,46,.12);color:#FFB199;border:1px solid rgba(255,77,46,.25);border-radius:999px}
+.btn-g:hover{background:rgba(255,77,46,.22);color:#FFD1C2}
+.btn-pur{background:rgba(255,122,61,.12);color:#FFB199;border:1px solid rgba(255,122,61,.28);border-radius:999px}
+.btn-pur:hover{background:rgba(255,122,61,.22)}
 .btn-sm{border-radius:999px}
 .btn-icon{border-radius:999px}
-.chip{border-radius:999px;border-color:rgba(139,92,246,.22)}
-.chip.active{background:linear-gradient(135deg,#8B5CF6,#FACC15);border-color:#8B5CF6;color:#fff;box-shadow:0 4px 14px -3px rgba(139,92,246,.55)}
-.cp-submit-btn,.modal-v2-btn-submit{background:linear-gradient(135deg,#8B5CF6,#FACC15);border-radius:999px;box-shadow:0 6px 20px -6px rgba(139,92,246,.5)}
-.cp-submit-btn:hover,.modal-v2-btn-submit:hover{box-shadow:0 10px 26px -6px rgba(139,92,246,.6)}
-.pw-submit{background:linear-gradient(135deg,#8B5CF6,#FACC15);border-radius:999px;box-shadow:0 6px 20px -6px rgba(139,92,246,.5)}
-.pw-submit:hover{box-shadow:0 10px 24px -6px rgba(139,92,246,.6)}
+.chip{border-radius:999px;border-color:rgba(255,77,46,.22)}
+.chip.active{background:linear-gradient(135deg,#FF4D2E,#FF8A3D);border-color:#FF4D2E;color:#fff;box-shadow:0 4px 14px -3px rgba(255,61,46,.55)}
+.cp-submit-btn,.modal-v2-btn-submit{background:linear-gradient(135deg,#FF4D2E,#FF8A3D);border-radius:999px;box-shadow:0 6px 20px -6px rgba(255,61,46,.5)}
+.cp-submit-btn:hover,.modal-v2-btn-submit:hover{box-shadow:0 10px 26px -6px rgba(255,61,46,.6)}
+.pw-submit{background:linear-gradient(135deg,#FF4D2E,#FF8A3D);border-radius:999px;box-shadow:0 6px 20px -6px rgba(255,61,46,.5)}
+.pw-submit:hover{box-shadow:0 10px 24px -6px rgba(255,61,46,.6)}
 
 /* ── نوارهاي پيشرفت: گراديان نارنجي→قرمز ── */
-.spbar,.ubar{background:rgba(139,92,246,.14)}
-.spfill,.ubar-f{background:linear-gradient(90deg,#FACC15,#8B5CF6)}
-.upd-progress-track{background:rgba(139,92,246,.14)}
-.upd-progress-fill{background:linear-gradient(90deg,#FACC15,#8B5CF6)}
-.tog{background:rgba(168,85,247,.28)}
-.tog.on{background:linear-gradient(135deg,#8B5CF6,#FACC15)}
-.traf-range-tab.on{background:linear-gradient(135deg,#8B5CF6,#FACC15);box-shadow:0 2px 10px -2px rgba(139,92,246,.5)}
+.spbar,.ubar{background:rgba(255,77,46,.14)}
+.spfill,.ubar-f{background:linear-gradient(90deg,#FF8A3D,#FF4D2E)}
+.upd-progress-track{background:rgba(255,77,46,.14)}
+.upd-progress-fill{background:linear-gradient(90deg,#FF8A3D,#FF4D2E)}
+.tog{background:rgba(255,122,61,.28)}
+.tog.on{background:linear-gradient(135deg,#FF4D2E,#FF8A3D)}
+.traf-range-tab.on{background:linear-gradient(135deg,#FF4D2E,#FF8A3D);box-shadow:0 2px 10px -2px rgba(255,61,46,.5)}
 
 /* ── كارتهاي انتخاب پروتكل/ترنسپورت ── */
 .proto-base-card.active,.proto-t-card.active,.proto-card.active,.fp-card.active,.alpn-chip.active{
-  border-color:#8B5CF6;background:rgba(139,92,246,.12);box-shadow:0 0 0 3px rgba(139,92,246,.12),0 0 18px -6px rgba(139,92,246,.4)
+  border-color:#FF4D2E;background:rgba(255,77,46,.12);box-shadow:0 0 0 3px rgba(255,77,46,.12),0 0 18px -6px rgba(255,61,46,.4)
 }
-.proto-base-card.active .proto-base-icon,.proto-t-card.active .proto-t-icon,.proto-card.active .proto-icon,.fp-card.active .fp-card-icon{background:linear-gradient(135deg,#8B5CF6,#FACC15);color:#fff}
-.proto-tab.active{border-color:#8B5CF6;background:rgba(139,92,246,.12);color:#FFB199;box-shadow:0 0 0 3px rgba(139,92,246,.1)}
-.fp-card-icon,.proto-base-icon,.proto-t-icon{background:rgba(139,92,246,.12);color:#FF7A4D}
-.fi:focus,.fs:focus{border-color:rgba(139,92,246,.5);background:rgba(0,0,0,.25);box-shadow:0 0 0 3px rgba(139,92,246,.12)}
-.cp-input-full:focus{border-color:rgba(139,92,246,.5);box-shadow:0 0 0 3px rgba(139,92,246,.12)}
+.proto-base-card.active .proto-base-icon,.proto-t-card.active .proto-t-icon,.proto-card.active .proto-icon,.fp-card.active .fp-card-icon{background:linear-gradient(135deg,#FF4D2E,#FF8A3D);color:#fff}
+.proto-tab.active{border-color:#FF4D2E;background:rgba(255,77,46,.12);color:#FFB199;box-shadow:0 0 0 3px rgba(255,77,46,.1)}
+.fp-card-icon,.proto-base-icon,.proto-t-icon{background:rgba(255,77,46,.12);color:#FF7A4D}
+.fi:focus,.fs:focus{border-color:rgba(255,77,46,.5);background:rgba(0,0,0,.25);box-shadow:0 0 0 3px rgba(255,77,46,.12)}
+.cp-input-full:focus{border-color:rgba(255,77,46,.5);box-shadow:0 0 0 3px rgba(255,77,46,.12)}
 
 /* ── پنلها و مودال‌ها ── */
-.create-panel{background:linear-gradient(155deg,rgba(28,20,32,0.85) 0%,rgba(20,20,28,0.6) 55%);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-color:rgba(139,92,246,.16)}
+.create-panel{background:linear-gradient(155deg,rgba(28,20,32,0.85) 0%,rgba(20,17,26,0.6) 55%);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-color:rgba(255,77,46,.16)}
 [data-theme="light"] .create-panel{background:linear-gradient(155deg,rgba(255,255,255,0.9) 0%,rgba(255,255,255,0.72) 55%)}
 .cp-block,.fi,.fs,.cp-input-full,.vl-code{background:rgba(0,0,0,.22)}
-[data-theme="light"] .cp-block{background:rgba(124,58,237,.03)}
-.cp-head-icon{background:linear-gradient(135deg,#8B5CF6,#FACC15);box-shadow:0 6px 20px -4px rgba(139,92,246,.5)}
-.modal-v2,.cm-modal{background:rgba(20,20,28,0.85);backdrop-filter:blur(26px);-webkit-backdrop-filter:blur(26px);border:1px solid rgba(139,92,246,.18)}
+[data-theme="light"] .cp-block{background:rgba(226,62,30,.03)}
+.cp-head-icon{background:linear-gradient(135deg,#FF4D2E,#FF8A3D);box-shadow:0 6px 20px -4px rgba(255,61,46,.5)}
+.modal-v2,.cm-modal{background:rgba(20,17,26,0.85);backdrop-filter:blur(26px);-webkit-backdrop-filter:blur(26px);border:1px solid rgba(255,77,46,.18)}
 [data-theme="light"] .modal-v2,[data-theme="light"] .cm-modal{background:rgba(255,255,255,0.94)}
 .modal-bg{backdrop-filter:blur(6px)}
-.modal-v2-icon,.cm-head-icon{background:linear-gradient(135deg,#8B5CF6,#FACC15);box-shadow:0 6px 20px -4px rgba(139,92,246,.5)}
-.cm-close,.modal-v2-close{background:rgba(139,92,246,.12);color:#D9A99B;border-color:rgba(139,92,246,.2)}
+.modal-v2-icon,.cm-head-icon{background:linear-gradient(135deg,#FF4D2E,#FF8A3D);box-shadow:0 6px 20px -4px rgba(255,61,46,.5)}
+.cm-close,.modal-v2-close{background:rgba(255,77,46,.12);color:#D9A99B;border-color:rgba(255,77,46,.2)}
 
 /* ── سربرگ و جعبه‌ي VLESS ── */
 .tb-title{color:#FFF}
-.tb-title i{color:#FF6A45;text-shadow:0 0 14px rgba(139,92,246,.6)}
+.tb-title i{color:#FF6A45;text-shadow:0 0 14px rgba(255,61,46,.6)}
 .tb-sub{color:#8A6A60}
-.vless-box{background:linear-gradient(135deg,rgba(28,20,32,0.85) 0%,rgba(16,13,21,0.6) 100%);border-color:rgba(139,92,246,.16)}
-.vless-box::before{background:radial-gradient(circle,rgba(139,92,246,.2),transparent 70%)}
+.vless-box{background:linear-gradient(135deg,rgba(28,20,32,0.85) 0%,rgba(16,13,21,0.6) 100%);border-color:rgba(255,77,46,.16)}
+.vless-box::before{background:radial-gradient(circle,rgba(255,61,46,.2),transparent 70%)}
 .vl-title i{color:#FF6A45}
-.vl-code{color:#FFB199;border-color:rgba(139,92,246,.16)}
-.badge.bg-blue,.badge.bg-purple{background:rgba(139,92,246,.12);color:#FFB199}
-.badge.bg-amber{background:rgba(202,138,4,.14);color:#FFC06B}
-.cl{background:rgba(139,92,246,.08);border-color:rgba(139,92,246,.2)}
+.vl-code{color:#FFB199;border-color:rgba(255,77,46,.16)}
+.badge.bg-blue,.badge.bg-purple{background:rgba(255,77,46,.12);color:#FFB199}
+.badge.bg-amber{background:rgba(232,89,12,.14);color:#FFC06B}
+.cl{background:rgba(255,77,46,.08);border-color:rgba(255,77,46,.2)}
 .cl i{color:#FF6A45}
-.sub-url,.df-link{color:#FFB199;border-color:rgba(139,92,246,.2);background:rgba(139,92,246,.07)}
+.sub-url,.df-link{color:#FFB199;border-color:rgba(255,77,46,.2);background:rgba(255,77,46,.07)}
 
 /* ── هدرهاي كارت و سكشن‌ها ── */
 .card-title i{color:#FF6A45}
@@ -1724,299 +1596,15 @@ body::after{
 html,body{max-width:100%;overflow-x:hidden}
 @media(max-width:1050px){
   .sidebar{transform:translateX(calc(100% + 60px)) !important}
-  .sidebar.open{transform:translateX(0) !important;box-shadow:-10px 0 44px rgba(0,0,0,.5),0 0 46px -20px rgba(139,92,246,.4)}
+  .sidebar.open{transform:translateX(0) !important;box-shadow:-10px 0 44px rgba(0,0,0,.5),0 0 46px -20px rgba(255,61,46,.4)}
   .topbar .tb-title{font-size:16px}
 }
 .log-timeline i{color:#FF6A45}
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   NixHD Signature Touches — dot-matrix indicators + premium gradient cards
-   ═══════════════════════════════════════════════════════════════════════════ */
-.dot-matrix{display:flex;gap:3px;flex-wrap:wrap;padding:8px 0}
-.dot-matrix .d{width:6px;height:6px;border-radius:50%;background:var(--dot-off);transition:background .2s,box-shadow .2s}
-.dot-matrix .d.on{background:var(--dot-on);box-shadow:0 0 6px var(--accent-glow)}
-.dot-matrix .d.warn{background:var(--amber);box-shadow:0 0 6px var(--amber-bg)}
-.dot-matrix .d.off{background:var(--red);box-shadow:0 0 6px var(--red-bg)}
-
-/* Premium gradient card — for hero metrics + best-link displays */
-.card-vy{background:var(--grad-vy);color:#0A0A0F;border:none;box-shadow:0 12px 36px rgba(139,92,246,0.32),0 4px 12px rgba(250,204,21,0.20)}
-.card-vy .vy-eyebrow{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;opacity:.7}
-.card-vy .vy-num{font-size:42px;font-weight:800;letter-spacing:-.03em;line-height:1}
-.card-vy .vy-label{font-size:12px;opacity:.75;margin-top:4px}
-
-/* Glow pulse for active nav items */
-.nav-it.on{box-shadow:inset 0 1px 0 rgba(255,255,255,0.04),0 0 18px rgba(139,92,246,0.18)}
-.nav-it.on i{text-shadow:0 0 12px var(--accent-glow)}
-
-/* Premium metric card with violet left edge */
-.metric{position:relative;overflow:hidden}
-.metric::before{content:'';position:absolute;top:0;right:0;width:100%;height:2px;background:linear-gradient(90deg,transparent,var(--accent-violet),var(--accent2),transparent);opacity:.6;transition:opacity .25s}
-.metric:hover::before{opacity:1}
-
-/* Buttons — NixHD feel: violet base, yellow glow */
-.btn-g{position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s,filter .2s}
-.btn-g::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,transparent 0%,rgba(250,204,21,0.18) 50%,transparent 100%);opacity:0;transition:opacity .25s;pointer-events:none}
-.btn-g:hover::after{opacity:1}
-.btn-g:hover{transform:translateY(-1px);box-shadow:0 8px 24px var(--accent-glow),0 0 0 1px var(--accent-violet)}
-
-/* Inputs — NixHD glass inputs with violet focus ring */
-input:focus,select:focus,textarea:focus{border-color:var(--accent-violet) !important;background:rgba(139,92,246,0.06) !important;box-shadow:0 0 0 4px var(--accent-glow) !important}
-
-/* Sidebar — slightly darker for depth, with subtle violet edge */
-.sidebar{background:rgba(10,10,15,0.92) !important;border-left-color:rgba(139,92,246,0.12) !important}
-[data-theme="light"] .sidebar{background:rgba(255,255,255,0.92) !important}
-.mob-top{background:rgba(10,10,15,0.92) !important;border-bottom-color:rgba(139,92,246,0.12) !important}
-[data-theme="light"] .mob-top{background:rgba(255,255,255,0.92) !important}
-
-/* Premium card hover — violet glow + slight lift */
-.card:hover{border-color:rgba(139,92,246,0.28) !important;box-shadow:0 24px 64px -16px rgba(0,0,0,0.6),0 0 0 1px rgba(139,92,246,0.18) inset,0 0 32px -8px var(--accent-glow) !important}
-
-/* Status badges — pill shape with glow */
-.badge{box-shadow:0 0 0 1px rgba(139,92,246,0.08) inset}
-.badge.ok{box-shadow:0 0 0 1px rgba(34,197,94,0.18) inset,0 0 12px rgba(34,197,94,0.18)}
-.badge.err{box-shadow:0 0 0 1px rgba(239,68,68,0.18) inset,0 0 12px rgba(239,68,68,0.18)}
-
-/* VPN Pro cards — distinct violet/yellow accent */
-.vpn-card{position:relative;overflow:hidden}
-.vpn-card::after{content:'';position:absolute;top:0;right:0;width:120px;height:120px;background:radial-gradient(circle at top right,var(--accent-glow),transparent 70%);pointer-events:none;opacity:.6}
-.vpn-wg-card::after{background:radial-gradient(circle at top right,rgba(139,92,246,0.20),transparent 70%)}
-.vpn-ovpn-card::after{background:radial-gradient(circle at top right,rgba(250,204,21,0.20),transparent 70%)}
-
-/* VPN Pro inputs — login-page style (icon + wiggle on focus) */
-.vpn-field{display:flex;flex-direction:column}
-.vpn-field>label{font-size:10.5px;font-weight:700;color:var(--t2);margin-bottom:7px;text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;gap:6px}
-.vpn-input-wrap{position:relative;display:flex;align-items:center}
-.vpn-input-ic{position:absolute;right:11px;top:50%;transform:translateY(-50%);color:var(--t3);font-size:15px;pointer-events:none;transition:color .2s,transform .2s;z-index:1}
-.vpn-input{
-  width:100%;padding:12px 38px 12px 14px;border-radius:12px;border:1px solid var(--card-b);
-  background:rgba(0,0,0,.22);color:var(--t1);font-family:'Vazirmatn',ui-monospace,monospace;font-size:12.5px;
-  outline:none;transition:border-color .2s,background .2s,box-shadow .2s;direction:ltr;text-align:left;
-}
-[data-theme="light"] .vpn-input{background:rgba(139,92,246,.04)}
-.vpn-input::placeholder{color:var(--t3);opacity:.7}
-.vpn-input:focus{border-color:var(--accent-violet);background:rgba(139,92,246,.07);box-shadow:0 0 0 4px var(--accent-glow)}
-.vpn-input:focus~.vpn-input-ic{color:var(--accent2);animation:vpnWiggle .4s ease}
-@keyframes vpnWiggle{0%,100%{transform:translateY(-50%) rotate(0)}25%{transform:translateY(-50%) rotate(-12deg)}75%{transform:translateY(-50%) rotate(12deg)}}
-.vpn-textarea{
-  width:100%;min-height:140px;padding:12px 14px;border-radius:12px;border:1px solid var(--card-b);
-  background:rgba(0,0,0,.22);color:var(--t1);font-family:ui-monospace,'JetBrains Mono',monospace;font-size:11px;
-  outline:none;transition:border-color .2s,background .2s,box-shadow .2s;direction:ltr;text-align:left;resize:vertical;line-height:1.6;
-}
-[data-theme="light"] .vpn-textarea{background:rgba(139,92,246,.04)}
-.vpn-textarea:focus{border-color:var(--accent-violet);background:rgba(139,92,246,.07);box-shadow:0 0 0 4px var(--accent-glow)}
-.vpn-textarea::placeholder{color:var(--t3);opacity:.65}
-
-/* VPN empty-state — gentle call-to-action */
-.vpn-empty-state{transition:opacity .25s,transform .25s}
-.vpn-empty-state.hidden{opacity:0;transform:translateY(-4px);pointer-events:none;height:0;padding:0;margin:0;overflow:hidden;border:none}
-
-/* Trojan/Link health badge — NixHD style */
-.cfg-sub-tag{transition:all .18s ease}
-.cfg-sub-tag:hover{transform:translateY(-1px)}
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   Experimental Section — Responsive Grid (mobile-first)
-   ▸ auto-fit/minmax → cards natively collapse on narrow screens
-   ▸ header badge wraps below title on small screens
-   ▸ sub-sections two-column on desktop, single-column on mobile
-   ▸ feature cards stack with smaller padding on phones
-   ═══════════════════════════════════════════════════════════════════════════ */
-.exp-features-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(min(320px,100%),1fr));
-  gap:14px;
-  margin-bottom:24px;
-}
-.exp-subsections{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:18px;
-  margin-top:20px;
-}
-.exp-stealth-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(min(280px,100%),1fr));
-  gap:10px;
-}
-.exp-action-btn{
-  width:100%;
-  text-align:right;
-  justify-content:flex-start;
-  font-size:12px;
-}
-.exp-recheck-btn{
-  width:100%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:8px;
-  padding:12px 16px;
-}
-
-/* Tablet */
-@media(max-width:900px){
-  .exp-features-grid{gap:10px}
-  .exp-subsections{gap:14px}
-  .exp-stealth-grid{gap:8px}
-}
-
-/* Mobile — single column, tighter padding, full-width buttons */
-@media(max-width:640px){
-  .exp-features-grid{
-    grid-template-columns:1fr;
-    gap:10px;
-    margin-bottom:18px;
-  }
-  .exp-subsections{
-    grid-template-columns:1fr;
-    gap:14px;
-    margin-top:14px;
-  }
-  .exp-stealth-grid{
-    grid-template-columns:1fr;
-    gap:8px;
-  }
-  .exp-sub-card{padding:16px !important}
-  #pg-experimental .page-hdr h1{font-size:20px}
-  #pg-experimental .page-hdr p{font-size:11.5px;line-height:1.55}
-  #exp-warning{padding:12px 14px}
-  #exp-warning > div:last-child > div:last-child{font-size:11px;line-height:1.55}
-  #exp-warning code{font-size:10px;padding:1px 5px}
-}
-
-/* Extra small phones */
-@media(max-width:380px){
-  .exp-sub-card{padding:12px !important}
-  .exp-action-btn{font-size:11px;padding:8px 10px}
-  #pg-experimental .page-hdr h1{font-size:18px}
-  #pg-experimental .page-hdr i.ti-flask{font-size:22px}
-}
-
-</style>
-<style>
-/* ═══════════════════════════════════════════════════════════════════════════
-   EMIX Motion Layer — لایه‌ی روان‌سازی (فقط کیفیت حرکت؛ بدون تغییر طراحی)
-   ▸ این بلاک صرفاً انیمیشن/ترنزیشن اضافه می‌کند؛ هیچ رنگ/چیدمانی را override نمی‌کند
-   ▸ اگر حذف شود، پنل دقیقاً مثل قبل کار می‌کند
-   ═══════════════════════════════════════════════════════════════════════════ */
-
-/* ── ۱) حرکت نرم سراسری ── */
-html{scroll-behavior:smooth}
-body,.pg,.card,.cfg-card,.btn,.nav-it,.cm-modal,
-.cfg-sub-tag,.proto-chip,.ubar-f,.tog,.info-item
-{transition-timing-function:cubic-bezier(.32,.72,0,1)}
-@media (prefers-reduced-motion:reduce){
-  *,*::before,*::after{animation-duration:.001s !important;transition-duration:.001s !important;scroll-behavior:auto !important}
-}
-
-/* ── ۲) کارت‌های کانفیگ: شناور شدن نرم و بازخورد لمسی ── */
-.cfg-card{will-change:transform}
-.cfg-card:hover{transform:translateY(-2px);box-shadow:0 10px 34px -14px rgba(139,92,246,.22),var(--shadow)}
-.cfg-card:active{transform:translateY(0) scale(.997)}
-.cfg-card.selected{transform:translateY(-1px)}
-
-/* ── ۳) دکمه‌ها: بازخورد فشار نرم‌تر (طراحی موجود دست‌نخورده) ── */
-.btn{position:relative}
-.btn:disabled{opacity:.55;cursor:not-allowed;filter:saturate(.6)}
-.btn-icon{transition:transform .18s cubic-bezier(.32,.72,0,1),filter .18s,opacity .18s,background .18s,border-color .18s,color .18s}
-.btn-icon:not(:disabled):hover i{transform:scale(1.12)}
-.btn-icon i{transition:transform .18s cubic-bezier(.32,.72,0,1)}
-.btn-icon:not(:disabled):active{transform:scale(.9)}
-
-/* ── ۴) بج پینگ: تغییر رنگ نرم + پاپ ظریف هنگام نتیجه ── */
-.cfg-sub-tag{transition:color .35s,background .35s,border-color .35s}
-.ping-pop{animation:pingPop .45s cubic-bezier(.34,1.56,.64,1)}
-@keyframes pingPop{0%{transform:scale(.8);opacity:.4}60%{transform:scale(1.06)}100%{transform:scale(1);opacity:1}}
-.ping-dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0;animation:pingPulse 1.2s ease-in-out infinite}
-@keyframes pingPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.72)}}
-
-/* ── ۵) حالت بارگذاری پینگ: سه‌نقطه‌ی موجی به‌جای متن خشک ── */
-.ping-wave{display:inline-flex;gap:2.5px;align-items:center;margin-right:2px}
-.ping-wave span{width:3.5px;height:3.5px;border-radius:50%;background:currentColor;animation:pingWave 1s ease-in-out infinite}
-.ping-wave span:nth-child(2){animation-delay:.15s}
-.ping-wave span:nth-child(3){animation-delay:.3s}
-@keyframes pingWave{0%,100%{transform:translateY(0);opacity:.45}50%{transform:translateY(-3.5px);opacity:1}}
-
-/* ── ۶) توست: ورود فنری ── */
-.toast.show{animation:toastIn .38s cubic-bezier(.34,1.4,.64,1)}
-@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(26px) scale(.92)}to{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}}
-.toast.warn{border-color:rgba(245,158,11,.3);background:var(--amber-bg);color:var(--amber-t)}
-
-/* ── ۷) سوییچ بین صفحات: محو نرم ── */
-.pg.on{animation:pgIn .3s cubic-bezier(.32,.72,0,1)}
-@keyframes pgIn{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
-
-/* ── ۸) نوار پیشرفت پینگ روی دکمه‌ی «تست همه» ── */
-#ping-all-btn{overflow:hidden;position:relative}
-#ping-all-btn .ping-prog{position:absolute;inset:0;background:linear-gradient(90deg,transparent,var(--accent-d),transparent);transform:translateX(-100%);pointer-events:none}
-#ping-all-btn.running .ping-prog{animation:progSweep 1.1s linear infinite}
-@keyframes progSweep{to{transform:translateX(100%)}}
-
-/* ── ۹) اعداد: شمارش نرم (کلاس کمکی JS) ── */
-.num-tick{display:inline-block;transition:transform .2s cubic-bezier(.34,1.56,.64,1)}
-.num-tick.tick{transform:translateY(-2px) scale(1.08)}
-
-/* ── ۱۰) سوییچ فعال/غیرفعال: حرکت نرم‌تر ── */
-.tog{transition:background .3s,border-color .3s,box-shadow .3s}
-.tog::after{transition:bottom .3s cubic-bezier(.34,1.56,.64,1),transform .3s cubic-bezier(.34,1.56,.64,1),background .3s}
-.tog:active::after{transform:scale(1.15)}
-
-/* ── ۱۱) کارت‌های داخل صفحه: ورود پلکانی ظریف (فقط هنگام ورود به صفحه) ── */
-body.cascade #links-grid .cfg-card{animation:cardCascade .4s cubic-bezier(.32,.72,0,1) backwards}
-body.cascade #links-grid .cfg-card:nth-child(1){animation-delay:.02s}
-body.cascade #links-grid .cfg-card:nth-child(2){animation-delay:.05s}
-body.cascade #links-grid .cfg-card:nth-child(3){animation-delay:.08s}
-body.cascade #links-grid .cfg-card:nth-child(4){animation-delay:.11s}
-body.cascade #links-grid .cfg-card:nth-child(5){animation-delay:.14s}
-body.cascade #links-grid .cfg-card:nth-child(6){animation-delay:.17s}
-body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
-@keyframes cardCascade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-
-/* ── ۱۲) Command Palette (Ctrl+K) ── */
-#cp-overlay{position:fixed;inset:0;z-index:1200;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);display:none;align-items:flex-start;justify-content:center;padding-top:12vh}
-#cp-overlay.open{display:flex;animation:cpFade .18s ease}
-@keyframes cpFade{from{opacity:0}to{opacity:1}}
-#cp-box{width:100%;max-width:560px;background:var(--bg2);border:1px solid var(--card-b);border-radius:16px;box-shadow:0 30px 80px -20px rgba(0,0,0,.7),0 0 40px -12px rgba(139,92,246,.25);overflow:hidden;animation:cpIn .22s cubic-bezier(.32,.72,0,1)}
-@keyframes cpIn{from{opacity:0;transform:translateY(-14px) scale(.98)}to{opacity:1;transform:none}}
-#cp-input-wrap{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--card-b)}
-#cp-input-wrap i{color:var(--t3);font-size:17px}
-#cp-input{flex:1;background:none;border:none;outline:none;color:var(--t1);font-family:inherit;font-size:14px}
-#cp-input::placeholder{color:var(--t3)}
-#cp-kbd{font-size:9.5px;color:var(--t3);background:var(--bg3);border:1px solid var(--card-b);border-radius:6px;padding:2px 7px;font-family:monospace}
-#cp-list{max-height:340px;overflow-y:auto;padding:8px}
-.cp-group{padding:8px 10px 4px;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);font-weight:700}
-.cp-item{display:flex;align-items:center;gap:11px;padding:9.5px 12px;border-radius:10px;cursor:pointer;transition:background .12s}
-.cp-item:hover,.cp-item.sel{background:var(--accent-d)}
-.cp-item>i{font-size:16px;color:var(--accent2);width:20px;text-align:center;flex-shrink:0}
-.cp-item .cp-txt{flex:1;min-width:0}
-.cp-item .cp-title{font-size:12.5px;color:var(--t1);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.cp-item .cp-sub{font-size:9.5px;color:var(--t3);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.cp-item .cp-hint{font-size:9px;color:var(--t3);background:var(--bg3);border:1px solid var(--card-b);border-radius:5px;padding:1px 6px;flex-shrink:0}
-#cp-empty{padding:26px;text-align:center;color:var(--t3);font-size:12px}
-#cp-foot{display:flex;gap:14px;padding:9px 16px;border-top:1px solid var(--card-b);font-size:9.5px;color:var(--t3)}
-#cp-foot b{color:var(--t2);font-weight:600}
-@media(max-width:600px){#cp-overlay{padding-top:6vh}}
 </style>
 </head>
 <body>
 <div class="toast" id="toast"></div>
-
-<!-- ══════ Command Palette (Ctrl+K) ══════ -->
-<div id="cp-overlay" onclick="if(event.target===this)cpClose()">
-  <div id="cp-box" role="dialog" aria-label="پالت فرمان">
-    <div id="cp-input-wrap">
-      <i class="ti ti-search"></i>
-      <input id="cp-input" type="text" placeholder="جستجو یا فرمان... (مثلاً: ساخت کانفیگ، تست همه، پل ایران)" autocomplete="off">
-      <span id="cp-kbd">ESC</span>
-    </div>
-    <div id="cp-list"></div>
-    <div id="cp-foot">
-      <span><b>↑↓</b> جابه‌جایی</span>
-      <span><b>Enter</b> اجرا</span>
-      <span><b>Ctrl+K</b> باز/بسته</span>
-    </div>
-  </div>
-</div>
 
 <div class="modal-bg" id="modal-create-link">
   <div class="modal-v2 cm-modal">
@@ -2139,12 +1727,6 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
             <span class="alpn-chip-dot"><i class="ti ti-check"></i></span> h3
           </div>
         </div>
-        <div class="cm-pills" style="margin-top:6px">
-          <span class="cm-pill active" onclick="cmAlpnPreset(['h2','http/1.1'],this)">استاندارد</span>
-          <span class="cm-pill" onclick="cmAlpnPreset(['h2'],this)">مدرن (h2)</span>
-          <span class="cm-pill" onclick="cmAlpnPreset(['http/1.1'],this)">قدیمی (http/1.1)</span>
-          <span class="cm-pill" onclick="cmAlpnPreset(['h2','http/1.1','h3'],this)">همه</span>
-        </div>
         
         <div class="stream-sub-label"><i class="ti ti-fingerprint"></i> Fingerprint (TLS Client Hello)</div>
         <div class="fp-grid" id="fp-pills">
@@ -2190,52 +1772,15 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
         </div>
       </div>
 
-      <!-- ── SNI Spoofing (per-link, opt-in) ──────────────────────────────────
-           Hidden for MTProto (uses FakeTLS domain — SNI spoofing not applicable)
-           Hidden for Shadowsocks (v2ray-plugin host= is shared between WS Host
-           and TLS SNI — changing it would break routing through CDN edge).
-           Visible for: VLESS-WS, VLESS-XHTTP, Trojan-WS, Trojan-XHTTP. -->
-      <div class="cm-section" id="sni-spoof-field" style="display:block;margin-bottom:0">
-        <div class="cm-section-label"><i class="ti ti-mask"></i> SNI Spoofing (جعل SNI در TLS Handshake)</div>
-        <div class="cm-row2" style="align-items:center;gap:10px">
-          <label class="tog-wrap" style="display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none">
-            <span class="tog" id="nl-spoof-toggle" onclick="cmToggleSpoof()"></span>
-            <span style="font-size:12px;font-weight:600;color:var(--t2)">🎭 فعال‌سازی SNI جعلی</span>
-          </label>
-        </div>
-        <div id="nl-spoof-controls" style="display:none;margin-top:10px">
-          <div class="cm-row2" style="gap:8px">
-            <input class="cm-input" id="nl-spoof-sni" type="text" placeholder="www.google.com" style="direction:ltr;text-align:left;font-family:monospace">
-            <select class="cm-input" id="nl-spoof-preset" onchange="cmSpoofPreset(this)" style="flex:.5">
-              <option value="">— انتخاب سریع —</option>
-              <option value="www.google.com">www.google.com</option>
-              <option value="www.cloudflare.com">www.cloudflare.com</option>
-              <option value="docs.google.com">docs.google.com</option>
-              <option value="drive.google.com">drive.google.com</option>
-              <option value="images.unsplash.com">images.unsplash.com</option>
-              <option value="api.github.com">api.github.com</option>
-              <option value="mail.yahoo.com">mail.yahoo.com</option>
-              <option value="www.microsoft.com">www.microsoft.com</option>
-              <option value="www.amazon.com">www.amazon.com</option>
-              <option value="speedtest.net">speedtest.net</option>
-            </select>
-          </div>
-          <div class="cm-note" style="margin-top:8px">
-            <i class="ti ti-info-circle"></i>
-            <span>SNI جعلی در هندشیک TLS ارسال می‌شود. درخروجی «پل چندلوکیشن v2 → ردیاب SNI» می‌توانی <b>با مدرک زنده</b> ببینی هندشیک واقعاً قبول می‌شود یا نه — آزمون با هندشیک واقعی TLS انجام می‌شود، نه حدس.</span>
-          </div>
-          <div id="nl-spoof-cdn-warn" class="cm-note" style="margin-top:8px;display:none;background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.25);border-radius:10px">
-            <i class="ti ti-info-circle" style="color:#10B981"></i>
-            <span style="color:#10B981"><b>حالت مستقیم:</b> بدون CDN، پارامتر <code style="background:rgba(0,0,0,.3);padding:1px 4px;border-radius:3px;color:#10B981">allowInsecure=1</code> به لینک اضافه می‌شود. کلاینت بررسی cert را رد می‌کند → SNI جعلی در TLS Handshake ارسال می‌شود → DPI گول می‌خورد. برای حداکثر استتار، <code style="background:rgba(0,0,0,.3);padding:1px 4px;border-radius:3px;color:#10B981">EMIX_CDN_DOMAIN</code> را در Railway تنظیم کنید (حالت CDN امن‌تر است).</span>
-          </div>
-        </div>
-        <input type="hidden" id="nl-spoof-enabled" value="0">
-      </div>
-
       <div class="cm-section" id="mtproto-port-field" style="display:none;margin-bottom:0">
-        <!-- Audit fix: ویجت auto-domain حذف شد — استایل ناقص (کاما به‌جای سمی‌کالن) داشت،
-             عناصر دکمه/وضعیتش وجود نداشتند و JS آن (autoGetMtprotoDomain و…) به‌هم می‌ریخت.
-             مسیر واقعی دریافت دامنه عمومی: توکن Railway را در تنظیمات TCP Proxy وارد کنید. -->
+        <div id="auto-domain-box" style="margin-top:10px, display: none">
+          <div id="auto-domain-token-wrap" style="display:none;margin-top:9px">
+            <div class="cm-row2">
+              <input class="cm-input" id="auto-domain-token" type="password" placeholder="Railway API Token">
+              <button type="button" class="btn btn-p btn-sm" onclick="submitAutoDomainToken()"><i class="ti ti-check"></i> تایید و دریافت</button>
+            </div>
+          </div>
+        </div>
         <div class="cm-row2">
           <div class="cm-field">
             <label><i class="ti ti-route" style="color:var(--accent);margin-left:4px"></i>پورت TCP</label>
@@ -2312,7 +1857,7 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
 <!-- مودال بروزرسانی -->
 <div class="modal-bg" id="modal-update" style="z-index:9999">
   <div class="modal-v2" style="max-width:460px">
-    <div class="modal-v2-head" style="background:linear-gradient(155deg,rgba(139,92,246,.16) 0%,transparent 65%)">
+    <div class="modal-v2-head" style="background:linear-gradient(155deg,rgba(255,77,46,.16) 0%,transparent 65%)">
       <button class="modal-v2-close" onclick="closeModal('modal-update')"><i class="ti ti-x"></i></button>
       <div class="modal-v2-icon" style="background:linear-gradient(135deg,var(--accent),var(--accent2))"><i class="ti ti-cloud-download"></i></div>
       <div class="modal-v2-title">بروزرسانی جدید موجود است</div>
@@ -3057,43 +2602,24 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
   <button class="sb-close" id="close-sb"><i class="ti ti-x"></i></button>
   <div class="logo">
     <div class="logo-img"><svg viewBox="0 0 100 100" width="100%" height="100%" role="img" aria-label="EMIX logo"><rect width="100" height="100" fill="#030303"/><circle cx="50" cy="48" r="45" fill="#0B0B0B" stroke="#5A160E" stroke-width="2"/><circle cx="50" cy="48" r="42" fill="none" stroke="#FF3B24" stroke-width="1" opacity=".7"/><path d="M72 24H39C29 24 23 30 23 40V61C23 71 29 77 39 77H73M39 50H64C72 50 76 46 80 39" fill="none" stroke="#7A170F" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" opacity=".6"/><path d="M72 24H39C29 24 23 30 23 40V61C23 71 29 77 39 77H73M39 50H64C72 50 76 46 80 39" fill="none" stroke="#FF4028" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/><text x="50" y="91" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" font-weight="800" letter-spacing="3" fill="#FF3B24">EMIX</text></svg></div>
-    <div><div class="logo-name">EMIX</div><div class="logo-sub" id="logo-ver-chip">Gateway · v11</div></div>
+    <div><div class="logo-name">EMIX</div><div class="logo-sub">Gateway · v9.2</div></div>
   </div>
   <div class="nav-wrap">
-    <!-- ═══ Phase 40 §30 — ناوبری ساده‌شده ═══
-         ساختار اصلی: داشبورد / کانفیگ‌ها (ورک‌اسپیس واحد شبکه) / حساب‌ها / سیستم / تشخیص+لاگ.
-         صفحات شبکه‌ایِ تکراری از ناوبری مخفی شده‌اند (HIDE — نه حذف): از طریق
-         command palette (Ctrl+K) و لینک‌های داخلیِ همان حوزه همچنان در دسترس‌اند.
-         تمام بک‌اند و JS صفحات مخفی دست‌نخورده باقی مانده (§31: هیچ کارکردی حذف نشد). -->
     <div class="nav-sec">پنل</div>
     <div class="nav-it on" data-pg="overview"><i class="ti ti-layout-dashboard"></i> داشبورد</div>
-    <div class="nav-it" data-pg="links" style="background:linear-gradient(135deg,rgba(76,201,240,.14),rgba(139,92,246,.08))"><i class="ti ti-link-plus" style="color:#4cc9f0"></i> کانفیگ‌ها <span class="nav-badge" id="links-nb" style="background:#4cc9f0;color:#06121e">0</span></div>
-    <div class="nav-it" data-pg="accounts"><i class="ti ti-users" style="color:#38BDF8"></i> حساب‌ها <span class="nav-badge" id="accounts-nb">0</span></div>
+    <div class="nav-it" data-pg="links"><i class="ti ti-link-plus"></i> کانفیگ‌ها <span class="nav-badge" id="links-nb">0</span></div>
     <div class="nav-it" data-pg="subgroups"><i class="ti ti-folders"></i> گروه‌های ساب <span class="nav-badge" id="subs-nb">0</span></div>
+    <div class="nav-it" data-pg="subscriptions"><i class="ti ti-rss"></i> سابسکریپشن</div>
+    <div class="nav-it" data-pg="traffic"><i class="ti ti-chart-area"></i> ترافیک</div>
+    <div class="nav-it" data-pg="connections"><i class="ti ti-plug-connected"></i> اتصالات <span class="nav-badge" id="conns-nb">0</span></div>
+    <div class="nav-it" data-pg="nodes"><i class="ti ti-topology-star-3"></i> نود <span class="nav-badge" id="nodes-nb">0</span></div>
     <div class="nav-sec">سیستم</div>
-    <div class="nav-it" data-pg="settings"><i class="ti ti-settings"></i> تنظیمات</div>
-    <div class="nav-it" data-pg="updates"><i class="ti ti-cloud-download"></i> نسخه و بروزرسانی <span class="nav-badge" id="update-nb" style="display:none">1</span></div>
     <div class="nav-it" data-pg="backup"><i class="ti ti-database-export"></i> بکاپ‌گیری</div>
+    <div class="nav-it" data-pg="updates"><i class="ti ti-cloud-download"></i> نسخه و بروزرسانی <span class="nav-badge" id="update-nb" style="display:none">1</span></div>
     <div class="nav-it" data-pg="support"><i class="ti ti-headset"></i> پشتیبانی <span class="nav-badge" id="support-nb" style="display:none">●</span></div>
-    <div class="nav-sec">تشخیص و لاگ</div>
-    <div class="nav-it" data-pg="diag"><i class="ti ti-activity-heartbeat" style="color:#10B981"></i> سلامت و تشخیص</div>
     <div class="nav-it" data-pg="logs"><i class="ti ti-history"></i> لاگ فعالیت‌ها</div>
     <div class="nav-it" data-pg="errors"><i class="ti ti-alert-triangle"></i> خطاها</div>
-    <!-- ── مخفی (HIDE): صفحات شبکه‌ی تخصصی — از palette قابل دسترسی ── -->
-    <div class="nav-it" data-pg="builder" style="display:none"><i class="ti ti-wand"></i> ✨ ساخت کانفیگ <span class="nav-badge" id="builder-nb" style="display:none">—</span></div>
-    <div class="nav-it" data-pg="bridge" style="display:none"><i class="ti ti-flag"></i> پل ایران <span class="nav-badge" id="bridge-nb" style="display:none">فعال</span></div>
-    <div class="nav-it" data-pg="zeus" style="display:none"><i class="ti ti-bolt"></i> ⚡ ZEUS Pro <span class="nav-badge" id="zeus-nb" style="display:none">جدید</span></div>
-    <div class="nav-it" data-pg="gaming" style="display:none"><i class="ti ti-device-gamepad-2"></i> 🎮 گیمینگ <span class="nav-badge" id="gaming-nb" style="display:none">پینگ</span></div>
-    <div class="nav-it" data-pg="multiloc" style="display:none"><i class="ti ti-world"></i> 🌐 پل چندلوکیشن <span class="nav-badge" id="ml-nb" style="display:none">v2</span></div>
-    <div class="nav-it" data-pg="vpn" style="display:none"><i class="ti ti-shield-lock"></i> 🛡 VPN Pro <span class="nav-badge" id="vpn-nb" style="display:none">WG+OVPN</span></div>
-    <div class="nav-it" data-pg="routing" style="display:none"><i class="ti ti-route"></i> 🇮🇷 مسیریابی هوشمند <span class="nav-badge" id="routing-nb" style="display:none">Direct</span></div>
-    <div class="nav-it" data-pg="iranproxy" style="display:none"><i class="ti ti-flag"></i> 🇮🇷 پروکسی ایران <span class="nav-badge" id="iranproxy-nb" style="display:none">—</span></div>
-    <div class="nav-it" data-pg="subscriptions" style="display:none"><i class="ti ti-rss"></i> سابسکریپشن</div>
-    <div class="nav-it" data-pg="traffic" style="display:none"><i class="ti ti-chart-area"></i> ترافیک</div>
-    <div class="nav-it" data-pg="connections" style="display:none"><i class="ti ti-plug-connected"></i> اتصالات <span class="nav-badge" id="conns-nb">0</span></div>
-    <div class="nav-it" data-pg="nodes" style="display:none"><i class="ti ti-topology-star-3"></i> نود <span class="nav-badge" id="nodes-nb">0</span></div>
-    <div class="nav-it" data-pg="experimental" style="display:none"><i class="ti ti-flask"></i> 🧪 بخش آزمایشی <span class="nav-badge" id="exp-nb" style="display:none">جدید</span></div>
-    <div class="nav-it" data-pg="unified-configs" style="display:none"><i class="ti ti-grid-dots"></i> 🎯 همه‌ی کانفیگ‌ها</div>
+    <div class="nav-it" data-pg="settings"><i class="ti ti-settings"></i> تنظیمات</div>
   </div>
   <div class="sb-foot">
     <button class="theme-btn" onclick="toggleTheme()"><i class="ti ti-moon" id="theme-icon"></i> <span id="theme-label">تم روشن</span></button>
@@ -3112,46 +2638,6 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
       <button class="btn btn-p btn-sm" onclick="refreshAll()"><i class="ti ti-refresh"></i> رفرش</button>
     </div>
   </div>
-
-  <!-- هشدار volume — فقط وقتی دیتا دائمی نیست نمایش داده می‌شود -->
-  <div id="volume-warn" class="card" style="margin-bottom:14px;border:1px solid var(--amber-t);display:none">
-    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-      <i class="ti ti-database-off" style="font-size:22px;color:var(--amber-t)"></i>
-      <div style="flex:1;min-width:220px">
-        <div style="font-weight:700;font-size:12.5px;color:var(--amber-t)">⚠ دیتای شما هنوز دائمی نیست — حجم (Volume) متصل نشده</div>
-        <div style="font-size:11px;color:var(--t3);margin-top:3px">بدون volume، با هر دیپلوی یا ری‌استارت، همه‌ی کانفیگ‌ها و تنظیمات پاک می‌شوند. با یک کلیک volume بسازید (نیازمند توکن Railway که قبلاً ذخیره شده).</div>
-      </div>
-      <button class="btn btn-g" onclick="ensureVolume(this)"><i class="ti ti-database-plus"></i> ساخت خودکار Volume</button>
-    </div>
-  </div>
-
-  <!-- کارت سلامت کلی سیستم -->
-  <div class="card" style="margin-bottom:14px">
-    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px">
-      <i class="ti ti-heartbeat" style="font-size:20px;color:var(--green-t)"></i>
-      <div style="flex:1;min-width:180px">
-        <div style="font-weight:700;font-size:13px">سلامت کلی پنل</div>
-        <div style="font-size:11px;color:var(--t3)">بررسی همه‌ی بخش‌ها تا خروجی: ماژول‌ها، دیتا، پروکسی‌ها، گیت‌وی کلادفلر و پل</div>
-      </div>
-      <button class="btn btn-g" id="health-all-btn" onclick="runHealthAll(this)"><i class="ti ti-stethoscope"></i> بررسی سلامت همه‌چیز</button>
-    </div>
-    <div id="health-all-result" style="display:none"></div>
-    <div style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--card-b)">
-      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-        <i class="ti ti-world" style="color:var(--blue-t)"></i>
-        <div style="flex:1;min-width:200px">
-          <div style="font-weight:700;font-size:12.5px">دامنه‌ی عمومی لینک‌ها (EMIX_PUBLIC_HOST)</div>
-          <div style="font-size:10.5px;color:var(--t3);line-height:1.7">اگر ingress مستقیم Railway از شبکه‌ی شما فیلتر است، دامنه‌ی گیت‌وی Cloudflare را بگذارید تا پنل و همه‌ی کانفیگ‌ها از همان مسیر صادر شوند — مثلاً دامنه‌ی Worker گیت‌وی خودتان</div>
-        </div>
-      </div>
-      <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
-        <input id="pubhost-input" dir="ltr" placeholder="مثلاً my-gate.workers.dev" style="flex:1;min-width:220px;direction:ltr;text-align:left;font-size:12px" class="in">
-        <button class="btn btn-blue" id="pubhost-btn" onclick="savePublicHost(this)"><i class="ti ti-device-floppy"></i> ذخیره و redeploy</button>
-      </div>
-      <div id="pubhost-cur" style="font-size:11px;color:var(--t3);margin-top:6px;direction:ltr;text-align:left">—</div>
-    </div>
-  </div>
-
   <div class="metrics">
     <div class="metric"><div class="m-icon"><i class="ti ti-plug-connected"></i></div><div class="m-label">اتصالات فعال</div><div class="m-val" id="m-conns">—</div><div class="m-sub"><span class="dot dg pulse"></span> WebSocket / XHTTP زنده</div></div>
     <div class="metric"><div class="m-icon"><i class="ti ti-transfer"></i></div><div class="m-label">کل ترافیک</div><div class="m-val" id="m-traffic">—<span class="m-unit">MB</span></div><div class="m-sub">از راه‌اندازی</div></div>
@@ -3171,43 +2657,18 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
       <button class="btn btn-pur" onclick="navTo('subgroups')"><i class="ti ti-folders"></i> گروه‌های ساب</button>
     </div>
   </div>
-
-  <!-- ═══ کارت دسترسی سریع به ZEUS Pro ═══ -->
-  <div class="zeus-quick" style="margin-top:18px;background:linear-gradient(135deg,rgba(245,158,11,.10),rgba(139,92,246,.06));border:1px solid var(--amber-t);border-radius:14px;padding:18px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;animation:fadeup .5s cubic-bezier(.16,1,.3,1) .15s backwards">
-    <div style="display:flex;align-items:center;gap:14px;flex:1;min-width:240px">
-      <div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,#FACC15,#EF4444);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-        <i class="ti ti-bolt" style="font-size:26px;color:#fff"></i>
-      </div>
-      <div>
-        <div style="font-size:15px;font-weight:800;color:var(--t1);display:flex;align-items:center;gap:8px">
-          ⚡ ZEUS Pro — تنظیمات حرفه‌ای
-          <span class="badge bg-amber" style="font-size:9px">جدید</span>
-        </div>
-        <div style="font-size:12px;color:var(--t3);margin-top:3px;line-height:1.6">
-          انتخاب ISP همراه اول/ایرانسل/مخابرات + TLS Mask پیشرفته + حالت هوشمند + قفل لاگین
-        </div>
-      </div>
-    </div>
-    <button class="btn btn-p" style="background:linear-gradient(135deg,#FACC15,#EF4444);font-weight:700;padding:11px 18px" onclick="navTo('zeus')">
-      <i class="ti ti-arrow-left"></i> ورود به ZEUS Pro
-    </button>
-  </div>
   <div class="g3">
     <div class="card"><div class="card-title"><i class="ti ti-chart-area"></i> ترافیک ساعتی (MB)</div><div class="ch"><canvas id="ch1"></canvas></div></div>
     <div class="card"><div class="card-title"><i class="ti ti-chart-donut"></i> توزیع</div><div class="ch-sm"><canvas id="ch2"></canvas></div></div>
   </div>
   <div class="g2">
     <div class="card">
-      <div class="card-title"><i class="ti ti-activity"></i> وضعیت سرویس <span class="ml-auto" style="font-size:9.5px;color:var(--t3)">زنده از Diagnostics</span></div>
-      <!-- Audit fix: قبلاً ۶ ردیف «فعال» hardcoded بود (بدون هیچ API).
-           حالا همه‌ی مقادیر از /api/diagnostics (واقعی) می‌آیند. -->
-      <div class="sr"><span class="sr-k"><i class="ti ti-shield-check"></i> UUID Auth</span><span class="sr-v" style="color:var(--green-t)">● فعال · لایه‌ی relay</span></div>
-      <div class="sr"><span class="sr-k"><i class="ti ti-keyframe"></i> موتور سلامت شبکه</span><span class="sr-v" id="svc-health">—</span></div>
-      <div class="sr"><span class="sr-k"><i class="ti ti-route"></i> گره‌های تحت مدیریت</span><span class="sr-v" id="svc-nodes">—</span></div>
-      <div class="sr"><span class="sr-k"><i class="ti ti-cpu"></i> ران‌تایم‌های تحت نظارت</span><span class="sr-v" id="svc-runtimes">—</span></div>
-      <div class="sr"><span class="sr-k"><i class="ti ti-clock-play"></i> جاب‌های پس‌زمینه</span><span class="sr-v" id="svc-jobs">—</span></div>
-      <div class="sr"><span class="sr-k"><i class="ti ti-database"></i> پایداری داده</span><span class="sr-v" id="svc-persist">—</span></div>
-      <div class="sr"><span class="sr-k"><i class="ti ti-list-tree"></i> ترکیب‌های معتبر پروتکل×حمل‌ونقل</span><span class="sr-v" id="svc-transports">—</span></div>
+      <div class="card-title"><i class="ti ti-activity"></i> وضعیت سرویس</div>
+      <div class="sr"><span class="sr-k"><i class="ti ti-shield-check"></i> UUID Auth</span><span class="sr-v" style="color:var(--green-t)">● فعال · سخت‌گیرانه</span></div>
+      <div class="sr"><span class="sr-k"><i class="ti ti-circle-check"></i> VLESS / WS Tunnel</span><span class="sr-v" style="color:var(--green-t)">● فعال</span></div>
+      <div class="sr"><span class="sr-k"><i class="ti ti-bolt"></i> Siz10a XHTTP Ultra</span><span class="sr-v" style="color:var(--green-t)">● فعال · 3 mode</span></div>
+      <div class="sr"><span class="sr-k"><i class="ti ti-folders"></i> Sub Groups</span><span class="sr-v" style="color:var(--green-t)">● فعال v9</span></div>
+      <div class="sr"><span class="sr-k"><i class="ti ti-rss"></i> Subscription API</span><span class="sr-v" style="color:var(--green-t)">● فعال</span></div>
       <div class="sr"><span class="sr-k"><i class="ti ti-clock"></i> آپتایم</span><span class="sr-v" id="uptime-inline">—</span></div>
       <div class="sr" style="flex-direction:column;align-items:flex-start;gap:4px">
         <div style="width:100%;display:flex;justify-content:space-between"><span class="sr-k"><i class="ti ti-gauge"></i> بار نسبی</span><span class="sr-v" id="bw-pct">—%</span></div>
@@ -3215,45 +2676,35 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
       </div>
     </div>
     <div class="card">
-      <div class="card-title">
-        <i class="ti ti-trophy" style="color:var(--amber-t)"></i> پیشنهاد هوشمند — سریع‌ترین کانفیگ
-        <span class="ml-auto"><button class="btn btn-g btn-sm" onclick="bestConfigTest(this)"><i class="ti ti-bolt"></i> تست زنده</button></span>
-      </div>
-      <div id="best-list"><div class="sr"><span class="sr-k" style="color:var(--t3)">دکمه‌ی «تست زنده» را بزنید تا همه‌ی کانفیگ‌ها تست شوند و سریع‌ترین‌ها رتبه‌بندی شوند</span></div></div>
+      <div class="card-title"><i class="ti ti-list"></i> خلاصه کانفیگ‌ها <span class="ml-auto badge bg-blue" id="lsummary-badge">۰</span></div>
+      <div id="lsummary">—</div>
     </div>
   </div>
   <div class="dash-footer">
-    <span class="df-text">EMIX PRO · <span id="footer-ver">v11</span> · Railway · ZEUS + گیمینگ + ضدد ضریب + چندلوکیشن</span>
+    <span class="df-text">EMIX v9.2 · Railway · 2025</span>
     <a class="df-link" href="https://t.me/emixpi" target="_blank"><i class="ti ti-brand-telegram"></i> t.me/emixpi</a>
   </div>
 </section>
 <section class="pg" id="pg-links">
-  <!-- ═════════════════════════════════════════════════════════════════════
-       PHASE 40 — کانفیگ‌ها = ورک‌اسپیس واحد شبکه
-       ساخت (ورک‌اسپیس تمام‌صفحه) · تست زنده‌ی واقعی · کارت‌های premium با
-       تفکیکِ CONFIG VALID از RUNTIME VERIFIED · مدیریت کامل — همه اینجا.
-       ═════════════════════════════════════════════════════════════════════ -->
-  <div class="ncw-hdr">
-    <div class="ncw-hdr-text">
-      <div class="ncw-hdr-title"><i class="ti ti-link-plus"></i> کانفیگ‌ها</div>
-      <div class="ncw-hdr-sub">ورک‌اسپیس واحد شبکه — ساخت، تست واقعی، تأیید و مدیریت کانفیگ</div>
-    </div>
-    <div class="ncw-hdr-actions">
-      <button class="btn btn-p" id="ncw-add-btn" onclick="openCreateWorkspace()">
-        <i class="ti ti-square-rounded-plus"></i> ساخت کانفیگ
+  <div class="topbar">
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+      <button class="btn btn-p" onclick="openModal('modal-create-link')">
+        <i class="ti ti-square-rounded-plus"></i> ساخت کانفیگ جدید
+      </button>
+      <button class="btn btn-g" style="margin-right:14px" onclick="openModal('modal-bot-tcp-proxy');btpCheckTokenState()">
+        <i class="ti ti-server-2"></i> Bot tcp proxy
+      </button>
+      <button class="btn btn-g" id="zeus-nav-btn" style="margin-right:8px" onclick="openModal('modal-zeus-proxy');zpCheckTokenState()">
+        <i class="ti ti-bolt"></i> Zeus proxy
       </button>
     </div>
-  </div>
-
-  <div class="ncw-stats">
-    <div class="ncw-stat"><i class="ti ti-grid-dots"></i> کل <b id="ncw-total">۰</b></div>
-    <div class="ncw-stat ok" id="ncw-st-healthy"><i class="ti ti-shield-check"></i> تأییدشده <b id="ncw-healthy">۰</b></div>
-    <div class="ncw-stat" id="ncw-st-active"><i class="ti ti-toggle-right"></i> فعال <b id="ncw-active">۰</b></div>
-    <div class="ncw-stat" id="ncw-st-net"><i class="ti ti-activity-heartbeat"></i> شبکه: <b id="ncw-net">—</b></div>
-    <div class="ncw-stat-spacer"></div>
-    <button class="btn btn-o btn-sm" id="ping-all-btn" onclick="pingAllLinks(this)"><i class="ti ti-activity-heartbeat"></i> تست همه</button>
-    <button class="btn btn-o btn-sm" id="zeus-nav-btn" onclick="openModal('modal-zeus-proxy');zpCheckTokenState()" title="Zeus proxy"><i class="ti ti-bolt"></i></button>
-    <button class="btn btn-o btn-sm" onclick="openModal('modal-bot-tcp-proxy');btpCheckTokenState()" title="Bot TCP proxy (MTProto عمومی)"><i class="ti ti-server-2"></i></button>
+    <div class="tb-right">
+      <label class="links-selectall" id="links-selectall-wrap" style="display:none">
+        <div class="cfg-check" id="links-selectall-check" onclick="toggleSelectAllLinks()"><i class="ti ti-check"></i></div>
+        انتخاب همه
+      </label>
+      <span class="badge bg-blue" id="links-pg-cnt">۰ کانفیگ</span>
+    </div>
   </div>
 
   <div class="links-bulkbar" id="links-bulkbar">
@@ -3263,2965 +2714,33 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
       <button class="btn btn-sm btn-d" onclick="bulkDeleteLinks()"><i class="ti ti-trash"></i> حذف انتخاب‌شده‌ها</button>
     </div>
   </div>
-  <label class="links-selectall" id="links-selectall-wrap" style="display:none">
-    <div class="cfg-check" id="links-selectall-check" onclick="toggleSelectAllLinks()"><i class="ti ti-check"></i></div>
-    انتخاب همه
-  </label>
-
-  <!-- کارت‌های premium — CONFIG VALID در برابر RUNTIME VERIFIED -->
-  <div class="ncw-grid" id="links-grid"></div>
-  <div class="ncw-empty" id="links-empty" style="display:none">
-    <div class="ncw-empty-icon"><i class="ti ti-link-plus"></i></div>
-    <div class="ncw-empty-title">هنوز کانفیگی وجود ندارد</div>
-    <div class="ncw-empty-sub">اولین کانفیگ را در ورک‌اسپیس ساخت بسازید — تست زنده‌ی واقعی، تأیید مسیریابی و QR همراهِ همان تجربه.</div>
-    <button class="btn btn-p" onclick="openCreateWorkspace()"><i class="ti ti-square-rounded-plus"></i> ساخت کانفیگ</button>
-  </div>
 
   <div class="info-strip">
     <div class="info-item">
-      <span class="info-item-label">ترافیک این ساعت</span>
-      <span class="info-item-val"><i class="ti ti-clock-bolt"></i> <span id="info-sent-recv">0 B</span></span>
+      <span class="info-item-label">ارسال / دریافت لحظه‌ای</span>
+      <span class="info-item-val"><i class="ti ti-arrows-exchange"></i> <span id="info-sent-recv">0 B / 0 B</span></span>
     </div>
     <div class="info-item">
-      <span class="info-item-label">مصرف ۲۴ ساعت اخیر</span>
+      <span class="info-item-label">مصرف دوره فعلی</span>
       <span class="info-item-val"><i class="ti ti-chart-pie"></i> <span id="info-usage">0 B</span></span>
     </div>
     <div class="info-item">
       <span class="info-item-label">مصرف کل از ابتدا</span>
       <span class="info-item-val"><i class="ti ti-history"></i> <span id="info-alltime">0 B</span></span>
     </div>
-  </div>
-  <span class="badge bg-blue" id="links-pg-cnt" style="display:none">۰ کانفیگ</span>
-
-  <!-- ══ حقیقت مسیر از مرورگر شما — پینگ واقعی سمت کلاینت ══ -->
-  <div class="card" id="ct-card" style="margin-top:18px">
-    <div class="tb-row" style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
-      <div style="display:flex;align-items:center;gap:10px">
-        <div style="width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,rgba(76,201,240,.16),rgba(139,92,246,.14));display:flex;align-items:center;justify-content:center">
-          <i class="ti ti-radar-2" style="color:var(--accent)"></i>
-        </div>
-        <div>
-          <div class="tb-title" style="font-size:14.5px">حقیقت مسیر از مرورگر شما</div>
-          <div class="tb-sub" style="font-size:11.5px">اندازه‌گیری واقعی از شبکه‌ی خودتان — همان چیزی که کلاینت (Karing / v2rayNG) تجربه می‌کند، نه از سرور</div>
-        </div>
-      </div>
-      <button class="btn btn-sm btn-g" id="ct-refresh" onclick="refreshClientTruth()"><i class="ti ti-refresh"></i> تست دوباره</button>
+    <div class="info-item">
+      <span class="info-item-label">تعداد این‌باندها</span>
+      <span class="info-item-val"><i class="ti ti-list-details"></i> <span id="info-inbounds">0</span></span>
     </div>
-    <div id="ct-rows" style="display:flex;flex-direction:column;gap:8px;margin-top:14px">
-      <div class="ct-row" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--card-b);border-radius:10px">
-        <i class="ti ti-rss"></i>
-        <span style="min-width:170px;font-weight:600">ورودی مستقیم (Railway)</span>
-        <span id="ct-direct" style="color:var(--t3)">—</span>
-      </div>
-      <div class="ct-row" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--card-b);border-radius:10px">
-        <i class="ti ti-cloud" style="color:#f38020"></i>
-        <span style="min-width:170px;font-weight:600">گیت‌وی Cloudflare (تونل)</span>
-        <span id="ct-cf-gateway" style="color:var(--t3)">—</span>
-      </div>
-    </div>
-    <div class="cl" style="margin-top:12px;font-size:11.5px;line-height:1.9">
-      <i class="ti ti-info-circle"></i>
-      <span>هر سطر یک <b>WebSocket واقعی</b> از مرورگر شما تا مسیر ورودی کانفیگ‌ها باز می‌کند (TCP + TLS + هندشیک WS). اگر «مستقیم» قرمز و «گیت‌وی» سبز باشد، ISP شما مسیر Railway را بلاک کرده — کانفیگ‌های سالم را از <b>مسیر گیت‌وی</b> (دسترسی سریع Ctrl+K → گیمینگ) تحویل بگیرید. این همان دلیلی است که گاهی «همه‌ی کانفیگ‌ها قطع» دیده می‌شوند در حالی که سرور سالم است.</span>
+    <div class="info-item">
+      <span class="info-item-label">کلاینت‌ها</span>
+      <span class="info-item-val"><i class="ti ti-users"></i> <span class="info-badge" id="info-clients">0</span></span>
     </div>
   </div>
 
-  <!-- ═════════════════════════════════════════════════════════════════════
-       PHASE 40 §7-§8 — ورک‌اسپیس ساخت کانفیگ (تمام‌صفحه، داخل تجربه‌ی کانفیگ‌ها)
-       همان سازنده‌ی یکپارچه (مرحله‌ای + قابلیت‌محور + تست زنده‌ی واقعی) —
-       اینجا و فقط اینجا زندگی می‌کند. صفحه‌ی رقیب دیگری وجود ندارد.
-       ═════════════════════════════════════════════════════════════════════ -->
-  <div class="ws-overlay" id="ws-create" aria-hidden="true">
-    <div class="ws-sheet">
-      <div class="ws-hdr">
-        <div class="ws-hdr-text">
-          <div class="ws-hdr-title"><i class="ti ti-wand"></i> ساخت کانفیگ جدید</div>
-          <div class="ws-hdr-sub">هسته‌ی EMIX · کامپایلر کانونی · تست زنده‌ی واقعی — ساخت و تأیید، همه در یک ورک‌اسپیس</div>
-        </div>
-        <div class="ws-hdr-stats">
-          <div class="ncc-stat" id="ncc-st-core"><i class="ti ti-cpu"></i> Core <span class="ncc-dot" id="ncc-dot-core"></span><b id="ncc-val-core">…</b></div>
-          <div class="ncc-stat" id="ncc-st-backend"><i class="ti ti-server-2"></i> Backend <span class="ncc-dot" id="ncc-dot-backend"></span><b id="ncc-val-backend">…</b></div>
-          <div class="ncc-stat" id="ncc-st-node"><i class="ti ti-router"></i> <b id="ncc-val-node">…</b></div>
-          <div class="ncc-stat" id="ncc-st-lat"><i class="ti ti-activity-heartbeat"></i> <b id="ncc-val-lat">—</b></div>
-          <button class="btn btn-o btn-sm" onclick="loadBuilderPage()"><i class="ti ti-refresh"></i> رفرش</button>
-          <button class="btn btn-d btn-sm ws-close-btn" onclick="closeCreateWorkspace()"><i class="ti ti-x"></i> بستن</button>
-        </div>
-        <!-- ═══ Phase 41 §20 — خلاصه‌ی پیکربندی؛ سطر دومِ هدرِ چسبان — همیشه مرئی ═══ -->
-        <div class="ws-summary" id="ws-summary">
-          <span class="ws-sum-lbl">کانفیگ</span>
-          <span class="ws-sum-vals" id="ws-summary-vals">—</span>
-          <span class="ws-sum-dot" id="ws-summary-state">—</span>
-        </div>
-      </div>
-
-      <!-- استپر فشرده — پیشرفت شفاف (progressive disclosure) -->
-      <div class="ws-steps" id="ws-steps">
-        <span class="ws-step on" data-s="1">۱ پروتکل</span><i class="ti ti-chevron-left"></i>
-        <span class="ws-step" data-s="2">۲ نود</span><i class="ti ti-chevron-left"></i>
-        <span class="ws-step" data-s="3">۳ ترنسپورت</span><i class="ti ti-chevron-left"></i>
-        <span class="ws-step" data-s="4">۴ امنیت</span><i class="ti ti-chevron-left"></i>
-        <span class="ws-step" data-s="5">۵ اندپوینت/SNI</span><i class="ti ti-chevron-left"></i>
-        <span class="ws-step" data-s="6">۶ مسیریابی</span><i class="ti ti-chevron-left"></i>
-        <span class="ws-step" data-s="7">۷ کلاینت</span><i class="ti ti-chevron-left"></i>
-        <span class="ws-step" data-s="8">۸ تأیید شبکه</span><i class="ti ti-chevron-left"></i>
-        <span class="ws-step" data-s="9">۹ پیش‌نمایش</span><i class="ti ti-chevron-left"></i>
-        <span class="ws-step" data-s="10">۱۰ ساخت</span>
-      </div>
-
-      <div class="ws-body">
-        <div class="ncc-grid">
-          <!-- ═══ ستون اول: سازنده (مرحله‌ای) ═══ -->
-          <div class="card ncc-build">
-            <div class="card-title"><i class="ti ti-list-check"></i> مراحل ساخت کانفیگ</div>
-
-            <div class="ncc-step"><div class="ncc-step-label">۱ · پروتکل <span class="ncc-step-note">— فقط پروتکل‌های واقعاً فعال روی این دیپلوی</span></div>
-              <div id="ncc-protocols" class="ncc-proto-cards"></div>
-              <div id="ncc-proto-hint" class="bld-hint"></div>
-            </div>
-
-            <div class="ncc-step"><div class="ncc-step-label">۲ · نود / اندپوینت سرور</div>
-              <div id="ncc-nodes" class="ncc-node-cards"></div>
-              <div id="ncc-node-detail" class="bld-hint"></div>
-            </div>
-
-            <div class="ncc-step"><div class="ncc-step-label">۳ · ترنسپورت</div>
-              <div id="ncc-transports" class="ncc-chips"></div>
-              <div id="ncc-tr-hint" class="bld-hint"></div>
-            </div>
-
-            <div class="ncc-step"><div class="ncc-step-label">۴ · امنیت (Security)</div>
-              <div id="ncc-security" class="ncc-chips"></div>
-              <div id="ncc-sec-hint" class="bld-hint"></div>
-            </div>
-
-            <!-- Phase 41 §16/§21: اندپوینت/SNI به‌طور پیش‌فرض جمع است —
-                 فقط وقتی کاربر بخواهد باز می‌شود (پیشرفت افشای تدریجی) -->
-            <details class="ncc-step ncc-fold" id="ncc-ep-fold">
-              <summary class="ncc-step-label"><i class="ti ti-chevron-down"></i> ۵ · اندپوینت / SNI <span class="ncc-step-note">— پیش‌فرض: استاندارد (panel host) · جمع‌شده</span></summary>
-              <div class="ncc-fold-body">
-                <select id="bld-ep" class="cm-input" onchange="builderOnEpChange()"></select>
-                <div id="bld-ep-custom" style="display:none;gap:8px;margin-top:8px">
-                  <input id="bld-ep-address" class="cm-input" placeholder="آدرس اندپوینت (ورودی — دامنه یا IP)" style="direction:ltr;text-align:left;font-family:monospace">
-                  <input id="bld-ep-sni" class="cm-input" placeholder="SNI (اختیاری — معنای TLS، نه جغرافیا)" style="direction:ltr;text-align:left;font-family:monospace">
-                  <input id="bld-ep-port" class="cm-input" type="number" value="443" placeholder="پورت" style="direction:ltr">
-                </div>
-                <div class="bld-hint">SNI فقط معنای TLS/اندپوینت دارد — هرگز مسیریابی، هرگز خروج جغرافیایی، هرگز «IP ایران» نیست. SNI جعلی روی لینک = رفتار TLS در برابر فیلتر، بدون تغییر مسیر.</div>
-              </div>
-            </details>
-
-            <div class="ncc-step"><div class="ncc-step-label">۶ · مسیریابی (Routing Policy) <span class="ncc-step-note">— تقسیم ترافیک ایران / بین‌الملل</span></div>
-              <div id="ncc-routing" class="ncc-route-cards"></div>
-              <div id="ncc-routing-hint" class="bld-hint"></div>
-            </div>
-
-            <div class="ncc-step"><div class="ncc-step-label">۷ · خروجی کلاینت</div>
-              <div id="ncc-clients" class="ncc-client-cards"></div>
-              <div id="ncc-client-hint" class="bld-hint"></div>
-            </div>
-
-            <!-- Phase 41 §21: نام/تنظیمات پیشرفته — جمع‌شده، فقط فیلدهای مرتبط -->
-            <details class="ncc-step ncc-fold" id="ncc-adv-fold">
-              <summary class="ncc-step-label"><i class="ti ti-chevron-down"></i> نام و تنظیمات پیشرفته <span class="ncc-step-note">— ALPN / fingerprint / رمزنگاری SS</span></summary>
-              <div class="ncc-fold-body">
-                <div class="ncc-adv-grid">
-                  <input id="bld-name" class="cm-input" placeholder="نام کانفیگ (تاریخچه)">
-                  <input id="bld-remark" class="cm-input" placeholder="remark" style="direction:ltr;text-align:left;font-family:monospace">
-                  <input id="bld-alpn" class="cm-input" value="h2,http/1.1" placeholder="ALPN (مثلاً h2,http/1.1)" style="direction:ltr">
-                  <input id="bld-fingerprint" class="cm-input" value="chrome" placeholder="fingerprint" style="direction:ltr">
-                </div>
-                <div id="ncc-ss-extra" hidden>
-                  <input id="bld-ss-cipher" class="cm-input" value="chacha20-ietf-poly1305" placeholder="SS cipher" style="direction:ltr">
-                </div>
-                <div class="bld-hint">پیش‌فرض‌ها امن و سازگارند — فقط اگر می‌دانید چه می‌کنید تغییر دهید.</div>
-              </div>
-            </details>
-
-            <div class="bld-actions">
-              <button class="btn btn-o" id="bld-preview-btn" onclick="builderPreview(this)"><i class="ti ti-eye"></i> پیش‌نمایش و اعتبارسنجی</button>
-              <button class="btn btn-p" id="bld-gen-btn" onclick="builderGenerate(this)"><i class="ti ti-wand"></i> ساخت نهایی</button>
-            </div>
-          </div>
-
-          <!-- ═══ Phase 41 §16 — تست شبکه: در جریانِ ساخت، بلافاصله بعد از مراحل ═══ -->
-          <div class="ncc-live card ncc-test-card">
-            <div class="card-title"><i class="ti ti-activity"></i> تست شبکه <span class="badge bg-purple" style="margin-inline-start:8px">واقعی</span></div>
-            <div class="ncc-test-target" id="ncc-test-target">هدف تست: <b>—</b></div>
-            <div class="ncc-test-btns">
-              <button class="btn btn-p btn-sm" onclick="nccTestQuick(this)"><i class="ti ti-bolt"></i> تست سریع</button>
-              <button class="btn btn-o btn-sm ncc-more-toggle" id="ncc-more-toggle" onclick="nccToggleMoreTests(this)"><i class="ti ti-dots"></i> تست‌های بیشتر <i class="ti ti-chevron-down"></i></button>
-            </div>
-            <!-- Phase 41 §22: موبایل = جمع‌شده؛ دسکتاپ = باز. شش دکمه‌ی غول‌پیکر کنار هم نیست. -->
-            <div class="ncc-test-extra" id="ncc-test-extra">
-              <button class="btn btn-o btn-sm" onclick="nccTestTls(this)"><i class="ti ti-lock-square"></i> تست TLS</button>
-              <button class="btn btn-o btn-sm" onclick="nccTestSni(this)"><i class="ti ti-certificate"></i> تست SNI</button>
-              <button class="btn btn-o btn-sm" onclick="nccTestTunnel(this)"><i class="ti ti-tunnel"></i> تست تونل E2E</button>
-              <button class="btn btn-o btn-sm" onclick="nccTestTurbo(this)"><i class="ti ti-rocket"></i> توربو A/B</button>
-              <button class="btn btn-amber btn-sm" onclick="nccTestDiagnostic(this)"><i class="ti ti-stethoscope"></i> تشخیص کامل</button>
-            </div>
-            <div class="ncc-test-links">
-              <select id="ncc-link-sel" class="cm-input" onchange="nccOnLinkSel()"><option value="">— کانفیگ ساخته‌شده‌ای برای تست تونل/توربو انتخاب کنید —</option></select>
-            </div>
-            <div id="ncc-console" class="ncc-console"><div class="ncc-console-empty">برای شروع، یکی از دکمه‌های تست را بزنید — هر عدد از اندازه‌گیری واقعی می‌آید.</div></div>
-            <div id="ncc-browser" class="ncc-browser">
-              <div class="ncc-browser-title"><i class="ti ti-world"></i> حقیقت مسیر از مرورگر شما <button class="btn btn-o btn-sm" onclick="nccBrowserPing()"><i class="ti ti-refresh"></i></button></div>
-              <div id="ncc-browser-rows"></div>
-            </div>
-          </div>
-
-          <!-- ═══ اعتبارسنجی و خروجی (کامپایلر کانونی) ═══ -->
-          <div class="card ncc-out">
-            <div class="card-title"><i class="ti ti-eye"></i> اعتبارسنجی و خروجی (از کامپایلر کانونی)</div>
-            <div id="bld-validation"></div>
-            <div id="bld-outputs"></div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-title"><i class="ti ti-history"></i> کانفیگ‌های ساخته‌شده (تاریخچه)</div>
-          <div id="bld-history"><div class="bld-hint">—</div></div>
-        </div>
-      </div>
-
-      <!-- موبایل: نوار اقدام چسبان (§16 BOTTOM STICKY ACTION) -->
-      <div class="ws-sticky">
-        <button class="btn btn-o" onclick="builderPreview(this)"><i class="ti ti-eye"></i> اعتبارسنجی</button>
-        <button class="btn btn-p" onclick="builderGenerate(this)"><i class="ti ti-wand"></i> ساخت کانفیگ</button>
-      </div>
-    </div>
-  </div>
+  <div class="cfg-grid" id="links-grid"></div>
+  <div class="empty" id="links-empty" style="display:none"><i class="ti ti-link-off"></i><p>هنوز کانفیگی وجود ندارد</p></div>
 </section>
-
-<!-- ════════════════════════ پل ایران ════════════════════════ -->
-<section class="pg" id="pg-bridge">
-  <div class="node-hero" style="margin-bottom:18px">
-    <div class="node-hero-top">
-      <div class="node-hero-title">
-        <div class="node-hero-icon"><i class="ti ti-flag"></i></div>
-        <div>
-          <div class="tb-title">پل ایران — مصرف داخلی + شتاب‌دهی</div>
-          <div class="tb-sub">ضریب ۲.۷ اپراتور فقط روی ترافیک بین‌المللی اعمال می‌شود؛ با این پل، مسیر شما داخلی می‌شود</div>
-        </div>
-      </div>
-      <div class="tb-right">
-        <span class="badge bg-blue" id="bridge-status-badge">غیرفعال</span>
-      </div>
-    </div>
-    <div class="node-hero-metrics">
-      <div class="node-metric">
-        <div class="node-metric-top"><i class="ti ti-route"></i><span class="node-metric-label">مسیر بدون پل</span></div>
-        <div class="node-metric-val" style="font-size:15px">گوشی ──✈──► Railway</div>
-        <div class="node-metric-sub" style="color:var(--red-t)">بین‌المللی · ضریب ۲.۷</div>
-      </div>
-      <div class="node-metric">
-        <div class="node-metric-top"><i class="ti ti-flag"></i><span class="node-metric-label">مسیر با پل</span></div>
-        <div class="node-metric-val" style="font-size:15px">گوشی ─► ایران ─► Railway</div>
-        <div class="node-metric-sub" style="color:var(--green-t)">داخلی · ضریب ۱ + سرعت بهتر</div>
-      </div>
-      <div class="node-metric">
-        <div class="node-metric-top"><i class="ti ti-bolt"></i><span class="node-metric-label">وضعیت پل</span></div>
-        <div class="node-metric-val" id="bridge-metric-status">—</div>
-        <div class="node-metric-sub" id="bridge-metric-sub">تست نشده</div>
-      </div>
-      <div class="node-metric">
-        <div class="node-metric-top"><i class="ti ti-clock-pause"></i><span class="node-metric-label">تاخیر پل</span></div>
-        <div class="node-metric-val" id="bridge-metric-ms">—</div>
-        <div class="node-metric-sub">هندشیک TLS از مسیر پل</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- انتخاب روش پل -->
-  <div class="conn-toolbar" style="margin-bottom:14px">
-    <div class="conn-toolbar-title"><i class="ti ti-routes"></i> انتخاب روش پل</div>
-  </div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px" id="br-mode-cards">
-    <div class="card br-mode-card" id="br-mode-vps" onclick="brSetMode('vps')" style="cursor:pointer">
-      <div style="display:flex;align-items:center;gap:12px">
-        <div style="width:44px;height:44px;border-radius:12px;background:var(--accent-d);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ti-server-2" style="font-size:22px;color:var(--accent2)"></i></div>
-        <div style="flex:1">
-          <div style="font-weight:700;font-size:13.5px">🖥 سرور شخصی ایران (VPS)</div>
-          <div style="font-size:10.5px;color:var(--t3);margin-top:3px">کنترل کامل · پورت دلخواه · مناسب مصرف سنگین</div>
-        </div>
-        <div class="br-mode-check" style="width:20px;height:20px;border-radius:50%;border:2px solid var(--t3);display:flex;align-items:center;justify-content:center"><i class="ti ti-check" style="font-size:12px;opacity:0"></i></div>
-      </div>
-      <div style="font-size:10px;color:var(--t3);margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
-        <span class="cfg-sub-tag">هزینه: VPS ماهانه</span>
-        <span class="cfg-sub-tag">پهنای باند: نامحدود VPS</span>
-        <span class="cfg-sub-tag">راه‌اندازی: ۳ دقیقه</span>
-      </div>
-    </div>
-    <div class="card br-mode-card" id="br-mode-cdn" onclick="brSetMode('cdn')" style="cursor:pointer">
-      <div style="display:flex;align-items:center;gap:12px">
-        <div style="width:44px;height:44px;border-radius:12px;background:var(--green-bg);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ti-cloud" style="font-size:22px;color:var(--green-t)"></i></div>
-        <div style="flex:1">
-          <div style="font-weight:700;font-size:13.5px">🌐 CDN ایرانی (نیازمند پلن پولی + دامنه)</div>
-          <div style="font-size:10.5px;color:var(--t3);margin-top:3px">ترافیک از لبه‌ی اروان داخل ایران رد می‌شود · برای مبدأ خارجی باید کیف پول شارژ شود</div>
-        </div>
-        <div class="br-mode-check" style="width:20px;height:20px;border-radius:50%;border:2px solid var(--t3);display:flex;align-items:center;justify-content:center"><i class="ti ti-check" style="font-size:12px;opacity:0"></i></div>
-      </div>
-      <div style="font-size:10px;color:var(--t3);margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
-        <span class="cfg-sub-tag">هزینه: پولی (شارژ کیف پول)</span>
-        <span class="cfg-sub-tag">دامنه اختصاصی لازم است</span>
-        <span class="cfg-sub-tag">استتار: عالی</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- راهنمای حالت CDN (اروان) -->
-  <div class="card" id="br-cdn-guide" style="margin-bottom:18px;display:none">
-    <div class="card-title"><i class="ti ti-cloud" style="color:var(--green-t)"></i> راه‌اندازی با ابر آروان (پلن پولی)</div>
-    <div style="display:flex;flex-direction:column;gap:10px">
-      <div class="cl"><i class="ti ti-circle-number-1" style="color:var(--green-t)"></i><span>در <b>arvancloud.ir</b> ثبت‌نام کنید، کیف پول را شارژ کنید و یک <b>دامنه‌ی اختصاصی</b> ثبت کنید (دامنه‌ی وورکر رایگان اروان فقط صفحه‌ی Hello, World! برمی‌گرداند و به مبدأ خارجی فوروارد نمی‌شود)</span></div>
-      <div class="cl"><i class="ti ti-circle-number-2" style="color:var(--green-t)"></i><span>نیم‌سرورهای دامنه را به نیم‌سرورهای اروان تغییر دهید، سپس رکورد زیر بسازید: <b style="direction:ltr;display:inline-block">CNAME: sub → your-panel.up.railway.app</b> با پروکسی (ابر) <b>روشن</b></span></div>
-      <div class="cl"><i class="ti ti-circle-number-3" style="color:var(--green-t)"></i><span>در تنظیمات CDN اروان: <b>WebSocket را فعال</b> کنید و گزینه‌ی <b>بازنویسی هدر Host به مبدأ</b> را روشن کنید + گواهی SSL را فعال کنید</span></div>
-      <div class="cl"><i class="ti ti-circle-number-4" style="color:var(--green-t)"></i><span>همان دامنه (مثلاً <b style="direction:ltr;display:inline-block">sub.yourdomain.ir</b>) را در فرم زیر وارد و ذخیره کنید — ترافیک شما داخلی محاسبه می‌شود</span></div>
-      <div class="cl amber"><i class="ti ti-alert-triangle"></i><span>اگر می‌خواهید <b>رایگان</b> و بدون خرید سرور پل داشته باشید، از <b>گیت‌وی کلادفلر</b> در تب «گیمینگ» استفاده کنید — وورکر رایگان با ۱۰۰ هزار درخواست در روز و اسکنر IP داخلی. برای پل اروان، پلن پولی + دامنه لازم است.</span></div>
-    </div>
-  </div>
-
-  <!-- راهنمای حالت VPS -->
-  <div id="br-vps-guide" style="display:none">
-    <div class="conn-toolbar" style="margin-bottom:14px">
-      <div class="conn-toolbar-title"><i class="ti ti-terminal-2"></i> راه‌اندازی سرور ایران (۳ دقیقه)</div>
-    </div>
-    <div class="card" style="margin-bottom:18px">
-      <div class="card-title">
-        <i class="ti ti-script"></i> اسکریپت نصب خودکار
-        <span class="ml-auto" style="display:flex;gap:6px">
-          <button class="btn btn-g btn-sm" onclick="brCopyScript()"><i class="ti ti-copy"></i> کپی اسکریپت</button>
-          <button class="btn btn-g btn-sm" onclick="brShowNginx()"><i class="ti ti-brand-nginx"></i> نسخه nginx</button>
-        </span>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:10px">
-        <div class="cl"><i class="ti ti-circle-number-1"></i><span>یک سرور مجازی داخل ایران بگیرید (هر VPS ارزان ایرانی با ترافیک نامحدود کافی است)</span></div>
-        <div class="cl"><i class="ti ti-circle-number-2"></i><span>اسکریپت زیر را با دسترسی root روی آن اجرا کنید — socat و سرویس systemd خودکار نصب می‌شود</span></div>
-        <div class="cl"><i class="ti ti-circle-number-3"></i><span>آدرس سرور را در فرم زیر ذخیره کنید و دکمه «تست پل» را بزنید</span></div>
-        <pre id="br-script" style="background:var(--bg);border:1px solid var(--card-b);border-radius:10px;padding:14px;font-size:11px;direction:ltr;text-align:left;overflow-x:auto;max-height:260px;overflow-y:auto;font-family:monospace"></pre>
-      </div>
-    </div>
-  </div>
-
-  <!-- فرم تنظیم پل -->
-  <div class="conn-toolbar" style="margin-bottom:14px">
-    <div class="conn-toolbar-title"><i class="ti ti-server-2"></i> تنظیم پل <span id="br-mode-label" style="font-size:10px;color:var(--t3)">(حالت: سرور شخصی)</span></div>
-  </div>
-  <div class="card" style="margin-bottom:18px">
-    <div class="card-title"><i class="ti ti-settings"></i> <span id="br-form-title">آدرس سرور داخل ایران</span></div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
-      <div class="fg" style="flex:1;min-width:220px">
-        <label id="br-host-label">آدرس سرور ایران (IP یا دامنه)</label>
-        <input id="br-host" placeholder="VPS: 185.51.x.x · CDN: sub.yourdomain.ir" style="width:100%;direction:ltr;text-align:left">
-      </div>
-      <div class="fg" style="width:110px" id="br-port-wrap">
-        <label>پورت پل</label>
-        <input id="br-port" type="number" value="443" list="cdn-ports" style="width:100%;direction:ltr;text-align:left">
-        <datalist id="cdn-ports">
-          <option value="443"><option value="8443"><option value="2053"><option value="2083"><option value="2087"><option value="2096">
-        </datalist>
-      </div>
-      <button class="btn btn-p" onclick="brSaveConfig(this)"><i class="ti ti-device-floppy"></i> ذخیره</button>
-      <button class="btn btn-g" onclick="brTestBridge(this)"><i class="ti ti-activity"></i> تست پل</button>
-      <button class="btn btn-blue" onclick="brTestCNAME(this)"><i class="ti ti-link"></i> تست CNAME اروان</button>
-    </div>
-    <div class="cl" style="margin-top:10px" id="br-form-note"><i class="ti ti-info-circle"></i><span>پورت پیش‌فرض ۴۴۳ است. اگر ISP پورت ۴۴۳ سرور شما را نمی‌بندد همان ۴۴۳ بهتر است؛ در غیر این صورت هر پورت دلخواه را روی سرور باز کنید و همین‌جا وارد کنید.</span></div>
-  </div>
-
-  <!-- واقعیت‌های فنی: چرا جعل/کلوک تنها کافی نیست -->
-  <div class="conn-toolbar" style="margin-bottom:14px">
-    <div class="conn-toolbar-title"><i class="ti ti-flask"></i> چرا «جعل داده» و «کلوک» به‌تنهایی ضریب را حذف نمی‌کنند؟</div>
-  </div>
-  <div class="card" style="margin-bottom:18px">
-    <div style="overflow-x:auto">
-      <table style="width:100%;border-collapse:collapse;font-size:11.5px">
-        <thead>
-          <tr style="border-bottom:1px solid var(--card-b)">
-            <th style="text-align:right;padding:9px 8px;color:var(--t3);font-size:10px">روش</th>
-            <th style="text-align:center;padding:9px 8px;color:var(--t3);font-size:10px">ضریب صورت‌حساب</th>
-            <th style="text-align:center;padding:9px 8px;color:var(--t3);font-size:10px">استتار از DPI</th>
-            <th style="text-align:center;padding:9px 8px;color:var(--t3);font-size:10px">نیاز به سرور</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr style="border-bottom:1px solid var(--card-b)">
-            <td style="padding:9px 8px">اتصال مستقیم به Railway</td>
-            <td style="padding:9px 8px;text-align:center;color:var(--red-t)">۲.۷ ❌</td>
-            <td style="padding:9px 8px;text-align:center;color:var(--amber-t)">متوسط</td>
-            <td style="padding:9px 8px;text-align:center">—</td>
-          </tr>
-          <tr style="border-bottom:1px solid var(--card-b)">
-            <td style="padding:9px 8px">جعل هدر / SNI spoofing</td>
-            <td style="padding:9px 8px;text-align:center;color:var(--red-t)">۲.۷ ❌</td>
-            <td style="padding:9px 8px;text-align:center;color:var(--red-t)">کم</td>
-            <td style="padding:9px 8px;text-align:center">—</td>
-          </tr>
-          <tr style="border-bottom:1px solid var(--card-b)">
-            <td style="padding:9px 8px">Cloak / Reality خالی</td>
-            <td style="padding:9px 8px;text-align:center;color:var(--red-t)">۲.۷ ❌</td>
-            <td style="padding:9px 8px;text-align:center;color:var(--green-t)">عالی</td>
-            <td style="padding:9px 8px;text-align:center;color:var(--amber-t)">✅ سرور</td>
-          </tr>
-          <tr style="border-bottom:1px solid var(--card-b)">
-            <td style="padding:9px 8px">پل VPS ایران</td>
-            <td style="padding:9px 8px;text-align:center;color:var(--green-t)">۱ ✅</td>
-            <td style="padding:9px 8px;text-align:center;color:var(--amber-t)">خوب</td>
-            <td style="padding:9px 8px;text-align:center;color:var(--amber-t)">✅ سرور</td>
-          </tr>
-          <tr>
-            <td style="padding:9px 8px">⭐ CDN ایرانی (ابَر آروان)</td>
-            <td style="padding:9px 8px;text-align:center;color:var(--green-t)">۱ ✅</td>
-            <td style="padding:9px 8px;text-align:center;color:var(--green-t)">عالی</td>
-            <td style="padding:9px 8px;text-align:center;color:var(--amber-t)">پلن پولی + دامنه</td>
-          </tr>
-          <tr style="background:var(--green-bg)">
-            <td style="padding:9px 8px;font-weight:700">🆕 گیت‌وی کلادفلر (تب گیمینگ)</td>
-            <td style="padding:9px 8px;text-align:center;color:var(--amber-t)">داخلی تا لبه</td>
-            <td style="padding:9px 8px;text-align:center;color:var(--green-t);font-weight:700">عالی</td>
-            <td style="padding:9px 8px;text-align:center;color:var(--green-t);font-weight:700">رایگان (۱۰۰k/روز)</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-    <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">
-      <div class="cl"><i class="ti ti-shield-off" style="color:var(--red-t)"></i><span><b>چرا جعل کار نمی‌کند؟</b> ضریب ۲.۷ بر اساس <b>آی‌پی مقصد</b> محاسبه می‌شود، نه محتوای پکت‌ها. اپراتور فقط می‌بیند که به یک آی‌پی خارجی TCP زدی — هر چیزی که داخل پکت‌ها نوشته شده باشد. پس جعل هدر، SNI spoofing و padding فقط DPI را گول می‌زنند، نه سیستم صورت‌حساب.</span></div>
-      <div class="cl"><i class="ti ti-shield-check" style="color:var(--green-t)"></i><span><b>پس «مسیر ایرانی» چطور ممکن است؟</b> باید مقصدِ واقعیِ TCP یک آی‌پی <b>داخلی</b> باشد. CDN ایرانی دقیقاً همین کار را می‌کند: واقعاً به یک سایت/سرویس ایرانی وصل می‌شوی (هزاران سایت واقعی روی همان آی‌پی‌های اروان هستند) — پس هم صورت‌حساب داخلی می‌شود، هم ترافیک شما از نظر DPI کاملاً عادی و شبیه مرور یک سایت ایرانی معمولی است. این همان استتاری است که می‌خواستی، بدون هیچ جعلی!</span></div>
-    </div>
-  </div>
-
-  <!-- محاسبه‌گر صرفه‌جویی -->
-  <div class="conn-toolbar" style="margin-bottom:14px">
-    <div class="conn-toolbar-title"><i class="ti ti-calculator"></i> محاسبه‌گر صرفه‌جویی</div>
-  </div>
-  <div class="card" style="margin-bottom:18px">
-    <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center">
-      <div class="fg" style="flex:1;min-width:180px">
-        <label>مصرف ماهانه تونل شما (گیگابایت)</label>
-        <input id="br-calc-gb" type="range" min="1" max="100" value="10" style="width:100%;accent-color:var(--accent)">
-        <div style="text-align:center;font-weight:700;font-size:15px;margin-top:4px"><span id="br-calc-gb-val">۱۰</span> GB</div>
-      </div>
-      <div style="flex:2;min-width:260px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
-        <div style="background:var(--red-bg);border:1px solid rgba(239,68,68,.2);border-radius:12px;padding:12px;text-align:center">
-          <div style="font-size:9.5px;color:var(--t3)">بدون پل (×۲.۷)</div>
-          <div style="font-size:17px;font-weight:800;color:var(--red-t);margin-top:4px" id="br-calc-without">۲۷ GB</div>
-          <div style="font-size:9px;color:var(--t3)">صورت‌حساب اپراتور</div>
-        </div>
-        <div style="background:var(--green-bg);border:1px solid rgba(16,185,129,.2);border-radius:12px;padding:12px;text-align:center">
-          <div style="font-size:9.5px;color:var(--t3)">با پل (×۱)</div>
-          <div style="font-size:17px;font-weight:800;color:var(--green-t);margin-top:4px" id="br-calc-with">۱۰ GB</div>
-          <div style="font-size:9px;color:var(--t3)">صورت‌حساب اپراتور</div>
-        </div>
-        <div style="background:var(--accent-d);border:1px solid var(--card-b);border-radius:12px;padding:12px;text-align:center">
-          <div style="font-size:9.5px;color:var(--t3)">صرفه‌جویی</div>
-          <div style="font-size:17px;font-weight:800;color:var(--accent2);margin-top:4px" id="br-calc-save">۱۷ GB</div>
-          <div style="font-size:9px;color:var(--t3)">در ماه (۶۳٪)</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="conn-toolbar" style="margin-bottom:14px">
-    <div class="conn-toolbar-title"><i class="ti ti-link"></i> کانفیگ‌های پل‌دار <span class="badge bg-blue" id="bridge-links-cnt">۰</span></div>
-  </div>
-  <div class="card" style="margin-bottom:18px">
-    <div id="bridge-links-list"><div class="empty"><i class="ti ti-flag-off"></i><p>ابتدا آدرس پل را ذخیره کنید</p></div></div>
-    <div class="cl amber" style="margin-top:10px"><i class="ti ti-alert-triangle"></i><span>دکمه‌ی <b>فعالیت</b> کنار هر کانفیگ، پینگ واقعی «از مسیر پل» می‌گیرد — همان مسیری که کلاینت می‌رود. اگر این تست سبز باشد، کلاینت‌ها هم قطعاً جواب می‌گیرند.</span></div>
-  </div>
-
-  <!-- آی‌پی‌های تمیز -->
-  <div class="conn-toolbar" style="margin-bottom:14px">
-    <div class="conn-toolbar-title"><i class="ti ti-radar-2"></i> آی‌پی‌های تمیز لبه‌ی CDN <span class="badge bg-purple" id="cip-cnt">۰</span></div>
-  </div>
-  <div class="card" style="margin-bottom:18px">
-    <div class="card-title">
-      <i class="ti ti-radar-2" style="color:var(--purple)"></i> اسکن لبه‌های اروان
-      <span class="ml-auto" style="display:flex;gap:6px;flex-wrap:wrap">
-        <button class="btn btn-g btn-sm" onclick="cipScanArvan(this)"><i class="ti ti-radar"></i> اسکن آروان</button>
-        <button class="btn btn-g btn-sm" onclick="cipScanBrowser(this)"><i class="ti ti-speedometer"></i> اسکن از مرورگر من</button>
-      </span>
-    </div>
-    <div id="cip-list"><div class="sr"><span class="sr-k" style="color:var(--t3)">«اسکن آروان» IPهای معتبر را از سمت سرور پیدا می‌کند؛ سپس «اسکن از مرورگر من» تاخیر واقعی هر IP را از اینترنت خودتان می‌سنجد</span></div></div>
-    <div class="cl" style="margin-top:10px"><i class="ti ti-info-circle"></i><span>آی‌پی تمیز = جایگزینی «آدرس اتصال» لینک با IP سریع، در حالی که host/sni همان دامنه‌ی پل می‌ماند. اگر ISP شما بعضی IPهای اروان را کند کرده، با این روش از IP سریع‌تر وصل می‌شوید.</span></div>
-  </div>
-
-  <!-- پورت‌های لبه -->
-  <div class="conn-toolbar" style="margin-bottom:14px">
-    <div class="conn-toolbar-title"><i class="ti ti-plug"></i> پورت‌های آماده‌ی اتصال</div>
-  </div>
-  <div class="card" style="margin-bottom:18px">
-    <div class="card-title">
-      <i class="ti ti-plug"></i> پورت‌های سالم پروتکل
-      <span class="ml-auto"><button class="btn btn-g btn-sm" onclick="portTestAll(this)"><i class="ti ti-speedometer"></i> تست پورت‌ها از مرورگر</button></span>
-    </div>
-    <div style="display:flex;gap:14px;flex-wrap:wrap">
-      <div style="flex:1;min-width:220px">
-        <div style="font-size:10px;font-weight:700;color:var(--green-t);margin-bottom:6px"><i class="ti ti-lock"></i> TLS (رمزنگاری‌شده)</div>
-        <div id="ports-tls" style="display:flex;gap:6px;flex-wrap:wrap"></div>
-      </div>
-      <div style="flex:1;min-width:220px">
-        <div style="font-size:10px;font-weight:700;color:var(--amber-t);margin-bottom:6px"><i class="ti ti-lock-open"></i> غیر TLS</div>
-        <div id="ports-plain" style="display:flex;gap:6px;flex-wrap:wrap"></div>
-      </div>
-    </div>
-    <div class="cl" style="margin-top:10px"><i class="ti ti-info-circle"></i><span>کانفیگ‌های پنل با security=tls ساخته می‌شوند؛ پورت اصلی ۴۴۳ است. پورت‌های دیگر فقط زمانی معتبرند که پل CDN فعال باشد و لبه، آن پورت را سرو کند — با «تست پورت‌ها» از مرورگر خودتان بررسی کنید.</span></div>
-  </div>
-</section>
-
-<!-- ════════════════════════ تنظیمات حرفه‌ای ZEUS ════════════════════════ -->
-<section class="pg" id="pg-zeus">
-  <div class="node-hero" style="margin-bottom:18px">
-    <div class="node-hero-top">
-      <div class="node-hero-title">
-        <div class="node-hero-icon"><i class="ti ti-bolt"></i></div>
-        <div>
-          <div class="tb-title">تنظیمات حرفه‌ای — ISP + TLS Mask + Smart + Security</div>
-          <div class="tb-sub">پیاده‌سازی ویژگی‌های پنل ZEUS به‌صورت ماژول کاملاً جدا از هسته‌ی EMIX</div>
-        </div>
-      </div>
-      <div class="tb-right">
-        <span class="badge bg-amber" id="zeus-status-badge">بارگذاری...</span>
-      </div>
-    </div>
-    <div class="node-hero-metrics">
-      <div class="node-metric">
-        <div class="node-metric-top"><i class="ti ti-device-mobile"></i><span class="node-metric-label">ISP انتخابی</span></div>
-        <div class="node-metric-val" id="zeus-isp-name" style="font-size:15px">—</div>
-        <div class="node-metric-sub" id="zeus-isp-best-proto">پروتکل پیشنهادی: —</div>
-      </div>
-      <div class="node-metric">
-        <div class="node-metric-top"><i class="ti ti-shield-lock"></i><span class="node-metric-label">TLS Mask</span></div>
-        <div class="node-metric-val" id="zeus-tls-status">—</div>
-        <div class="node-metric-sub" id="zeus-tls-sni-metric">SNI: —</div>
-      </div>
-      <div class="node-metric">
-        <div class="node-metric-top"><i class="ti ti-brain"></i><span class="node-metric-label">حالت هوشمند</span></div>
-        <div class="node-metric-val" id="zeus-smart-status">—</div>
-        <div class="node-metric-sub" id="zeus-smart-best">بهترین کانفیگ: —</div>
-      </div>
-      <div class="node-metric">
-        <div class="node-metric-top"><i class="ti ti-lock"></i><span class="node-metric-label">قفل‌سازی لاگین</span></div>
-        <div class="node-metric-val" id="zeus-security-status">—</div>
-        <div class="node-metric-sub" id="zeus-security-rule">حداکثر تلاش: —</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ۱) انتخاب ISP -->
-  <div class="conn-toolbar" style="margin-bottom:14px">
-    <div class="conn-toolbar-title"><i class="ti ti-device-mobile"></i> انتخاب سرویس‌دهنده اینترنت (ISP)</div>
-  </div>
-  <div class="card" style="margin-bottom:18px">
-    <div class="card-title"><i class="ti ti-wifi"></i> ISP شما کدام است؟</div>
-    <div style="font-size:11.5px;color:var(--t3);margin-bottom:14px">با انتخاب ISP، توصیه‌گر پروتکل متناسب با شبکه‌ی شما نمایش داده می‌شود. این فقط توصیه‌ست و لینک‌ها را تغییر نمی‌دهد.</div>
-    <div id="zeus-isp-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px">
-      <!-- توسط JS پر می‌شود -->
-    </div>
-    <div id="zeus-isp-detail" style="margin-top:14px;padding:14px;background:var(--bg);border-radius:10px;border:1px solid var(--card-b);display:none">
-      <div style="font-weight:700;font-size:13px;margin-bottom:8px" id="zeus-isp-detail-title">—</div>
-      <div style="font-size:12px;color:var(--t2);margin-bottom:8px" id="zeus-isp-detail-rationale">—</div>
-      <ul id="zeus-isp-detail-tips" style="margin:0;padding-right:18px;font-size:11.5px;color:var(--t3);list-style:disc"></ul>
-    </div>
-  </div>
-
-  <!-- ۲) تنظیمات TLS Mask -->
-  <div class="conn-toolbar" style="margin-bottom:14px">
-    <div class="conn-toolbar-title"><i class="ti ti-shield-lock"></i> تنظیمات پیشرفته TLS Mask <span class="badge bg-purple" id="zeus-tls-badge" style="display:none">فعال</span></div>
-  </div>
-  <div class="card" style="margin-bottom:18px">
-    <div class="card-title">
-      <i class="ti ti-settings"></i> SNI سفارشی + Fragment + Cipher Suites
-      <span class="ml-auto" style="display:flex;align-items:center;gap:8px">
-        <span style="font-size:11px;color:var(--t3)">فعال‌سازی:</span>
-        <label class="toggle" style="position:relative;display:inline-block;width:36px;height:20px;cursor:pointer">
-          <input type="checkbox" id="zeus-tls-toggle" style="opacity:0;width:0;height:0">
-          <span class="toggle-slider" style="position:absolute;inset:0;background:var(--t3);border-radius:20px;transition:.3s"></span>
-        </label>
-      </span>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px">
-      <div>
-        <label style="font-size:11.5px;color:var(--t2);display:block;margin-bottom:6px">SNI سفارشی (دامنه جعلی به جای دامنه اصلی)</label>
-        <input type="text" id="zeus-tls-sni" placeholder="www.speedtest.net" style="width:100%;direction:ltr;text-align:left;font-family:monospace">
-      </div>
-      <div>
-        <label style="font-size:11.5px;color:var(--t2);display:block;margin-bottom:6px">Cipher Suites (TLS 1.3)</label>
-        <input type="text" id="zeus-tls-cipher" placeholder="TLS_AES_256_GCM_SHA384:..." style="width:100%;direction:ltr;text-align:left;font-family:monospace;font-size:10.5px">
-      </div>
-      <div>
-        <label style="font-size:11.5px;color:var(--t2);display:block;margin-bottom:6px">Fragment Length (تعداد بایت‌های هر پکت)</label>
-        <input type="text" id="zeus-tls-frag-len" placeholder="5-94" style="width:100%;direction:ltr;text-align:left;font-family:monospace">
-      </div>
-      <div>
-        <label style="font-size:11.5px;color:var(--t2);display:block;margin-bottom:6px">Fragment Delay (ms)</label>
-        <input type="text" id="zeus-tls-frag-dly" placeholder="0" style="width:100%;direction:ltr;text-align:left;font-family:monospace">
-      </div>
-    </div>
-    <div class="cl amber" style="margin-top:12px"><i class="ti ti-alert-triangle"></i><span><b>هشدار:</b> Fragment و SNI spoofing فقط DPI را گول می‌زنند، نه صورت‌حساب اپراتور را. برای صورت‌حساب داخلی از پل CDN اروان استفاده کنید. این تنظیمات در سمت کلاینت Xray اعمال می‌شوند (خروجی JSON Fragment در پایین صفحه).</span></div>
-    <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
-      <button class="btn btn-g" onclick="zeusSaveTlsMask()"><i class="ti ti-check"></i> ذخیره تنظیمات</button>
-      <button class="btn btn-pur" onclick="zeusShowMaskedLinks()"><i class="ti ti-link"></i> لینک‌های Mask-شده</button>
-      <button class="btn btn-blue" onclick="zeusShowFragmentJson()"><i class="ti ti-code"></i> خروجی JSON Fragment</button>
-    </div>
-  </div>
-
-  <!-- ۳) حالت هوشمند -->
-  <div class="conn-toolbar" style="margin-bottom:14px">
-    <div class="conn-toolbar-title"><i class="ti ti-brain"></i> حالت هوشمند (Smart Mode)</div>
-  </div>
-  <div class="card" style="margin-bottom:18px">
-    <div class="card-title">
-      <i class="ti ti-robot"></i> انتخاب خودکار بهترین کانفیگ لحظه‌ای
-      <span class="ml-auto" style="display:flex;align-items:center;gap:8px">
-        <span style="font-size:11px;color:var(--t3)">فعال‌سازی:</span>
-        <label class="toggle" style="position:relative;display:inline-block;width:36px;height:20px;cursor:pointer">
-          <input type="checkbox" id="zeus-smart-toggle" style="opacity:0;width:0;height:0">
-          <span class="toggle-slider" style="position:absolute;inset:0;background:var(--t3);border-radius:20px;transition:.3s"></span>
-        </label>
-      </span>
-    </div>
-    <div style="font-size:11.5px;color:var(--t3);margin-top:8px">وقتی روشن باشد، پنل همه‌ی کانفیگ‌ها را تست می‌کند و کم‌تاخیرترین را به‌عنوان پیشنهاد لحظه‌ای نشان می‌دهد.</div>
-    <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
-      <button class="btn btn-g" onclick="zeusSmartRecommend()"><i class="ti ti-trophy"></i> تست اکنون و معرفی بهترین</button>
-    </div>
-    <div id="zeus-smart-result" style="margin-top:14px;padding:14px;background:var(--bg);border-radius:10px;border:1px solid var(--card-b);display:none">
-      <div style="font-weight:700;font-size:13px;margin-bottom:8px">بهترین کانفیگ لحظه‌ای</div>
-      <div id="zeus-smart-result-content">—</div>
-    </div>
-  </div>
-
-  <!-- ۴) قفل‌سازی لاگین -->
-  <div class="conn-toolbar" style="margin-bottom:14px">
-    <div class="conn-toolbar-title"><i class="ti ti-lock"></i> قفل‌سازی لاگین (Security Rate-Limit)</div>
-  </div>
-  <div class="card" style="margin-bottom:18px">
-    <div class="card-title">
-      <i class="ti ti-shield-check"></i> محدودسازی تلاش‌های ورود
-      <span class="ml-auto" style="display:flex;align-items:center;gap:8px">
-        <span style="font-size:11px;color:var(--t3)">فعال‌سازی:</span>
-        <label class="toggle" style="position:relative;display:inline-block;width:36px;height:20px;cursor:pointer">
-          <input type="checkbox" id="zeus-security-toggle" style="opacity:0;width:0;height:0">
-          <span class="toggle-slider" style="position:absolute;inset:0;background:var(--t3);border-radius:20px;transition:.3s"></span>
-        </label>
-      </span>
-    </div>
-    <div style="font-size:11.5px;color:var(--t3);margin-top:8px">میان‌افزار روی /api/login اعمال می‌شود؛ IPهایی که بیش از حد مجاز تلاش کنند به‌طور موقت بلاک می‌شوند.</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:14px">
-      <div>
-        <label style="font-size:11.5px;color:var(--t2);display:block;margin-bottom:6px">حداقل طول پسورد</label>
-        <input type="number" id="zeus-sec-min-len" placeholder="8" min="4" max="64" style="width:100%;direction:ltr;text-align:left;font-family:monospace">
-      </div>
-      <div>
-        <label style="font-size:11.5px;color:var(--t2);display:block;margin-bottom:6px">فاصله‌ی تلاش‌ها (ms)</label>
-        <input type="number" id="zeus-sec-interval" placeholder="1000" min="100" style="width:100%;direction:ltr;text-align:left;font-family:monospace">
-      </div>
-      <div>
-        <label style="font-size:11.5px;color:var(--t2);display:block;margin-bottom:6px">حداکثر تعداد تلاش</label>
-        <input type="number" id="zeus-sec-max" placeholder="5" min="1" max="100" style="width:100%;direction:ltr;text-align:left;font-family:monospace">
-      </div>
-    </div>
-    <div style="margin-top:12px">
-      <label style="font-size:11.5px;color:var(--t2);display:block;margin-bottom:6px">مدت بلاک پس از تجاوز (ms)</label>
-      <input type="number" id="zeus-sec-lockout" placeholder="60000" min="1000" step="1000" style="width:100%;direction:ltr;text-align:left;font-family:monospace">
-    </div>
-    <div class="cl" style="margin-top:12px"><i class="ti ti-info-circle"></i><span>این قفل‌سازی فقط روی اندپوینت /api/login اعمال می‌شود و جریان احراز هویت اصلی EMIX را تغییر نمی‌دهد. اگر ماژول غیرفعال شود، همه‌ی IPهای بلاک‌شده آزاد می‌شوند.</span></div>
-    <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
-      <button class="btn btn-g" onclick="zeusSaveSecurity()"><i class="ti ti-check"></i> ذخیره تنظیمات</button>
-      <button class="btn btn-blue" onclick="zeusSecurityCheck()"><i class="ti ti-activity"></i> بررسی وضعیت میان‌افزار</button>
-    </div>
-    <div id="zeus-security-result" style="margin-top:14px;padding:14px;background:var(--bg);border-radius:10px;border:1px solid var(--card-b);display:none">
-      <div id="zeus-security-result-content">—</div>
-    </div>
-  </div>
-</section>
-
-<!-- ══════════════════════ مرکز گیمینگ EMIX ══════════════════════ -->
-<section class="pg" id="pg-gaming">
-  <div class="node-hero" style="margin-bottom:18px">
-    <div class="node-hero-top">
-      <div class="node-hero-title">
-        <div class="node-hero-icon" style="background:rgba(76,201,240,.15);color:#4cc9f0"><i class="ti ti-device-gamepad-2"></i></div>
-        <div>
-          <div class="tb-title">مرکز گیمینگ — بهترین پینگ و پایداری</div>
-          <div class="tb-sub">اسکنر IP کلادفلر + مسیر PoP + کانفیگ‌های tuned برای بازی + مولتی‌لوکیشن</div>
-        </div>
-      </div>
-      <div class="tb-right">
-        <span class="badge" id="gaming-status-badge">بارگذاری...</span>
-      </div>
-    </div>
-    <div class="node-hero-metrics">
-      <div class="node-metric">
-        <div class="node-metric-top"><i class="ti ti-bolt"></i><span class="node-metric-label">بهترین IP</span></div>
-        <div class="node-metric-val" id="gaming-best-ip" style="font-size:15px;direction:ltr">—</div>
-        <div class="node-metric-sub" id="gaming-best-ms">تأخیر: —</div>
-      </div>
-      <div class="node-metric">
-        <div class="node-metric-top"><i class="ti ti-building-broadcast-tower"></i><span class="node-metric-label">PoP کلادفلر شما</span></div>
-        <div class="node-metric-val" id="gaming-colo" style="font-size:15px">—</div>
-        <div class="node-metric-sub" id="gaming-colo-city">شهر: —</div>
-      </div>
-      <div class="node-metric">
-        <div class="node-metric-top"><i class="ti ti-flag"></i><span class="node-metric-label">لوکیشن خروج</span></div>
-        <div class="node-metric-val" id="gaming-loc-count" style="font-size:15px">—</div>
-        <div class="node-metric-sub" id="gaming-loc-list">—</div>
-      </div>
-      <div class="node-metric">
-        <div class="node-metric-top"><i class="ti ti-server-2"></i><span class="node-metric-label">گیت‌وی کلادفلر</span></div>
-        <div class="node-metric-val" id="gaming-worker-status" style="font-size:15px">—</div>
-        <div class="node-metric-sub" id="gaming-worker-domain-label" style="direction:ltr;text-align:left;overflow:hidden;text-overflow:ellipsis">—</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ۱) راه‌اندازی گیت‌وی -->
-  <div class="conn-toolbar" style="margin-bottom:14px">
-    <div class="conn-toolbar-title"><i class="ti ti-cloud-cog"></i> گیت‌وی کلادفلر و ورودی‌ها</div>
-  </div>
-  <div class="card" style="margin-bottom:18px">
-    <div class="card-title"><i class="ti ti-cloud"></i> Worker کلادفلر (Gateway)</div>
-    <div style="font-size:11.5px;color:var(--t3);margin-bottom:14px;line-height:1.9">
-      معماری: <b style="direction:ltr;display:inline-block">کاربر → بهترین IP کلادفلر (یا VPS ایران) → Worker → لوکیشن → اینترنت</b><br>
-      کد Worker در فایل <code style="direction:ltr;display:inline-block">cf_gateway_worker.js</code> مخزن است — در <b>dash.cloudflare.com → Workers & Pages → Create Worker</b> پیست و Deploy کن، بعد دامنه‌ی workers.dev را اینجا ذخیره کن. توکن اختیاری است و فقط برای افزودن لوکیشن لازم است (در Cloudflare → Settings → Variables → EMIX_TOKEN).
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px">
-      <div><label style="font-size:11px;color:var(--t3)">دامنه‌ی Worker (workers.dev)</label>
-        <input id="gaming-worker-domain" placeholder="emix-gateway.username.workers.dev" style="width:100%;direction:ltr;text-align:left;font-family:monospace"></div>
-      <div><label style="font-size:11px;color:var(--t3)">توکن EMIX_TOKEN (اختیاری — برای لوکیشن)</label>
-        <input id="gaming-worker-token" type="password" placeholder="••••••••" style="width:100%;direction:ltr;text-align:left;font-family:monospace"></div>
-      <div><label style="font-size:11px;color:var(--t3)">IP سرور ایران VPS (ورودی پایدار — اختیاری)</label>
-        <input id="gaming-vps-ip" placeholder="185.164.73.192" style="width:100%;direction:ltr;text-align:left;font-family:monospace"></div>
-      <div><label style="font-size:11px;color:var(--t3)">پورت VPS</label>
-        <input id="gaming-vps-port" type="number" value="443" style="width:100%;direction:ltr;text-align:left;font-family:monospace"></div>
-    </div>
-    <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
-      <button class="btn btn-g" onclick="gamingSaveConfig()"><i class="ti ti-check"></i> ذخیره تنظیمات</button>
-      <button class="btn btn-blue" onclick="gamingCheckWorker()"><i class="ti ti-radar-2"></i> تست سلامت گیت‌وی + تشخیص PoP</button>
-    </div>
-    <div id="gaming-worker-result" style="margin-top:14px;padding:14px;background:var(--bg);border-radius:10px;border:1px solid var(--card-b);display:none;font-size:12px;line-height:1.9"></div>
-  </div>
-
-  <!-- ۲) اسکنر IP -->
-  <div class="conn-toolbar" style="margin-bottom:14px">
-    <div class="conn-toolbar-title"><i class="ti ti-radar"></i> اسکنر IP کلادفلر (سمت مرورگر شما)</div>
-  </div>
-  <div class="card" style="margin-bottom:18px">
-    <div class="card-title"><i class="ti ti-signal-4g"></i> پیدا کردن سریع‌ترین IP آنیکست</div>
-    <div style="font-size:11.5px;color:var(--t3);margin-bottom:14px;line-height:1.8">
-      این اسکنر <b>از مرورگر خودتان</b> IPهای کلادفلر را تست می‌کند — چون فقط تأخیرِ مسیر «شما → لبه‌ی کلادفلر» مهم است، نه مسیر سرور پنل. هر IP سه بار پروب می‌شود؛ کمینه = پینگ واقعی، پراکندگی = jitter. نتایج بر اساس کمترین تأخیر رتبه‌بندی می‌شوند و بهترین IP برای ساخت کانفیگ گیمینگ ذخیره می‌شود.
-    </div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-      <button class="btn btn-g" id="gaming-scan-btn" onclick="gamingStartScan()"><i class="ti ti-radar-2"></i> شروع اسکن (~۱ دقیقه)</button>
-      <span id="gaming-scan-progress" style="font-size:11.5px;color:var(--t3)">آماده</span>
-    </div>
-    <div id="gaming-scan-table" style="margin-top:14px;max-height:320px;overflow:auto;display:none">
-      <table style="width:100%;border-collapse:collapse;font-size:11.5px">
-        <thead><tr style="text-align:right;color:var(--t3)">
-          <th style="padding:6px 8px">#</th><th style="padding:6px 8px">IP</th><th style="padding:6px 8px">کمینه (ms)</th>
-          <th style="padding:6px 8px">میانگین (ms)</th><th style="padding:6px 8px">Jitter (ms)</th><th style="padding:6px 8px">وضعیت</th>
-        </tr></thead>
-        <tbody id="gaming-scan-tbody"></tbody>
-      </table>
-    </div>
-    <div id="gaming-scan-summary" style="margin-top:12px;font-size:12px;display:none"></div>
-  </div>
-
-  <!-- ۳) اینباندهای گیت‌وی (مولتی‌ورودی روی خود وورکر — بدون خرید سرور) -->
-  <div class="conn-toolbar" style="margin-bottom:14px">
-    <div class="conn-toolbar-title"><i class="ti ti-door-enter"></i> اینباندهای گیت‌وی — چند ورودی روی خودِ وورکر (بدون سرور اضافه)</div>
-  </div>
-  <div class="card" style="margin-bottom:18px">
-    <div class="card-title"><i class="ti ti-door-enter"></i> اینباندهای ورودی (Entry Points)</div>
-    <div style="font-size:11.5px;color:var(--t3);margin-bottom:14px;line-height:1.8">
-      هر IP آنیکست کلادفلر = یک ورودی مستقل به <b>همان وورکر</b> — مثل داشتن چند سرور ورودی، بدون خرید هیچ سروری. اینباند موردنظر را تست کنید و با کلیک روی «استفاده»، IP آن در فیلد ساخت کانفیگ قرار می‌گیرد.
-    </div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
-      <button class="btn btn-g" onclick="gamingLoadInbounds(this)"><i class="ti ti-plug-connected"></i> تست و نمایش اینباندها</button>
-      <span id="gaming-inbounds-summary" style="font-size:11px;color:var(--t3)"></span>
-    </div>
-    <div id="gaming-inbounds-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px"></div>
-  </div>
-
-  <!-- ۳-ب) لوکیشن‌های خروج — بازطراحی کامل -->
-  <div class="conn-toolbar" style="margin-bottom:14px">
-    <div class="conn-toolbar-title"><i class="ti ti-world"></i> لوکیشن‌های خروج — چند کشور، رایگان</div>
-  </div>
-  <div class="card" style="margin-bottom:18px">
-    <div class="card-title"><i class="ti ti-flag"></i> لوکیشن‌های خروج (خروجیِ ترافیک = IP کشور هدف)</div>
-    <div style="font-size:11.5px;color:var(--t3);margin-bottom:14px;line-height:1.9">
-      <b>خروجی ترافیک شما الان از بک‌اند اصلی (Railway آمریکا) است.</b> برای اینکه خروجی به کشور دیگری برود، باید یک سرور خروج کوچک در آن کشور باشد —
-      اما نگران نباش: <b>۳ راه واقعاً رایگان</b> برای همین پروژه ساخته شده:
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px;margin-top:10px">
-        <div style="padding:10px 12px;background:var(--bg);border-radius:10px;border:1px solid var(--card-b)">
-          <b style="color:var(--green-t)">۱. بسته‌ی سرور خروج رایگان ⭐</b><br>
-          <span style="font-size:10.5px">پنل برایت یک سرور VLESS مینیمال با UUID خودت می‌سازد؛ روی Railway خودت (رژیون فرانکفورت/سنگاپور) یا Koyeb بدون کارت deploy می‌کنی — ۵ دقیقه کار دارد</span>
-        </div>
-        <div style="padding:10px 12px;background:var(--bg);border-radius:10px;border:1px solid var(--card-b)">
-          <b style="color:var(--blue-t)">۲. Oracle Cloud همیشه‌رایگان</b><br>
-          <span style="font-size:10.5px">سرور مجازی کامل و دائمی در دبی/فرانکفورت — بهترین پینگ برای بازی؛ فقط یک‌بار ثبت‌نام می‌خواهد</span>
-        </div>
-        <div style="padding:10px 12px;background:var(--bg);border-radius:10px;border:1px solid var(--card-b)">
-          <b style="color:var(--purple-t)">۳. دامنه‌ی اختصاصی</b><br>
-          <span style="font-size:10.5px">هر سروری که WS سرو کند (حتی VPS ارزان) با یک دامنه معتبر، اینجا قابل ثبت است — کاستوم همیشه باز است</span>
-        </div>
-      </div>
-    </div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px">
-      <button class="btn btn-blue" onclick="gamingExitWizard(this)"><i class="ti ti-package-export"></i> بسته‌ی سرور خروج رایگان (۵ دقیقه)</button>
-      <button class="btn btn-g" onclick="gamingRefreshLocations(false,true)"><i class="ti ti-refresh"></i> دریافت + تست سلامت لوکیشن‌ها</button>
-    </div>
-    <div id="gaming-loc-list-box" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px"></div>
-
-    <!-- قالب‌های آماده لوکیشن -->
-    <div style="font-size:12px;font-weight:700;margin-bottom:8px"><i class="ti ti-layout-grid"></i> قالب‌های آماده — کلیک کن تا فرم پایین خودکار پر شود</div>
-    <div id="gaming-loc-templates" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;margin-bottom:16px"></div>
-
-    <!-- فرم افزودن (پیش‌پر با لوکیشن‌های سالم) -->
-    <div style="font-size:12px;font-weight:700;margin-bottom:8px"><i class="ti ti-plus"></i> افزودن لوکیشن جدید (پیش‌فرض سالم — قابل ویرایش)</div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px">
-      <div><label style="font-size:11px;color:var(--t3)">کد لوکیشن (انگلیسی)</label>
-        <input id="gaming-loc-name" value="de" placeholder="de" style="width:100%;direction:ltr;text-align:left;font-family:monospace"></div>
-      <div><label style="font-size:11px;color:var(--t3)">نام نمایشی</label>
-        <input id="gaming-loc-label" value="آلمان — فرانکفورت" placeholder="آلمان — فرانکفورت" style="width:100%"></div>
-      <div><label style="font-size:11px;color:var(--t3)">پرچم (ایموجی)</label>
-        <input id="gaming-loc-flag" value="🇩🇪" placeholder="🇩🇪" style="width:100%"></div>
-      <div style="grid-column:span 2"><label style="font-size:11px;color:var(--t3)">دامنه‌ی بک‌اند (با TLS معتبر)</label>
-        <input id="gaming-loc-upstream" value="emix-pro-production.up.railway.app" placeholder="emix-pro-production.up.railway.app" style="width:100%;direction:ltr;text-align:left;font-family:monospace"></div>
-    </div>
-    <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
-      <button class="btn btn-g" onclick="gamingAddLocation()"><i class="ti ti-plus"></i> افزودن لوکیشن</button>
-      <span style="font-size:10.5px;color:var(--t3);align-self:center">کد چند حرفی انگلیسی مثل tr / ru / de / ae — بعداً در ساخت کانفیگ انتخاب می‌شود. مقادیر پیش‌فرض سالم‌اند — برای خروج واقعی، یک exit node deploy کنید.</span>
-    </div>
-    <!-- ویزارد بسته‌ی خروج -->
-    <div id="gaming-exit-wizard" style="margin-top:16px;display:none"></div>
-  </div>
-
-  <!-- ۳.۵) حقیقت مسیر و خروج — CONTROL PLANE / EXIT NODE / REAL EGRESS -->
-  <div class="conn-toolbar" style="margin-bottom:14px">
-    <div class="conn-toolbar-title"><i class="ti ti-route"></i> حقیقت مسیر و خروج — کنترل‌پلین / نود خروج / IP خروج واقعی</div>
-  </div>
-  <div class="card" style="margin-bottom:18px">
-    <div class="card-title"><i class="ti ti-compass"></i> مسیر و IP خروج — چه چیزی واقعاً تأیید شده است؟</div>
-    <div style="font-size:11px;color:var(--t3);margin-bottom:12px;line-height:1.9">
-      <b>اندپوینت ≠ مسیر ≠ خروج.</b> آدرس/SNI/Hostname فقط تعیین می‌کنند کلاینت <b>به کجا وصل</b> شود؛ IP خروج را فقط نودی تغییر می‌دهد که ترافیک واقعاً از آن عبور می‌کند (نود خروج/ریلی).
-      <b style="color:var(--amber-t)">تغییر IP سفارشی یا SNI هرگز IP خروج را عوض نمی‌کند.</b>
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:12px">
-      <div style="padding:12px;background:var(--bg);border-radius:12px;border:1px solid var(--card-b)">
-        <div style="font-size:10px;color:var(--t3);margin-bottom:4px"><i class="ti ti-server-2"></i> CONTROL PLANE — کنترل‌پلین</div>
-        <div id="eg-cp-host" style="font-size:12px;font-weight:700;direction:ltr;text-align:left;font-family:monospace">—</div>
-        <div id="eg-cp-note" style="font-size:10px;color:var(--t3);margin-top:4px">Railway = میزبان پنل و برنامه</div>
-      </div>
-      <div style="padding:12px;background:var(--bg);border-radius:12px;border:1px solid var(--card-b)">
-        <div style="font-size:10px;color:var(--t3);margin-bottom:4px"><i class="ti ti-door-exit"></i> EXIT NODE — نود خروج</div>
-        <div id="eg-exit-node" style="font-size:12px;font-weight:700">تنظیم نشده</div>
-        <div id="eg-exit-note" style="font-size:10px;color:var(--t3);margin-top:4px">بدون نود خروج، ترافیک از همین نود (کنترل‌پلین) خارج می‌شود</div>
-      </div>
-      <div style="padding:12px;background:var(--bg);border-radius:12px;border:1px solid var(--card-b)">
-        <div style="font-size:10px;color:var(--t3);margin-bottom:4px"><i class="ti ti-world"></i> REAL EGRESS — IP خروج واقعی</div>
-        <div id="eg-real-ip" style="font-size:12px;font-weight:700;direction:ltr;text-align:left;font-family:monospace">—</div>
-        <div id="eg-real-sub" style="font-size:10px;color:var(--t3);margin-top:4px">فقط با اندازه‌گیری واقعی تأیید می‌شود — نه با مقدار تنظیم‌شده</div>
-      </div>
-      <div style="padding:12px;background:var(--bg);border-radius:12px;border:1px solid var(--card-b)">
-        <div style="font-size:10px;color:var(--t3);margin-bottom:4px"><i class="ti ti-statuschange"></i> STATUS — وضعیت مسیر</div>
-        <div><span class="badge bg-blue" id="eg-status-badge">UNKNOWN</span></div>
-        <div id="eg-status-note" style="font-size:10px;color:var(--t3);margin-top:4px">DIRECT = خروج از همین نود · RELAY = عبور از ریل‌لی · VERIFIED = تأییدشده با مدرک</div>
-      </div>
-    </div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-      <button class="btn btn-blue" onclick="verifyPanelEgress(this)"><i class="ti ti-radar-2"></i> اندازه‌گیری IP خروج پنل (با مدرک)</button>
-      <span id="eg-verify-result" style="font-size:11px;color:var(--t3)"></span>
-    </div>
-  </div>
-
-  <!-- ۴) ضد ضریب (Anti-DPI) + تولید کانفیگ گیمینگ -->
-  <div class="conn-toolbar" style="margin-bottom:14px">
-    <div class="conn-toolbar-title"><i class="ti ti-trophy"></i> ضد ضریب + کانفیگ گیمینگ</div>
-  </div>
-  <div class="card" style="margin-bottom:18px">
-    <div class="card-title"><i class="ti ti-shield-lock"></i> ضد ضریب (Anti-DPI) — جعل دیتا برای دور زدن مهار سرعت</div>
-    <div style="font-size:11.5px;color:var(--t3);margin-bottom:12px;line-height:1.9">
-      <b>«ضریب» یعنی چه؟</b> فیلترینگ DPI با دیدن امضای handshake تونل، آن جریان را با QoS مهار می‌کند و سرعت چند برابر کم می‌شود. EMIX پنج لایه جعل دارد:
-      <b>۱) fragment تصادفی</b> (ClientHello به تکه‌های کوچک متغیر می‌شکند و امضای DPI بازسازی نمی‌شود) ·
-      <b>۲) uTLS</b> (اثر انگشت TLS دقیقاً مثل مرورگر واقعی) ·
-      <b>۳) ترنسپورت XHTTP</b> (الگوی ترافیک مثل HTTP عادی، بدون امضای Upgrade وب‌سوکت) ·
-      <b>۴) حالت ایرانسل مخصوص</b> (fragment تهاجمی 8-40 بایت + اثر انگشت Safari) ·
-      <b>۵) XHTTP+ایرانسل</b> (وقتی WS روی ایرانسل وصل نمی‌شود).
-      <br><b style="color:var(--amber-t)">📱 اگر روی همراه‌اول عالی ولی روی ایرانسل کار نمی‌کند:</b> حالت «ایرانسل» یا «ایرانسل-XHTTP» را انتخاب کنید — برای ایرانسل بهینه‌سازی شده است.
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:12px">
-      <div><label style="font-size:11px;color:var(--t3)">حالت ضد ضریب</label>
-        <select id="gaming-anti-mode" style="width:100%">
-          <option value="balanced">⚖ متعادل — پیشنهادی (fragment 40-120 + کروم)</option>
-          <option value="stealth">🛡 حداکثری — ضد ضریب (fragment ریز 20-80 + فایرفاکس)</option>
-          <option value="speed">⚡ حداکثر سرعت (بدون fragment — همراه‌اول)</option>
-          <option value="irancell">📱 ایرانسل — ضد ضریب مخصوص (fragment 8-40 + Safari)</option>
-          <option value="irancell-xhttp">📱 ایرانسل + XHTTP — حداکثری (وقتی WS وصل نمی‌شود)</option>
-        </select></div>
-      <div><label style="font-size:11px;color:var(--t3)">ترنسپورت (نوع ترافیک)</label>
-        <select id="gaming-transport" style="width:100%">
-          <option value="ws">WebSocket — پایدار و سازگار</option>
-          <option value="xhttp-stream-up">XHTTP stream-up — بیشترین جعل ترافیک</option>
-          <option value="xhttp-packet-up">XHTTP packet-up — ضد DPI پکت‌محور</option>
-        </select></div>
-    </div>
-    <div id="gaming-anti-desc" style="font-size:11px;color:var(--t2);padding:10px 12px;background:var(--bg);border-radius:10px;border:1px solid var(--card-b);margin-bottom:14px;line-height:1.8"></div>
-    <div style="font-size:12px;font-weight:700;margin:14px 0 8px"><i class="ti ti-bolt"></i> ساخت کانفیگ tuned برای بازی</div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:12px">
-      <div><label style="font-size:11px;color:var(--t3)">ورودی (Entry)</label>
-        <select id="gaming-entry" style="width:100%">
-          <option value="panel">🖥 مستقیم پنل — بدون وورکر (سریع‌ترین اگر مستقیم در دسترس است)</option>
-          <option value="direct" selected>☁ مستقیم کلادفلر — ضد فیلتر</option>
-          <option value="vps">🇮🇷 VPS ایران — پایدارترین (ضد قطعی)</option>
-        </select></div>
-      <div><label style="font-size:11px;color:var(--t3)">کشور خروج (Route) — فقط با نود خروج واقعی</label>
-        <select id="gaming-location" style="width:100%"><option value="auto">auto — Railway (کنترل‌پلین)</option></select></div>
-      <div><label style="font-size:11px;color:var(--t3)">آدرس اندپوینت (ورودی — نه IP خروج)</label>
-        <input id="gaming-override-ip" placeholder="آدرس اتصال کلاینت — IP خروج را عوض نمی‌کند" style="width:100%;direction:ltr;text-align:left;font-family:monospace"></div>
-    </div>
-    <div style="font-size:11px;color:var(--t3);margin-bottom:10px">کانفیگ گیمینگ = بدون mux + fragment ضد DPI + tcpNoDelay + TCP Fast Open + اولویت IPv4 — همه در لینک یا JSON اعمال می‌شوند. <b>نمی‌دانید کدام مسیر برایتان سریع‌تر است؟ اول «مقایسه‌ی مسیرها» را بزنید.</b> اگر سرعت‌تان بعد از مدتی افت کرد، حالت را روی «حداکثری» و ترنسپورت را XHTTP بگذارید. <b style="color:var(--amber-t)">روی ایرانسل، حالت «ایرانسل» را امتحان کنید.</b></div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button class="btn btn-blue" onclick="gamingCheckExitIP(this)"><i class="ti ti-world"></i> بررسی IP خروج واقعی</button>
-      <button class="btn btn-blue" onclick="gamingCompare(this)"><i class="ti ti-scale"></i> مقایسه‌ی مسیرها (پنل vs گیت‌وی)</button>
-      <button class="btn btn-g" onclick="gamingGenLinks()"><i class="ti ti-link"></i> تولید لینک‌ها</button>
-      <button class="btn btn-g" onclick="gamingGenJson()"><i class="ti ti-code"></i> JSON کامل Xray (بهترین برای گیمینگ)</button>
-    </div>
-    <div id="gaming-exit-result" style="margin-top:14px;display:none"></div>
-    <div id="gaming-compare-result" style="margin-top:14px;display:none"></div>
-    <div id="gaming-links-result" style="margin-top:14px;display:none"></div>
-    <div id="gaming-json-result" style="margin-top:14px;display:none"></div>
-  </div>
-
-  <!-- ۵) پریست بازی‌ها -->
-  <div class="conn-toolbar" style="margin-bottom:14px">
-    <div class="conn-toolbar-title"><i class="ti ti-trophy"></i> راهنمای بازی‌ها — سرور کجاست و چه مسیری بزنم؟</div>
-  </div>
-  <div class="card" style="margin-bottom:18px">
-    <div class="card-title"><i class="ti ti-gamepad"></i> پریست‌های بازی</div>
-    <div id="gaming-presets-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px">
-      <!-- توسط JS پر می‌شود -->
-    </div>
-  </div>
-</section>
-
-<!-- ════════════════════════════════════════════════════════════════════════════
-     ✨ PHASE 38+ — Unified Config Builder (ساخت کانفیگ)
-     تنها صفحه‌ی واحد ساخت کانفیگ — همه‌ی گزینه‌ها از
-     /api/config-builder/capabilities می‌آیند (قابلیت‌محور؛ هیچ فرضی در JS هاردکد
-     نشده). پیش‌نمایش از همان کامپایلر کانونی است؛ ترکیب نامعتبر ساخته نمی‌شود.
-     ════════════════════════════════════════════════════════════════════════════ -->
-<!-- ═══ Phase 40 §33 — بخش builder مستقل حذف شد ═══
-     محتوای سازنده‌ی یکپارچه (مراحل + پنل تست زنده + تاریخچه) به‌صورت کامل
-     به ورک‌اسپیس تمام‌صفحه‌ی «ساخت کانفیگ» داخل همان صفحه‌ی کانفیگ‌ها منتقل شد
-     (#ws-create داخل #pg-links). navTo('builder') همان تجربه را باز می‌کند.
-     همه‌ی توابع JS (loadBuilderPage/ncc*/bld*) دست‌نخورده باقی مانده‌اند. -->
-
-<!-- ════════════════════════════════════════════════════════════════════════════
-     🇮🇷 PHASE 38+ §13 — پروکسی ایران (IRAN_PROXY / Iran Gateway)
-     متفاوت از IRAN_DIRECT: خروج واقعی از یک گیت‌وی ایرانیِ اثبات‌شده.
-     IP دستی = فقط CONFIGURED؛ فقط شواهد شبکه‌ای = VERIFIED_IRAN_EGRESS.
-     ════════════════════════════════════════════════════════════════════════════ -->
-<section class="pg" id="pg-iranproxy">
-  <div class="topbar">
-    <div><div class="tb-title"><i class="ti ti-flag" style="color:#EF4444"></i> 🇮🇷 پروکسی ایران — گیت‌وی ایرانی واقعی</div><div class="tb-sub">ترافیک مقاصد ایرانی از گیت‌وی اثبات‌شده · مقاصد بین‌المللی از نود خروج</div></div>
-    <div class="tb-right"><span class="badge bg-amber" id="igw-state-badge">—</span><button class="btn btn-o btn-sm" onclick="loadIranProxyPage()"><i class="ti ti-refresh"></i> رفرش</button></div>
-  </div>
-
-  <div class="card" style="margin-bottom:18px">
-    <div class="card-title"><i class="ti ti-info-circle"></i> IRAN_PROXY چیست؟ (و چه نیست)</div>
-    <div class="bld-hint" style="margin:10px 0">
-      <b>IRAN_DIRECT</b>: سرور ایرانی لازم ندارد — ترافیک ایرانی مستقیم از ISP خود کاربر (USER_ISP) خارج می‌شود.<br>
-      <b>IRAN_PROXY</b>: مسیر <span style="direction:ltr;display:inline-block;font-family:monospace">Client → EMIX Entry/Relay → گیت‌وی ایران → اینترنت ایران</span> — به یک گیت‌وی ایرانی <b>واقعی و اثبات‌شده</b> نیاز دارد.<br>
-      ⛔ IP دستی، SNI، hostname، Cloudflare و لوکیشن Railway <b>هیچ‌کدام</b> خروج ایرانی را اثبات نمی‌کنند — فقط اندازه‌گیری شبکه‌ای (VERIFIED_IRAN_EGRESS).
-    </div>
-  </div>
-
-  <div class="g2" style="align-items:start">
-    <div class="card" style="margin-bottom:18px">
-      <div class="card-title"><i class="ti ti-plus"></i> افزودن / ویرایش گیت‌وی</div>
-      <div class="bld-form2">
-        <input id="igw-name" class="cm-input" placeholder="نام گیت‌وی (مثلاً Tehran-GW)">
-        <input id="igw-endpoint" class="cm-input" placeholder="آدرس (hostname/IP)" style="direction:ltr;text-align:left;font-family:monospace">
-        <input id="igw-port" class="cm-input" type="number" value="443" placeholder="پورت" style="direction:ltr">
-        <select id="igw-protocol" class="cm-input">
-          <option value="http">HTTP Forward Proxy (قابل اثبات)</option>
-          <option value="socks5">SOCKS5 (قابل اثبات)</option>
-          <option value="emix-worker">EMIX Worker (/exit-check)</option>
-          <option value="custom">سایر / بدون پروب (egress مجهول می‌ماند)</option>
-        </select>
-        <input id="igw-user" class="cm-input" placeholder="نام کاربری (اختیاری)" style="direction:ltr;text-align:left;font-family:monospace">
-        <input id="igw-pass" class="cm-input" placeholder="رمز گیت‌وی (اختیاری — هرگز لاگ نمی‌شود)" style="direction:ltr;text-align:left;font-family:monospace">
-        <input id="igw-notes" class="cm-input" placeholder="توضیح (اختیاری)">
-        <button class="btn btn-p" onclick="iranGwSave(this)"><i class="ti ti-device-floppy"></i> ذخیره گیت‌وی</button>
-      </div>
-    </div>
-    <div class="card" style="margin-bottom:18px">
-      <div class="card-title"><i class="ti ti-flag-check"></i> گیت‌وی‌ها و وضعیت اثبات</div>
-      <div id="igw-list"><div class="bld-hint">—</div></div>
-    </div>
-  </div>
-</section>
-
-<style>
-/* ── Config Builder + Iran Gateway (scoped prefixes bld-/igw-) ─────────── */
-.bld-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
-@media(max-width:1080px){.bld-grid{grid-template-columns:1fr}}
-.bld-step{margin:14px 0;padding-bottom:6px;border-bottom:1px dashed var(--card-b)}
-.bld-step-label{font-size:12px;color:var(--t3);margin-bottom:8px;font-weight:700}
-.bld-chips{display:flex;flex-wrap:wrap;gap:8px}
-.bld-chip{padding:8px 14px;border-radius:12px;border:1px solid var(--card-b);background:rgba(139,92,246,.06);cursor:pointer;font-size:13px;transition:.15s}
-.bld-chip:hover{border-color:var(--accent)}
-.bld-chip.sel{border-color:var(--accent);background:rgba(139,92,246,.18);box-shadow:0 0 0 1px var(--accent)}
-.bld-chip.off{opacity:.4;cursor:not-allowed}
-.bld-chip .st{font-size:10px;opacity:.8}
-.bld-hint{font-size:11.5px;color:var(--t3);margin-top:8px;line-height:1.9}
-.bld-nodes{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
-.bld-node{padding:10px 12px;border-radius:12px;border:1px solid var(--card-b);cursor:pointer;transition:.15s}
-.bld-node:hover{border-color:var(--accent)}
-.bld-node.sel{border-color:var(--accent);background:rgba(139,92,246,.15)}
-.bld-node .nm{font-weight:700;font-size:13px}
-.bld-node .meta{font-size:11px;color:var(--t3);margin-top:4px;line-height:1.8}
-.bld-modes{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
-.bld-mode{padding:10px 12px;border-radius:12px;border:1px solid var(--card-b);cursor:pointer;transition:.15s}
-.bld-mode:hover{border-color:var(--accent)}
-.bld-mode.sel{border-color:var(--accent);background:rgba(139,92,246,.15)}
-.bld-mode .nm{font-weight:700;font-size:13px}
-.bld-mode .meta{font-size:11px;color:var(--t3);margin-top:4px;line-height:1.8}
-.bld-actions{display:flex;gap:10px;margin-top:16px}
-.bld-out{margin:12px 0;padding:10px;border-radius:10px;background:rgba(0,0,0,.25);border:1px solid var(--card-b)}
-.bld-out code{display:block;direction:ltr;text-align:left;font-family:'JetBrains Mono',monospace;font-size:11px;word-break:break-all;color:var(--t2);white-space:pre-wrap}
-.bld-valid-ok{padding:10px 12px;border-radius:10px;background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.4);font-size:12.5px}
-.bld-valid-bad{padding:10px 12px;border-radius:10px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.4);font-size:12.5px;line-height:2}
-.bld-hist{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;margin-top:10px}
-.bld-hcard{padding:12px;border-radius:12px;border:1px solid var(--card-b);background:var(--card)}
-.bld-hcard .nm{font-weight:700}
-.bld-hcard .meta{font-size:11px;color:var(--t3);margin:6px 0;line-height:1.9}
-.igw-state{display:inline-block;padding:2px 10px;border-radius:8px;font-size:11px;font-weight:700}
-.igw-ok{background:rgba(16,185,129,.2);color:#34d399}
-.igw-warn{background:rgba(245,158,11,.2);color:#fbbf24}
-.igw-bad{background:rgba(239,68,68,.2);color:#f87171}
-.igw-info{background:rgba(59,130,246,.2);color:#60a5fa}
-.bld-form2{display:grid;gap:10px;margin-top:10px}
-/* ── IRAN DIRECT builder assets (ird-) ───────────────────────────────── */
-.ird-assets{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
-.ird-asset{display:inline-flex;align-items:center;gap:8px;padding:7px 12px;border-radius:12px;border:1px solid var(--card-b);background:rgba(249,115,22,.06);cursor:pointer;font-size:12px;transition:.15s;direction:ltr}
-.ird-asset:hover{border-color:var(--accent)}
-.ird-asset.sel{border-color:var(--accent);background:rgba(249,115,22,.16);box-shadow:0 0 0 1px var(--accent)}
-.ird-asset .addr{font-family:'JetBrains Mono',monospace;font-size:11.5px;word-break:break-all}
-.ird-asset .st{font-size:10px;opacity:.9}
-.ird-asset .pbtn{cursor:pointer;font-size:12px;line-height:1}
-.ird-asset .xbtn{cursor:pointer;color:#f87171;font-size:13px;line-height:1}
-/* ═══ PHASE 39 — مرکز کنترل شبکه (ncc-) ═════════════════════════════ */
-.ncc-hdr{display:flex;align-items:center;gap:14px;padding:18px 22px;border-radius:20px;border:1px solid var(--card-b);
-  background:linear-gradient(140deg,rgba(139,92,246,.14) 0%,var(--card) 55%);margin-bottom:18px;position:relative;overflow:hidden;flex-wrap:wrap}
-.ncc-hdr::before{content:'';position:absolute;top:-80px;left:-40px;width:240px;height:240px;background:radial-gradient(circle,rgba(139,92,246,.22),transparent 70%);pointer-events:none}
-.ncc-hdr-icon{width:52px;height:52px;border-radius:15px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;color:#fff;font-size:26px;flex-shrink:0;box-shadow:0 8px 22px rgba(139,92,246,.4)}
-.ncc-hdr-text{flex:1;min-width:230px;position:relative;z-index:1}
-.ncc-hdr-title{font-size:17px;font-weight:800;color:var(--t1);letter-spacing:-.01em}
-.ncc-hdr-sub{font-size:11.5px;color:var(--t3);margin-top:3px;line-height:1.7}
-.ncc-hdr-stats{display:flex;gap:9px;flex-wrap:wrap;position:relative;z-index:1}
-.ncc-stat{display:flex;align-items:center;gap:7px;padding:8px 13px;border-radius:12px;border:1px solid var(--card-b);background:rgba(0,0,0,.22);font-size:11.5px;color:var(--t2)}
-[data-theme="light"] .ncc-stat{background:rgba(255,255,255,.75)}
-.ncc-stat i{color:var(--accent);font-size:14px}
-.ncc-stat b{color:var(--t1);font-weight:700}
-.ncc-dot{width:8px;height:8px;border-radius:50%;background:var(--t3);display:inline-block;flex-shrink:0}
-.ncc-dot.ok{background:#22c55e;box-shadow:0 0 8px rgba(34,197,94,.7)}
-.ncc-dot.bad{background:#ef4444;box-shadow:0 0 8px rgba(239,68,68,.7)}
-.ncc-dot.warn{background:#f59e0b;box-shadow:0 0 8px rgba(245,158,11,.7)}
-/* ═══ Phase 41 — گرید ورک‌اسپیس: دسکتاپ دوستونه (§18)، موبایل تک‌ستونه (§17) ═══
-   DOM: builder → test → outputs. دسکتاپ: build چپ، test+out راست. */
-.ncc-grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);grid-template-areas:"build test" "build out";align-items:start}
-.ncc-build{grid-area:build}
-.ncc-live{grid-area:test}
-.ncc-out{grid-area:out}
-@media(max-width:1080px){
-  .ncc-grid{grid-template-columns:minmax(0,1fr);grid-template-areas:"build" "test" "out"}
-}
-.ncc-build,.ncc-live,.ncc-out{min-width:0;max-width:100%;box-sizing:border-box}
-.ncc-step{margin:16px 0;padding-bottom:8px;border-bottom:1px dashed var(--card-b)}
-.ncc-step:last-of-type{border-bottom:none}
-.ncc-step-label{font-size:12.5px;color:var(--t2);margin-bottom:10px;font-weight:800;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.ncc-step-note{font-size:10px;color:var(--t3);font-weight:600}
-/* Phase 41 §16/§21 — بخش‌های جمع‌شونده (Endpoint/SNI و تنظیمات پیشرفته) */
-details.ncc-fold{margin:14px 0;padding-bottom:0;border-bottom:1px dashed var(--card-b)}
-details.ncc-fold>summary{list-style:none;cursor:pointer;font-size:12.5px;color:var(--t2);font-weight:800;display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:6px 0}
-details.ncc-fold>summary::-webkit-details-marker{display:none}
-details.ncc-fold>summary .ti-chevron-down{font-size:13px;color:var(--t3);transition:transform .18s}
-details.ncc-fold[open]>summary .ti-chevron-down{transform:rotate(180deg)}
-.ncc-fold-body{padding:2px 0 12px;display:grid;gap:9px}
-.ncc-adv-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-@media(max-width:640px){.ncc-adv-grid{grid-template-columns:1fr}}
-/* ═══ Phase 41 §22 — تست‌های بیشتر: موبایل جمع‌شده، دسکتاپ همیشه باز ═══ */
-.ncc-test-extra{display:none;flex-wrap:wrap;gap:8px;margin-top:9px}
-.ncc-test-extra.open{display:flex}
-@media(min-width:1081px){
-  .ncc-test-extra{display:flex}
-  .ncc-more-toggle{display:none!important}
-}
-.ncc-more-toggle .ti-chevron-down{transition:transform .18s;font-size:11px}
-.ncw-split-warn{display:inline-block;font-size:10.5px;color:#fbbf24;line-height:1.8}
-.ncc-proto-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
-.ncc-pcard{border:1.5px solid var(--card-b);border-radius:14px;padding:13px 12px;cursor:pointer;transition:.18s;text-align:center;position:relative;background:rgba(0,0,0,.12)}
-[data-theme="light"] .ncc-pcard{background:#fff}
-.ncc-pcard:hover{border-color:var(--card-bh);transform:translateY(-1px)}
-.ncc-pcard.sel{border-color:var(--accent);background:rgba(139,92,246,.14);box-shadow:0 0 0 3px rgba(139,92,246,.12)}
-.ncc-pcard.off{opacity:.45;cursor:not-allowed}
-.ncc-pcard-icon{width:36px;height:36px;border-radius:10px;background:var(--accent-d);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:18px;margin:0 auto 8px}
-.ncc-pcard.sel .ncc-pcard-icon{background:var(--accent);color:#fff}
-.ncc-pcard-title{font-size:12.5px;font-weight:800;color:var(--t1)}
-.ncc-pcard-sub{font-size:9.5px;color:var(--t3);margin-top:3px;line-height:1.5}
-.ncc-node-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
-.ncc-ncard{padding:12px 14px;border-radius:14px;border:1px solid var(--card-b);cursor:pointer;transition:.15s;background:rgba(0,0,0,.1);max-width:100%;box-sizing:border-box;overflow:hidden}
-[data-theme="light"] .ncc-ncard{background:#fff}
-.ncc-ncard:hover{border-color:var(--accent)}
-.ncc-ncard.sel{border-color:var(--accent);background:rgba(139,92,246,.14)}
-.ncc-ncard .nm{font-weight:800;font-size:13px;color:var(--t1);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.ncc-ncard .meta{font-size:10.5px;color:var(--t3);margin-top:5px;line-height:1.8;overflow:hidden;text-overflow:ellipsis}
-.ncc-ncard .meta b{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom}
-.ncc-chips{display:flex;flex-wrap:wrap;gap:8px}
-.ncc-chip{padding:9px 15px;border-radius:12px;border:1px solid var(--card-b);background:rgba(139,92,246,.06);cursor:pointer;font-size:12.5px;transition:.15s;font-weight:700}
-.ncc-chip:hover{border-color:var(--accent)}
-.ncc-chip.sel{border-color:var(--accent);background:rgba(139,92,246,.18);box-shadow:0 0 0 1px var(--accent)}
-.ncc-chip.off{opacity:.4;cursor:not-allowed}
-.ncc-chip .st{font-size:10px;opacity:.8;font-weight:600}
-.ncc-route-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(225px,1fr));gap:10px}
-.ncc-rcard{padding:13px 14px;border-radius:14px;border:1px solid var(--card-b);cursor:pointer;transition:.18s;background:rgba(0,0,0,.1)}
-[data-theme="light"] .ncc-rcard{background:#fff}
-.ncc-rcard:hover{border-color:var(--card-bh)}
-.ncc-rcard.sel{border-color:var(--accent);background:rgba(139,92,246,.14);box-shadow:0 0 0 3px rgba(139,92,246,.12)}
-.ncc-rcard.off{opacity:.55;cursor:not-allowed}
-.ncc-rcard .nm{font-weight:800;font-size:13px;color:var(--t1);display:flex;align-items:center;gap:8px}
-.ncc-rcard .legs{font-size:10.5px;color:var(--t2);margin-top:7px;line-height:1.9;direction:rtl}
-.ncc-rcard .legs b{color:var(--t1)}
-.ncc-rcard .req{font-size:10px;color:var(--t3);margin-top:6px;line-height:1.7}
-.ncc-rcard .why-off{font-size:10px;color:#fbbf24;margin-top:6px;line-height:1.7}
-.ncc-client-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:10px}
-.ncc-ccard{padding:12px 13px;border-radius:14px;border:1px solid var(--card-b);cursor:pointer;transition:.18s;background:rgba(0,0,0,.1)}
-[data-theme="light"] .ncc-ccard{background:#fff}
-.ncc-ccard:hover{border-color:var(--card-bh)}
-.ncc-ccard.sel{border-color:var(--accent);background:rgba(139,92,246,.14);box-shadow:0 0 0 3px rgba(139,92,246,.12)}
-.ncc-ccard .nm{font-weight:800;font-size:12.5px;color:var(--t1)}
-.ncc-ccard .meta{font-size:10px;color:var(--t3);margin-top:4px;line-height:1.7}
-.ncc-adv{margin-top:10px;border:1px dashed var(--card-b);border-radius:12px;padding:10px 13px}
-.ncc-adv summary{cursor:pointer;font-size:12px;color:var(--t2);font-weight:700;display:flex;align-items:center;gap:7px;list-style:none}
-.ncc-adv summary::-webkit-details-marker{display:none}
-.ncc-adv summary i{color:var(--accent)}
-.ncc-test-card{margin-bottom:18px;border:1px solid rgba(139,92,246,.25)}
-.ncc-test-target{font-size:12px;color:var(--t2);background:rgba(0,0,0,.2);border:1px solid var(--card-b);border-radius:11px;padding:10px 13px;margin-top:10px;direction:rtl;line-height:1.8}
-[data-theme="light"] .ncc-test-target{background:rgba(139,92,246,.04)}
-.ncc-test-target b{color:var(--t1);font-family:'JetBrains Mono',monospace;font-size:11.5px;direction:ltr;display:inline-block}
-.ncc-test-btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:11px}
-.ncc-test-links{margin-top:10px}
-.ncc-console{margin-top:12px;border-radius:13px;border:1px solid var(--card-b);background:rgba(0,0,0,.32);padding:13px 15px;min-height:90px;max-height:420px;overflow-y:auto}
-[data-theme="light"] .ncc-console{background:#0d1117}
-.ncc-console-empty{color:var(--t3);font-size:11.5px;text-align:center;padding:18px 8px;line-height:1.9}
-.ncc-cline{display:flex;align-items:center;gap:10px;padding:6px 2px;font-size:12px;color:var(--t2);border-bottom:1px dashed rgba(139,92,246,.1);font-family:'JetBrains Mono',monospace;direction:ltr;justify-content:flex-start}
-.ncc-cline:last-child{border-bottom:none}
-.ncc-cline .ncc-cname{min-width:96px;font-weight:700;color:var(--t1);font-size:11px;direction:ltr;text-align:left}
-.ncc-cline .ncc-cval{flex:1;font-size:11px;color:#9fb0c9;word-break:break-word;text-align:left}
-.ncc-cline.ok .ncc-cname{color:#34d399}
-.ncc-cline.bad .ncc-cname{color:#f87171}
-.ncc-cline.bad .ncc-cval{color:#fca5a5}
-.ncc-cline.warn .ncc-cname{color:#fbbf24}
-.ncc-console-hdr{display:flex;align-items:center;gap:9px;font-size:12.5px;font-weight:800;color:var(--t1);padding:7px 2px 9px;border-bottom:1px solid rgba(139,92,246,.2);margin-bottom:4px;direction:rtl}
-.ncc-console-hdr .ncc-final{margin-inline-start:auto;font-size:12px;font-weight:800;padding:3px 12px;border-radius:9px}
-.ncc-final.ok{background:rgba(34,197,94,.18);color:#4ade80;border:1px solid rgba(34,197,94,.4)}
-.ncc-final.bad{background:rgba(239,68,68,.18);color:#f87171;border:1px solid rgba(239,68,68,.4)}
-.ncc-final.run{background:rgba(139,92,246,.16);color:#a78bfa;border:1px solid rgba(139,92,246,.4)}
-.ncc-browser{margin-top:13px;border:1px dashed var(--card-b);border-radius:12px;padding:11px 13px}
-.ncc-browser-title{font-size:12px;font-weight:800;color:var(--t2);display:flex;align-items:center;gap:8px}
-.ncc-browser-title i{color:var(--accent)}
-.ncc-browser-title button{margin-inline-start:auto}
-.ncc-brow-row{display:flex;align-items:center;gap:9px;font-size:11.5px;color:var(--t2);margin-top:8px;line-height:1.7}
-.ncc-brow-row i{font-size:13px}
-.ncc-brow-row .lbl{color:var(--t3);min-width:120px;text-align:right}
-.ncc-busy{opacity:.6;pointer-events:none}
-@media(max-width:760px){
-  .ncc-hdr{padding:14px 16px}
-  .ncc-hdr-stats{width:100%}
-  .ncc-stat{flex:1;min-width:105px;justify-content:center}
-  .ncc-proto-cards,.ncc-node-cards,.ncc-route-cards,.ncc-client-cards{grid-template-columns:1fr 1fr}
-  .bld-actions{position:sticky;bottom:10px;z-index:40;background:linear-gradient(0deg,var(--bg2) 65%,transparent);padding:12px 0 4px;flex-direction:column}
-  .bld-actions .btn{width:100%;justify-content:center}
-  .ncc-test-btns{gap:6px}
-  .ncc-test-btns .btn{flex:1 1 46%;justify-content:center}
-}
-/* ═══ PHASE 40 — کانفیگ‌ها: ورک‌اسپیس واحد شبکه (ncw- + ws-) ═════════════
-   Premium dark · glass · mobile-first. کارت = CONFIG VALID در برابر
-   RUNTIME VERIFIED (سبز فقط با شاهد واقعی). بدون نئون اضافی.
-   ════════════════════════════════════════════════════════════════════════ */
-.ncw-hdr{display:flex;align-items:center;gap:16px;padding:20px 22px;border-radius:20px;border:1px solid var(--card-b);
-  background:linear-gradient(140deg,rgba(76,201,240,.12) 0%,var(--card) 60%);margin-bottom:16px;position:relative;overflow:hidden;flex-wrap:wrap}
-.ncw-hdr::before{content:'';position:absolute;top:-90px;left:-50px;width:280px;height:280px;background:radial-gradient(circle,rgba(76,201,240,.16),transparent 70%);pointer-events:none}
-.ncw-hdr-text{flex:1;min-width:220px;position:relative;z-index:1}
-.ncw-hdr-title{font-size:19px;font-weight:800;color:var(--t1);letter-spacing:-.01em;display:flex;align-items:center;gap:10px}
-.ncw-hdr-title i{color:#4cc9f0;font-size:22px}
-.ncw-hdr-sub{font-size:11.5px;color:var(--t3);margin-top:4px;line-height:1.7}
-.ncw-hdr-actions{position:relative;z-index:1}
-.ncw-stats{display:flex;align-items:center;gap:9px;flex-wrap:wrap;padding:10px 14px;border-radius:16px;border:1px solid var(--card-b);background:rgba(0,0,0,.18);margin-bottom:16px}
-[data-theme="light"] .ncw-stats{background:rgba(255,255,255,.7)}
-.ncw-stat{display:flex;align-items:center;gap:6px;padding:7px 12px;border-radius:11px;border:1px solid var(--card-b);font-size:11.5px;color:var(--t2);background:rgba(0,0,0,.16)}
-[data-theme="light"] .ncw-stat{background:#fff}
-.ncw-stat i{color:var(--t3);font-size:13px}
-.ncw-stat b{color:var(--t1);font-weight:800;font-size:12.5px}
-.ncw-stat.ok i{color:#22c55e}
-.ncw-stat-spacer{flex:1}
-.ncw-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px}
-@media(max-width:640px){.ncw-grid{grid-template-columns:1fr}}
-.ncw-card{border:1px solid var(--card-b);border-radius:18px;padding:16px;background:linear-gradient(160deg,rgba(76,201,240,.05),transparent 40%),var(--card);
-  display:flex;flex-direction:column;gap:11px;transition:border-color .18s,transform .18s,box-shadow .18s;position:relative;overflow:hidden}
-.ncw-card:hover{border-color:rgba(76,201,240,.4);transform:translateY(-2px);box-shadow:0 10px 28px rgba(0,0,0,.28)}
-.ncw-card.selected{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
-.ncw-card.is-off{opacity:.62}
-.ncw-card.is-exp{border-color:rgba(245,158,11,.45)}
-.ncw-card-top{display:flex;align-items:center;gap:9px}
-.ncw-proto{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:10px;font-size:11px;font-weight:800;color:#a5ecff;
-  background:linear-gradient(135deg,rgba(76,201,240,.2),rgba(139,92,246,.14));border:1px solid rgba(76,201,240,.3);direction:ltr;flex-shrink:0;letter-spacing:.02em}
-.ncw-proto b{font-size:12px}
-.ncw-proto span{opacity:.75;font-weight:600}
-.ncw-title{flex:1;min-width:0;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.ncw-label{font-size:13.5px;font-weight:700;color:var(--t1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
-.ncw-nodebadge{font-size:10px;color:var(--t3);border:1px solid var(--card-b);border-radius:8px;padding:2px 7px;display:inline-flex;gap:4px;align-items:center}
-.ncw-dot{width:9px;height:9px;border-radius:50%;background:#22c55e;box-shadow:0 0 9px rgba(34,197,94,.6);flex-shrink:0}
-.ncw-dot.off{background:var(--t3);box-shadow:none}
-.ncw-status{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
-.ncw-chip{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;padding:4px 10px;border-radius:9px;border:1px solid;cursor:pointer;direction:ltr}
-.ncw-chip.ok{color:#86efac;border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.1)}
-.ncw-chip.warn{color:#fcd34d;border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.1)}
-.ncw-chip.bad{color:#fca5a5;border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.1)}
-.ncw-mini{font-size:10px;color:var(--t3);padding:3px 8px;border-radius:8px;border:1px solid var(--card-b);direction:ltr}
-.ncw-mini.ok{color:#86efac;border-color:rgba(34,197,94,.25)}
-.ncw-routing{font-size:11px;color:var(--t2);display:flex;align-items:center;gap:6px;padding:7px 11px;border-radius:10px;background:rgba(0,0,0,.16);border:1px solid var(--card-b)}
-[data-theme="light"] .ncw-routing{background:rgba(255,255,255,.6)}
-.ncw-routing i{color:#f59e0b;font-size:13px}
-.ncw-routing b{color:var(--t1)}
-.ncw-routing-sub{color:var(--t3);font-size:10px}
-.ncw-actions{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
-.ncw-actions .tog{margin-inline-start:auto}
-.ncw-more{border-top:1px dashed var(--card-b);padding-top:11px;display:flex;flex-direction:column;gap:10px}
-.ncw-more-badges{display:flex;gap:6px;flex-wrap:wrap}
-.ncw-more-usage{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.ncw-more-usage .ubar{flex:1;min-width:120px;height:7px;border-radius:6px;background:rgba(0,0,0,.3);overflow:hidden}
-.ncw-more-usage .ubar-f{height:100%;border-radius:6px;transition:width .3s}
-.ncw-more-usage .utxt{font-size:10.5px;color:var(--t3);display:flex;gap:4px}
-.ncw-created{font-size:10px;color:var(--t3)}
-.ncw-more-actions{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
-.ncw-more-btn i{transition:transform .18s}
-.ncw-empty{display:flex;flex-direction:column;align-items:center;gap:10px;padding:52px 20px;border:1px dashed var(--card-b);border-radius:20px;text-align:center;background:rgba(0,0,0,.1)}
-.ncw-empty-icon{width:58px;height:58px;border-radius:17px;background:linear-gradient(135deg,rgba(76,201,240,.16),rgba(139,92,246,.12));display:flex;align-items:center;justify-content:center}
-.ncw-empty-icon i{font-size:27px;color:#4cc9f0}
-.ncw-empty-title{font-size:15px;font-weight:800;color:var(--t1)}
-.ncw-empty-sub{font-size:11.5px;color:var(--t3);max-width:380px;line-height:1.9}
-/* ── ورک‌اسپیس تمام‌صفحه‌ی ساخت (ws-) ── */
-.ws-overlay{position:fixed;inset:0;z-index:1200;background:rgba(3,8,14,.72);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
-  display:none;align-items:flex-start;justify-content:center;overflow-y:auto;overscroll-behavior:contain;padding:0}
-.ws-overlay.open{display:flex}
-.ws-sheet{width:100%;max-width:1240px;min-height:100%;background:linear-gradient(180deg,rgba(10,16,26,.97),var(--bg2) 140px);
-  border-inline:1px solid var(--card-b);display:flex;flex-direction:column;animation:wsIn .22s ease}
-@keyframes wsIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
-.ws-hdr{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:14px;padding:15px 20px;flex-wrap:wrap;
-  background:rgba(8,13,22,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--card-b)}
-.ws-hdr-text{flex:1;min-width:200px}
-.ws-hdr-title{font-size:16px;font-weight:800;color:var(--t1);display:flex;align-items:center;gap:9px}
-.ws-hdr-title i{color:#a78bfa;font-size:19px}
-.ws-hdr-sub{font-size:10.5px;color:var(--t3);margin-top:3px}
-.ws-hdr-stats{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.ws-close-btn{flex-shrink:0}
-.ws-steps{display:flex;align-items:center;gap:4px;padding:10px 18px;overflow-x:auto;white-space:nowrap;border-bottom:1px solid var(--card-b);background:rgba(0,0,0,.14);-webkit-overflow-scrolling:touch}
-.ws-step{font-size:10.5px;font-weight:700;color:var(--t3);padding:5px 10px;border-radius:9px;border:1px solid transparent;flex-shrink:0}
-.ws-step.on{color:#a5b4fc;border-color:rgba(139,92,246,.4);background:rgba(139,92,246,.12)}
-.ws-step.done{color:#86efac;background:rgba(34,197,94,.1)}
-.ws-steps i{font-size:11px;color:var(--t3);opacity:.5;flex-shrink:0}
-.ws-body{padding:18px;flex:1;max-width:100%;box-sizing:border-box}
-
-/* ═══ Phase 41 §20 — خلاصه‌ی پیکربندی؛ سطر دومِ هدر چسبان — همیشه مرئی ═══ */
-.ws-summary{display:flex;align-items:center;gap:9px;padding:7px 2px 0;flex-wrap:nowrap;flex-basis:100%;min-width:0;max-width:100%;border-top:1px dashed var(--card-b);margin-top:6px;padding-top:8px}
-.ws-sum-lbl{font-size:10px;font-weight:800;color:var(--t3);letter-spacing:.4px;flex-shrink:0}
-.ws-sum-vals{font-size:11.5px;font-weight:700;color:var(--t1);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
-.ws-sum-dot{font-size:9.5px;font-weight:800;color:var(--t3);border:1px solid var(--card-b);border-radius:8px;padding:3px 8px;flex-shrink:0}
-.ws-sum-dot.ok{color:#86efac;border-color:rgba(34,197,94,.45);background:rgba(34,197,94,.1)}
-
-/* ═══ Phase 41 §16 — نوار اقدام چسبان: قانون پایه قبل از مدیاکوئری ═══
-   (باگ CSS: قاعده‌ی display:none بعد از @media آمده بود و با اولویت برابر
-   آن را خنثی می‌کرد — استیکی هرگز روی موبایل نمایش داده نمی‌شد) */
-.ws-sticky{display:none;position:sticky;bottom:0;z-index:60;padding:11px 14px;gap:9px;
-  background:rgba(8,13,22,.95);backdrop-filter:blur(10px);border-top:1px solid var(--card-b)}
-.ws-sticky .btn{flex:1;justify-content:center;padding:12px 10px}
-
-/* ═══ موبایل — یک ستون، فشرده، بدون سرریز (§16/§17) ═══ */
-@media(max-width:640px){
-  .ncw-hdr{padding:15px}
-  .ncw-stats{padding:9px 10px}
-  .ncw-stat{padding:6px 9px;font-size:10.5px}
-  .ws-hdr{padding:11px 12px}
-  .ws-hdr-stats .ncc-stat{display:none}
-  .ws-hdr-stats .ws-close-btn{display:inline-flex}
-  .ws-hdr-sub{display:none}
-  .ws-summary{gap:7px;padding-top:6px;margin-top:5px}
-  .ws-sum-vals{font-size:10.5px}
-  .ws-steps{padding:8px 12px}
-  .ws-step{font-size:10px;padding:4px 8px}
-  .ws-body{padding:11px}
-  .ncw-card{padding:13px;gap:9px}
-  .ncw-actions .btn{flex:1 1 auto;justify-content:center}
-  .ws-sticky{display:flex}
-  /* فشرده‌سازی کارت‌ها: نودها/مسیریابی/کلاینت‌ها — نه فونت‌ریزه، ساختار کوچک‌تر */
-  .ncc-proto-cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-  .ncc-pcard{padding:10px 9px}
-  .ncc-pcard-icon{width:28px;height:28px;font-size:15px;border-radius:9px;margin-bottom:5px}
-  .ncc-pcard-title{font-size:11.5px}
-  .ncc-pcard-sub{font-size:9px}
-  .ncc-node-cards{grid-template-columns:1fr;gap:7px}
-  .ncc-ncard{padding:9px 11px;border-radius:11px}
-  .ncc-ncard .nm{font-size:12px}
-  .ncc-ncard .meta{font-size:9.5px;line-height:1.55;margin-top:3px}
-  .ncc-route-cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
-  .ncc-rcard{padding:9px 10px;border-radius:11px}
-  .ncc-rcard .nm{font-size:11.5px}
-  .ncc-rcard .legs{font-size:9.5px;line-height:1.6;margin-top:4px}
-  .ncc-rcard .req{display:none}
-  .ncc-rcard .why-off{font-size:9px}
-  .ncc-client-cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
-  .ncc-ccard{padding:9px 10px;border-radius:11px}
-  .ncc-ccard .nm{font-size:11.5px}
-  .ncc-ccard .meta{font-size:9px;line-height:1.5}
-  .ncc-chip{padding:8px 13px;font-size:11.5px}
-  .ncc-step{margin:12px 0}
-  .ncc-step-label{font-size:11.5px;margin-bottom:8px}
-  .bld-actions{grid-template-columns:1fr}
-  .ncc-test-btns .btn{padding:9px 12px}
-  .ncc-console{padding:10px 11px;font-size:11px}
-  .ws-sticky .btn{font-size:12.5px}
-}
-@media(max-width:400px){
-  .ncc-route-cards,.ncc-client-cards{grid-template-columns:1fr}
-  .ncc-proto-cards{grid-template-columns:1fr}
-}
-/* پنل «کانفیگ زنده ساخته شد» در خروجی سازنده */
-.bld-link-ok{margin:10px 0;padding:13px 14px;border-radius:14px;border:1px solid rgba(34,197,94,.4);background:linear-gradient(140deg,rgba(34,197,94,.14),transparent 60%);font-size:12px;color:#bbf7d0;line-height:1.9}
-.bld-link-ok b{color:#86efac}
-.bld-link-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}
-.bld-link-actions .btn{font-size:11px}
-[data-theme="light"] .bld-link-ok{color:#166534;border-color:rgba(22,163,74,.35)}
-</style>
-
-<script>
-/* ════════════════════════════════════════════════════════════════════════
-   Config Builder + Iran Gateway page logic (isolated script block — a syntax
-   error in one block must never kill the dashboard; see pages.py:4627 note).
-   Rendering is 100% capability-driven: /api/config-builder/capabilities.
-   No protocol-support assumptions are hardcoded in JavaScript.
-   ════════════════════════════════════════════════════════════════════════ */
-var BLD_CAPS=null, BLD_EPS=[], BLD_LINKS=[], BLD_VMX=null, NCC_SEL_LINK='';
-var BLD_SEL={protocol:'',transport:'',security:'',node:'panel',ep:'',routing:'ALL_VPN',client:'xray-json'};
-
-// ── آیکون/نام فارسی پروتکل‌ها (فقط نمایش — تصمیم‌ها همیشه از capabilities) ──
-var NCC_PROTO_META={
-  vless:{icon:'ti-bolt',fa:'ولس',sub:'سبک · UUID'},
-  trojan:{icon:'ti-shield-check',fa:'تروجان',sub:'پسورد · ضد تشخیص'},
-  shadowsocks:{icon:'ti-ghost',fa:'شادوساکس',sub:'AEAD'},
-  mtproto:{icon:'ti-brand-telegram',fa:'ام‌تی‌پروتو',sub:'tg:// proxy'}
-};
-var NCC_ROUTE_META={
-  ALL_VPN:{icon:'ti-world',fa:'همه‌ی ترافیک از VPN'},
-  IRAN_DIRECT:{icon:'ti-flag',fa:'ایران مستقیم (ISP خودت)'},
-  IRAN_PROXY:{icon:'ti-flag-2',fa:'پروکسی ایران (گیت‌وی واقعی)'},
-  INTERNATIONAL_VPN:{icon:'ti-globe',fa:'بین‌الملل VPN'},
-  CUSTOM:{icon:'ti-adjustments',fa:'قواعد سفارشی'}
-};
-// Phase 41 §4 — برچسب نمایشی ترنسپورت‌ها؛ مقدار داخلی همیشه canonical است:
-// xhttp-packet-up / xhttp-stream-up / ws / tcp — دقیقاً مقادیرِ capability engine.
-var NCC_TR_FA={
-  'tcp':'TCP',
-  'ws':'WebSocket',
-  'xhttp-packet-up':'XHTTP Packet-up',
-  'xhttp-stream-up':'XHTTP Stream-up'
-};
-
-async function loadBuilderPage(){
-  try{
-    nccLoadStatus(); nccBrowserPing();   // هسته: در هر پروفایلی کار می‌کنند
-    var r=await authF('/api/config-builder/capabilities');
-    if(!r.ok){
-      // Phase 40 §32: زنجیره‌ی ساخت کانفیگ از v12.4 هسته است — این مسیر دیگر
-      // «دیوار پروفایل» نیست؛ فقط حالت خطای honest برای موتورِ لودنشده/خطادار.
-      var host=document.getElementById('ncc-protocols');
-      if(host)host.innerHTML='<div class="bld-hint" style="grid-column:1/-1;padding:14px;border:1px dashed var(--card-b);border-radius:12px">'+
-        '<b>موتور سازنده‌ی کانفیگ روی این دیپلوی در دسترس نیست.</b><br>'+
-        'زنجیره‌ی ساخت کانفیگ (config_builder + capability_engine) از نسخه‌ی v12.4 هسته‌ی همیشه‌زنده است — '+
-        'این پیام یعنی موتور در بوت لود نشده (خطای فنی، نه تنظیم پروفایل). '+
-        '<details style="margin-top:6px"><summary>جزئیات فنی</summary><code style="direction:ltr;display:block">GET /api/config-builder/capabilities → HTTP '+r.status+'</code> — '+
-        'لاگ بوت را در «تشخیص و لاگ» ببینید.</details>'+
-        '<br>پنل تست زنده‌ی شبکه (تست سریع/TLS/SNI/تشخیص کامل) همین حالا هم واقعی و فعال است.</div>';
-      ['ncc-nodes','ncc-routing','ncc-clients'].forEach(function(id){var e=document.getElementById(id);if(e)e.innerHTML=''});
-      return;
-    }
-    BLD_CAPS=await r.json();
-    nccRenderProtocols(); nccRenderNodes(); nccRenderRouting(); nccRenderClients();
-    bldLoadEndpointProfiles(); bldLoadHistory(); nccLoadLinks(); nccLoadMatrix();
-    wsStepAuto();   // استپر پیشرفت بعد از اولین رندر
-  }catch(e){netErr(e,'ورک‌اسپیس ساخت کانفیگ')}
-}
-
-// ── هدر: وضعیت Core / Backend / Node / Latency — از داده‌ی واقعی ──
-async function nccLoadStatus(){
-  try{
-    var r=await authF('/health'); var h=await r.json();
-    nccDot('core', h && h.status==='ok');
-    document.getElementById('ncc-val-core').textContent=(h&&h.uptime)?('UP '+h.uptime):'—';
-  }catch(e){nccDot('core',false);document.getElementById('ncc-val-core').textContent='DOWN'}
-  try{
-    var r=await authF('/api/health/summary'); var s=await r.json();
-    var by=(s&&s.by_state)||{}; var healthy=(by.HEALTHY||0), tot=(s&&s.tracked)||0;
-    var backend = tot>0 ? (healthy>0?'HEALTHY':'NO VERIFIED') : 'NO CONFIGS';
-    nccDot('backend', backend==='HEALTHY');
-    document.getElementById('ncc-val-backend').textContent=backend+' · '+healthy+'/'+tot;
-  }catch(e){nccDot('backend',false);document.getElementById('ncc-val-backend').textContent='—'}
-  try{
-    var node=(BLD_CAPS.nodes||[]).filter(function(n){return n.node_id===BLD_SEL.node})[0]||{};
-    document.getElementById('ncc-val-node').textContent=(node.name||node.node_id||'—')+(node.state?(' · '+node.state):'');
-  }catch(e){}
-  nccUpdateTarget();
-}
-function nccDot(which,ok){
-  var d=document.getElementById('ncc-dot-'+which); if(d)d.className='ncc-dot '+(ok?'ok':'bad');
-}
-
-// ── ۱) پروتکل — کارت‌ها؛ فقط چیزی که واقعاً قابل انتخاب است فعال است ──
-// Phase 41 §7: با تغییر پروتکل، transport/security از نو محاسبه می‌شوند —
-// هیچ مقدار قدیمی از پروتکل قبلی در state نمی‌ماند (capability-driven).
-function nccAutoTransport(){
-  // §4/§5 — قابلیت‌محور: اولین ترنسپورتِ SUPPORTED برای (protocol × node فعلی).
-  // فقط وقتی transport خالی/نامعتبر است انتخاب می‌کند — انتخاب صریح کاربر را
-  // بازنویس نمی‌کند. (همان الگوی UX موجود در صفحه‌ی IR-Direct.)
-  if(!BLD_SEL.protocol)return false;
-  var list=nccNodeProtocols().filter(function(x){
-    return x.protocol===BLD_SEL.protocol&&x.status==='SUPPORTED';
-  });
-  if(!list.length)return false;
-  var cur=null;
-  if(BLD_SEL.transport)cur=list.filter(function(x){return x.transport===BLD_SEL.transport})[0];
-  if(!cur){cur=list[0];BLD_SEL.transport=cur.transport}
-  if(!BLD_SEL.security||!list.filter(function(x){return x.transport===BLD_SEL.transport&&x.security===BLD_SEL.security}).length){
-    BLD_SEL.security=cur.security;
-  }
-  return true;
-}
-function nccRenderProtocols(){
-  var host=document.getElementById('ncc-protocols'); if(!host)return;
-  host.innerHTML='';
-  (BLD_CAPS.protocols||[]).forEach(function(p){
-    var m=NCC_PROTO_META[p.protocol]||{icon:'ti-plug',fa:p.protocol,sub:''};
-    var d=document.createElement('div');
-    d.className='ncc-pcard'+(p.selectable?'':' off')+(BLD_SEL.protocol===p.protocol?' sel':'');
-    d.innerHTML='<div class="ncc-pcard-icon"><i class="ti '+m.icon+'"></i></div>'+
-      '<div class="ncc-pcard-title">'+esc(m.fa)+'</div>'+
-      '<div class="ncc-pcard-sub">'+esc(m.sub)+(p.selectable?'':' · '+(p.readiness||''))+'</div>';
-    if(p.selectable){d.onclick=function(){
-      if(BLD_SEL.protocol!==p.protocol){BLD_SEL.protocol=p.protocol;BLD_SEL.transport='';BLD_SEL.security='';}
-      nccAutoTransport();            // §5: انتخاب خودکار اولین ترنسپورت معتبر
-      nccRenderProtocols();nccUpdateTarget();
-    }}
-    else{d.title='Not supported on this deployment — '+esc(p.note||p.readiness||'')}
-    host.appendChild(d);
-  });
-  var hint=document.getElementById('ncc-proto-hint');
-  if(hint){var bp=(BLD_CAPS.protocols||[]).filter(function(p){return !p.selectable});
-    hint.textContent=bp.length?('پروتکل‌های دیگر روی این دیپلوی پشتیبانی نمی‌شوند (فقط تولید لینک/بخش آزمایشی): '+bp.map(function(p){return p.protocol}).join('، ')):'همه‌ی پروتکل‌های پشتیبانی‌شده روی این دیپلوی فعال‌اند.';}
-  nccRenderTransports();
-}
-
-function nccNodeProtocols(){
-  var node=(BLD_CAPS.nodes||[]).filter(function(n){return n.node_id===BLD_SEL.node})[0];
-  return (node&&node.protocols)||[];
-}
-
-// ── ۳) ترنسپورت — فقط ترکیب‌های معتبر ──
-// Phase 41 §3/§8: هر رندر، انتخاب فعلی را با فهرست واقعیِ نود/پروتکل فعلی
-// تطبیق می‌دهد — اگر transport در state با چیزیز رندرشده یکی نباشد یعنی
-// باگ همگام‌سازی است؛ دیگر هرگز «چیپ SEL ولی state خالی» رخ نمی‌دهد.
-function nccRenderTransports(){
-  var host=document.getElementById('ncc-transports'); if(!host)return;
-  host.innerHTML='';
-  var list=nccNodeProtocols().filter(function(x){return !BLD_SEL.protocol||x.protocol===BLD_SEL.protocol});
-  var supported=list.filter(function(x){return x.status==='SUPPORTED'});
-  if(BLD_SEL.transport){
-    var stillValid=supported.some(function(x){return x.transport===BLD_SEL.transport});
-    if(!stillValid)BLD_SEL.transport='';   // §7/§8: state قدیمی/نامعتبر پاک می‌شود
-  }
-  nccAutoTransport();                      // §5: پرکردن خودکار فقط وقتی خالی است
-  var seen={};
-  list.forEach(function(x){
-    if(seen[x.transport])return; seen[x.transport]=1;
-    var ok=(x.status==='SUPPORTED');
-    var d=document.createElement('div');
-    d.className='ncc-chip'+(ok?'':' off')+(BLD_SEL.transport===x.transport?' sel':'');
-    d.innerHTML=esc(NCC_TR_FA[x.transport]||x.transport)+(ok?'':' <span class="st">'+esc(x.status)+'</span>');
-    if(ok){d.onclick=function(){BLD_SEL.transport=x.transport;BLD_SEL.security=x.security;nccRenderTransports();nccUpdateTarget()}}
-    else{d.title=esc(x.reason||x.status)}
-    host.appendChild(d);
-  });
-  if(!BLD_SEL.protocol){var hint=document.getElementById('ncc-tr-hint');if(hint)hint.textContent='اول پروتکل را انتخاب کنید.'}
-  else{
-    var bad=list.filter(function(x){return x.status!=='SUPPORTED'}).map(function(x){return x.transport+' ('+x.status+(x.reason?': '+x.reason:'')+')'});
-    var hint=document.getElementById('ncc-tr-hint');
-    if(hint){hint.textContent=bad.length?('روی این نود/دیپلوی پشتیبانی نمی‌شود: '+bad.join(' · ')):'ترنسپورت‌ها از قابلیت واقعی نود می‌آیند — ترکیب نامعتبر ساخته نمی‌شود.'}
-  }
-  nccRenderSecurity();
-}
-
-// ── ۴) امنیت ──
-// Phase 41 §7: امنیت همیشه با (protocol × transport) فعلی اعتبارسنجی می‌شود —
-// مقدار امنیتیِ خارج از مجموعه‌ی مجاز، به اولین مقدار معتبر برمی‌گردد.
-function nccRenderSecurity(){
-  var host=document.getElementById('ncc-security'); if(!host)return;
-  host.innerHTML='';
-  var list=nccNodeProtocols().filter(function(x){return (!BLD_SEL.protocol||x.protocol===BLD_SEL.protocol)&&(!BLD_SEL.transport||x.transport===BLD_SEL.transport)});
-  var valid=list.map(function(x){return x.security});
-  if(BLD_SEL.security&&valid.length&&valid.indexOf(BLD_SEL.security)<0){
-    BLD_SEL.security=valid[0]||'';        // §7: بقاژی امنیتِ پروتکل قبلی پاک می‌شود
-  }
-  var seen={};
-  list.forEach(function(x){
-    if(seen[x.security])return; seen[x.security]=1;
-    var d=document.createElement('div');
-    d.className='ncc-chip'+(BLD_SEL.security===x.security?' sel':'');
-    d.textContent=x.security;
-    d.onclick=function(){BLD_SEL.security=x.security;nccRenderSecurity();nccUpdateTarget()};
-    host.appendChild(d);
-  });
-  var hint=document.getElementById('ncc-sec-hint');
-  if(hint){hint.textContent=BLD_SEL.security==='none'?'بدون TLS — فقط برای تست/شبکه‌ی امن':'TLS با SNI از پروفایل اندپوینت — REALITY فقط جایی که هسته واقعاً پشتیبانی کند عرضه می‌شود (قابلیت‌محور).'}
-}
-
-// ── ۲) نود — کارت با سلامت/لوکیشن/قابلیت ──
-function nccRenderNodes(){
-  var host=document.getElementById('ncc-nodes'); if(!host)return;
-  host.innerHTML='';
-  (BLD_CAPS.nodes||[]).forEach(function(n){
-    var d=document.createElement('div');
-    d.className='ncc-ncard'+(BLD_SEL.node===n.node_id?' sel':'');
-    var st=(n.state==='ONLINE')?'ok':(n.state==='DEGRADED'?'warn':'bad');
-    var eg=n.egress||{};
-    var egBadge=eg.classification==='VERIFIED_EGRESS'?'<span class="igw-state igw-ok">EGRESS ✓</span>':(eg.classification==='CONFIGURED_ONLY'?'<span class="igw-state igw-warn">CONFIGURED</span>':'<span class="igw-state igw-info">UNKNOWN</span>');
-    d.innerHTML='<div class="nm"><i class="ti ti-router"></i> '+esc(n.name||n.node_id)+' <span class="ncc-dot '+(n.state==='ONLINE'?'ok':(n.state==='DEGRADED'?'warn':'bad'))+'"></span></div>'+
-      '<div class="meta">'+esc(n.role||'')+' · '+(n.region?esc(n.region):'')+'<br>'+
-      '<b style="direction:ltr;display:inline-block;font-family:monospace;font-size:10px">'+esc(n.address||'')+'</b><br>'+
-      'TCP: '+esc(String(n.tcp)).slice(0,42)+' · TLS: '+(n.tls?'✓':'✗')+' · UDP: '+esc(String(n.udp))+' '+egBadge+'</div>';
-    d.onclick=function(){BLD_SEL.node=n.node_id;nccRenderNodes();
-      // Phase 41 §8: تغییر نود → سطح قابلیتِ نود جدید اعمال می‌شود:
-      // transport/security از نو محاسبه و رندر می‌شوند (همگام‌سازی visual=state)
-      nccAutoTransport();nccRenderTransports();nccUpdateTarget();nccLoadStatus();
-    };
-    host.appendChild(d);
-    var det=document.getElementById('ncc-node-detail');
-    if(det&&BLD_SEL.node===n.node_id){
-      det.innerHTML='نود انتخابی: <b>'+esc(n.name||n.node_id)+'</b> — '+esc(n.deployment_label||'')+'<br>'+
-        esc(n.state_note||'')+
-        (eg.classification==='VERIFIED_EGRESS'?('<br>خروج اثبات‌شده: '+esc(eg.public_ip||'?')+' → '+esc(eg.country||'')):'');
-    }
-  });
-}
-
-// ── ۶) مسیریابی — کارت‌های بزرگ با پاها؛ IRAN_PROXY فقط با گیت‌وی اثبات‌شده ──
-function nccRenderRouting(){
-  var host=document.getElementById('ncc-routing'); if(!host)return;
-  host.innerHTML='';
-  var gw=BLD_CAPS.iran_gateway||{};
-  var gwReady=(gw.state||'')!=='UNCONFIGURED'&&(gw.verified_count||0)>0;
-  (BLD_CAPS.routing_policies||[]).forEach(function(p){
-    var m=NCC_ROUTE_META[p.policy]||{icon:'ti-route',fa:p.policy};
-    var isIranProxy=(p.policy==='IRAN_PROXY');
-    var off=isIranProxy&&!gwReady;
-    var d=document.createElement('div');
-    d.className='ncc-rcard'+(off?' off':'')+(BLD_SEL.routing===p.policy?' sel':'');
-    var legs=p.legs||{};
-    var legsHtml= legs.iran!==undefined ?
-      ('🇮🇷 مقاصد ایرانی → <b>'+esc(legs.iran)+'</b><br>🌍 مقاصد بین‌المللی → <b>'+esc(legs.international)+'</b>') : 'قواعد ادمین';
-    d.innerHTML='<div class="nm"><i class="ti '+m.icon+'"></i> '+esc(m.fa)+'</div>'+
-      '<div class="legs">'+legsHtml+'</div>'+
-      (off?'<div class="why-off"><i class="ti ti-alert-triangle"></i> گیت‌وی ایرانی اثبات‌شده‌ای موجود نیست — این مسیریابی ساخته نمی‌شود (بدون جعل).</div>':'')+
-      '<div class="req">'+esc(p.gateway_requirement||'')+'</div>';
-    if(!off){d.onclick=function(){BLD_SEL.routing=p.policy;nccRenderRouting()}}
-    else{d.title='No verified Iranian gateway available — cannot generate this routing profile.'}
-    host.appendChild(d);
-  });
-  var hint=document.getElementById('ncc-routing-hint');
-  if(hint){
-    var extra='';
-    if(BLD_SEL.routing==='IRAN_DIRECT'){extra='IRAN_DIRECT = split tunnel سمت کلاینت (بدون سرور ایرانی): ترافیک ایران از ISP خودت، بقیه از تونل.'}
-    else if(BLD_SEL.routing==='IRAN_PROXY'){extra='IRAN_PROXY = خروج ایرانی واقعی فقط از گیت‌وی اثبات‌شده — SNI/دامنه/IP تنظیم‌شده هرگز مبنای «خروج ایران» نیست.'}
-    else if(BLD_SEL.routing==='ALL_VPN'){extra='همه‌ی ترافیک از تونل EMIX — با هر خروجی کلایتی.'}
-    // Phase 41 §24 — هشدار زنده: فرمت کلاینتِ بدون split-tunnel نمی‌تواند IRAN_DIRECT
-    // را اجرا کند؛ صادقانه قبل از اعتبارسنجی گفته می‌شود (نه بعد از آن).
-    var splitWarn='';
-    var cl=(BLD_CAPS.clients||{})[BLD_SEL.client]||{};
-    if((BLD_SEL.routing==='IRAN_DIRECT'||BLD_SEL.routing==='INTERNATIONAL_VPN')&&cl.split_tunnel!=='SPLIT_TUNNEL_SUPPORTED'){
-      splitWarn='<br><span class="ncw-split-warn"><i class="ti ti-alert-triangle"></i> SPLIT_TUNNEL_NOT_SUPPORTED — فرمت «'+esc(BLD_SEL.client)+'» split-tunnel را اجرا نمی‌کند؛ برای این مسیریابی xray-json یا sing-box انتخاب کنید.</span>';
-    }
-    hint.innerHTML='گیت‌وی ایران: <b>'+esc(gw.state||'UNCONFIGURED')+'</b>'+(gw.verified_count?(' ('+gw.verified_count+' اثبات‌شده)'):'')+' — IRAN_PROXY بدون گیت‌وی اثبات‌شده ساخته نمی‌شود.'+(extra?('<br>'+extra):'')+splitWarn;
-  }
-}
-
-// ── ۷) کلاینت/خروجی ──
-function nccRenderClients(){
-  var host=document.getElementById('ncc-clients'); if(!host)return;
-  host.innerHTML='';
-  Object.keys(BLD_CAPS.clients||{}).forEach(function(k){
-    var c=BLD_CAPS.clients[k];
-    var split=(c.split_tunnel==='SPLIT_TUNNEL_SUPPORTED');
-    var d=document.createElement('div');
-    d.className='ncc-ccard'+(BLD_SEL.client===k?' sel':'');
-    d.innerHTML='<div class="nm">'+esc(k)+'</div><div class="meta">'+esc(c.label||'')+'<br>'+
-      (split?'<span class="igw-state igw-ok">split ✓</span>':'<span class="igw-state igw-warn">بدون split</span>')+'</div>';
-    d.onclick=function(){BLD_SEL.client=k;nccRenderClients()};
-    host.appendChild(d);
-  });
-  var hint=document.getElementById('ncc-client-hint');
-  if(hint){var c=BLD_CAPS.clients[BLD_SEL.client]||{};
-    hint.textContent=String(c.routing_rules||'');
-    if(BLD_SEL.routing==='IRAN_DIRECT'&&!((BLD_CAPS.clients||{})[BLD_SEL.client]||{}).split_tunnel||false){}
-  }
-}
-
-// ── ۵) پروفایل اندپوینت ──
-async function bldLoadEndpointProfiles(){
-  try{
-    var r=await authF('/api/endpoint-profiles');
-    if(!r.ok){netErr(r,'Endpoint Profiles');return}
-    var j=await r.json();
-    BLD_EPS=j.profiles||j||[];
-    var sel=document.getElementById('bld-ep'); if(!sel)return;
-    sel.innerHTML='<option value="">استاندارد (panel host)</option><option value="__custom__">اندپوینت سفارشی…</option>';
-    BLD_EPS.forEach(function(p){var o=document.createElement('option');o.value=p.id;o.textContent=p.name+' — '+(p.address||'')+(p.sni?(' / SNI:'+p.sni):'');sel.appendChild(o)});
-  }catch(e){netErr(e,'Endpoint Profiles')}
-}
-
-function builderOnEpChange(){
-  var sel=document.getElementById('bld-ep');
-  BLD_SEL.ep=sel.value;
-  document.getElementById('bld-ep-custom').style.display=(sel.value==='__custom__')?'grid':'none';
-  nccUpdateTarget();
-}
-
-// ── لینک‌های موجود (برای تست تونل/توربو — تست E2E واقعی) ──
-async function nccLoadLinks(){
-  try{
-    var r=await authF('/api/links');
-    if(!r.ok)return;
-    var j=await r.json();
-    BLD_LINKS=j.links||[];
-    var sel=document.getElementById('ncc-link-sel'); if(!sel)return;
-    var cur=sel.value;
-    sel.innerHTML='<option value="">— کانفیگی برای تست تونل/توربو انتخاب کنید —</option>';
-    BLD_LINKS.forEach(function(l){
-      var o=document.createElement('option');
-      o.value=l.uuid;
-      var hp=(l.last_ping&&l.last_ping.ok)?(' · تونل '+Math.round(l.last_ping.e2e_ms!=null?l.last_ping.e2e_ms:l.last_ping.ws_ms)+'ms'):'';
-      o.textContent=(l.label||l.uuid.slice(0,8))+' ('+(l.protocol||'')+')'+hp;
-      sel.appendChild(o);
-    });
-    if(cur)sel.value=cur;
-    NCC_SEL_LINK=sel.value||'';
-  }catch(e){}
-}
-function nccOnLinkSel(){NCC_SEL_LINK=document.getElementById('ncc-link-sel').value||''}
-
-// Phase 41 §22 — تست‌های بیشتر: موبایل جمع‌شده، دسکتاپ باز
-function nccToggleMoreTests(btn){
-  var ex=document.getElementById('ncc-test-extra'); if(!ex)return;
-  var open=ex.classList.toggle('open');
-  if(btn){var ch=btn.querySelector('.ti-chevron-down'); if(ch)ch.style.transform=open?'rotate(180deg)':''}
-}
-
-// ── ماتریس اعتبارسنجی ران‌تایم (شواهد RUNTIME_STARTED/LISTENER_REACHABLE) ──
-async function nccLoadMatrix(){
-  try{
-    var r=await authF('/api/railway/validation-matrix');
-    if(!r.ok)return;
-    var j=await r.json();
-    BLD_VMX=j.matrix||[];
-  }catch(e){}
-}
-function nccRuntimeRow(){
-  // دو وضعیت (§31): CONFIGURATION در مقابل RUNTIME — runtime فقط از شواهد
-  if(!BLD_VMX)return null;
-  var proto=BLD_SEL.protocol||'', tr=BLD_SEL.transport||'';
-  var row=BLD_VMX.filter(function(x){
-    return (x.protocol===proto||('vless'===proto&&x.fused===tr))&&(x.transport===tr||x.fused===proto+'-'+tr||x.fused===tr);
-  })[0];
-  if(!row&&tr) row=BLD_VMX.filter(function(x){return x.fused===tr})[0];
-  return row||null;
-}
-function nccRuntimeBadge(){
-  var row=nccRuntimeRow();
-  if(!row)return 'RUNTIME: <span class="igw-state igw-info">UNKNOWN</span>';
-  var st=row.stages||{};
-  var rt=String(st.RUNTIME_STARTED||'');
-  var lr=String(st.LISTENER_REACHABLE||'');
-  if(rt.indexOf('PASS')===0&&lr.indexOf('PASS')===0)return 'RUNTIME: <span class="igw-state igw-ok">VERIFIED ✓</span>';
-  if(rt.indexOf('NO_ACTIVE_INSTANCE')===0)return 'RUNTIME: <span class="igw-state igw-warn">در انتظار instance</span> — '+esc(rt.split('—')[1]||'per-link');
-  return 'RUNTIME: <span class="igw-state igw-info">NOT VERIFIED</span>';
-}
-
-// ── هدف تست فعلی ──
-function nccTarget(){
-  var t={address:'',port:443,sni:'',tls:true};
-  try{
-    if(BLD_SEL.ep==='__custom__'){
-      t.address=document.getElementById('bld-ep-address').value||'';
-      t.port=parseInt(document.getElementById('bld-ep-port').value)||443;
-      t.sni=document.getElementById('bld-ep-sni').value||'';
-    }else if(BLD_SEL.ep){
-      var p=(BLD_EPS||[]).filter(function(x){return x.id===BLD_SEL.ep})[0];
-      if(p){t.address=p.address||'';t.sni=p.sni||'';t.port=p.port||443}
-    }
-    if(!t.address){
-      var node=(BLD_CAPS.nodes||[]).filter(function(n){return n.node_id===BLD_SEL.node})[0]||{};
-      t.address=node.address||'';
-      t.sni='';
-    }
-    t.tls=(BLD_SEL.security!=='none');
-  }catch(e){}
-  return t;
-}
-// ── خلاصه‌ی پیکربندی (§20) — همیشه مرئی؛ بدون اسکرول به عقب ──
-function nccSummaryUpdate(){
-  var el=document.getElementById('ws-summary'); if(!el)return;
-  var node=(BLD_CAPS.nodes||[]).filter(function(n){return n.node_id===BLD_SEL.node})[0]||{};
-  var proto=BLD_SEL.protocol?(NCC_PROTO_META[BLD_SEL.protocol]||{}).fa||BLD_SEL.protocol:'—';
-  var tr=BLD_SEL.transport?(NCC_TR_FA[BLD_SEL.transport]||BLD_SEL.transport):'—';
-  var sec=BLD_SEL.security||'—';
-  var nodeLbl=node.name||node.node_id||'—';
-  var route=BLD_SEL.routing?(NCC_ROUTE_META[BLD_SEL.routing]||{}).fa||BLD_SEL.routing:'—';
-  var ready=BLD_SEL.protocol&&BLD_SEL.transport&&BLD_SEL.security;
-  var sum=document.getElementById('ws-summary-vals');
-  if(sum)sum.innerHTML=esc(proto)+' <i class="ti ti-circle-dot" style="font-size:6px;vertical-align:middle;opacity:.5"></i> '+
-    esc(String(nodeLbl).slice(0,22))+' <i class="ti ti-circle-dot" style="font-size:6px;vertical-align:middle;opacity:.5"></i> '+
-    esc(tr)+' <i class="ti ti-circle-dot" style="font-size:6px;vertical-align:middle;opacity:.5"></i> '+esc(sec)+
-    (BLD_SEL.routing?' <i class="ti ti-circle-dot" style="font-size:6px;vertical-align:middle;opacity:.5"></i> '+esc(String(route).slice(0,26)):'');
-  var dot=document.getElementById('ws-summary-state');
-  if(dot){dot.className='ws-sum-dot '+(ready?'ok':'');dot.textContent=ready?'READY':'—'}
-}
-function nccUpdateTarget(){
-  var el=document.getElementById('ncc-test-target'); if(!el)return;
-  var t=nccTarget();
-  var link=NCC_SEL_LINK?((BLD_LINKS||[]).filter(function(l){return l.uuid===NCC_SEL_LINK})[0]||{}):{};
-  el.innerHTML='هدف تست: <b>'+esc(t.address||'—')+':'+esc(String(t.port))+'</b>'+(t.sni?(' · SNI: <b>'+esc(t.sni)+'</b>'):'')+(t.tls?' · TLS':' · بدون TLS')+
-    (NCC_SEL_LINK?(' · تونل: <b>'+esc(link.label||NCC_SEL_LINK.slice(0,8))+'</b>'):'');
-  nccSummaryUpdate();   // Phase 41 §20: خلاصه همیشه مرئی
-  wsStepAuto();   // Phase 40: استپر پیشرفت از انتخاب‌های واقعی
-}
-
-// ── payload کامپایلر کانونی (همان مسیر preview و generate) ──
-function bldPayload(){
-  var custom=(BLD_SEL.ep==='__custom__');
-  var p={
-    name:document.getElementById('bld-name').value||'',
-    remark:document.getElementById('bld-remark').value||'EMIX',
-    protocol:BLD_SEL.protocol, transport:BLD_SEL.transport, security:BLD_SEL.security,
-    node_id:BLD_SEL.node,
-    endpoint_profile_id:(custom?'':BLD_SEL.ep),
-    custom_address:custom?document.getElementById('bld-ep-address').value:'',
-    custom_sni:custom?document.getElementById('bld-ep-sni').value:'',
-    custom_port:custom?(parseInt(document.getElementById('bld-ep-port').value)||443):443,
-    routing_policy:BLD_SEL.routing, client_format:BLD_SEL.client
-  };
-  var alpn=document.getElementById('bld-alpn'); if(alpn&&alpn.value)p.alpn=alpn.value;
-  var fp=document.getElementById('bld-fingerprint'); if(fp&&fp.value)p.fingerprint=fp.value;
-  if(BLD_SEL.protocol==='shadowsocks'){
-    var c=document.getElementById('bld-ss-cipher'); if(c&&c.value)p.ss_cipher=c.value;
-    var ssx=document.getElementById('ncc-ss-extra'); if(ssx)ssx.hidden=false;
-  }else{
-    var ssx2=document.getElementById('ncc-ss-extra'); if(ssx2)ssx2.hidden=true;
-  }
-  return p;
-}
-
-function bldBusy(btn,on){if(!btn)return;btn.disabled=on;var i=btn.querySelector('i');if(i){i.className=on?'ti ti-loader-2 spin':'ti '+(btn.id==='bld-gen-btn'?'ti-wand':'ti-eye')}}
-
-// ═══ Phase 41 §5/§6 — مرز اعتبار درخواست (فرانت‌اند) ═══
-// ConfigRequest هرگز نباید با فیلد اجباریِ خالی به سرور برسد. این
-// اعتبارسنجی قبل از preview/generate اجرا می‌شود و پیام فارسیِ دقیق
-// می‌دهد — دقیقاً همان قراردادی که §5 خواسته است.
-function bldValidateSelection(){
-  var v=document.getElementById('bld-validation');
-  var missing=[];
-  if(!BLD_SEL.protocol)missing.push('protocol');
-  if(!BLD_SEL.transport)missing.push('transport');
-  if(!BLD_SEL.security)missing.push('security');
-  if(!missing.length)return true;
-  var msg=missing.indexOf('protocol')>=0?'اول پروتکل را انتخاب کنید (مرحله‌ی ۱).'
-    :(missing.indexOf('transport')>=0?'ابتدا نوع انتقال را انتخاب کنید (مرحله‌ی ۳).'
-    :'ابتدا امنیت (Security) را انتخاب کنید (مرحله‌ی ۴).');
-  if(v){v.innerHTML='<div class="bld-valid-bad">⚠ <b>درخواست ناقص</b> — '+esc(msg)+'<br>'+
-    '<span class="bld-hint">این خطا قبل از ارسال به سرور گرفته شد — درخواستِ ناقص هرگز به کامپایلر نمی‌رسد (INVALID_REQUEST در مرز).</span></div>';
-    v.scrollIntoView({behavior:'smooth',block:'nearest'});
-  }
-  toast(msg,'err');
-  return false;
-}
-
-// ── نتیجه: دو وضعیت (CONFIGURATION / RUNTIME) + خروجی‌ها ──
-function bldRenderResult(j){
-  var v=document.getElementById('bld-validation'), o=document.getElementById('bld-outputs');
-  if(!j.ok){
-    v.innerHTML='<div class="bld-valid-bad">⛔ <b>INVALID</b> — مرحله: '+esc(j.stage||'?')+'<br>'+ (j.errors||[]).map(esc).join('<br>') +'</div>'+
-      '<div class="bld-hint">ترکیب انتخاب‌شده صادقانه ساخته نشد — از ماتریس قابلیت‌ها (مراحل بالا) یک ترکیب SUPPORTED انتخاب کنید.</div>';
-    o.innerHTML=''; wsStep(10,false); return;
-  }
-  var rtBadge=nccRuntimeBadge();
-  v.innerHTML='<div class="bld-valid-ok">✓ <b>CONFIGURATION: VALID</b> — '+esc(j.preview.protocol)+' / '+esc(j.preview.transport)+' / '+esc(j.preview.security)+' · نود: '+esc(j.preview.node.label||j.preview.node.node_id)+' · مسیریابی: '+esc(j.preview.routing)+'</div>'+
-    '<div style="margin-top:8px">'+rtBadge+' <span class="bld-hint" style="display:inline">— کنترل‌پلین ≠ دیتاپلین: تست واقعی را از پنل تست زنده بزنید.</span></div>'+
-    (j.credential_placeholder?'<div class="bld-hint">credential پیش‌نمایش: جای‌نگهدار — در ساخت نهایی واقعی ساخته می‌شود.</div>':'');
-  var out=j.outputs||{}; var h='';
-  // ═══ Phase 40 §34 — پنل لینک زنده‌ی ساخته‌شده (کارت + Retest) ═══
-  var L=j.link;
-  if(L&&L.created){
-    window.__bldLink=L;
-    h+='<div class="bld-link-ok"><i class="ti ti-circle-check"></i> <b>کانفیگ زنده ساخته شد</b> — روی کارت‌های «کانفیگ‌ها» ظاهر می‌شود و قابل Retest واقعی است'+
-      '<div class="bld-link-actions">'+
-      '<button class="btn btn-sm btn-g" onclick="navigator.clipboard.writeText(window.__bldLink.share_link).then(function(){toast(\'لینک کپی شد\',\'ok\')})"><i class="ti ti-copy"></i> کپی لینک</button>'+
-      '<button class="btn btn-sm btn-o" onclick="showQR(window.__bldLink.share_link)"><i class="ti ti-qrcode"></i> QR (محلی)</button>'+
-      '<button class="btn btn-sm btn-o" onclick="navigator.clipboard.writeText(window.__bldLink.sub_url).then(function(){toast(\'Sub کپی شد\',\'ok\')})"><i class="ti ti-rss"></i> کپی Sub</button>'+
-      '<button class="btn btn-sm btn-p" onclick="closeCreateWorkspace()"><i class="ti ti-arrow-back-up"></i> بازگشت به کانفیگ‌ها</button>'+
-      '</div><div class="bld-hint">UUID: <span style="direction:ltr;display:inline-block;font-family:monospace">'+esc(L.uuid||'')+'</span> · مسیریابی: '+esc(NCW_ROUTE_FA[L.routing_policy]||L.routing_policy||'')+' — وضعیت RUNTIME بعد از اولین تست واقعی مشخص می‌شود.</div></div>';
-    wsStep(10,true);
-  } else if(L&&!L.created&&L.reason){
-    h+='<div class="bld-hint">خروجی فقط-artifact: '+esc(L.reason)+'</div>';
-  }
-  if(out.uri){h+='<div class="bld-out"><b>URI</b> <button class="btn btn-sm btn-o" onclick="bldCopy(this)">کپی</button> <button class="btn btn-sm btn-o" onclick="showQR(window.__bldUri)">QR (محلی)</button><code>'+esc(out.uri)+'</code></div>';window.__bldUri=out.uri}
-  if(out.xray_json){h+='<div class="bld-out"><b>Xray JSON</b><code>'+esc(JSON.stringify(out.xray_json,null,1))+'</code></div>'}
-  if(out.subscription){h+='<div class="bld-out"><b>Subscription (base64)</b><code>'+esc(out.subscription)+'</code></div>'}
-  var rd=j.preview&&j.preview.routing_detail;
-  if(rd&&rd.legs){
-    h+='<div class="bld-out"><b>مسیریابی (explainable)</b><br>';
-    Object.keys(rd.legs).forEach(function(k){h+=esc(k)+' → '+esc(rd.legs[k].decision)+' · خروج: '+esc(rd.legs[k].egress)+'<br>'});
-    if(rd.iran_gateway){h+='گیت‌وی ایران: '+esc(rd.iran_gateway.verdict||'')+'<br>'}
-    if(rd.split_rules){h+='قواعد split-tunnel: '+rd.split_rules.rules.length+' قاعده ('+esc(rd.split_rules.mechanism||'')+')'}
-    h+='</div>';
-  }
-  if(out.split_rules){h+='<div class="bld-hint">قواعد split-tunnel در JSON خروجی گنجانده شد (GEOIP:ir + CIDR از دیتاست اثبات‌شده)</div>'}
-  o.innerHTML=h;
-}
-
-function bldCopy(btn){if(window.__bldUri){navigator.clipboard.writeText(window.__bldUri).then(function(){toast('کپی شد ✓','ok')})}}
-
-async function builderPreview(btn){
-  if(!bldValidateSelection())return;   // §5: درخواست ناقص ارسال نمی‌شود
-  bldBusy(btn,true);
-  try{
-    var r=await authF('/api/config-builder/preview',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(bldPayload())});
-    var j=await r.json(); bldRenderResult(j);
-    if(!j.ok)toast('ترکیب نامعتبر — ساخته نشد','err');
-  }catch(e){netErr(e,'پیش‌نمایش کانفیگ')}finally{bldBusy(btn,false)}
-}
-
-async function builderGenerate(btn){
-  if(!bldValidateSelection())return;   // §5: درخواست ناقص ارسال نمی‌شود
-  bldBusy(btn,true);
-  try{
-    var r=await authF('/api/config-builder/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(bldPayload())});
-    var j=await r.json(); bldRenderResult(j);
-    if(j.ok){
-      toast(j.link&&j.link.created?('کانفیگ ساخته شد ✓ — روی کارت‌ها ظاهر شد'):'کانفیگ ساخته شد ✓ (خروجی)','ok');
-      bldLoadHistory(); nccLoadLinks();   // لینک جدید همان‌جا برای تست تونل/توربو قابل انتخاب است
-    }else{toast('ساخت ناموفق — '+((j.errors||[''])[0]).slice(0,60),'err')}
-  }catch(e){netErr(e,'ساخت کانفیگ')}finally{bldBusy(btn,false)}
-}
-
-// ═══════════════════════════════════════════════════════════════════════
-// پنل تست زنده‌ی شبکه — هر عدد از اندازه‌گیری واقعی می‌آید (فاز ۳۹ §6/§19)
-// ═══════════════════════════════════════════════════════════════════════
-var NCC_ERR_FA={
-  DNS_ERROR:'دامنه resolve نشد — DNS مسیر شما/سرور را بررسی کنید',
-  TCP_REFUSED:'اتصال TCP رد شد — پورت/فایروال/آدرس را بررسی کنید',
-  TIMEOUT:'مهلت اتصال تمام شد — مسیر یا فیلتر را بررسی کنید',
-  TLS_ERROR:'اتصال TLS برقرار نشد — SNI/گواهی/اندپوینت را بررسی کنید',
-  SNI_ERROR:'SNI پذیرفته نشد'
-};
-function nccConsole(title,running){
-  var c=document.getElementById('ncc-console'); if(!c)return;
-  c.innerHTML='<div class="ncc-console-hdr"><i class="ti ti-activity"></i> '+esc(title)+
-    '<span class="ncc-final '+(running?'run':'')+'">'+(running?'در حال اجرا…':'—')+'</span></div><div id="ncc-console-body"></div>';
-}
-function nccLine(name,state,val){
-  var b=document.getElementById('ncc-console-body'); if(!b)return;
-  var d=document.createElement('div');
-  d.className='ncc-cline '+(state||'');
-  var icon=state==='ok'?'ti-circle-check':(state==='bad'?'ti-circle-x':(state==='warn'?'ti-alert-triangle':'ti-minus'));
-  d.innerHTML='<i class="ti '+icon+'"></i><span class="ncc-cname">'+esc(name)+'</span><span class="ncc-cval">'+val+'</span>';
-  b.appendChild(d);
-  var c=document.getElementById('ncc-console'); if(c)c.scrollTop=c.scrollHeight;
-}
-function nccFinal(ok,text){
-  var h=document.querySelector('#ncc-console .ncc-console-hdr .ncc-final');
-  if(h){h.className='ncc-final '+(ok?'ok':'bad');h.textContent=text}
-}
-function nccBusyBtn(btn,on){if(!btn)return;btn.classList.toggle('ncc-busy',on);var i=btn.querySelector('i');if(i){i.style.animation=on?'spin 1s linear infinite':''}}
-
-async function nccTestQuick(btn){
-  nccBusyBtn(btn,true); nccConsole('تست سریع — DNS / TCP / TLS',true);
-  try{
-    var t=nccTarget();
-    if(!t.address){nccFinal(false,'هدفی نیست');nccLine('TARGET','warn','اول پروتکل/نود یا اندپوینت سفارشی انتخاب کنید');return}
-    var r=await authF('/api/network/test/quick',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({address:t.address,port:t.port,sni:t.sni,tls:t.tls})});
-    var d=await r.json();
-    var s=d.stages_ms||{};
-    nccLine('DNS', d.ok||s.dns!=null?'ok':'bad', (s.dns!=null?(toFa(Math.round(s.dns))+'ms'):('✗ '+(d.error_code||'')))+' — '+esc((d.resolved_ips||[])[0]||''));
-    nccLine('TCP', s.tcp!=null?'ok':'bad', s.tcp!=null?(toFa(Math.round(s.tcp))+'ms'):'✗');
-    if(t.tls){nccLine('TLS', s.tls!=null?'ok':'bad', s.tls!=null?(toFa(Math.round(s.tls))+'ms'+((d.cert||{}).alpn_negotiated?(' · ALPN '+esc(d.cert.alpn_negotiated)):'')):'✗')}
-    nccLine('TOTAL', d.ok?'ok':'bad', d.total_ms!=null?(toFa(Math.round(d.total_ms))+'ms'):'—');
-    if(d.ok){nccFinal(true,'● سالم')}
-    else{
-      var fa=NCC_ERR_FA[d.error_code]||'تست ناموفق';
-      nccLine('ERROR','bad',esc(d.error_code||'FAILED')+' — '+esc(d.error_detail||''));
-      nccLine('راهنما','warn',fa+' · جزئیات فنی: '+esc((d.error_detail||'').slice(0,90)));
-      nccFinal(false,fa);
-    }
-  }catch(e){netErr(e,'تست سریع');nccFinal(false,'خطا')}finally{nccBusyBtn(btn,false)}
-}
-
-async function nccTestTls(btn){
-  nccBusyBtn(btn,true); nccConsole('تست TLS — هندشیک + گواهی',true);
-  try{
-    var t=nccTarget();
-    var r=await authF('/api/network/test/tls',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({address:t.address,port:t.port,sni:(t.sni||t.address)})});
-    var d=await r.json();
-    var s=d.stages_ms||{}; var cert=d.cert||{};
-    nccLine('HANDSHAKE', s.tls!=null?'ok':'bad', s.tls!=null?(toFa(Math.round(s.tls))+'ms · DNS '+toFa(Math.round(s.dns||0))+'ms · TCP '+toFa(Math.round(s.tcp||0))+'ms'):'✗');
-    if(d.ok){
-      nccLine('CERT', 'ok', esc(cert.subject_cn||'?')+' · '+esc(cert.issuer||'?'));
-      nccLine('EXPIRY', (cert.days_left!=null&&cert.days_left>14)?'ok':'warn', cert.days_left!=null?(toFa(Math.round(cert.days_left))+' روز باقی‌مانده'):'—');
-      nccLine('SAN', cert.sans&&cert.sans.length?'ok':'warn', esc((cert.sans||[]).slice(0,3).join(' , '))||'—');
-      nccLine('VERIFY', cert.verify_mode==='verified'?'ok':'warn', cert.verify_mode||'—');
-      nccFinal(true,'● TLS سالم');
-    }else{
-      nccLine('ERROR','bad',esc(d.error_code||'TLS_ERROR')+' — '+esc(d.error_detail||''));
-      nccFinal(false,NCC_ERR_FA[d.error_code]||'اتصال TLS برقرار نشد');
-    }
-  }catch(e){netErr(e,'تست TLS');nccFinal(false,'خطا')}finally{nccBusyBtn(btn,false)}
-}
-
-async function nccTestSni(btn){
-  nccBusyBtn(btn,true); nccConsole('تست SNI — گواهی ارائه‌شده در برابر نام درخواستی',true);
-  try{
-    var t=nccTarget();
-    var r=await authF('/api/network/test/sni',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({address:t.address,port:t.port,sni:(t.sni||t.address)})});
-    var d=await r.json();
-    var sa=d.sni_analysis||{}; var cert=d.cert||{};
-    nccLine('REQUESTED','ok',esc(sa.requested||t.sni||'—'));
-    nccLine('HANDSHAKE', d.ok?'ok':'bad', d.ok?'قبول شد'+((d.stages_ms||{}).tls!=null?(' · '+toFa(Math.round(d.stages_ms.tls))+'ms'):''):'✗ '+esc(d.error_code||''));
-    if(cert.subject_cn||cert.sans){nccLine('PRESENTED', sa.match?'ok':'warn', esc(cert.subject_cn||'?')+' · SAN: '+esc((cert.sans||[]).slice(0,2).join(','))||'—')}
-    nccLine('VERDICT', sa.match?'ok':'warn', esc(sa.verdict||'—'));
-    nccLine('NOTE','warn','SNI فقط معنای TLS دارد — نه مسیریابی، نه خروج جغرافیایی');
-    nccFinal(d.ok,(d.ok?(sa.match?'MATCH ✓':'SNI کار می‌کند (گواهی متفاوت)'):'TLS/SNI ناموفق'));
-  }catch(e){netErr(e,'تست SNI');nccFinal(false,'خطا')}finally{nccBusyBtn(btn,false)}
-}
-
-async function nccTestTunnel(btn){
-  nccBusyBtn(btn,true); nccConsole('تست تونل E2E — کلاینت واقعی همان پروتکل',true);
-  try{
-    if(!NCC_SEL_LINK){nccLine('TARGET','warn','اول یک کانفیگ از فهرست بالا انتخاب کنید (تست تونل روی کانفیگ واقعی اجرا می‌شود)');nccFinal(false,'کانفیگی انتخاب نشده');return}
-    var r=await authF('/api/links/'+NCC_SEL_LINK+'/ping',{method:'POST'});
-    var d=await r.json();
-    nccLine('TEST', d.ok?'ok':'bad', esc(d.test||'')+' · via '+esc(d.via||'direct'));
-    nccLine('WS', d.ws_ms!=null?'ok':'bad', d.ws_ms!=null?(toFa(Math.round(d.ws_ms))+'ms'):'✗');
-    nccLine('TUNNEL', d.e2e_ms!=null?'ok':'bad', d.e2e_ms!=null?(toFa(Math.round(d.e2e_ms))+'ms'):'✗');
-    nccLine('REPLY', d.reply?'ok':'bad', esc(d.reply||d.detail||'—'));
-    if(d.fallback==='local'){nccLine('VANTAGE','warn','مسیر عمومی از داخل دیپلوی در دسترس نبود — تونل از آدرس محلی پنل تأیید شد (fallback صادقانه)')}
-    if(d.ok){nccFinal(true,'● تونل سالم');nccLoadLinks()}
-    else{nccLine('ERROR','bad',esc(d.detail||''));nccFinal(false,'تونل برقرار نشد')}
-  }catch(e){netErr(e,'تست تونل');nccFinal(false,'خطا')}finally{nccBusyBtn(btn,false)}
-}
-
-async function nccTestTurbo(btn){
-  nccBusyBtn(btn,true); nccConsole('توربو A/B — همان تونل، عادی در برابر 0-RTT',true);
-  try{
-    if(!NCC_SEL_LINK){nccLine('TARGET','warn','اول یک کانفیگ VLESS-WS/Trojan-WS انتخاب کنید');nccFinal(false,'کانفیگی انتخاب نشده');return}
-    var r=await authF('/api/turbo/links/'+NCC_SEL_LINK+'/ab',{method:'POST'});
-    var d=await r.json();
-    if(!r.ok){nccLine('ERROR','bad',esc(d.detail||''));nccFinal(false,'توربو برای این کانفیگ در دسترس نیست');return}
-    var n=d.normal||{}, tb=d.turbo||{};
-    nccLine('NORMAL', n.ok?'ok':'bad', n.ok?((n.ws_ms!=null?('WS '+toFa(Math.round(n.ws_ms))+'ms'):'')+(n.e2e_ms!=null?(' · E2E '+toFa(Math.round(n.e2e_ms))+'ms'):'')):esc(n.detail||'✗'));
-    nccLine('TURBO 0-RTT', tb.ok?'ok':'bad', tb.ok?((tb.ws_ms!=null?('WS '+toFa(Math.round(tb.ws_ms))+'ms'):'')+(tb.e2e_ms!=null?(' · E2E '+toFa(Math.round(tb.e2e_ms))+'ms'):'')):esc(tb.detail||'✗'));
-    if(d.improvement_ms!=null||d.improvement_pct!=null){nccLine('GAIN','ok',toFa(Math.round(d.improvement_ms||0))+'ms'+(d.improvement_pct!=null?(' ('+toFa(Math.round(d.improvement_pct))+'%)'):''))}
-    nccFinal(d.ok!==false?((tb.ok&&n.ok)?'● A/B کامل شد':'بخشی ناموفق'):'ناموفق');
-  }catch(e){netErr(e,'توربو A/B');nccFinal(false,'خطا')}finally{nccBusyBtn(btn,false)}
-}
-
-async function nccTestDiagnostic(btn){
-  nccBusyBtn(btn,true); nccConsole('تشخیص کامل — اندپوینت + خروج + سلامت پنل',true);
-  try{
-    var t=nccTarget();
-    if(!t.address){nccFinal(false,'هدفی نیست');return}
-    var r=await authF('/api/network/test/diagnostic',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({address:t.address,port:t.port,sni:t.sni,tls:t.tls})});
-    var d=await r.json();
-    var ep=d.endpoint||{}; var s=ep.stages_ms||{};
-    nccLine('DNS', s.dns!=null?'ok':'bad', (s.dns!=null?(toFa(Math.round(s.dns))+'ms'):esc(ep.error_code||'✗')));
-    nccLine('TCP', s.tcp!=null?'ok':'bad', s.tcp!=null?(toFa(Math.round(s.tcp))+'ms'):'✗');
-    if(t.tls)nccLine('TLS', s.tls!=null?'ok':'bad', s.tls!=null?(toFa(Math.round(s.tls))+'ms'):'✗');
-    var eg=d.panel_egress||{};
-    nccLine('EGRESS', eg.status==='OK'?'ok':'warn', eg.status==='OK'?((eg.ip||'?')+' · '+(eg.country||'?')+' · '+esc(eg.classification||'')):esc(eg.status||''));
-    var ph=d.panel_health||{};
-    nccLine('PANEL', ph.status==='OK'?'ok':'warn', ph.status==='OK'?('tracked '+((ph.tracked||0))+' · HEALTHY '+(((ph.by_state||{}).HEALTHY||0))):esc(ph.status||''));
-    if(!ep.ok&&ep.error_code){nccLine('ERROR','bad',esc(ep.error_code)+' — '+esc(ep.error_detail||''))}
-    nccFinal(ep.ok,ep.ok?'● کلی سالم':'● اندپوینت مشکل دارد');
-    nccBrowserPing();  // نمای مرورگر هم تازه شود
-  }catch(e){netErr(e,'تشخیص کامل');nccFinal(false,'خطا')}finally{nccBusyBtn(btn,false)}
-}
-
-// ── حقیقت مسیر از مرورگر شما — WebSocket واقعی از شبکه‌ی خودتان ──
-async function nccBrowserPing(){
-  var rows=document.getElementById('ncc-browser-rows'); if(!rows)return;
-  var cfg=await loadClientPingConfig();
-  if(!cfg){rows.innerHTML='<div class="ncc-brow-row"><span class="lbl">در دسترس نیست</span></div>';return}
-  rows.innerHTML='';
-  var probeUuid='00000000-0000-0000-0000-000000000000';
-  for(var i=0;i<(cfg.targets||[]).length;i++){
-    var t=cfg.targets[i];
-    var d=document.createElement('div'); d.className='ncc-brow-row';
-    d.dataset.lbl=t.label||t.id;
-    d.innerHTML='<span class="lbl">'+esc(t.label||t.id)+'</span> <i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i> در حال تست…';
-    rows.appendChild(d);
-    (function(rowEl,url){
-      browserWsPing(url.replace('{uuid}',probeUuid),8000).then(function(r){
-        if(r.ok){rowEl.innerHTML='<span class="lbl">'+rowEl.dataset.lbl+'</span> <i class="ti ti-circle-check" style="color:var(--green)"></i> زنده از شبکه‌ی شما — '+toFa(r.ms)+'ms'}
-        else{rowEl.innerHTML='<span class="lbl">'+rowEl.dataset.lbl+'</span> <i class="ti ti-circle-x" style="color:var(--red)"></i> از شبکه‌ی شما در دسترس نیست ('+esc(r.error)+')'}
-      });
-    })(d,t.url);
-  }
-}
-
-async function bldLoadHistory(){
-  try{
-    var r=await authF('/api/config-builder/history');
-    if(!r.ok)return;
-    var j=await r.json();
-    var host=document.getElementById('bld-history'); if(!host)return;
-    if(!(j.history||[]).length){host.innerHTML='<div class="bld-hint">هنوز کانفیگی ساخته نشده — اولین را با «ساخت نهایی» بسازید.</div>';return}
-    host.className='bld-hist';
-    host.innerHTML=j.history.map(function(h){
-      return '<div class="bld-hcard"><div class="nm">'+esc(h.name)+' <span class="igw-state igw-ok">'+esc(h.status)+'</span></div>'+
-      '<div class="meta">'+esc(h.protocol)+' / '+esc(h.transport)+' / '+esc(h.security)+' · نود: '+esc(h.node)+' · مسیریابی: '+esc(h.routing)+'<br>'+esc(h.created_at_iso||'')+' · checksum: '+esc((h.checksum||'').slice(0,10))+'</div>'+
-      '<button class="btn btn-sm btn-o" onclick="bldHistView(\''+h.history_id+'\')">مشاهده/کپی</button> '+
-      '<button class="btn btn-sm btn-o" onclick="bldHistRegen(\''+h.history_id+'\')">بازسازی</button> '+
-      '<button class="btn btn-sm btn-d" onclick="bldHistDel(\''+h.history_id+'\')">حذف</button></div>';
-    }).join('');
-  }catch(e){netErr(e,'تاریخچه‌ی کانفیگ')}
-}
-
-async function bldHistView(id){
-  try{
-    var r=await authF('/api/config-builder/history/'+id+'?reveal=1');
-    if(!r.ok){toast('یافت نشد','err');return}
-    var j=await r.json(); var e=j.entry||{};
-    window.__bldUri=e.uri||'';
-    var v=document.getElementById('bld-validation'), o=document.getElementById('bld-outputs');
-    v.innerHTML='<div class="bld-valid-ok">✓ کانفیگ: <b>'+esc(e.name)+'</b> — '+esc((e.outputs_summary||{}).protocol||'')+' · '+esc((e.outputs_summary||{}).transport||'')+'</div>';
-    o.innerHTML=e.uri?('<div class="bld-out"><b>URI</b> <button class="btn btn-sm btn-o" onclick="bldCopy(this)">کپی</button> <button class="btn btn-sm btn-o" onclick="showQR(window.__bldUri)">QR</button><code>'+esc(e.uri)+'</code></div>'):'<div class="bld-hint">URI در تاریخچه ذخیره نشده — از «بازسازی» استفاده کنید</div>';
-  }catch(err){netErr(err,'مشاهده‌ی کانفیگ')}
-}
-
-async function bldHistRegen(id){
-  try{
-    var r=await authF('/api/config-builder/history/'+id+'/regenerate',{method:'POST'});
-    var j=await r.json();
-    if(j.ok){bldRenderResult(j);toast('بازسازی شد'+(j.deterministic_match?' (checksum یکسان ✓)':''),'ok');bldLoadHistory()}else{toast('بازسازی ناموفق','err')}
-  }catch(e){netErr(e,'بازسازی کانفیگ')}
-}
-
-async function bldHistDel(id){
-  if(!confirm('این کانفیگ از تاریخچه حذف شود؟'))return;
-  try{
-    var r=await authF('/api/config-builder/history/'+id,{method:'DELETE'});
-    if(r.ok){toast('حذف شد','ok');bldLoadHistory()}else{toast('حذف ناموفق','err')}
-  }catch(e){netErr(e,'حذف کانفیگ')}
-}
-
-/* ── Iran Gateway (پروکسی ایران) ───────────────────────────────────────── */
-var IGW_STATES_FA={UNCONFIGURED:'پیکربندی‌نشده',CONFIGURED:'ثبت‌شده (غیراثباتی)',REACHABLE:'در دسترس',HEALTHY:'سلامت',DEGRADED:'کهنه',UNREACHABLE:'غیرقابل‌دسترس',VERIFIED_IRAN_EGRESS:'خروج ایران اثبات‌شده ✓',ROUTE_MISMATCH:'عدم‌تطابق مسیر',UNSUPPORTED:'غیرقابل‌اثبات',UNKNOWN:'مجهول'};
-function igwBadge(st){
-  var cls=(st==='VERIFIED_IRAN_EGRESS')?'igw-ok':(st==='ROUTE_MISMATCH'||st==='UNREACHABLE'||st==='DEGRADED')?'igw-bad':(st==='REACHABLE'||st==='HEALTHY')?'igw-warn':'igw-info';
-  return '<span class="igw-state '+cls+'">'+esc(IGW_STATES_FA[st]||st)+'</span>';
-}
-
-async function loadIranProxyPage(){
-  try{
-    var r=await authF('/api/iran-gateway');
-    if(!r.ok){netErr(r,'پروکسی ایران');return}
-    var j=await r.json();
-    var b=document.getElementById('igw-state-badge');
-    if(b){b.textContent=IGW_STATES_FA[j.state]||j.state; b.className='badge '+(j.state==='VERIFIED_IRAN_EGRESS'?'bg-green':(j.state==='UNCONFIGURED'?'bg-amber':'bg-blue'))}
-    var host=document.getElementById('igw-list'); if(!host)return;
-    if(!(j.gateways||[]).length){host.innerHTML='<div class="bld-hint">گیت‌وی‌ای ثبت نشده — IRAN_PROXY بدون گیت‌وی واقعی ساخته نمی‌شود (IRAN_DIRECT نیازی به سرور ایران ندارد).</div>';return}
-    host.innerHTML=j.gateways.map(function(g){
-      return '<div class="bld-hcard" style="margin:8px 0"><div class="nm">'+esc(g.name)+' '+igwBadge(g.state)+'</div>'+
-      '<div class="meta" style="direction:ltr;text-align:left;font-family:monospace">'+esc(g.endpoint)+':'+esc(String(g.port))+' · '+esc(g.protocol)+(g.auth_configured?' · 🔑':'')+'</div>'+
-      '<div class="bld-hint">'+esc(g.state_reason||'')+(g.last_egress&&g.last_egress.public_ip?('<br>آخرین خروج اندازه‌گیری‌شده: '+esc(g.last_egress.public_ip)+' → '+esc(g.last_egress.country_code||'?')):'')+'</div>'+
-      '<button class="btn btn-sm btn-p" onclick="iranGwCheck(\''+g.gateway_id+'\',this)">بررسی و اثبات خروج</button> '+
-      '<button class="btn btn-sm btn-d" onclick="iranGwDel(\''+g.gateway_id+'\')">حذف</button></div>';
-    }).join('');
-  }catch(e){netErr(e,'پروکسی ایران')}
-}
-
-async function iranGwSave(btn){
-  bldBusy(btn,true);
-  try{
-    var body={name:document.getElementById('igw-name').value,endpoint:document.getElementById('igw-endpoint').value,
-      port:parseInt(document.getElementById('igw-port').value)||443,protocol:document.getElementById('igw-protocol').value,
-      auth_username:document.getElementById('igw-user').value,auth_password:document.getElementById('igw-pass').value,
-      notes:document.getElementById('igw-notes').value};
-    var r=await authF('/api/iran-gateway',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-    var j=await r.json();
-    if(j.ok){toast('گیت‌وی ذخیره شد — وضعیت: CONFIGURED (هنوز اثبات‌نشده) ✓','ok');loadIranProxyPage()}
-    else{toast((j.errors||['خطا'])[0],'err')}
-  }catch(e){netErr(e,'ذخیره‌ی گیت‌وی')}finally{bldBusy(btn,false)}
-}
-
-async function iranGwCheck(id,btn){
-  if(btn){btn.disabled=true;btn.innerHTML='<i class="ti ti-loader-2 spin"></i> در حال اثبات…'}
-  try{
-    var r=await authF('/api/iran-gateway/'+id+'/check',{method:'POST'});
-    var j=await r.json();
-    if(j.state==='VERIFIED_IRAN_EGRESS')toast('خروج ایرانی اثبات شد ✓ ('+(j.egress&&j.egress.public_ip)+')','ok');
-    else if(j.state==='ROUTE_MISMATCH')toast('ROUTE_MISMATCH — خروج اندازه‌گیری‌شده ایران نیست!','err');
-    else toast('وضعیت: '+(IGW_STATES_FA[j.state]||j.state),'warn');
-    loadIranProxyPage();
-  }catch(e){netErr(e,'بررسی گیت‌وی');if(btn){btn.disabled=false;btn.textContent='بررسی'}}
-}
-
-async function iranGwDel(id){
-  if(!confirm('گیت‌وی حذف شود؟'))return;
-  try{
-    var r=await authF('/api/iran-gateway/'+id,{method:'DELETE'});
-    if(r.ok){toast('حذف شد','ok');loadIranProxyPage()}
-  }catch(e){netErr(e,'حذف گیت‌وی')}
-}
-</script>
-
-<script>
-/* ════════════════════════════════════════════════════════════════════════
-   🇮🇷 IRAN DIRECT — ساخت کانفیگ با IP سالم + هندشیک (بلاک ایزوله)
-   آینه‌ی «ساخت کانفیگ» با مسیریابی ثابت IRAN_DIRECT. رندر ۱۰۰٪
-   قابلیت‌محور از /api/config-builder/capabilities؛ ساخت کانفیگ فقط از
-   API کانونی config-builder (preview/generate) — هیچ emitter در JS نیست.
-   IP دستی = CONFIGURED_ENDPOINT؛ SNI = فقط معنای TLS.
-   ════════════════════════════════════════════════════════════════════════ */
-var IRD_CAPS=null, IRD_ASSETS={ips:[],handshakes:[]};
-var IRD_SEL={protocol:'',transport:'',security:'',node:'panel',client:'xray-json',ip_id:'',hs_id:''};
-
-async function irdLoad(){
-  try{
-    var r=await authF('/api/config-builder/capabilities');
-    if(r.ok)IRD_CAPS=await r.json();
-    var a=await authF('/api/iran-direct/assets');
-    if(a.ok)IRD_ASSETS=await a.json();
-    irdRenderProtocols(); irdRenderNodes(); irdRenderClients(); irdRenderAssets(); irdLoadHistory();
-  }catch(e){netErr(e,'IRAN DIRECT')}
-}
-
-async function irdRefreshAssets(){
-  try{
-    var a=await authF('/api/iran-direct/assets');
-    if(a.ok){IRD_ASSETS=await a.json(); irdRenderAssets()}
-  }catch(e){}
-}
-
-function irdBusy(btn,on){if(!btn)return;btn.disabled=on;var i=btn.querySelector('i');if(i){if(!btn.dataset.icon)btn.dataset.icon=i.className;i.className=on?'ti ti-loader-2 spin':btn.dataset.icon}}
-
-/* ── Steps 1-4: قابلیت‌محور (همان منبع سازنده‌ی کانونی) ──────────────── */
-function irdRenderProtocols(){
-  var host=document.getElementById('ird-protocols'); if(!host)return;
-  if(!IRD_SEL.protocol){
-    var first=(IRD_CAPS&&IRD_CAPS.protocols||[]).filter(function(p){return p.selectable})[0];
-    if(first)IRD_SEL.protocol=first.protocol;
-  }
-  host.innerHTML='';
-  (IRD_CAPS&&IRD_CAPS.protocols||[]).forEach(function(p){
-    var d=document.createElement('div');
-    d.className='bld-chip'+(p.selectable?'':' off')+(IRD_SEL.protocol===p.protocol?' sel':'');
-    d.innerHTML=esc(p.protocol)+(p.selectable?'':' <span class="st">('+esc(p.readiness)+')</span>');
-    if(p.selectable){d.onclick=function(){IRD_SEL.protocol=p.protocol;IRD_SEL.transport='';irdRenderProtocols()}}
-    host.appendChild(d);
-  });
-  var hint=document.getElementById('ird-proto-hint');
-  if(hint){var bp=(IRD_CAPS&&IRD_CAPS.protocols||[]).filter(function(p){return !p.selectable});
-    hint.textContent=bp.length?('پروتکل‌های دیگر فقط تولید لینک/کانفیگ (BETA — بدون ران‌تایم پنل): '+bp.map(function(p){return p.protocol}).join(', ')):'';}
-  irdRenderTransports();
-}
-
-function irdNodeProtocols(){
-  var node=(IRD_CAPS&&IRD_CAPS.nodes||[]).filter(function(n){return n.node_id===IRD_SEL.node})[0];
-  return (node&&node.protocols)||[];
-}
-
-function irdRenderTransports(){
-  var host=document.getElementById('ird-transports'); if(!host)return;
-  host.innerHTML='';
-  var list=irdNodeProtocols().filter(function(x){return !IRD_SEL.protocol||x.protocol===IRD_SEL.protocol});
-  var supported=list.filter(function(x){return x.status==='SUPPORTED'});
-  if(!IRD_SEL.transport&&supported.length)IRD_SEL.transport=supported[0].transport;
-  var seen={};
-  list.forEach(function(x){
-    if(seen[x.transport])return; seen[x.transport]=1;
-    var ok=(x.status==='SUPPORTED');
-    var d=document.createElement('div');
-    d.className='bld-chip'+(ok?'':' off')+(IRD_SEL.transport===x.transport?' sel':'');
-    d.innerHTML=esc(x.transport)+' <span class="st">'+(ok?'':'('+esc(x.status)+')</span>');
-    if(ok){d.onclick=function(){IRD_SEL.transport=x.transport;IRD_SEL.security=x.security;irdRenderTransports()}}
-    host.appendChild(d);
-  });
-  var hint=document.getElementById('ird-tr-hint');
-  if(hint){
-    var bad=list.filter(function(x){return x.status!=='SUPPORTED'}).map(function(x){return x.transport+' ('+x.status+(x.reason?': '+x.reason:'')+')'});
-    hint.textContent=bad.length?('ناموجود روی این نود/دیپلوی: '+bad.join(' · ')):'';
-  }
-  irdRenderSecurity();
-}
-
-function irdRenderSecurity(){
-  var host=document.getElementById('ird-security'); if(!host)return;
-  host.innerHTML='';
-  var list=irdNodeProtocols().filter(function(x){return (!IRD_SEL.protocol||x.protocol===IRD_SEL.protocol)&&(!IRD_SEL.transport||x.transport===IRD_SEL.transport)});
-  if(!IRD_SEL.security&&list.length)IRD_SEL.security=list[0].security;
-  var seen={};
-  list.forEach(function(x){
-    if(seen[x.security])return; seen[x.security]=1;
-    var d=document.createElement('div');
-    d.className='bld-chip'+(IRD_SEL.security===x.security?' sel':'');
-    d.textContent=x.security;
-    d.onclick=function(){IRD_SEL.security=x.security;irdRenderSecurity()};
-    host.appendChild(d);
-  });
-}
-
-function irdRenderNodes(){
-  var host=document.getElementById('ird-nodes'); if(!host)return;
-  host.innerHTML='';
-  (IRD_CAPS&&IRD_CAPS.nodes||[]).forEach(function(n){
-    var d=document.createElement('div');
-    d.className='bld-node'+(IRD_SEL.node===n.node_id?' sel':'');
-    var eg=n.egress||{};
-    var egBadge=eg.classification==='VERIFIED_EGRESS'?'<span class="igw-state igw-ok">EGRESS ✓</span>':(eg.classification==='CONFIGURED_ONLY'?'<span class="igw-state igw-warn">CONFIGURED</span>':'<span class="igw-state igw-info">UNKNOWN</span>');
-    d.innerHTML='<div class="nm">'+esc(n.name||n.node_id)+'</div><div class="meta">'+esc(n.role||'')+' · '+esc(n.state||'')+'<br>UDP: '+esc(String(n.udp))+' '+egBadge+'</div>';
-    d.onclick=function(){IRD_SEL.node=n.node_id;IRD_SEL.transport='';irdRenderNodes()};
-    host.appendChild(d);
-    var det=document.getElementById('ird-node-detail');
-    if(det&&IRD_SEL.node===n.node_id){
-      det.innerHTML='نود انتخابی: <b>'+esc(n.name||n.node_id)+'</b> — '+esc(n.deployment_label||'')+'<br>'+
-        'TCP: '+esc(String(n.tcp))+' · UDP: '+esc(String(n.udp))+' · TLS: '+esc(String(n.tls))+' — '+esc(n.state_note||'')+
-        (eg.classification==='VERIFIED_EGRESS'?('<br>خروج اثبات‌شده: '+esc(eg.public_ip||'?')+' → '+esc(eg.country||'')):'');
-    }
-  });
-  irdRenderTransports();   /* تغییر نود ⇒ بازرندر ترنسپورت‌ها (قابلیت نود جدید) */
-}
-
-function irdRenderClients(){
-  var host=document.getElementById('ird-clients'); if(!host)return;
-  var clients=(IRD_CAPS&&IRD_CAPS.clients)||{};
-  if(!clients[IRD_SEL.client]){
-    var k=Object.keys(clients).filter(function(x){return clients[x].split_tunnel==='SPLIT_TUNNEL_SUPPORTED'})[0];
-    if(k)IRD_SEL.client=k;
-  }
-  host.innerHTML='';
-  Object.keys(clients).forEach(function(k){
-    var cl=clients[k];
-    var splitOk=(cl.split_tunnel==='SPLIT_TUNNEL_SUPPORTED');
-    var d=document.createElement('div');
-    d.className='bld-chip'+(splitOk?'':' off')+(IRD_SEL.client===k?' sel':'');
-    d.innerHTML=esc(k)+' <span class="st">'+(splitOk?'split ✓':'بدون split ⛔')+'</span>';
-    if(splitOk){d.onclick=function(){IRD_SEL.client=k;irdRenderClients()}}
-    host.appendChild(d);
-  });
-  var hint=document.getElementById('ird-client-hint');
-  if(hint){hint.innerHTML='IRAN_DIRECT نیازمند کلاینتی است که قواعد split-tunnel را واقعاً اعمال کند — فرمت‌های ساده‌ی URI/subscription صادقانه غیرفعال‌اند (<b>SPLIT_TUNNEL_NOT_SUPPORTED</b>).'+' خروجی Xray JSON شامل قواعد GEOIP:ir + CIDR دیتاست ایران است.'}
-}
-
-/* ── Steps 5-6: دارایی‌ها (IP سالم + هندشیک) ─────────────────────────── */
-function irdRenderAssets(){
-  var hip=document.getElementById('ird-ips'), hhs=document.getElementById('ird-hss');
-  if(hip){
-    if(!(IRD_ASSETS.ips||[]).length){hip.innerHTML='<div class="bld-hint">IP سالمی ذخیره نشده — با دکمه‌ی «ذخیره در لیست» اضافه کن، یا مستقیم در فیلد بالا تایپ کن.</div>'}
-    else{
-      hip.innerHTML='';
-      IRD_ASSETS.ips.forEach(function(ip){
-        var d=document.createElement('div');
-        d.className='ird-asset'+(ip.id===IRD_SEL.ip_id?' sel':'');
-        var pr=ip.last_probe||{};
-        var prBadge=pr.state==='TLS_VERIFIED'?' <span class="st" style="color:#34d399">TLS ✓ '+(pr.tls_ms||'?')+'ms</span>':(pr.state==='TCP_REACHABLE'?' <span class="st" style="color:#fbbf24">TCP '+(pr.tcp_ms||'?')+'ms</span>':(pr.state==='UNREACHABLE'?' <span class="st" style="color:#f87171">UNREACHABLE</span>':''));
-        d.innerHTML='<span class="addr">'+esc(ip.address)+((ip.port&&ip.port!==443)?':'+esc(String(ip.port)):'')+'</span>'+prBadge+(ip.use_count?' <span class="st">×'+toFa(ip.use_count)+'</span>':'')+' <span class="pbtn" title="تست از سرور پنل">⚡</span><span class="xbtn" title="حذف">✕</span>';
-        d.onclick=function(ev){
-          var t=ev.target||ev.srcElement; var cls=(t&&t.className)||'';
-          if(cls.indexOf('xbtn')>=0){irdDelIp(ip.id);return}
-          if(cls.indexOf('pbtn')>=0){irdProbeIp(ip.id);return}
-          IRD_SEL.ip_id=ip.id;
-          var ii=document.getElementById('ird-ip-input'); if(ii)ii.value=ip.address;
-          var pp=document.getElementById('ird-port'); if(pp)pp.value=ip.port||443;
-          irdRenderAssets();
-        };
-        hip.appendChild(d);
-      });
-    }
-  }
-  if(hhs){
-    if(!(IRD_ASSETS.handshakes||[]).length){hhs.innerHTML='<div class="bld-hint">هندشیکی ذخیره نشده — دامنه‌ی هندشیک را اضافه کن یا مستقیم تایپ کن.</div>'}
-    else{
-      hhs.innerHTML='';
-      IRD_ASSETS.handshakes.forEach(function(hs){
-        var d=document.createElement('div');
-        d.className='ird-asset'+(hs.id===IRD_SEL.hs_id?' sel':'');
-        d.innerHTML='<span class="addr">'+esc(hs.sni)+'</span>'+(hs.use_count?' <span class="st">×'+toFa(hs.use_count)+'</span>':'')+' <span class="xbtn" title="حذف">✕</span>';
-        d.onclick=function(ev){
-          var t=ev.target||ev.srcElement; var cls=(t&&t.className)||'';
-          if(cls.indexOf('xbtn')>=0){irdDelHs(hs.id);return}
-          IRD_SEL.hs_id=hs.id;
-          var hi=document.getElementById('ird-hs-input'); if(hi)hi.value=hs.sni;
-          irdRenderAssets();
-        };
-        hhs.appendChild(d);
-      });
-    }
-  }
-}
-
-async function irdAddIp(btn){
-  var inp=document.getElementById('ird-ip-input');
-  var v=(inp.value||'').trim();
-  if(!v){toast('IP سالم را وارد کنید','err');return}
-  irdBusy(btn,true);
-  try{
-    var r=await authF('/api/iran-direct/ips',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({address:v,port:parseInt(document.getElementById('ird-port').value)||443})});
-    var j=await r.json().catch(function(){return{}});
-    if(r.ok){IRD_SEL.ip_id=(j.asset||{}).id;await irdRefreshAssets();toast('IP سالم ذخیره شد ✓','ok')}
-    else toast(j.detail||'IP نامعتبر است','err');
-  }catch(e){netErr(e,'ذخیره‌ی IP')}finally{irdBusy(btn,false)}
-}
-
-async function irdDelIp(id){
-  if(!confirm('این IP حذف شود؟'))return;
-  try{
-    var r=await authF('/api/iran-direct/ips/'+id,{method:'DELETE'});
-    if(r.ok){if(IRD_SEL.ip_id===id)IRD_SEL.ip_id='';toast('حذف شد','ok');irdRefreshAssets()}
-  }catch(e){netErr(e,'حذف IP')}
-}
-
-async function irdAddHs(btn){
-  var inp=document.getElementById('ird-hs-input');
-  var v=(inp.value||'').trim();
-  if(!v){toast('هندشیک (دامنه) را وارد کنید','err');return}
-  irdBusy(btn,true);
-  try{
-    var r=await authF('/api/iran-direct/handshakes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sni:v})});
-    var j=await r.json().catch(function(){return{}});
-    if(r.ok){IRD_SEL.hs_id=(j.asset||{}).id;await irdRefreshAssets();toast('هندشیک ذخیره شد ✓','ok')}
-    else toast(j.detail||'هندشیک نامعتبر است (باید دامنه باشد)','err');
-  }catch(e){netErr(e,'ذخیره‌ی هندشیک')}finally{irdBusy(btn,false)}
-}
-
-async function irdDelHs(id){
-  if(!confirm('این هندشیک حذف شود؟'))return;
-  try{
-    var r=await authF('/api/iran-direct/handshakes/'+id,{method:'DELETE'});
-    if(r.ok){if(IRD_SEL.hs_id===id)IRD_SEL.hs_id='';toast('حذف شد','ok');irdRefreshAssets()}
-  }catch(e){netErr(e,'حذف هندشیک')}
-}
-
-async function irdProbeIp(id){
-  toast('در حال تست از سرور پنل…','');
-  try{
-    var hs=(document.getElementById('ird-hs-input').value||'').trim();
-    var r=await authF('/api/iran-direct/ips/'+id+'/probe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sni:hs})});
-    var j=await r.json();
-    var p=j.probe||{};
-    if(p.state==='TLS_VERIFIED')toast('TLS با هندشیک تأیید شد ✓ ('+p.tls_ms+'ms — اندازه‌گیری از سرور پنل)','ok');
-    else if(p.state==='TCP_REACHABLE')toast('TCP در دسترس ('+p.tcp_ms+'ms — از سرور پنل؛ TLS با این هندشیک تأیید نشد)','warn');
-    else toast('از سرور پنل در دسترس نیست ('+(p.error||p.tls_error||'?')+')','err');
-    await irdRefreshAssets();
-  }catch(e){netErr(e,'تست IP')}
-}
-
-/* ── Payload — همان API کانونی؛ routing ثابت IRAN_DIRECT ────────────── */
-function irdPayload(){
-  var ip=(document.getElementById('ird-ip-input').value||'').trim();
-  var hs=(document.getElementById('ird-hs-input').value||'').trim();
-  var address=ip||hs;   /* فقط هندشیک؟ → همان دامنه، آدرس اتصال هم هست */
-  return {
-    name:document.getElementById('ird-name').value||'',
-    remark:document.getElementById('ird-remark').value||'EMIX',
-    protocol:IRD_SEL.protocol, transport:IRD_SEL.transport, security:IRD_SEL.security,
-    node_id:IRD_SEL.node, endpoint_profile_id:'',
-    custom_address:address, custom_sni:hs,
-    custom_port:parseInt(document.getElementById('ird-port').value)||443,
-    routing_policy:'IRAN_DIRECT', client_format:IRD_SEL.client
-  };
-}
-
-async function irdMarkUse(){
-  try{
-    var body={ip_id:IRD_SEL.ip_id||'', handshake_id:IRD_SEL.hs_id||''};
-    if(body.ip_id||body.handshake_id)await authF('/api/iran-direct/use',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-  }catch(e){}
-}
-
-function irdRenderResult(j){
-  var v=document.getElementById('ird-validation'), o=document.getElementById('ird-outputs');
-  if(!v||!o)return;
-  if(!j.ok){
-    v.innerHTML='<div class="bld-valid-bad">⛔ <b>INVALID</b> — مرحله: '+esc(j.stage||'?')+'<br>'+(j.errors||[]).map(esc).join('<br>')+'</div>';
-    o.innerHTML=''; return;
-  }
-  v.innerHTML='<div class="bld-valid-ok">✓ <b>VALID</b> — '+esc(j.preview.protocol)+' / '+esc(j.preview.transport)+' / '+esc(j.preview.security)+' · نود: '+esc((j.preview.node||{}).label||(j.preview.node||{}).node_id||'?')+' · مسیریابی: <b>IRAN_DIRECT</b>'+(j.credential_placeholder?' · (credential پیش‌نمایش: جای‌نگهدار)':'')+'</div>';
-  var out=j.outputs||{}; var h='';
-  if(out.uri){h+='<div class="bld-out"><b>URI</b> <button class="btn btn-sm btn-o" onclick="irdCopy(this)">کپی</button> <button class="btn btn-sm btn-o" onclick="showQR(window.__irdUri)">QR</button><code>'+esc(out.uri)+'</code></div>';window.__irdUri=out.uri}
-  if(out.xray_json){h+='<div class="bld-out"><b>Xray JSON</b> <button class="btn btn-sm btn-o" onclick="irdDlJson()">دانلود فایل</button><code>'+esc(JSON.stringify(out.xray_json,null,1))+'</code></div>';window.__irdJson=out.xray_json}
-  var rd=j.preview&&j.preview.routing_detail;
-  if(rd&&rd.legs){
-    h+='<div class="bld-out"><b>مسیریابی IRAN_DIRECT (explainable)</b><br>';
-    Object.keys(rd.legs).forEach(function(k){h+=esc(k)+' → '+esc(rd.legs[k].decision)+' · خروج: '+esc(rd.legs[k].egress)+'<br>'});
-    if(rd.split_rules){h+='قواعد split-tunnel: '+rd.split_rules.rules.length+' قاعده ('+esc(rd.split_rules.mechanism||'')+') — در خروجی JSON گنجانده شد'}
-    h+='</div>';
-  }
-  o.innerHTML=h;
-}
-
-function irdCopy(btn){if(window.__irdUri){navigator.clipboard.writeText(window.__irdUri).then(function(){toast('URI کپی شد ✓','ok')})}}
-
-function irdDlJson(){
-  try{
-    var blob=new Blob([JSON.stringify(window.__irdJson,null,2)],{type:'application/json'});
-    var a=document.createElement('a');a.href=URL.createObjectURL(blob);
-    a.download=((document.getElementById('ird-name').value||'emix-iran-direct')+'.json');
-    a.click();setTimeout(function(){URL.revokeObjectURL(a.href)},1000);
-  }catch(e){toast('دانلود ناموفق','err')}
-}
-
-async function irdPreview(btn){
-  irdBusy(btn,true);
-  try{
-    var r=await authF('/api/config-builder/preview',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(irdPayload())});
-    var j=await r.json(); irdRenderResult(j);
-    if(!j.ok)toast('ترکیب نامعتبر — ساخته نشد','err');
-  }catch(e){netErr(e,'پیش‌نمایش IRAN DIRECT')}finally{irdBusy(btn,false)}
-}
-
-async function irdGenerate(btn){
-  var p=irdPayload();
-  if(!p.custom_address){toast('حداقل یکی از IP سالم یا هندشیک را وارد/انتخاب کن','err');return}
-  irdBusy(btn,true);
-  try{
-    var r=await authF('/api/config-builder/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});
-    var j=await r.json(); irdRenderResult(j);
-    if(j.ok){toast('کانفیگ IRAN_DIRECT ساخته شد ✓','ok');irdMarkUse();irdLoadHistory()}
-    else toast('ساخت ناموفق — '+(((j.errors||[''])[0])+'').slice(0,70),'err');
-  }catch(e){netErr(e,'ساخت کانفیگ IRAN DIRECT')}finally{irdBusy(btn,false)}
-}
-
-/* ── History (تاریخچه‌ی مشترک کانونی — فیلتر IRAN_DIRECT) ───────────── */
-async function irdLoadHistory(){
-  try{
-    var r=await authF('/api/config-builder/history');
-    if(!r.ok)return;
-    var j=await r.json();
-    var rows=(j.history||[]).filter(function(h){return h.routing==='IRAN_DIRECT'});
-    var host=document.getElementById('ird-history'); if(!host)return;
-    if(!rows.length){host.className='';host.innerHTML='<div class="bld-hint">هنوز کانفیگ IRAN_DIRECT نساخته‌ای — اولین را با «ساخت نهایی و تحویل» بساز.</div>';return}
-    host.className='bld-hist';
-    host.innerHTML=rows.map(function(h){
-      return '<div class="bld-hcard"><div class="nm">'+esc(h.name)+' <span class="igw-state igw-ok">'+esc(h.status)+'</span></div>'+
-      '<div class="meta">'+esc(h.protocol)+' / '+esc(h.transport)+' / '+esc(h.security)+' · نود: '+esc(h.node)+' · <b>IRAN_DIRECT</b><br>'+esc(h.created_at_iso||'')+' · checksum: '+esc((h.checksum||'').slice(0,10))+'</div>'+
-      '<button class="btn btn-sm btn-o" onclick="irdHistView(\''+h.history_id+'\')">مشاهده/کپی</button> '+
-      '<button class="btn btn-sm btn-o" onclick="irdHistRegen(\''+h.history_id+'\')">بازسازی</button> '+
-      '<button class="btn btn-sm btn-d" onclick="irdHistDel(\''+h.history_id+'\')">حذف</button></div>';
-    }).join('');
-  }catch(e){netErr(e,'تاریخچه‌ی IRAN DIRECT')}
-}
-
-async function irdHistView(id){
-  try{
-    var r=await authF('/api/config-builder/history/'+id+'?reveal=1');
-    if(!r.ok){toast('یافت نشد','err');return}
-    var j=await r.json(); var e=j.entry||{};
-    window.__irdUri=e.uri||'';
-    var v=document.getElementById('ird-validation'), o=document.getElementById('ird-outputs');
-    v.innerHTML='<div class="bld-valid-ok">✓ کانفیگ: <b>'+esc(e.name)+'</b> — '+esc((e.outputs_summary||{}).protocol||'')+' · '+esc((e.outputs_summary||{}).transport||'')+' · IRAN_DIRECT</div>';
-    o.innerHTML=e.uri?('<div class="bld-out"><b>URI</b> <button class="btn btn-sm btn-o" onclick="irdCopy(this)">کپی</button> <button class="btn btn-sm btn-o" onclick="showQR(window.__irdUri)">QR</button><code>'+esc(e.uri)+'</code></div>'):'<div class="bld-hint">URI در تاریخچه ذخیره نشده — از «بازسازی» استفاده کن</div>';
-  }catch(err){netErr(err,'مشاهده‌ی کانفیگ')}
-}
-
-async function irdHistRegen(id){
-  try{
-    var r=await authF('/api/config-builder/history/'+id+'/regenerate',{method:'POST'});
-    var j=await r.json();
-    if(j.ok){irdRenderResult(j);toast('بازسازی شد'+(j.deterministic_match?' (checksum یکسان ✓)':''),'ok');irdLoadHistory()}else toast('بازسازی ناموفق','err');
-  }catch(e){netErr(e,'بازسازی کانفیگ')}
-}
-
-async function irdHistDel(id){
-  if(!confirm('این کانفیگ از تاریخچه حذف شود؟'))return;
-  try{
-    var r=await authF('/api/config-builder/history/'+id,{method:'DELETE'});
-    if(r.ok){toast('حذف شد','ok');irdLoadHistory()}else toast('حذف ناموفق','err');
-  }catch(e){netErr(e,'حذف کانفیگ')}
-}
-</script>
-
-<!-- ════════════════════════════════════════════════════════════════════════════
-     🇮🇷 PHASE 38 / P17 — مسیریابی هوشمند (Split Tunneling صادقانه)
-     مقصدهای ایرانی → DIRECT از ISP خود کاربر (USER_ISP)
-     مقصدهای بین‌المللی → VPN از نود خروج EMIX
-     هیچ برچسب/ادعایی بدون شواهد واقعی نمایش داده نمی‌شود.
-     ════════════════════════════════════════════════════════════════════════════ -->
-<section class="pg" id="pg-routing">
-  <div class="topbar">
-    <div><div class="tb-title"><i class="ti ti-route" style="color:#F97316"></i> مسیریابی هوشمند — عبور مستقیم ترافیک داخلی</div><div class="tb-sub">ترافیک ایرانی از ISP خودت · ترافیک بین‌المللی از تونل EMIX</div></div>
-    <div class="tb-right"><span class="badge bg-amber" id="routing-mode-badge">—</span><button class="btn btn-o btn-sm" onclick="loadRoutingPage()"><i class="ti ti-refresh"></i> رفرش</button></div>
-  </div>
-
-  <div class="card" style="margin-bottom:18px">
-    <div class="card-title"><i class="ti ti-split-route"></i> حالت مسیریابی شبکه (Network Routing Mode)</div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin:12px 0">
-      <div id="rt-mode-allvpn" class="rt-mode-card" onclick="routingSetMode('ALL_VPN')">
-        <div class="rt-mode-title">🌍 همه‌ی ترافیک از VPN</div>
-        <div class="rt-mode-sub">همه‌ی مقصدها (داخلی و بین‌المللی) از تونل EMIX عبور می‌کنند</div>
-        <div class="rt-mode-tag" id="rt-tag-allvpn">ALL_VPN</div>
-      </div>
-      <div id="rt-mode-irandirect" class="rt-mode-card" onclick="routingSetMode('IRAN_DIRECT')">
-        <div class="rt-mode-title">🇮🇷 ترافیک ایرانی مستقیم</div>
-        <div class="rt-mode-sub">مقصدهای ایرانی مستقیم از ISP خودت (بدون VPN) · مقاصدهای بین‌المللی از نود EMIX</div>
-        <div class="rt-mode-tag" id="rt-tag-irandirect">IRAN_DIRECT</div>
-      </div>
-    </div>
-    <div id="rt-mode-detail" style="font-size:12px;line-height:2;padding:12px 14px;background:var(--bg);border-radius:10px;border:1px solid var(--card-b)"></div>
-    <div style="font-size:11px;color:var(--t3);margin-top:10px;line-height:1.9">
-      <b>چطور کار می‌کند؟</b> موتور مسیریابی، IP مقصد را با پایگاه پیشوندهای ایران (RIPEstat — <span id="rt-prefix-count">—</span> پیشوند) تطبیق می‌دهد؛ تطابق ⇒ مسیر DIRECT و خروج از ISP خود کاربر (<b>USER_ISP</b>)؛ عدم تطابق ⇒ تونل VPN.
-      تصمیم بر اساس <b>IP نهایی بعد از DNS</b> است — نه پسوند دامنه. کلادفلر و ریلی هرگز به‌عنوان خروج ایرانی طبقه‌بندی نمی‌شوند.
-    </div>
-  </div>
-
-  <!-- ════════════════════════════════════════════════════════════════════════
-       🇮🇷 IRAN DIRECT — ساخت کانفیگ با IP سالم + هندشیک (آینه‌ی «ساخت کانفیگ»)
-       مسیریابی ثابت IRAN_DIRECT · اندپوینت از دارایی‌های کاربر ·
-       خروجی فقط از کامپایلر کانونی (config-builder API) — صفر emitter در JS.
-       ════════════════════════════════════════════════════════════════════════ -->
-  <div class="card" style="margin-bottom:18px">
-    <div class="card-title"><i class="ti ti-wand" style="color:#F97316"></i> 🇮🇷 ساخت کانفیگ IRAN_DIRECT — IP سالم + هندشیک</div>
-    <div class="bld-hint" style="margin:6px 0 0">
-      دقیقاً مثل «ساخت کانفیگ» — با این تفاوت که مسیریابی ثابت <b>IRAN_DIRECT</b> است (ترافیک داخلی از ISP خودت · <b>USER_ISP</b> · ترافیک بین‌المللی از تونل EMIX) و اندپوینت اتصال از <b>IP سالم</b> و <b>هندشیک</b>ِ خودت ساخته می‌شود. IP دستی فقط <b>CONFIGURED_ENDPOINT</b> است و SNI فقط معنای TLS دارد — نه مسیریابی، نه خروج جغرافیایی.
-    </div>
-    <div class="g2 bld-grid" style="align-items:start;margin-top:12px">
-      <div>
-        <div class="bld-step"><div class="bld-step-label">۱ · پروتکل</div><div id="ird-protocols" class="bld-chips"></div><div id="ird-proto-hint" class="bld-hint"></div></div>
-        <div class="bld-step"><div class="bld-step-label">۲ · نود (سرویس پشت اندپوینت)</div><div id="ird-nodes" class="bld-nodes"></div><div id="ird-node-detail" class="bld-hint"></div></div>
-        <div class="bld-step"><div class="bld-step-label">۳ · ترنسپورت</div><div id="ird-transports" class="bld-chips"></div><div id="ird-tr-hint" class="bld-hint"></div></div>
-        <div class="bld-step"><div class="bld-step-label">۴ · امنیت (Security)</div><div id="ird-security" class="bld-chips"></div></div>
-        <div class="bld-step"><div class="bld-step-label">۵ · IP سالم (آدرس اتصال — Address)</div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <input id="ird-ip-input" class="cm-input" placeholder="IP سالم — مثل 104.17.1.1 یا دامنه" style="flex:1;min-width:200px;direction:ltr;text-align:left;font-family:monospace">
-            <button class="btn btn-o btn-sm" onclick="irdAddIp(this)"><i class="ti ti-plus"></i> ذخیره در لیست</button>
-          </div>
-          <div id="ird-ips" class="ird-assets"></div>
-          <div class="bld-hint">IP دستی = فقط اندپوینت پیکربندی‌شده. «سالم‌بودن از دید ISP خودت» را باید از مرورگر خودت تست کنی — تست سرور پنل فقط «در دسترس بودن از پنل» را می‌سنجد.</div>
-        </div>
-        <div class="bld-step"><div class="bld-step-label">۶ · هندشیک (SNI/Host)</div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <input id="ird-hs-input" class="cm-input" placeholder="دامنه هندشیک — مثل bridge.example.com" style="flex:1;min-width:200px;direction:ltr;text-align:left;font-family:monospace">
-            <button class="btn btn-o btn-sm" onclick="irdAddHs(this)"><i class="ti ti-plus"></i> ذخیره در لیست</button>
-          </div>
-          <div id="ird-hss" class="ird-assets"></div>
-          <div class="bld-hint">هندشیک باید <b>دامنه</b> باشد (نه IP). اگر اندپوینتت IP است، هندشیک الزامی است — SNI فقط معنای TLS/اندپوینت دارد و هرگز روی خروج ترافیک داخلی (USER_ISP) اثری ندارد. اگر فقط هندشیک وارد کنی، همان دامنه به‌عنوان آدرس اتصال هم استفاده می‌شود.</div>
-        </div>
-        <div class="bld-step"><div class="bld-step-label">۷ · پورت اتصال</div><input id="ird-port" class="cm-input" type="number" value="443" style="direction:ltr;max-width:140px"></div>
-        <div class="bld-step"><div class="bld-step-label">۸ · خروجی کلاینت</div><div id="ird-clients" class="bld-chips"></div><div id="ird-client-hint" class="bld-hint"></div></div>
-        <div class="bld-step"><div class="bld-step-label">نام و برچسب</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-            <input id="ird-name" class="cm-input" placeholder="نام کانفیگ (تاریخچه)">
-            <input id="ird-remark" class="cm-input" placeholder="EMIX" style="direction:ltr;text-align:left;font-family:monospace">
-          </div>
-        </div>
-        <div class="bld-actions">
-          <button class="btn btn-o" id="ird-preview-btn" onclick="irdPreview(this)"><i class="ti ti-eye"></i> پیش‌نمایش و اعتبارسنجی</button>
-          <button class="btn btn-p" id="ird-gen-btn" onclick="irdGenerate(this)"><i class="ti ti-wand"></i> ساخت نهایی و تحویل</button>
-        </div>
-      </div>
-      <div>
-        <div style="font-weight:700;font-size:13px;margin:12px 0 8px"><i class="ti ti-eye"></i> پیش‌نمایش و خروجی (از کامپایلر کانونی)</div>
-        <div id="ird-validation"></div>
-        <div id="ird-outputs"></div>
-      </div>
-    </div>
-  </div>
-
-  <div class="card" style="margin-bottom:18px">
-    <div class="card-title"><i class="ti ti-history"></i> کانفیگ‌های IRAN_DIRECT ساخته‌شده</div>
-    <div id="ird-history"><div class="bld-hint">—</div></div>
-  </div>
-
-  <div class="card" style="margin-bottom:18px">
-    <div class="card-title"><i class="ti ti-flask"></i> ابزار تشخیص مسیر (Test Route)</div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0">
-      <input id="rt-test-input" placeholder="دامنه یا IP — مثلاً example.ir یا 5.10.0.1" style="flex:1;min-width:220px;direction:ltr;text-align:left;font-family:monospace">
-      <button class="btn btn-g" onclick="routingTestRoute()"><i class="ti ti-radar-2"></i> تست مسیر</button>
-    </div>
-    <div id="rt-test-result" style="display:none"></div>
-  </div>
-
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px">
-    <div class="card">
-      <div class="card-title"><i class="ti ti-database"></i> پایگاه پیشوندهای ایران</div>
-      <div id="rt-dataset-body" style="font-size:12px;line-height:2.1">در حال بارگذاری…</div>
-      <div style="display:flex;gap:8px;margin-top:10px">
-        <button class="btn btn-blue btn-sm" onclick="routingUpdateRules(this)"><i class="ti ti-cloud-download"></i> به‌روزرسانی اتمی از RIPEstat</button>
-      </div>
-      <div id="rt-rules-result" style="display:none;margin-top:10px;font-size:11.5px"></div>
-    </div>
-    <div class="card">
-      <div class="card-title"><i class="ti ti-chart-pie"></i> حسابداری ترافیک (تفکیک واقعی)</div>
-      <div id="rt-traffic-body" style="font-size:12px;line-height:2.1">در حال بارگذاری…</div>
-      <div style="font-size:11px;color:var(--t3);margin-top:8px;line-height:1.8">دسته‌بندی بر اساس منطق مسیر/مقصد است — <b>نه</b> پسوند دامنه (.ir).</div>
-    </div>
-    <div class="card">
-      <div class="card-title"><i class="ti ti-plug-connected"></i> پشتیبانی Split Tunnel در کلاینت‌ها</div>
-      <div id="rt-split-body" style="font-size:12px;line-height:2.1">در حال بارگذاری…</div>
-    </div>
-  </div>
-</section>
-
-<!-- ════════════════════════════════════════════════════════════════════════════
-     👤 PHASE 38 / P2+P3 — حساب‌ها، دستگاه‌ها و سابسکریپشن‌ها
-     Account → Subscription → Config → Route → Node → Verified Egress
-     محدودیت‌ها backend-side اعمال می‌شوند (نه فقط UI).
-     ════════════════════════════════════════════════════════════════════════════ -->
-<section class="pg" id="pg-accounts">
-  <div class="topbar">
-    <div><div class="tb-title"><i class="ti ti-users" style="color:#38BDF8"></i> حساب‌ها، دستگاه‌ها و اشتراک‌ها</div><div class="tb-sub">مدیریت کاربران با محدودیت‌های واقعی سمت سرور</div></div>
-    <div class="tb-right"><span class="badge bg-blue" id="accounts-count">—</span><button class="btn btn-o btn-sm" onclick="loadAccountsPage()"><i class="ti ti-refresh"></i> رفرش</button></div>
-  </div>
-
-  <div class="card" style="margin-bottom:18px">
-    <div class="card-title"><i class="ti ti-user-plus"></i> ساخت حساب جدید</div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin:10px 0">
-      <div><label style="font-size:11px;color:var(--t3)">نام کاربری</label><input id="ac-username" placeholder="username" style="width:100%;direction:ltr"></div>
-      <div><label style="font-size:11px;color:var(--t3)">رمز عبور (حداقل ۸ کاراکتر)</label><input id="ac-password" type="password" placeholder="••••••••" style="width:100%;direction:ltr"></div>
-      <div><label style="font-size:11px;color:var(--t3)">سهمیه ترافیک (GB — خالی = نامحدود)</label><input id="ac-quota" type="number" placeholder="" style="width:100%;direction:ltr"></div>
-      <div><label style="font-size:11px;color:var(--t3)">انقضا (روز — خالی = بی‌نهایت)</label><input id="ac-expiry" type="number" placeholder="" style="width:100%;direction:ltr"></div>
-      <div><label style="font-size:11px;color:var(--t3)">حداکثر دستگاه</label><input id="ac-maxdev" type="number" value="5" style="width:100%;direction:ltr"></div>
-      <div><label style="font-size:11px;color:var(--t3)">حداکثر سشن همزمان</label><input id="ac-maxses" type="number" value="3" style="width:100%;direction:ltr"></div>
-    </div>
-    <button class="btn btn-g" onclick="accountsCreate()"><i class="ti ti-user-plus"></i> ایجاد حساب</button>
-    <div style="font-size:11px;color:var(--t3);margin-top:8px;line-height:1.8">رمزها با PBKDF2-SHA256 هش می‌شوند · توکن دستگاه فقط یک‌بار نمایش داده می‌شود و لاگ نمی‌شود.</div>
-  </div>
-
-  <div id="ac-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px"></div>
-  <div id="ac-empty" style="display:none;text-align:center;padding:40px 0;color:var(--t3)">
-    <i class="ti ti-users" style="font-size:40px;opacity:.4"></i>
-    <div style="margin-top:8px;font-size:13px">هنوز حسابی ساخته نشده — اولین حساب را از فرم بالا بسازید</div>
-  </div>
-</section>
-
-<!-- ════════════════════════════════════════════════════════════════════════════
-     🌐 MULTI-LOC v2 — پل هوشمند چندلوکیشن (Worker-Terminated Egress)
-     معماری: کاربر → IP آنیکست CF (colo انتخابی) → Worker v2 (/vl)
-              ├─ حالت «خروج CF» : تونل داخل وورکر ختم می‌شود → خروج از colo اجرا
-              └─ حالت «تونل»     : /loc/{name} → Railway (پایدار)
-     ════════════════════════════════════════════════════════════════════════════ -->
-<section class="pg" id="pg-multiloc">
-  <div class="node-hero" style="margin-bottom:18px">
-    <div class="node-hero-top">
-      <div class="node-hero-title">
-        <div class="node-hero-icon" style="background:rgba(16,185,129,.15);color:#10B981"><i class="ti ti-world"></i></div>
-        <div>
-          <div class="tb-title">پل چندلوکیشن v2 — خروج واقعی از لبه‌ی کلادفلر</div>
-          <div class="tb-sub">کانفیگ‌های پل‌شده‌ی چند کشور بدون هیچ سرور اضافه + دیباگ فوق پیشرفته با مدرک زنده</div>
-        </div>
-      </div>
-      <div class="tb-right">
-        <span class="badge" id="ml-status-badge">بارگذاری...</span>
-      </div>
-    </div>
-    <div class="node-hero-metrics">
-      <div class="node-metric">
-        <div class="node-metric-top"><i class="ti ti-cloud-bolt"></i><span class="node-metric-label">Worker گیت‌وی</span></div>
-        <div class="node-metric-val" id="ml-worker-ver" style="font-size:15px;direction:ltr">—</div>
-        <div class="node-metric-sub" id="ml-worker-domain-lbl" style="direction:ltr;text-align:left;overflow:hidden;text-overflow:ellipsis">—</div>
-      </div>
-      <div class="node-metric">
-        <div class="node-metric-top"><i class="ti ti-flame"></i><span class="node-metric-label">حالت خروج CF (WTE)</span></div>
-        <div class="node-metric-val" id="ml-wte-status" style="font-size:15px">—</div>
-        <div class="node-metric-sub" id="ml-wte-sub">تونل داخل وورکر ختم می‌شود</div>
-      </div>
-      <div class="node-metric">
-        <div class="node-metric-top"><i class="ti ti-flag"></i><span class="node-metric-label">لوکیشن‌های تاییدشده</span></div>
-        <div class="node-metric-val" id="ml-loc-count" style="font-size:15px">—</div>
-        <div class="node-metric-sub" id="ml-loc-sub">با هندشیک واقعی TLS اثبات‌شده</div>
-      </div>
-      <div class="node-metric">
-        <div class="node-metric-top"><i class="ti ti-direction-horizontal"></i><span class="node-metric-label">آخرین خروج تست‌شده</span></div>
-        <div class="node-metric-val" id="ml-egress-last" style="font-size:15px">—</div>
-        <div class="node-metric-sub" id="ml-egress-sub">مدرک زنده از /egress-test</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ۱) وضعیت و راه‌اندازی وورکر v2 -->
-  <div class="conn-toolbar" style="margin-bottom:14px">
-    <div class="conn-toolbar-title"><i class="ti ti-cloud-cog"></i> گیت‌وی کلادفلر v2 (WTE) و سینک خودکار</div>
-  </div>
-  <div class="card" style="margin-bottom:18px">
-    <div class="card-title"><i class="ti ti-cloud-bolt"></i> Worker v2 — سرور VLESS داخل وورکر</div>
-    <div style="font-size:11.5px;color:var(--t3);margin-bottom:12px;line-height:1.9">
-      <b>چی‌کار می‌کند؟</b> تونل VLESS همین‌جا داخل وورکر کلادفلر خاتمه می‌یابد و ترافیک از <b>همان colo</b> که کاربر وارد شده به اینترنت می‌رود
-      — یعنی سایت‌ها IP کلادفلرِ آن region را می‌بینند، <b>نه IP ریلوی آمستردام</b>. هر «لوکیشن» = یک IP ورودی آنیکست؛ بدون خرید هیچ سروری.
-      <span style="color:var(--amber-t)">اگر وورکر هنوز v1.x است، کد v2 را با یک Paste آپگرید کن (۲ دقیقه):</span>
-    </div>
-    <div id="ml-worker-upgrade" style="display:none;margin-bottom:14px;padding:14px;background:rgba(250,204,21,.06);border:1px solid rgba(250,204,21,.3);border-radius:10px;font-size:12px;line-height:2">
-      <b style="color:var(--amber-t)">آپگرید وورکر به v2 (فقط یک بار):</b><br>
-      ۱) <b>dash.cloudflare.com → Workers &amp; Pages</b> → وورکر emix-gateway را باز کن → <b>Edit code</b><br>
-      ۲) کل کد را پاک کن و کد v2 زیر را Paste کن → <b>Save and Deploy</b><br>
-      ۳) اگر KV بایند نکرده‌ای: Settings → Bindings → KV namespace با نام <code>LOCATIONS</code> بساز و متصل کن<br>
-      ۴) متغیر <code>EMIX_TOKEN</code> را مثل قبل نگه دار (برای سینک UUID از پنل)<br>
-      <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
-        <button class="btn btn-pur" onclick="mlCopyWorkerCode()"><i class="ti ti-clipboard-copy"></i> کپی کد کامل Worker v2</button>
-        <a class="btn btn-o" href="/api/multiloc/worker-code" target="_blank" id="ml-worker-code-link" style="display:none">دانلود</a>
-      </div>
-    </div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button class="btn btn-blue" onclick="mlStatus(true)"><i class="ti ti-radar-2"></i> تست گیت‌وی</button>
-      <button class="btn btn-g" onclick="mlSyncWorker(this)"><i class="ti ti-refresh-sync"></i> سینک UUIDها به وورکر</button>
-      <span id="ml-sync-result" style="font-size:11.5px;color:var(--t3);align-self:center"></span>
-    </div>
-  </div>
-
-  <!-- ۲) اسکن colo — دیباگ فوق پیشرفته -->
-  <div class="conn-toolbar" style="margin-bottom:14px">
-    <div class="conn-toolbar-title"><i class="ti ti-radar"></i> اسکنر لوکیشن — نقشه‌ی تاییدشده‌ی IP → PoP (مدرک زنده)</div>
-  </div>
-  <div class="card" style="margin-bottom:18px">
-    <div class="card-title"><i class="ti ti-signal-4g"></i> اسکن و صحت‌سنجی IPهای کلادفلر</div>
-    <div style="font-size:11.5px;color:var(--t3);margin-bottom:14px;line-height:1.8">
-      هر IP با <b>هندشیک TLS واقعی + GET /cdn-cgi/trace</b> پروب می‌شود؛ فقط IPهایی که واقعاً دامنه‌ی وورکر شما را سرو کنند و coloشان خوانده شود نگه داشته می‌شوند.
-      نتیجه: لیست لوکیشن‌های <b>سالم و آماده</b> با RTT — هیچ IP تاییدنشده‌ای به کاربر داده نمی‌شود.
-    </div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-      <button class="btn btn-g" id="ml-scan-btn" onclick="mlScan(this,false)"><i class="ti ti-radar-2"></i> اسکن سریع (~۳۰ ثانیه)</button>
-      <button class="btn btn-blue" id="ml-scan-deep-btn" onclick="mlScan(this,true)"><i class="ti ti-radar"></i> اسکن عمیق (~۹۰ ثانیه)</button>
-      <span id="ml-scan-progress" style="font-size:11.5px;color:var(--t3)">آماده</span>
-    </div>
-    <div id="ml-loc-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;margin-top:14px"></div>
-    <div id="ml-scan-stats" style="margin-top:12px;font-size:11.5px;color:var(--t3)"></div>
-  </div>
-
-  <!-- ۳) سازنده‌ی ساده‌ی کانفیگ‌های پل -->
-  <div class="conn-toolbar" style="margin-bottom:14px">
-    <div class="conn-toolbar-title"><i class="ti ti-link-plus"></i> سازنده‌ی کانفیگ‌های پل — فقط چند کلیک</div>
-  </div>
-  <div class="card" style="margin-bottom:18px">
-    <div class="card-title"><i class="ti ti-wand"></i> ساخت کانفیگ‌های چندلوکیشن</div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;margin-bottom:12px">
-      <div>
-        <label style="font-size:11px;color:var(--t3)">کانفیگ پایه</label>
-        <select id="ml-cfg-sel" style="width:100%" class="cm-input"></select>
-      </div>
-      <div>
-        <label style="font-size:11px;color:var(--t3)">حالت خروج</label>
-        <select id="ml-mode-sel" style="width:100%" class="cm-input">
-          <option value="worker" selected>خروج CF — جعل خروجی (سایت‌ها IP کلادفلر می‌بینند)</option>
-          <option value="railway">تونل پایدار — خروج Railway (مثل قبل)</option>
-        </select>
-      </div>
-      <div>
-        <label style="font-size:11px;color:var(--t3)">لوکیشن‌ها</label>
-        <select id="ml-colo-sel" style="width:100%" class="cm-input">
-          <option value="all" selected>همه‌ی لوکیشن‌های تاییدشده</option>
-          <option value="auto">فقط Auto (نزدیک‌ترین PoP به ISP)</option>
-        </select>
-      </div>
-    </div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button class="btn btn-p" onclick="mlBuild(this)"><i class="ti ti-magic-wand"></i> ساخت کانفیگ‌های پل</button>
-      <button class="btn btn-g" id="ml-copy-all-btn" style="display:none" onclick="mlCopyAll()"><i class="ti ti-clipboard-copy"></i> کپی همه</button>
-      <span id="ml-build-result" style="font-size:11.5px;color:var(--t3);align-self:center"></span>
-    </div>
-    <div id="ml-links-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px;margin-top:14px"></div>
-    <textarea id="ml-links-raw" style="display:none;width:100%;margin-top:12px;direction:ltr;text-align:left;font-family:monospace;font-size:11px;height:150px" readonly></textarea>
-  </div>
-
-  <!-- ۴) SNI-Trace — دیباگ فوق پیشرفته‌ی جعل SNI -->
-  <div class="conn-toolbar" style="margin-bottom:14px">
-    <div class="conn-toolbar-title"><i class="ti ti-mask"></i> SNI-Trace — اثبات زنده‌ی جعل SNI (نه حدس)</div>
-  </div>
-  <div class="card" style="margin-bottom:18px">
-    <div class="card-title"><i class="ti ti-bug"></i> ردیاب SNI جعلی</div>
-    <div style="font-size:11.5px;color:var(--t3);margin-bottom:12px;line-height:1.8">
-      پنل با SNI جعلی شما <b>واقعاً</b> به ingress ریلوی و لبه‌ی کلادفلر هندشیک TLS می‌زند و نتیجه را با مدرک نشان می‌دهد:
-      آیا هندشیک کامل شد؟ لایه‌ی HTTP با Host درست رسید؟ پس DPI دقیقاً چه SNI‌ای می‌بیند؟
-      برای فعال‌سازی، در «ساخت کانفیگ» گزینه‌ی 🎭 SNI جعلی را روشن کن — لینک خروجی sni جعلی + allowInsecure خواهد داشت.
-    </div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <input class="cm-input" id="ml-sni-input" placeholder="www.microsoft.com" style="flex:1;min-width:220px;direction:ltr;text-align:left;font-family:monospace">
-      <button class="btn btn-pur" onclick="mlSniTrace(this)"><i class="ti ti-route"></i> تست زنده</button>
-    </div>
-    <div id="ml-sni-result" style="margin-top:14px;display:none"></div>
-  </div>
-</section>
-
-<!-- ════════════════════════════════════════════════════════════════════════════
-     VPN PRO — WireGuard و OpenVPN
-     پروتکل‌های مستقل از VLESS/Trojan — کاربر سرور خودش را deploy می‌کند
-     ════════════════════════════════════════════════════════════════════════════ -->
-<section class="pg" id="pg-vpn">
-  <div class="topbar">
-    <div><div class="tb-title"><i class="ti ti-shield-lock"></i> VPN Pro — WireGuard &amp; OpenVPN</div><div class="tb-sub">پروتکل‌های کلاسیک — روی سرور VPS خودتان deploy کنید، کانفیگ کلاینت را پنل تولید می‌کند</div></div>
-    <div class="tb-right">
-      <span class="badge bg-green" id="vpn-status-badge">بارگذاری...</span>
-    </div>
-  </div>
-
-  <!-- ۱) کارت معرفی و مزایا -->
-  <div class="card" style="margin-bottom:18px;background:linear-gradient(155deg,rgba(245,158,11,0.06) 0%,var(--card) 60%);border:1px solid var(--card-b)">
-    <div class="card-title"><i class="ti ti-info-circle" style="color:var(--accent)"></i> درباره‌ی WireGuard و OpenVPN</div>
-    <div style="font-size:12px;color:var(--t2);line-height:1.9">
-      <b>WireGuard</b> مدرن‌ترین پروتکل VPN است — رمزنگاری ChaCha20، سرعت بالا، تأخیر کم. مناسب برای گیمینگ و یوتیوب. <b>OpenVPN</b> قدیمی‌تر ولی به‌شدت سازگار و امن است — برای شبکه‌های شرکت و شرایطی که WireGuard بلاک شده.
-      <br><b style="color:var(--amber-t)">تفاوت با VLESS/Trojan:</b> این پروتکل‌ها روی UDP/TCP با TLS واقعی کار می‌کنند (نه WebSocket). روی CDN/Worker قابل عبور نیستند — سرور باید مستقیم (VPS) باشد.
-      <br><b>پیشنهاد:</b> یک VPS رایگان Oracle Cloud (Always Free، ۴ هسته ARM) در دبی/آمستردام بگیرید و اسکریپت آماده‌ی پنل را اجرا کنید.
-    </div>
-  </div>
-
-  <!-- ۲) کارت WireGuard -->
-  <div class="card vpn-card vpn-wg-card" style="margin-bottom:18px">
-    <div class="card-title"><i class="ti ti-key" style="color:var(--accent)"></i> WireGuard — تولید و مدیریت کانفیگ</div>
-
-    <!-- empty-state: وقتی هنوز سروری ست نشده، راهنمایی واضح نشان بده -->
-    <div id="wg-empty-state" class="vpn-empty-state" style="margin-bottom:14px;padding:14px 16px;background:rgba(139,92,246,0.06);border:1px dashed rgba(139,92,246,0.30);border-radius:14px;display:flex;gap:11px;align-items:flex-start">
-      <i class="ti ti-server-off" style="color:var(--accent2);font-size:22px;flex-shrink:0;margin-top:2px"></i>
-      <div style="flex:1;font-size:11.5px;line-height:1.8">
-        <b style="color:var(--accent2)">سرور WireGuard هنوز تنظیم نشده.</b><br>
-        روی <b>«اسکریپت راه‌اندازی سرور»</b> بزنید تا دستورات آماده برای VPS را بگیرید، سپس مقادیر برگشتی (آدرس، پورت، کلید عمومی) را اینجا وارد کنید. <b>یا</b> اگر VPS ندارید، یک VPS رایگان Oracle Cloud (Always Free) بگیرید.
-        <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">
-          <button class="btn btn-sm btn-g" onclick="vpnShowServerScript(this)"><i class="ti ti-server"></i> گرفتن اسکریپت سرور</button>
-          <button class="btn btn-sm btn-blue" onclick="vpnShowServerKey(this)"><i class="ti ti-key"></i> تولید کلید سرور</button>
-        </div>
-      </div>
-    </div>
-
-    <div style="font-size:12px;font-weight:700;margin-bottom:10px;color:var(--t1)">۱) مشخصات سرور</div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:12px">
-      <div class="vpn-field"><label>آدرس سرور (IP / دامنه)</label>
-        <div class="vpn-input-wrap"><i class="ti ti-world vpn-input-ic"></i><input id="wg-endpoint" class="vpn-input" placeholder="vpn.example.com"></div></div>
-      <div class="vpn-field"><label>پورت UDP</label>
-        <div class="vpn-input-wrap"><i class="ti ti-port vpn-input-ic"></i><input id="wg-port" type="number" value="51820" class="vpn-input"></div></div>
-      <div class="vpn-field" style="grid-column:span 2"><label>کلید عمومی سرور (Public Key)</label>
-        <div class="vpn-input-wrap"><i class="ti ti-key vpn-input-ic"></i><input id="wg-server-pub" placeholder="ServerPublicKeyBase64=" class="vpn-input"></div></div>
-    </div>
-
-    <div style="font-size:12px;font-weight:700;margin:14px 0 10px;color:var(--t1)">۲) تنظیمات کلاینت (پیش‌فرض سالم — قابل ویرایش)</div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:14px">
-      <div class="vpn-field"><label>IP کلاینت (CIDR)</label>
-        <div class="vpn-input-wrap"><i class="ti ti-address-book vpn-input-ic"></i><input id="wg-client-ip" value="10.7.0.2/32" class="vpn-input"></div></div>
-      <div class="vpn-field"><label>DNS</label>
-        <div class="vpn-input-wrap"><i class="ti ti-dns vpn-input-ic"></i><input id="wg-dns" value="1.1.1.1, 1.0.0.1" class="vpn-input"></div></div>
-      <div class="vpn-field"><label>Keepalive (ثانیه)</label>
-        <div class="vpn-input-wrap"><i class="ti ti-clock vpn-input-ic"></i><input id="wg-keepalive" type="number" value="25" class="vpn-input"></div></div>
-      <div class="vpn-field"><label>MTU</label>
-        <div class="vpn-input-wrap"><i class="ti ti-arrows-shuffle vpn-input-ic"></i><input id="wg-mtu" type="number" value="1280" class="vpn-input"></div></div>
-    </div>
-
-    <div style="font-size:12px;font-weight:700;margin:14px 0 10px;color:var(--t1)">۳) کلید کلاینت (اگر نداری، تولید کن)</div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
-      <button class="btn btn-blue" onclick="vpnGenerateClientKeys(this)"><i class="ti ti-key"></i> تولید کلید کلاینت جدید</button>
-      <button class="btn btn-o" onclick="vpnShowServerScript(this)"><i class="ti ti-server"></i> اسکریپت راه‌اندازی سرور</button>
-      <button class="btn btn-o" onclick="vpnShowServerKey(this)"><i class="ti ti-key"></i> تولید کلید سرور</button>
-    </div>
-    <div id="wg-keypair-result" style="margin-bottom:14px;display:none"></div>
-
-    <div style="font-size:12px;font-weight:700;margin:14px 0 10px;color:var(--t1)">۴) تولید کانفیگ کلاینت</div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
-      <button class="btn btn-g" onclick="vpnGenerateWGConfig(this)"><i class="ti ti-file-export"></i> تولید فایل .conf</button>
-      <button class="btn btn-amber" onclick="vpnGenerateWGQR(this)"><i class="ti ti-qrcode"></i> QR کد</button>
-      <button class="btn btn-o" onclick="vpnTestWG(this)"><i class="ti ti-plug"></i> تست سلامت سرور</button>
-    </div>
-    <div id="wg-config-result" style="display:none"></div>
-    <div id="wg-qr-result" style="display:none;margin-top:12px"></div>
-    <div id="wg-health-result" style="display:none;margin-top:12px"></div>
-  </div>
-
-  <!-- ۳) کارت OpenVPN -->
-  <div class="card vpn-card vpn-ovpn-card" style="margin-bottom:18px">
-    <div class="card-title"><i class="ti ti-lock-access" style="color:var(--accent2)"></i> OpenVPN — مدیریت کانفیگ با Cert واقعی</div>
-
-    <!-- empty-state -->
-    <div id="ovpn-empty-state" class="vpn-empty-state" style="margin-bottom:14px;padding:14px 16px;background:rgba(250,204,21,0.06);border:1px dashed rgba(250,204,21,0.30);border-radius:14px;display:flex;gap:11px;align-items:flex-start">
-      <i class="ti ti-file-import" style="color:var(--accent2);font-size:22px;flex-shrink:0;margin-top:2px"></i>
-      <div style="flex:1;font-size:11.5px;line-height:1.8">
-        <b style="color:var(--accent2)">هنوز کانفیگ OpenVPN نداری.</b><br>
-        روی سرور VPS خود دستور <code dir="ltr">curl -O https://git.io/vpn -o openvpn-install.sh</code> را اجرا کن، فایل <code dir="ltr">emix-client.ovpn</code> تولید شده را اینجا paste کن، یا از <b>«اسکریپت راه‌اندازی سرور»</b> کمک بگیر.
-        <div style="margin-top:8px">
-          <button class="btn btn-sm btn-g" onclick="vpnShowOVPNServerScript(this)"><i class="ti ti-server"></i> گرفتن اسکریپت سرور</button>
-        </div>
-      </div>
-    </div>
-
-    <div style="font-size:12px;font-weight:700;margin-bottom:10px;color:var(--t1)">روش ۱ — paste کردن فایل .ovpn کامل از سرور</div>
-    <div style="font-size:11px;color:var(--t3);margin-bottom:8px;line-height:1.7">
-      اگر از angristan یا یک نصب‌کننده‌ی OpenVPN استفاده کردید، فایل <code dir="ltr">emix-client.ovpn</code> حاوی <code dir="ltr">&lt;ca&gt;</code> و <code dir="ltr">&lt;cert&gt;</code> و <code dir="ltr">&lt;key&gt;</code> است. آن را اینجا paste کن — پنل آن را پارس می‌کند و از اول می‌سازد.
-    </div>
-    <textarea id="ovpn-inline-config" placeholder="client
-dev tun
-proto tcp
-remote vpn.example.com 1194
-...
-&lt;ca&gt;
------BEGIN CERTIFICATE-----
-...
------END CERTIFICATE-----
-&lt;/ca&gt;
-&lt;cert&gt;
-...
-&lt;/cert&gt;
-&lt;key&gt;
-...
-&lt;/key&gt;" class="vpn-textarea"></textarea>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;margin-bottom:18px">
-      <button class="btn btn-g" onclick="vpnParseOVPNInline(this)"><i class="ti ti-file-import"></i> پارس و ذخیره</button>
-      <button class="btn btn-o" onclick="vpnShowOVPNServerScript(this)"><i class="ti ti-server"></i> اسکریپت راه‌اندازی سرور</button>
-    </div>
-
-    <div style="font-size:12px;font-weight:700;margin:18px 0 10px;color:var(--t1)">روش ۲ — وارد کردن دستی مشخصات</div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:12px">
-      <div class="vpn-field"><label>آدرس سرور</label>
-        <div class="vpn-input-wrap"><i class="ti ti-world vpn-input-ic"></i><input id="ovpn-endpoint" placeholder="vpn.example.com" class="vpn-input"></div></div>
-      <div class="vpn-field"><label>پورت</label>
-        <div class="vpn-input-wrap"><i class="ti ti-port vpn-input-ic"></i><input id="ovpn-port" type="number" value="1194" class="vpn-input"></div></div>
-      <div class="vpn-field"><label>پروتکل</label>
-        <div class="vpn-input-wrap"><i class="ti ti-bolt vpn-input-ic"></i><select id="ovpn-protocol" class="vpn-input">
-          <option value="tcp" selected>TCP (سازگارتر — از CDN هم عبور می‌کند)</option>
-          <option value="udp">UDP (سریع‌تر — مناسب گیمینگ)</option>
-        </select></div>
-      </div>
-    </div>
-    <div style="font-size:11px;color:var(--t3);margin-bottom:10px;line-height:1.7">
-      برای OpenVPN نیازی به ساخت کلید در پنل نیست — از فایل .ovpn که سرور تولید کرده استفاده کن. بالا رو روش ۱ استفاده کن.
-    </div>
-
-    <div style="font-size:12px;font-weight:700;margin:14px 0 10px;color:var(--t1)">تولید فایل کانفیگ کلاینت</div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
-      <button class="btn btn-g" onclick="vpnGenerateOVPNConfig(this)"><i class="ti ti-file-export"></i> تولید فایل .ovpn</button>
-      <button class="btn btn-o" onclick="vpnTestOVPN(this)"><i class="ti ti-plug"></i> تست سلامت سرور</button>
-    </div>
-    <div id="ovpn-config-result" style="display:none"></div>
-    <div id="ovpn-health-result" style="display:none;margin-top:12px"></div>
-  </div>
-
-  <!-- ۴) راهنمای راه‌اندازی سریع -->
-  <div class="card" style="margin-bottom:18px;background:linear-gradient(155deg,rgba(52,211,153,0.06) 0%,var(--card) 60%)">
-    <div class="card-title"><i class="ti ti-bulb" style="color:#4ADE80"></i> راهنمای سریع — از کجا شروع کنم؟</div>
-    <div style="font-size:12px;color:var(--t2);line-height:2.1">
-      <b>۱)</b> یک VPS رایگان Oracle Cloud (Dubai یا Amsterdam، Always Free) بگیرید — <a href="https://cloud.oracle.com" target="_blank" style="color:var(--accent);text-decoration:underline">cloud.oracle.com</a>
-      <br><b>۲)</b> Ubuntu 22.04 نصب کنید و با SSH وارد شوید
-      <br><b>۳ — برای WireGuard:</b> در پنل بالا، روی «اسکریپت راه‌اندازی سرور» بزنید — اسکریپت آماده را کپی کنید، در VPS اجرا کنید (<code dir="ltr">bash emix-wg-server-setup.sh</code>). کلید عمومی سرور را برگردانید و در فیلد بالا وارد کنید.
-      <br><b>۳ — برای OpenVPN:</b> روی «اسکریپت راه‌اندازی سرور» در بخش OpenVPN بزنید، در VPS اجرا کنید. فایل <code dir="ltr">/root/emix-client.ovpn</code> را کپی کنید و در textarea بالا paste کنید.
-      <br><b>۴)</b> پورت UDP 51820 (WG) یا TCP 1194 (OVPN) را در فایروال سرور و Oracle Security List باز کنید.
-      <br><b>۵)</b> دکمه «تولید فایل .conf/.ovpn» را بزنید — فایل را در کلاینت WireGuard یا OpenVPN وارد کنید.
-    </div>
-  </div>
-</section>
-
 <section class="pg" id="pg-subgroups">
   <div class="topbar">
     <div><div class="tb-title"><i class="ti ti-folders"></i> گروه‌های ساب</div><div class="tb-sub">هر گروه یک صفحه پابلیک مجزا با کانفیگ‌های خودش دارد</div></div>
@@ -6414,130 +2933,6 @@ remote vpn.example.com 1194
   <div class="topbar"><div><div class="tb-title"><i class="ti ti-alert-triangle"></i> خطاها</div></div><div class="tb-right"><span class="badge bg-red" id="errs-badge">۰</span><button class="btn btn-p btn-sm" onclick="refreshAll()"><i class="ti ti-refresh"></i></button></div></div>
   <div class="card"><div class="card-title"><i class="ti ti-bug"></i> لاگ خطاها</div><div id="errs-full">—</div></div>
 </section>
-
-<section class="pg" id="pg-diag">
-  <div class="topbar">
-    <div><div class="tb-title"><i class="ti ti-activity-heartbeat"></i> سلامت و تشخیص (Diagnostics Center)</div>
-      <div class="tb-sub">موتور سلامت شبکه + سیستم جاب‌ها + خطاهای ساختاریافته — همه بر پایه‌ی تست واقعی، بدون عدد ساختگی</div></div>
-    <div class="tb-right"><button class="btn btn-p btn-sm" onclick="loadDiagPage()"><i class="ti ti-refresh"></i> بازخوانی</button>
-      <button class="btn btn-sm" onclick="diagProbeAll()"><i class="ti ti-bolt"></i> تست همه‌ی کانفیگ‌ها</button></div>
-  </div>
-
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:12px" id="diag-health-cards">—</div>
-
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px" class="diag-grid">
-    <div class="card">
-      <div class="card-title"><i class="ti ti-heart-rate-monitor"></i> وضعیت سلامت کانفیگ‌ها (تست واقعی End-to-End)</div>
-      <div id="diag-health-body">—</div>
-    </div>
-    <div class="card">
-      <div class="card-title"><i class="ti ti-list-check"></i> جاب‌های پس‌زمینه</div>
-      <div id="diag-jobs-body">—</div>
-    </div>
-    <div class="card">
-      <div class="card-title"><i class="ti ti-server-2"></i> زیرساخت (App / Persistence / Protocols)</div>
-      <div id="diag-sys-body">—</div>
-    </div>
-    <div class="card">
-      <div class="card-title"><i class="ti ti-shield-check"></i> کیفیت IP</div>
-      <div id="diag-ipq-body">—</div>
-    </div>
-  </div>
-
-  <div class="card" style="margin-top:12px">
-    <div class="card-title"><i class="ti ti-bug"></i> خطاهای ساختاریافته اخیر (کد / کامپوننت / شدت)</div>
-    <div id="diag-err-body">—</div>
-  </div>
-</section>
-
-<style>
-.diag-grid{grid-template-columns:1fr 1fr}
-@media(max-width:900px){.diag-grid{grid-template-columns:1fr}}
-.diag-hc{background:var(--card);border:1px solid var(--card-b);border-radius:14px;padding:14px;text-align:center}
-.diag-hc .n{font-size:26px;font-weight:800;margin-bottom:2px}
-.diag-hc .l{font-size:10.5px;color:var(--t3);letter-spacing:.08em}
-.diag-st-HEALTHY{color:#10B981}.diag-st-DEGRADED{color:#F59E0B}.diag-st-UNREACHABLE{color:#EF4444}.diag-st-INVALID{color:#6B7280}.diag-st-UNKNOWN{color:#8B5CF6}
-.diag-tb{width:100%;border-collapse:collapse;font-size:12px}
-.diag-tb th{text-align:right;color:var(--t3);font-size:10.5px;padding:6px 8px;border-bottom:1px solid var(--card-b);white-space:nowrap}
-.diag-tb td{padding:7px 8px;border-bottom:1px solid rgba(255,255,255,.04);white-space:nowrap}
-.diag-pill{display:inline-block;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:700}
-</style>
-
-<script>
-async function loadDiagPage(){
-  try{
-    // Audit fix (CRITICAL): این خط در v11.0.0-arch با خطای syntax واقعی
-    // (const s, dg, js, iq] — بدون bracket باز) کل script block را
-    // می‌کشت و Diagnostics Center در production هرگز لود نمی‌شد.
-    // + fetch خام → authF تا انقضای session به login redirect شود.
-    const [hs, dg, js, iq] = await Promise.all([
-      authF('/api/health/summary').then(r=>r.ok?r.json():null).catch(()=>null),
-      authF('/api/diagnostics').then(r=>r.ok?r.json():null).catch(()=>null),
-      authF('/api/jobs/status').then(r=>r.ok?r.json():null).catch(()=>null),
-      authF('/api/ip-quality/summary').then(r=>r.ok?r.json():null).catch(()=>null),
-    ]);
-    // health state cards
-    const hc = document.getElementById('diag-health-cards');
-    if(hs){
-      const states = [['HEALTHY','سالم','ti-circle-check'],['DEGRADED','ضعیف','ti-alert-triangle'],['UNREACHABLE','در دسترس نیست','ti-plug-x'],['INVALID','نامعتبر','ti-ban'],['UNKNOWN','تست نشده','ti-help']];
-      hc.innerHTML = states.map(([k,fa])=>`<div class="diag-hc"><div class="n diag-st-${k}">${hs.by_state?.[k]??0}</div><div class="l">${fa}</div></div>`).join('')
-      + `<div class="diag-hc"><div class="n">${hs.tracked??0}</div><div class="l">در مجموع</div></div>`;
-    } else { hc.textContent='موتور سلامت در دسترس نیست'; }
-    // health details + formula
-    const hb = document.getElementById('diag-health-body');
-    if(hs){
-      hb.innerHTML = `<div style="font-size:11.5px;color:var(--t3);margin-bottom:8px">فرمول امتیاز: ${hs.formula||''}</div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap">
-        ${Object.entries(hs.by_state||{}).map(([k,v])=>`<span class="diag-pill diag-st-${k}" style="background:var(--accent-d)">${k}: ${v}</span>`).join('')}
-      </div>
-      <div style="margin-top:8px;font-size:11px;color:var(--t3)">هر کانفیگ با یک پروتکل‌کلاینت واقعی از مسیر عمومی تست می‌شود (WS/TLS + هدر پروتکل + خروج). کانفیگ جدید هیچ‌وقت «سالم» متولد نمی‌شود — فقط تست واقعی.</div>`;
-    } else { hb.textContent='—'; }
-    // jobs table
-    const jb = document.getElementById('diag-jobs-body');
-    if(js && js.jobs){
-      jb.innerHTML = `<div style="margin-bottom:6px;font-size:11px;color:var(--t3)">Supervisor: <b>${js.supervisor}</b>${js.uptime_s!=null?' · '+Math.round(js.uptime_s)+'s':''}</div>
-      <div style="overflow-x:auto"><table class="diag-tb"><tr><th>جاب</th><th>وضعیت</th><th>اجرا</th><th>خطا</th><th>آخرین اجرا</th><th>ms</th></tr>
-      ${js.jobs.map(j=>`<tr><td>${j.name}</td><td class="diag-st-${j.last_status==='OK'?'HEALTHY':j.last_status==='FAILED'?'UNREACHABLE':'UNKNOWN'}">${j.last_status}</td><td>${j.run_count}</td><td>${j.fail_count}</td><td>${j.last_run?new Date(j.last_run*1000).toLocaleTimeString('fa-IR'):'—'}</td><td>${j.last_duration_ms??'—'}</td></tr>`).join('')}</table></div>`;
-    } else { jb.textContent='—'; }
-    // system checks
-    const sb = document.getElementById('diag-sys-body');
-    if(dg && dg.checks){
-      const rows = [];
-      const push=(name,data)=>{ if(!data) return; const st=data.status||data.supervisor||'OK';
-        rows.push(`<tr><td>${name}</td><td>${st}</td><td style="white-space:normal;direction:ltr;text-align:left">${(data.error||data.note||'').toString().slice(0,80)}</td></tr>`); };
-      push('App',dg.checks.app); push('Persistence',dg.checks.persistence);
-      push('Protocols',dg.checks.protocols?{status:'OK',note:(dg.checks.protocols.registered||0)+' registered'}:null);
-      sb.innerHTML='<table class="diag-tb"><tr><th>بخش</th><th>وضعیت</th><th>توضیح</th></tr>'+rows.join('')+'</table>';
-    } else { sb.textContent='—'; }
-    // ip quality
-    const ib = document.getElementById('diag-ipq-body');
-    if(iq && iq.by_classification){
-      ib.innerHTML = Object.entries(iq.by_classification).filter(([,v])=>v>0).map(([k,v])=>
-        `<span class="diag-pill" style="background:var(--accent-d);color:var(--t2)">${k}: ${v}</span>`).join(' ') || '<span style="color:var(--t3);font-size:12px">هنوز IP‌ای اسکن نشده — از تب گیمینگ یا /api/ip-quality استفاده کنید</span>';
-      ib.insertAdjacentHTML('beforeend','<div style="margin-top:6px;font-size:11px;color:var(--t3)">طبقه‌بندی فقط با شواهد واقعی (TLS/ASN/Reputation) — «Clean» بدون دلیل صادر نمی‌شود.</div>');
-    } else { ib.textContent='—'; }
-    // structured errors
-    const eb = document.getElementById('diag-err-body');
-    if(dg && dg.recent_errors && dg.recent_errors.length){
-      eb.innerHTML='<div style="overflow-x:auto"><table class="diag-tb"><tr><th>زمان</th><th>کد</th><th>کامپوننت</th><th>شدت</th><th>پیام</th></tr>'
-      + dg.recent_errors.map(e=>`<tr><td>${(e.timestamp_iso||'').slice(11,19)}</td><td style="direction:ltr">${e.code}</td><td style="direction:ltr">${e.component}</td><td>${e.severity}</td><td style="white-space:normal;direction:ltr;text-align:left;max-width:420px;overflow:hidden;text-overflow:ellipsis">${(e.message||'').slice(0,110)}</td></tr>`).join('')+'</table></div>';
-    } else { eb.innerHTML='<span style="color:var(--t3)">خطای ساختاریافته‌ای ثبت نشده</span>'; }
-  }catch(e){ console.error('diag load failed', e); }
-}
-async function diagProbeAll(){
-  // Phase 43: قبلاً اندپوینتِ probe-all مسیر smart_route را صدا می‌زد که در
-  // پروفایل core خاموش است → 404 بی‌صدا می‌شد و دکمه «نتیجه‌ای نمی‌داد».
-  // حالا همان تستِ واقعیِ هسته: پینگ End-to-End همه‌ی کانفیگ‌ها از مسیر کلاینت
-  // (link_health — بدون gate) + نتیجه‌ی قابل‌دیدن به کاربر.
-  try{
-    const r = await authF('/api/links/ping-all',{method:'POST'});
-    if(!r.ok){toast('خطا در تست کانفیگ‌ها','err');return}
-    const j = await r.json();
-    toast(`تست واقعی همه‌ی کانفیگ‌ها: ${toFa(j.ok)} از ${toFa(j.total)} سالم`, j.ok>0?'ok':'err');
-    loadDiagPage();
-  }catch(e){ console.error(e); toast('خطا در تست کانفیگ‌ها','err'); }
-}
-</script>
 <section class="pg" id="pg-updates">
   <div class="topbar">
     <div><div class="tb-title"><i class="ti ti-cloud-download"></i> نسخه و بروزرسانی</div><div class="tb-sub">مدیریت نسخه‌ی پنل و تاریخچه‌ی کامل بروزرسانی‌ها</div></div>
@@ -6672,7 +3067,7 @@ async function diagProbeAll(){
       </div>
       <div class="srv-tiles">
         <div class="srv-tile"><div class="srv-tile-icon"><i class="ti ti-route"></i></div><div class="srv-tile-text"><div class="srv-tile-label">پورت</div><div class="srv-tile-val">443 (TLS)</div></div></div>
-        <div class="srv-tile"><div class="srv-tile-icon"><i class="ti ti-versions"></i></div><div class="srv-tile-text"><div class="srv-tile-label">نسخه</div><div class="srv-tile-val" id="srv-version-val">v9.7.0</div></div></div>
+        <div class="srv-tile"><div class="srv-tile-icon"><i class="ti ti-versions"></i></div><div class="srv-tile-text"><div class="srv-tile-label">نسخه</div><div class="srv-tile-val">v9.2</div></div></div>
         <div class="srv-tile"><div class="srv-tile-icon"><i class="ti ti-brand-fastapi"></i></div><div class="srv-tile-text"><div class="srv-tile-label">فریم‌ورک</div><div class="srv-tile-val">FastAPI + Uvicorn</div></div></div>
         <div class="srv-tile"><div class="srv-tile-icon"><i class="ti ti-cloud"></i></div><div class="srv-tile-text"><div class="srv-tile-label">پلتفرم</div><div class="srv-tile-val">Railway</div></div></div>
         <div class="srv-tile" style="grid-column:1/-1"><div class="srv-tile-icon"><i class="ti ti-device-floppy"></i></div><div class="srv-tile-text"><div class="srv-tile-label">ذخیره‌سازی</div><div class="srv-tile-val">JSON File (/data)</div></div></div>
@@ -6721,145 +3116,6 @@ async function diagProbeAll(){
     </div>
   </div>
 </section>
-
-<!-- ════════════════════════════════════════════════════════════════════════════
-     بخش آزمایشی (Experimental Section) — تمام فیچرهای جدید در اینجا قرار دارند
-     حالت: AUTO-ENABLED — بعد از هر deploy خودکار فعال است.
-     برای غیرفعال‌کردن: EMIX_EXPERIMENTAL=0 یا EMIX_ENABLE_<FEATURE>=0
-     ════════════════════════════════════════════════════════════════════════════ -->
-<section class="pg" id="pg-experimental">
-  <div class="page-hdr" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
-    <div style="min-width:0;flex:1">
-      <h1 style="font-size:24px;font-weight:800;color:#8B5CF6;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-        <i class="ti ti-flask" style="font-size:28px"></i> بخش آزمایشی (Experimental)
-      </h1>
-      <p style="color:var(--t3);font-size:13px;margin-top:4px">تمام فیچرهای جدید — auto-enabled بعد از deploy. برای غیرفعال‌کردن: <code style="background:rgba(0,0,0,.3);padding:2px 6px;border-radius:4px;color:#8B5CF6">EMIX_EXPERIMENTAL=0</code> یا <code style="background:rgba(0,0,0,.3);padding:2px 6px;border-radius:4px;color:#8B5CF6">EMIX_ENABLE_&lt;FEATURE&gt;=0</code></p>
-    </div>
-    <div id="exp-status-badge" style="padding:8px 16px;border-radius:12px;background:rgba(139,92,246,.1);border:1px solid rgba(139,92,246,.3);font-weight:700;font-size:13px;color:#8B5CF6;flex-shrink:0">Loading...</div>
-  </div>
-
-  <!-- Info Banner (auto-enabled) -->
-  <div id="exp-warning" style="padding:14px 18px;background:linear-gradient(135deg,rgba(16,185,129,.08),rgba(139,92,246,.08));border:1px solid rgba(16,185,129,.3);border-radius:14px;margin-bottom:20px;display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap">
-    <i class="ti ti-circle-check" style="font-size:22px;color:#10B981;flex-shrink:0"></i>
-    <div style="flex:1;min-width:200px">
-      <div style="font-weight:700;color:#10B981;margin-bottom:4px">بخش آزمایشی خودکار فعال است</div>
-      <div style="font-size:12px;color:var(--t2);line-height:1.6">
-        بعد از هر redeploy در Railway، کل بخش آزمایشی و همه‌ی فیچرها (به جز مواردی که به setup اضافی نیاز دارند) خودکار فعال می‌شوند.<br>
-        استثناها (که باید صریحاً فعال شوند):
-        <code style="background:rgba(0,0,0,.3);padding:2px 6px;border-radius:4px;color:#FACC15">ip_whitelist</code>
-        (نیاز به <code style="background:rgba(0,0,0,.3);padding:2px 6px;border-radius:4px;color:#FACC15">EMIX_ADMIN_IPS</code>)،
-        <code style="background:rgba(0,0,0,.3);padding:2px 6px;border-radius:4px;color:#FACC15">totp_2fa</code>
-        (نیاز به <code style="background:rgba(0,0,0,.3);padding:2px 6px;border-radius:4px;color:#FACC15">EMIX_TOTP_SECRET</code>)،
-        <code style="background:rgba(0,0,0,.3);padding:2px 6px;border-radius:4px;color:#FACC15">telegram_bot</code>
-        (نیاز به <code style="background:rgba(0,0,0,.3);padding:2px 6px;border-radius:4px;color:#FACC15">EMIX_BOT_TOKEN</code>).
-      </div>
-    </div>
-  </div>
-
-  <!-- Features Grid -->
-  <div id="exp-features-grid" class="exp-features-grid">
-    <div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--t3)">
-      <i class="ti ti-loader-2" style="font-size:32px;animation:spin 1s linear infinite"></i>
-      <div style="margin-top:8px;font-size:13px">در حال بارگذاری...</div>
-    </div>
-  </div>
-
-  <!-- Sub-sections -->
-  <div class="exp-subsections">
-    <div class="card exp-sub-card" style="padding:20px">
-      <h3 style="font-size:16px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-        <i class="ti ti-bolt" style="color:#8B5CF6"></i> ابزارهای ویرایش لینک
-      </h3>
-      <p style="font-size:12px;color:var(--t3);margin-bottom:14px;line-height:1.6">
-        این ابزارها روی لینک‌های موجود (VLESS/Trojan) اعمال می‌شوند و واقعاً کار می‌کنند.
-        لینک موجود خود را کپی کنید و در اینجا پردازش کنید.
-      </p>
-      <div style="display:flex;flex-direction:column;gap:8px">
-        <button class="btn btn-o exp-action-btn" onclick="expEmitLink('finalmask')" style="text-align:right"><i class="ti ti-mask"></i> FinalMask (TLS fragmentation)</button>
-        <button class="btn btn-o exp-action-btn" onclick="expEmitLink('utls')" style="text-align:right"><i class="ti ti-fingerprint"></i> uTLS fingerprint</button>
-      </div>
-      <div style="margin-top:12px;padding:10px 12px;border-radius:10px;background:rgba(250,204,21,.06);border:1px solid rgba(250,204,21,.2)">
-        <div style="font-size:11px;color:#FACC15;line-height:1.6">
-          <i class="ti ti-info-circle"></i>
-          <b>نکته:</b> پروتکل‌های VMess، Reality، SS-2022 نیاز به سرور مجزا دارند (xray-core).
-          EMIX فقط VLESS/Trojan/Shadowsocks/MTProto را به‌صورت واقعی هاست می‌کند.
-          لینک تولیدی برای این پروتکل‌ها فقط فرمت لینک است و متصل نمی‌شود.
-          برای استفاده، یک سرور xray-core جداگانه راه‌اندازی کنید.
-        </div>
-      </div>
-    </div>
-
-    <div class="card exp-sub-card" style="padding:20px">
-      <h3 style="font-size:16px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-        <i class="ti ti-rss" style="color:#FACC15"></i> فرمت‌های سابسکریپشن
-      </h3>
-      <p style="font-size:12px;color:var(--t3);margin-bottom:14px;line-height:1.6">
-        خروجی subscription در چند فرمت برای پشتیبانی همه‌ی کلاینت‌ها (v2rayN/sing-box/Clash.Meta).
-      </p>
-      <div style="display:flex;flex-direction:column;gap:8px">
-        <button class="btn btn-o exp-action-btn" onclick="expSub('raw')" style="text-align:right"><i class="ti ti-file-text"></i> raw (پیش‌فرض)</button>
-        <button class="btn btn-o exp-action-btn" onclick="expSub('json')" style="text-align:right"><i class="ti ti-braces"></i> JSON (v2rayN/sing-box)</button>
-        <button class="btn btn-o exp-action-btn" onclick="expSub('clash')" style="text-align:right"><i class="ti ti-code"></i> Clash.Meta YAML</button>
-        <button class="btn btn-o exp-action-btn" onclick="expSub('encrypted')" style="text-align:right"><i class="ti ti-lock"></i> Encrypted (base64)</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Stealth Section -->
-  <div class="card" style="padding:20px;margin-top:18px;border:1px solid rgba(139,92,246,.3)">
-    <h3 style="font-size:16px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-      <i class="ti ti-ghost" style="color:#8B5CF6"></i> بخش استتار و جعل (Stealth/Disguise)
-      <span style="font-size:11px;background:rgba(139,92,246,.2);color:#8B5CF6;padding:2px 8px;border-radius:8px;font-weight:600">مجزا</span>
-    </h3>
-    <p style="font-size:12px;color:var(--t3);margin-bottom:14px;line-height:1.6">
-      متدهای استتار/جعل داده — هر یک toggle-based، بدون تأثیر در کد اصلی.
-      این متدها فقط param های جعل را به لینک اضافه می‌کنند؛ اجرای واقعی آن‌ها در کلاینت (xray-core 26+) است.
-    </p>
-    <div id="exp-stealth-grid" class="exp-stealth-grid">
-      <div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--t3);font-size:12px">بارگذاری...</div>
-    </div>
-  </div>
-
-  <!-- Anti-DPI Recheck -->
-  <div class="card" style="padding:20px;margin-top:18px;border:1px solid rgba(250,204,21,.3)">
-    <h3 style="font-size:16px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-      <i class="ti ti-shield-check" style="color:#FACC15"></i> بررسی مجدد کانفیگ‌های ضد-DPI
-    </h3>
-    <p style="font-size:12px;color:var(--t3);margin-bottom:14px;line-height:1.6">
-      همه‌ی کانفیگ‌های ضد-DPI (XHTTP/Reality/WS با TLS) را با پینگ واقعی تست می‌کند.
-    </p>
-    <button class="btn btn-pur exp-recheck-btn" onclick="expRecheckAntiDPI()" style="background:linear-gradient(135deg,#8B5CF6,#FACC15);color:#fff;font-weight:700;width:100%">
-      <i class="ti ti-refresh"></i> بررسی مجدد همه‌ی کانفیگ‌های ضد-DPI
-    </button>
-    <div id="exp-antidpi-result" style="margin-top:14px"></div>
-  </div>
-</section>
-
-<!-- Unified Configs View (Phase 8) — همه‌ی کانفیگ‌ها در یک view مرکزی -->
-<section class="pg" id="pg-unified-configs">
-  <div class="page-hdr" style="margin-bottom:20px">
-    <h1 style="font-size:24px;font-weight:800;color:#FACC15;display:flex;align-items:center;gap:10px">
-      <i class="ti ti-grid-dots" style="font-size:28px"></i> همه‌ی کانفیگ‌ها (Unified)
-    </h1>
-    <p style="color:var(--t3);font-size:13px;margin-top:4px">نمایش مرکزی همه‌ی کانفیگ‌ها از همه‌ی بخش‌های پنل — با type badge و سلامت.</p>
-  </div>
-
-  <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
-    <button class="btn btn-o" onclick="filterUnifiedConfigs('all')">همه</button>
-    <button class="btn btn-o" onclick="filterUnifiedConfigs('links')">کانفیگ‌های اصلی</button>
-    <button class="btn btn-o" onclick="filterUnifiedConfigs('subscriptions')">ساب‌گروپ‌ها</button>
-    <button class="btn btn-o" onclick="filterUnifiedConfigs('nodes')">نودها</button>
-    <button class="btn btn-o" onclick="filterUnifiedConfigs('vpn-pro')">VPN Pro</button>
-    <button class="btn btn-o" onclick="filterUnifiedConfigs('experimental')">آزمایشی</button>
-  </div>
-
-  <div id="unified-configs-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px">
-    <div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--t3)">
-      <i class="ti ti-loader-2" style="font-size:32px;animation:spin 1s linear infinite"></i>
-      <div style="margin-top:8px;font-size:13px">بارگذاری...</div>
-    </div>
-  </div>
-</section>
 </main>
 <script>
 let isDark=localStorage.getItem('rvg-theme')!=='light';
@@ -6886,91 +3142,11 @@ function applyTheme(dark){
 
 function toggleTheme(){isDark=!isDark;localStorage.setItem('rvg-theme',isDark?'dark':'light');applyTheme(isDark)}
 applyTheme(isDark);
-// ── Audit fix (§50 frontend error handling): هیچ catch ای بی‌صدا نیست ──
-// netErr: خطای شبکه/لودر را throttled به کاربر نشان می‌دهد (هر ۳۰s یک‌بار
-// برای هر context — تا pollingهای ۲/۵ ثانیه‌ای spam نکنند).
-const _netErrShown = {};
-function netErr(e, ctx){
-  console.error('['+ctx+']', e);
-  const now = Date.now();
-  if(_netErrShown[ctx] && now - _netErrShown[ctx] < 30000) return;
-  _netErrShown[ctx] = now;
-  try{ toast('⚠ خطا در دریافت «'+ctx+'» — اتصال یا نشست را بررسی کنید','err'); }catch(_e){}
-}
-
 function toast(msg,type=''){
   const t=document.getElementById('toast');
   t.textContent=msg;t.className='toast show'+(type?' '+type:'');
   setTimeout(()=>t.classList.remove('show'),2400);
 }
-
-/* ══════ Command Palette (Ctrl+K) ══════ */
-let cpItems=[],cpSel=0,cpOpen=false;
-function cpActions(){
-  return [
-    {t:'ساخت کانفیگ جدید',s:'ورک‌اسپیس واحد — پروتکل/نود/مسیریابی/تست زنده/تولید',i:'ti-square-rounded-plus',run:()=>{navTo('builder')}}, {t:'ساخت کانفیگ (از کانفیگ‌ها)',s:'ورک‌اسپیس ساخت داخل صفحه‌ی کانفیگ‌ها',i:'ti-link-plus',run:()=>{navTo('links');setTimeout(openCreateWorkspace,350)}},
-    {t:'تست پینگ همه کانفیگ‌ها',s:'بررسی سلامت همه به‌صورت هم‌زمان',i:'ti-activity-heartbeat',run:()=>{navTo('links');setTimeout(()=>{const b=document.getElementById('ping-all-btn');if(b)pingAllLinks(b)},350)}},
-    {t:'پیشنهاد هوشمند — سریع‌ترین کانفیگ',s:'تست زنده و رتبه‌بندی همه کانفیگ‌ها',i:'ti-trophy',run:()=>{navTo('overview');setTimeout(()=>bestConfigTest(),400)}},
-    {t:'صفحه کانفیگ‌ها',s:'مدیریت لینک‌ها',i:'ti-link-plus',run:()=>navTo('links')},
-    {t:'پل ایران',s:'مصرف داخلی + شتاب‌دهی',i:'ti-flag',run:()=>navTo('bridge')},
-    {t:'تنظیمات حرفه‌ای',s:'ISP + TLS Mask + Smart + Security',i:'ti-bolt',run:()=>navTo('zeus')},
-    {t:'اتصالات زنده',s:'مانیتورینگ لحظه‌ای',i:'ti-plug-connected',run:()=>navTo('connections')},
-    {t:'ترافیک',s:'نمودار مصرف',i:'ti-chart-area',run:()=>navTo('traffic')},
-    {t:'نودها',s:'مدیریت نودهای متصل',i:'ti-topology-star-3',run:()=>navTo('nodes')},
-    {t:'گروه‌های ساب',s:'مدیریت گروه‌ها',i:'ti-folders',run:()=>navTo('subgroups')},
-    {t:'تنظیمات',s:'تنظیمات پنل',i:'ti-settings',run:()=>navTo('settings')},
-    {t:'لاگ فعالیت‌ها',s:'گزارش رویدادها',i:'ti-history',run:()=>navTo('logs')},
-  ];
-}
-function cpBuild(){
-  const q=document.getElementById('cp-input').value.trim().toLowerCase();
-  const acts=cpActions().filter(a=>!q||a.t.toLowerCase().includes(q)||a.s.toLowerCase().includes(q));
-  const links=q?allLinksList.filter(l=>l.label.toLowerCase().includes(q)||l.uuid.toLowerCase().includes(q)).slice(0,8):[];
-  let html='';
-  if(acts.length){html+='<div class="cp-group">فرمان‌ها</div>';html+=acts.map((a,ix)=>`<div class="cp-item" data-k="a${ix}"><i class="ti ${a.i}"></i><div class="cp-txt"><div class="cp-title">${a.t}</div><div class="cp-sub">${a.s}</div></div><span class="cp-hint">اجرا</span></div>`).join('')}
-  if(links.length){html+='<div class="cp-group">کانفیگ‌ها</div>';html+=links.map((l,ix)=>`<div class="cp-item" data-k="l${ix}"><i class="ti ti-link"></i><div class="cp-txt"><div class="cp-title">${esc(l.label)}</div><div class="cp-sub">${l.uuid.slice(0,13)}… · ${l.protocol}</div></div><span class="cp-hint">مشاهده</span></div>`).join('')}
-  if(!acts.length&&!links.length){html='<div id="cp-empty"><i class="ti ti-search-off" style="font-size:22px;display:block;margin-bottom:8px"></i>نتیجه‌ای یافت نشد</div>'}
-  document.getElementById('cp-list').innerHTML=html;
-  cpItems={acts,links};cpSel=0;cpHighlight();
-  document.querySelectorAll('#cp-list .cp-item').forEach(el=>{
-    el.onclick=()=>cpRun(el.dataset.k);
-    el.onmouseenter=()=>{cpSel=[...document.querySelectorAll('#cp-list .cp-item')].indexOf(el);cpHighlight()};
-  });
-}
-function cpHighlight(){
-  document.querySelectorAll('#cp-list .cp-item').forEach((el,ix)=>el.classList.toggle('sel',ix===cpSel));
-  const sel=document.querySelector('#cp-list .cp-item.sel');
-  if(sel)sel.scrollIntoView({block:'nearest'});
-}
-function cpRun(key){
-  if(!key)return;
-  const src=key[0],ix=+key.slice(1);
-  const item=src==='a'?cpItems.acts[ix]:cpItems.links[ix];
-  if(!item)return;
-  cpClose();
-  if(src==='a'){item.run()}
-  else{
-    navTo('links');
-    setTimeout(()=>{
-      const card=document.querySelector(`#links-grid .cfg-card[data-uuid="${item.uuid}"]`);
-      if(card){card.scrollIntoView({behavior:'smooth',block:'center'});card.style.boxShadow='0 0 0 2px var(--accent)';setTimeout(()=>card.style.boxShadow='',2200)}
-    },500);
-  }
-}
-function cpOpenShow(){
-  cpOpen=true;document.getElementById('cp-overlay').classList.add('open');
-  const inp=document.getElementById('cp-input');inp.value='';cpBuild();setTimeout(()=>inp.focus(),50);
-}
-function cpClose(){cpOpen=false;document.getElementById('cp-overlay').classList.remove('open')}
-document.addEventListener('keydown',e=>{
-  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();cpOpen?cpClose():cpOpenShow();return}
-  if(!cpOpen)return;
-  if(e.key==='Escape'){e.preventDefault();cpClose()}
-  else if(e.key==='ArrowDown'){e.preventDefault();const n=document.querySelectorAll('#cp-list .cp-item').length;if(n){cpSel=(cpSel+1)%n;cpHighlight()}}
-  else if(e.key==='ArrowUp'){e.preventDefault();const n=document.querySelectorAll('#cp-list .cp-item').length;if(n){cpSel=(cpSel-1+n)%n;cpHighlight()}}
-  else if(e.key==='Enter'){e.preventDefault();cpRun(document.querySelector('#cp-list .cp-item.sel')?.dataset.k)}
-});
-document.getElementById('cp-input').addEventListener('input',cpBuild);
 function fmtB(b){if(!b||b===0)return '0 B';if(b<1024)return b+' B';if(b<1024**2)return (b/1024).toFixed(1)+' KB';if(b<1024**3)return (b/1024**2).toFixed(2)+' MB';return (b/1024**3).toFixed(2)+' GB'}
 function toFa(n){return String(n).replace(/\d/g,d=>'۰۱۲۳۴۵۶۷۸۹'[d])}
 function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
@@ -7028,73 +3204,13 @@ document.getElementById('open-sb').addEventListener('click',openSb);
 document.getElementById('close-sb').addEventListener('click',closeSb);
 overlay.addEventListener('click',closeSb);
 function navTo(name){
-  // ═══ Phase 40 §33 — «ساخت کانفیگ» دیگر صفحه‌ی رقیب نیست ═══
-  // navTo('builder') همان تجربه‌ی کانفیگ‌ها را باز می‌کند + ورک‌اسپیس ساخت.
-  // هیچ مسیر قدیمی نمی‌شکند (palette/لینک‌های داخلی/بوکمارک‌ها).
-  if(name==='builder'){
-    navTo('links');
-    setTimeout(openCreateWorkspace,140);
-    return;
-  }
   document.querySelectorAll('.nav-it').forEach(n=>n.classList.toggle('on',n.dataset.pg===name));
   document.querySelectorAll('.pg').forEach(p=>p.classList.toggle('on',p.id==='pg-'+name));
-  // ورود پلکانی کارت‌ها فقط هنگام سوییچ صفحه
-  if(name==='links'){document.body.classList.add('cascade');setTimeout(()=>document.body.classList.remove('cascade'),650)}
-  const loaders={links:loadLinks,bridge:loadBridgePage,connections:loadConns,errors:loadErrs,subscriptions:loadSubsPage,subgroups:loadSubs,logs:loadActivity,updates:loadVersion,support:loadSupportMsgs,nodes:loadNodesPage,zeus:loadZeusPage,gaming:loadGamingPage,multiloc:loadMultilocPage,vpn:loadVPNPage,experimental:loadExperimentalPage,'unified-configs':loadUnifiedConfigsPage,diag:loadDiagPage,routing:loadRoutingPage,accounts:loadAccountsPage,iranproxy:loadIranProxyPage};  if(loaders[name])loaders[name]();
+  const loaders={links:loadLinks,connections:loadConns,errors:loadErrs,subscriptions:loadSubsPage,subgroups:loadSubs,logs:loadActivity,updates:loadVersion,support:loadSupportMsgs,nodes:loadNodesPage};  if(loaders[name])loaders[name]();
   closeSb();window.scrollTo({top:0,behavior:'smooth'});
 }
-// ═══ Phase 40 §7 — ورک‌اسپیس ساخت کانفیگ (داخل تجربه‌ی کانفیگ‌ها) ═══
-function openCreateWorkspace(){
-  const ws=document.getElementById('ws-create');
-  if(!ws)return;
-  ws.classList.add('open');ws.setAttribute('aria-hidden','false');
-  document.body.style.overflow='hidden';
-  loadBuilderPage();          // همان سازنده‌ی یکپارچه — قابلیت‌محور و واقعی
-}
-function closeCreateWorkspace(){
-  const ws=document.getElementById('ws-create');
-  if(!ws)return;
-  ws.classList.remove('open');ws.setAttribute('aria-hidden','true');
-  document.body.style.overflow='';
-  loadLinks();                // کارتِ کانفیگِ تازه‌ساخته‌شده بلافاصله ظاهر می‌شود
-}
-// ═══ Phase 40 §8 — استپر پیشرفت: از انتخاب‌های واقعی کاربر تغذیه می‌شود ═══
-function wsStep(n,done){
-  const host=document.getElementById('ws-steps'); if(!host)return;
-  host.querySelectorAll('.ws-step').forEach(el=>{
-    const s=+el.dataset.s;
-    el.classList.toggle('done',s<n||(s===n&&done===true));
-    el.classList.toggle('on',s===n&&!done);
-  });
-}
-function wsStepAuto(){
-  // نزدیک‌ترین مرحله‌ی «فعال» از روی وضعیت انتخاب‌ها
-  if(typeof BLD_SEL==='undefined')return;
-  var n=1;
-  if(BLD_SEL.client)n=8; else if(BLD_SEL.routing)n=6; else if(BLD_SEL.security)n=5;
-  else if(BLD_SEL.transport)n=4; else if(BLD_SEL.node&&BLD_SEL.node!=='panel')n=3; else if(BLD_SEL.protocol)n=2;
-  var done=false;
-  try{ done=!!(window.__bldLink&&window.__bldLink.created); }catch(e){}
-  wsStep(n,done?10:false);
-}
 document.querySelectorAll('.nav-it').forEach(el=>el.addEventListener('click',()=>navTo(el.dataset.pg)));
-function openModal(id){
-  document.getElementById(id).classList.add('open');
-  // When opening create-link modal, initialize protocol sections
-  // (otherwise SNI spoofing + other sections stay display:none from HTML)
-  if(id === 'modal-create-link'){
-    setTimeout(()=>{
-      const sel = document.querySelector('#dd-base .cm-opt.sel');
-      if(sel){
-        cmSelectBase(sel.dataset.base, sel);
-      } else {
-        // Fallback: default to vless
-        const vlessOpt = document.querySelector('#dd-base .cm-opt[data-base="vless"]');
-        if(vlessOpt) cmSelectBase('vless', vlessOpt);
-      }
-    }, 50);
-  }
-}
+function openModal(id){document.getElementById(id).classList.add('open')}
 function closeModal(id){document.getElementById(id).classList.remove('open')}
 let supportDevDismissCount=0;
 const supportDevDismissTexts=['د اخه مگه دست خودته:(','نکن مشتی نداریمااااا'];
@@ -7109,7 +3225,6 @@ function handleSupportDevDismiss(){
 }
 let prevTraf=0,ch1,ch2,ch3;
 async function fetchStats(){
-  loadPublicHost(); /* Phase 44 — وضعیت دامنه‌ی عمومی روی کارت سلامت */
   try{
     const r=await authF('/stats'),d=await r.json();
     document.getElementById('m-conns').textContent=d.active_connections;
@@ -7136,14 +3251,6 @@ async function fetchStats(){
       if(ch3){ch3.data.labels=labels;ch3.data.datasets[0].data=vals;ch3.data.datasets[1].data=avgLine;ch3.update();}
       if(vals.length){
         const peak=Math.max(...vals),low=Math.min(...vals),peakIdx=vals.indexOf(peak);
-        // Audit fix: info-strip — ترافیک این ساعت و ۲۴ ساعت اخیر (داده‌ی واقعی
-        // از /stats.hourly؛ قبلاً این دو عنصر هرگز آپدیت نمی‌شدند و «0 B» فیک می‌ماندند)
-        try{
-          const curHour=labels[labels.length-1],lastMB=vals[vals.length-1]||0;
-          document.getElementById('info-sent-recv').textContent=fmtB(lastMB*1024**2);
-          const last24=vals.slice(-24).reduce((a,b)=>a+b,0);
-          document.getElementById('info-usage').textContent=fmtB(last24*1024**2);
-        }catch(_e){}
         document.getElementById('t-avg').innerHTML=avgAll.toFixed(2)+'<span class="m-unit">MB</span>';
         document.getElementById('t-peak').innerHTML=peak.toFixed(2)+'<span class="m-unit">MB</span>';
         document.getElementById('t-peak-time').textContent=labels[peakIdx]?('ساعت '+labels[peakIdx]):'بالاترین ساعت';
@@ -7169,75 +3276,6 @@ async function fetchStats(){
     renderErrs(d.recent_errors||[]);
   }catch(e){console.error(e)}
 }
-
-// ── Audit fix (zero-fake-features): وضعیت سرویس + نمودار توزیع، از داده‌ی واقعی ──
-// قبلاً: کارت وضعیت ۶ ردیف «فعال» hardcoded داشت و نمودار توزیع [55,35,10] ثابت بود.
-// حالا: /api/diagnostics (موتور سلامت/گره‌ها/ران‌تایم/جاب/پایداری/ترکیب‌ها) + /api/links (توزیع پروتکل).
-async function loadOverviewReal(){
-  try{
-    const r=await authF('/api/diagnostics');
-    if(r.status===401){return}
-    const d=await r.json();
-    const c=d.checks||{};
-    const set=(id,txt,color)=>{const el=document.getElementById(id);if(el){el.textContent=txt;if(color)el.style.color=color}};
-    const G='var(--green-t)',A='var(--amber-t)',R='var(--red-t)';
-    // Network Health
-    try{
-      const h=(c.network_health&&c.network_health.summary)||c.network_health||{};
-      const tracked=h.tracked??0, by=h.by_state||{};
-      const healthy=(by.HEALTHY||0), unk=(by.UNKNOWN||0);
-      set('svc-health', tracked?`${healthy} سالم / ${tracked} ردیابی‌شده`:'— (هنوز پروب نشده)', tracked?G:'var(--t3)');
-    }catch(_e){set('svc-health','—','var(--t3)')}
-    // Nodes
-    try{
-      const n=c.nodes||{};
-      set('svc-nodes', `${n.nodes??0} گره · ${((n.by_state||{}).ONLINE||0)} آنلاین`, G);
-    }catch(_e){set('svc-nodes','—','var(--t3)')}
-    // Runtimes
-    try{
-      const rt=c.runtimes||{}; const list=rt.runtimes||[];
-      const failed=list.filter(x=>(x.state||'')==='FAILED').length;
-      set('svc-runtimes', `${list.length} ران‌تایم${failed?` · ${failed} FAILED`:''}`, failed?R:G);
-    }catch(_e){set('svc-runtimes','—','var(--t3)')}
-    // Jobs
-    try{
-      const j=c.jobs||{}; const sup=j.supervisor==='RUNNING'?G:R;
-      set('svc-jobs', `${j.supervisor==='RUNNING'?'فعال':'متوقف'} · ${(j.jobs||[]).length} جاب`, sup);
-    }catch(_e){set('svc-jobs','—','var(--t3)')}
-    // Persistence
-    try{
-      const p=c.persistence||{};
-      const ok=p.writable!==false;
-      set('svc-persist', ok?`قابل نوشتن · ${p.links??0} کانفیگ`:'⚠ Volume قابل نوشتن نیست', ok?G:A);
-    }catch(_e){set('svc-persist','—','var(--t3)')}
-    // Transports
-    try{
-      const t=c.transports||{};
-      set('svc-transports', `${t.valid_combos??0} معتبر · ${t.experimental??0} آزمایشی`, G);
-    }catch(_e){set('svc-transports','—','var(--t3)')}
-  }catch(e){console.error('loadOverviewReal failed:',e)}
-  // توزیع واقعی پروتکل‌ها از /api/links
-  try{
-    const r=await authF('/api/links');
-    if(r.status===401){return}
-    const j=await r.json();
-    const links=(j.links||j)||[];
-    const byProto={};
-    for(const l of links){const p=l.protocol||'other';byProto[p]=(byProto[p]||0)+1}
-    const labels=Object.keys(byProto),vals=labels.map(k=>byProto[k]);
-    if(ch2&&vals.length){
-      const palette=['#8B5CF6','#10B981','#FACC15','#38BDF8','#FB7185','#A3E635','#F97316','#22D3EE'];
-      ch2.data.labels=labels;
-      ch2.data.datasets[0].data=vals;
-      ch2.data.datasets[0].backgroundColor=labels.map((_,i)=>palette[i%palette.length]);
-      ch2.update();
-    }else if(ch2){
-      ch2.data.labels=['کانفیگی موجود نیست'];
-      ch2.data.datasets[0].data=[1];
-      ch2.update();
-    }
-  }catch(e){console.error('distribution failed:',e)}
-}
 function renderErrs(errs){
   const el=document.getElementById('errs-full');if(!el)return;
   if(!errs.length){el.innerHTML='<div style="color:var(--green-t);padding:10px;font-size:12px;display:flex;align-items:center;gap:5px"><i class="ti ti-circle-check"></i> هیچ خطایی نیست</div>';return}
@@ -7261,2517 +3299,9 @@ async function loadActivity(){
         </div>
       </div>
     `).join('');
-  }catch(e){netErr(e,'لاگ فعالیت‌ها')}
-}
-let allSubsList=[],allLinksList=[],onlineNodesList=[];
-/* ══════ تست پینگ و سلامت کانفیگ‌ها ══════ */
-async function clientRtt(){
-  // سنجش RTT واقعی مرورگر → سرور (۲ بار، حداقل مقدار)
-  const ts=[];
-  for(let i=0;i<2;i++){
-    const t0=performance.now();
-    try{ await fetch('/api/ping',{cache:'no-store'}); ts.push(Math.round(performance.now()-t0)); }catch(e){}
-  }
-  return ts.length?Math.min(...ts):null;
-}
-/* ══════ پینگ واقعی از مرورگر شما (منظره‌ی کلاینت — مثل Karing) ══════ */
-let ctConfig=null;      // /api/client-ping-config → {targets, panel_host, gateway_domain}
-const ctCache={};       // uuid → {direct:{ok,ms}|{ok:false,error}, cf_gateway:...}
-function browserWsPing(url,timeoutMs){
-  // یک WebSocket واقعی از مرورگرِ شما تا مسیر ورودی کانفیگ (TCP+TLS+WS upgrade)
-  return new Promise(res=>{
-    let done=false, ws;
-    try{ ws=new WebSocket(url); }catch(e){ return res({ok:false,error:'construct'}); }
-    const t0=performance.now();
-    const fin=(ok,error)=>{
-      if(done)return; done=true;
-      try{ ws.onopen=ws.onerror=ws.onclose=null; ws.close(); }catch(e){}
-      res(ok?{ok:true,ms:Math.round(performance.now()-t0)}:{ok:false,error:error||'fail'});
-    };
-    const timer=setTimeout(()=>fin(false,'timeout'),timeoutMs||8000);
-    ws.onopen=()=>{clearTimeout(timer);fin(true)};
-    ws.onerror=()=>{clearTimeout(timer);fin(false,'unreachable')};
-    ws.onclose=()=>{if(!done){clearTimeout(timer);fin(false,'closed')}};
-  });
-}
-async function loadClientPingConfig(){
-  if(ctConfig) return ctConfig;
-  try{
-    const r=await authF('/api/client-ping-config');
-    const d=await r.json();
-    if(d.ok) ctConfig=d;
-  }catch(e){}
-  return ctConfig;
-}
-async function refreshClientTruth(){
-  // کارت «حقیقت مسیر از مرورگر شما» — هر سطر یک WS واقعی از شبکه‌ی خودتان
-  const cfg=await loadClientPingConfig();
-  if(!cfg){
-    const el=document.getElementById('ct-direct');
-    if(el){el.textContent='در دسترس نیست';el.style.color='var(--t3)'}
-    return;
-  }
-  const probeUuid='00000000-0000-0000-0000-000000000000'; // UUID آزمایشی — هندشیک WS کافی است
-  for(const t of (cfg.targets||[])){
-    const el=document.getElementById('ct-'+t.id);
-    if(!el) continue;
-    el.innerHTML=pingWaveHtml()+' در حال تست…'; el.style.color='var(--t3)';
-    const r=await browserWsPing(t.url.replace('{uuid}',probeUuid),8000);
-    if(r.ok){ el.innerHTML=`<i class="ti ti-circle-check" style="color:var(--green)"></i> زنده از شبکه‌ی شما — ${toFa(r.ms)}ms`; el.style.color='var(--green)'; }
-    else{ el.innerHTML=`<i class="ti ti-circle-x" style="color:var(--red)"></i> از شبکه‌ی شما قابل دسترس نیست (${r.error})`; el.style.color='var(--red)'; }
-  }
-}
-async function clientProbeLink(uuid){
-  // پینگ مرورگر برای یک کانفیگِ مشخص — با UUID واقعی همان کانفیگ
-  const cfg=await loadClientPingConfig();
-  if(!cfg) return null;
-  const out={};
-  for(const t of (cfg.targets||[])) out[t.id]=await browserWsPing(t.url.replace('{uuid}',uuid),8000);
-  ctCache[uuid]=out;
-  return out;
-}
-function pingWaveHtml(){return '<span class="ping-wave"><span></span><span></span><span></span></span>'}
-function pingMsClass(ms){return ms==null?'var(--green)':ms<500?'var(--green)':ms<1200?'var(--amber)':'var(--red)'}
-function pingBadgeHtml(l){
-  const p=l.last_ping;
-  if(!p) return `<span class="cfg-sub-tag" id="pb-${l.uuid}" style="color:var(--t3);cursor:pointer" onclick="pingLink('${l.uuid}',this)" title="تست نشده — کلیک برای تست"><i class="ti ti-activity"></i> تست نشده</span>`;
-  const tip=`تست: ${p.test||''}\nهدف: ${p.target||''}\nWS: ${p.ws_ms!=null?Math.round(p.ws_ms)+'ms':'—'}\nتونل: ${p.e2e_ms!=null?Math.round(p.e2e_ms)+'ms':'—'}\n${p.detail||''}\n${p.checked_at?new Date(p.checked_at).toLocaleString('fa-IR'):''}`;
-  if(p.ok){
-    const ms=p.e2e_ms!=null?Math.round(p.e2e_ms):null;
-    return `<span class="cfg-sub-tag" id="pb-${l.uuid}" style="color:${pingMsClass(ms)};cursor:pointer" onclick="pingLink('${l.uuid}',this)" title="${tip}"><i class="ti ti-activity"></i> تونل ${ms!=null?toFa(ms)+'ms':'✓'}</span>`;
-  }
-  return `<span class="cfg-sub-tag" id="pb-${l.uuid}" style="color:var(--red-t);cursor:pointer" onclick="pingLink('${l.uuid}',this)" title="${tip}"><i class="ti ti-wifi-off"></i> قطع</span>`;
-}
-// ═══ Phase 41 §12/§13 — قرارداد نتیجه‌ی تست روی کارت‌ها ═══
-// موفق: RUNTIME VERIFIED ✓ · Xms — شکست: RUNTIME FAILED ✗ + علت (قابل دیدن،
-// نه فقط در tooltip). هرگز مقدار جعل‌شده، هرگز خالی. tap روی چیپ = جزئیات کامل.
-function renderPingBadge(uuid,d,rtt,cp){
-  const el=document.getElementById('pb-'+uuid);
-  if(!el) return;
-  if(d&&d.ok){
-    const ms=d.e2e_ms!=null?Math.round(d.e2e_ms):null;
-    el.style.color=pingMsClass(ms);
-    let mine='';
-    if(cp){
-      const parts=[];
-      if(cp.direct) parts.push(`مستقیم ${cp.direct.ok?toFa(cp.direct.ms)+'ms':'✗'}`);
-      if(cp.cf_gateway) parts.push(`CF ${cp.cf_gateway.ok?toFa(cp.cf_gateway.ms)+'ms':'✗'}`);
-      if(parts.length) mine=' · من: '+parts.join(' · ');
-    }
-    if(!mine && rtt!=null) mine=' · من '+toFa(rtt)+'ms';
-    // v12.4.2: اگر last_ping مسیر کلاینت (SNI جعلی) را سنجیده باشد، برچسب صریح
-    // می‌زند — عدد ms همان مسیری است که کلاینتِ این لینک واقعاً می‌رود.
-    const spoofTag=(d.client_path==='spoofed-sni'&&d.spoof_sni)?` · <span style="opacity:.85" title="این عدد از مسیر کلاینت (TLS با SNI جعلی ${esc(d.spoof_sni)} + Host واقعی) اندازه‌گیری شده — همان مسیر لینک">🎭 SNI جعلی</span>`:'';
-    el.innerHTML=`<i class="ti ti-shield-check"></i> RUNTIME VERIFIED ✓${ms!=null?(' · '+toFa(ms)+'ms'):''}${spoofTag}${mine}`;
-    el.title=`WS: ${d.ws_ms!=null?Math.round(d.ws_ms)+'ms':'—'} | تونل: ${d.e2e_ms!=null?Math.round(d.e2e_ms)+'ms':'—'} | ${d.reply||''} | پینگ شما: ${rtt!=null?rtt+'ms':'—'}${d.client_path==='spoofed-sni'?(' | مسیر کلاینت: SNI جعلی '+d.spoof_sni+' (allowInsecure)'):''}${d.clean_path?(' | مسیر تمیز: '+(d.clean_path.ok?'OK':'✗')):''}`;
-  }else{
-    // شکست صادقانه: علت کوتاه روی خود چیپ + علت کامل در title/تیپ‌اُوور
-    const raw=(d&&d.detail)||(d&&d.error_code)||'نامشخص';
-    const short=String(raw).replace(/\s+/g,' ').slice(0,60);
-    el.style.color='var(--red-t)';
-    const failPath=(d&&d.client_path==='spoofed-sni')?' · مسیر کلاینت (SNI جعلی)':'';
-    el.innerHTML=`<i class="ti ti-wifi-off"></i> RUNTIME FAILED ✗ · ${esc(short)}${failPath}`;
-    el.title='علت کامل: '+String(raw)+(d&&d.clean_path?` | مسیر تمیز (کنترل): ${d.clean_path.ok?'OK — مشکل فقط مسیر SNI جعلی است':'✗ هر دو مسیر'}`:'');
-  }
-  // پاپ ظریف هنگام رسیدن نتیجه
-  el.classList.remove('ping-pop');
-  void el.offsetWidth; // ری‌استارت انیمیشن
-  el.classList.add('ping-pop');
-}
-function pingLoading(uuid){
-  const el=document.getElementById('pb-'+uuid);
-  if(el){el.style.color='var(--t3)';el.innerHTML=pingWaveHtml()+' تست'}
-}
-async function pingLink(uuid,btn){
-  const ic=btn?btn.querySelector('i'):null;
-  const el0=document.getElementById('pb-'+uuid);
-  if(el0) el0.dataset.userActive='1';  // جلوگیری از overwrite توسط auto-ping
-  pingLoading(uuid);
-  if(ic){ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite'}
-  try{
-    // سه اندازه‌گیری موازی: تونل از سرور + RTT مرورگر + پینگ واقعی مرورگر (دو مسیر ورودی)
-    const [rtt,r,cp]=await Promise.all([clientRtt(),authF(`/api/links/${uuid}/ping`,{method:'POST'}),clientProbeLink(uuid)]);
-    const d=await r.json();
-    renderPingBadge(uuid,d,rtt,cp);
-    if(d.ok){
-      const mine=cp?((cp.direct?(cp.direct.ok?'مستقیم '+cp.direct.ms+'ms':'مستقیم ✗'):'')+(cp.cf_gateway?(cp.cf_gateway.ok?' · CF '+cp.cf_gateway.ms+'ms':' · CF ✗'):'')):'';
-      toast(`تونل سالم — ${d.e2e_ms!=null?Math.round(d.e2e_ms)+'ms':''}${mine?' · از مرورگر شما: '+mine:(rtt!=null?' · پینگ شما '+rtt+'ms':'')}`,'ok');
-    }
-    else toast('تست ناموفق: '+(d.detail||'نامشخص'),'err');
-  }catch(e){
-    const el=document.getElementById('pb-'+uuid);
-    if(el){el.style.color='var(--red-t)';el.innerHTML='<i class="ti ti-wifi-off"></i> خطا'}
-    toast('خطا در تست پینگ','err');
-  }finally{
-    if(el0) delete el0.dataset.userActive;
-    if(ic){ic.className='ti ti-activity';ic.style.animation=''}
-  }
-}
-async function pingNodeLink(uuid,btn,nodeId){
-  const ic=btn?btn.querySelector('i'):null;
-  pingLoading(uuid);
-  if(ic){ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite'}
-  try{
-    const r=await authF(`/api/nodes/${nodeId}/links/${uuid}/ping`,{method:'POST'});
-    const d=await r.json();
-    renderPingBadge(uuid,d,null);
-    if(d.ok) toast(`تونل نود سالم — ${d.e2e_ms!=null?Math.round(d.e2e_ms)+'ms':''}`,'ok');
-    else toast('تست ناموفق: '+(d.detail||'نامشخص'),'err');
-  }catch(e){
-    const el=document.getElementById('pb-'+uuid);
-    if(el){el.style.color='var(--red-t)';el.innerHTML='<i class="ti ti-wifi-off"></i> خطا'}
-    toast('خطا در تست پینگ نود','err');
-  }finally{
-    if(ic){ic.className='ti ti-activity';ic.style.animation=''}
-  }
-}
-/* ══════ توربو 0-RTT — تست A/B خودکار ══════ */
-async function bestConfigTest(btn){
-  const box=document.getElementById('best-list');
-  const ic=btn?btn.querySelector('i'):null;
-  if(ic){ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite'}
-  if(btn)btn.disabled=true;
-  if(box)box.innerHTML='<div class="sr"><span class="sr-k" style="color:var(--t3)"><i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i> در حال تست همه‌ی کانفیگ‌ها از مسیر عمومی...</span></div>';
-  try{
-    const r=await authF('/api/links/best',{method:'POST'});
-    const d=await r.json();
-    if(!box)return;
-    const medals=['🥇','🥈','🥉','۴','۵'];
-    if(!d.ranking||!d.ranking.length){
-      box.innerHTML='<div class="sr"><span class="sr-k" style="color:var(--red-t)">کانفیگ سالمی برای رتبه‌بندی یافت نشد</span></div>';
-      return;
-    }
-    box.innerHTML=d.ranking.map((c,ix)=>{
-      const ms=Math.round(c.total_ms);
-      const color=ms<500?'var(--green-t)':ms<1200?'var(--amber-t)':'var(--red-t)';
-      return `<div class="sr" style="cursor:pointer" onclick="navTo('links');setTimeout(()=>{const el=document.querySelector('#links-grid .cfg-card[data-uuid=&quot;${c.uuid}&quot;]');if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.style.boxShadow='0 0 0 2px var(--accent)';setTimeout(()=>el.style.boxShadow='',2000)}},500)">
-        <span class="sr-k" style="gap:7px"><span style="font-size:13px">${medals[ix]||''}</span> ${esc(c.label)}</span>
-        <span class="sr-v" style="color:${color};font-weight:700">${toFa(ms)}ms</span>
-      </div>`;
-    }).join('')+`<div class="sr"><span class="sr-k" style="color:var(--t3);font-size:10px">${toFa(d.healthy)} از ${toFa(d.total)} کانفیگ سالم · ${new Date(d.checked_at).toLocaleTimeString('fa-IR')}</span></div>`;
-    toast(`سریع‌ترین: ${d.ranking[0].label} — ${Math.round(d.ranking[0].total_ms)}ms`,'ok');
-  }catch(e){
-    if(box)box.innerHTML='<div class="sr"><span class="sr-k" style="color:var(--red-t)">خطا در تست — دوباره تلاش کنید</span></div>';
-    toast('خطا در توصیه‌گر','err');
-  }finally{
-    if(ic){ic.className='ti ti-bolt';ic.style.animation=''}
-    if(btn)btn.disabled=false;
-  }
-}
-async function turboTest(uuid,btn){
-  const ic=btn?btn.querySelector('i'):null;
-  if(ic){ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite'}
-  if(btn)btn.disabled=true;
-  try{
-    const r=await authF(`/api/turbo/links/${uuid}/ab`,{method:'POST'});
-    const d=await r.json();
-    if(!r.ok){toast(d.detail||'توربو در دسترس نیست','err');return}
-    if(!d.ok){toast('تست توربو ناموفق بود: '+((d.turbo&&d.turbo.ok===false&&'تونل توربو پاسخ نداد')||'نامشخص'),'err');return}
-    const n=Math.round(d.normal.total_ms||0),t=Math.round(d.turbo.total_ms||0);
-    const imp=d.improvement_ms!=null?Math.round(d.improvement_ms):null;
-    if(d.turbo_url){
-      try{await navigator.clipboard.writeText(d.turbo_url)}catch(e){}
-    }
-    // در شبکه‌ی محلی تفاوت ~۰ است؛ در اینترنت واقعی صرفه‌جویی یک RTT کامل است
-    const impTxt=(imp!=null&&imp>5)?` — ${toFa(imp)}ms بهتر`:' — در اینترنت واقعی ≈ یک RTT سریع‌تر';
-    toast(`🚀 توربو ${toFa(t)}ms · عادی ${toFa(n)}ms${impTxt} · لینک توربو کپی شد`,'ok');
-  }catch(e){
-    toast('خطا در تست توربو','err');
-  }finally{
-    if(ic){ic.className='ti ti-rocket';ic.style.animation=''}
-    if(btn)btn.disabled=false;
-  }
-}
-async function pingAllLinks(btn){
-  const targets=allLinksList.filter(l=>!l._nodeId);
-  if(!targets.length){toast('کانفیگ محلی برای تست وجود ندارد','err');return}
-  const ic=btn.querySelector('i');
-  const label=btn.innerHTML;
-  ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite';
-  btn.disabled=true;
-  btn.classList.add('running');
-  targets.forEach(l=>pingLoading(l.uuid));
-  let done=0,ok=0,bad=0;
-  const CONC=3; // هم‌زمانی — آپدیت زنده‌ی بج‌ها بدون فشار به سرور
-  async function worker(list){
-    for(const l of list){
-      try{
-        const r=await authF(`/api/links/${l.uuid}/ping`,{method:'POST'});
-        const d=await r.json();
-        l.last_ping=d;
-        renderPingBadge(l.uuid,d,null);
-        if(d.ok) ok++; else bad++;
-      }catch(e){
-        bad++;
-        const el=document.getElementById('pb-'+l.uuid);
-        if(el){el.style.color='var(--red-t)';el.innerHTML='<i class="ti ti-wifi-off"></i> خطا'}
-      }
-      done++;
-      btn.innerHTML=`<i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i> تست ${toFa(done)}/${toFa(targets.length)} <span class="ping-prog"></span>`;
-    }
-  }
-  // تقسیم لیست بین worker ها برای پیشرفت هم‌زمان
-  const queues=Array.from({length:Math.min(CONC,targets.length)},(_,i)=>targets.filter((_,j)=>j%CONC===i));
-  try{
-    await Promise.all(queues.map(q=>worker(q)));
-    toast(`تست کامل شد — ${toFa(ok)} سالم، ${toFa(bad)} قطع`,bad?'warn':'ok');
-  }finally{
-    btn.classList.remove('running');
-    btn.disabled=false;
-    ic.style.animation='';
-    btn.innerHTML=label;
-  }
-}
-/* ══════ پل ایران — مصرف داخلی + شتاب‌دهی ══════ */
-let bridgeScriptCache='';
-let bridgeMode='vps';
-function brSetMode(mode){
-  bridgeMode=mode;
-  const vps=document.getElementById('br-mode-vps'),cdn=document.getElementById('br-mode-cdn');
-  // ظاهر انتخاب
-  [vps,cdn].forEach(c=>{c.style.borderColor='var(--card-b)';const chk=c.querySelector('.br-mode-check');chk.style.borderColor='var(--t3)';chk.querySelector('i').style.opacity=0;chk.style.background='transparent'});
-  const sel=mode==='vps'?vps:cdn;
-  sel.style.borderColor='var(--accent)';const chk=sel.querySelector('.br-mode-check');chk.style.borderColor='var(--accent)';chk.style.background='var(--accent)';chk.querySelector('i').style.opacity=1;chk.querySelector('i').style.color='#fff';
-  // نمایش/پنهان‌سازی راهنماها
-  document.getElementById('br-cdn-guide').style.display=mode==='cdn'?'':'none';
-  document.getElementById('br-vps-guide').style.display=mode==='vps'?'':'none';
-  // متن‌های فرم
-  document.getElementById('br-mode-label').textContent=mode==='cdn'?'(حالت: CDN ایرانی — رایگان)':'(حالت: سرور شخصی)';
-  document.getElementById('br-form-title').textContent=mode==='cdn'?'دامنه‌ی پشت CDN ایرانی':'آدرس سرور داخل ایران';
-  document.getElementById('br-host-label').textContent=mode==='cdn'?'دامنه‌ی شما روی ابر آروان (مثلاً sub.yourdomain.ir)':'آدرس سرور ایران (IP یا دامنه)';
-  document.getElementById('br-port-wrap').style.display=mode==='cdn'?'':'none';
-  document.getElementById('br-form-note').style.display=mode==='cdn'?'none':'';
-  if(mode==='cdn'){
-    const pi=document.getElementById('br-port');
-    if(![443,2053,2083,2087,2096,8443].includes(parseInt(pi.value)))pi.value=443;
-    pi.setAttribute('list','cdn-ports');
-  }else{document.getElementById('br-port').removeAttribute('list')}
-}
-function brCalc(){
-  const gb=parseInt(document.getElementById('br-calc-gb').value)||10;
-  const without=Math.round(gb*2.7*10)/10;
-  const save=Math.round((without-gb)*10)/10;
-  const pct=Math.round((save/without)*100);
-  document.getElementById('br-calc-gb-val').textContent=toFa(gb);
-  document.getElementById('br-calc-without').textContent=toFa(without)+' GB';
-  document.getElementById('br-calc-with').textContent=toFa(gb)+' GB';
-  document.getElementById('br-calc-save').textContent=toFa(save)+' GB';
-  const saveBox=document.getElementById('br-calc-save').closest('div[style*="accent-d"]');
-  if(saveBox)saveBox.lastElementChild.textContent='در ماه ('+toFa(pct)+'٪)';
-}
-async function loadBridgePage(){
-  try{
-    const [cr,sr]=await Promise.all([authF('/api/bridge/config'),authF('/api/bridge/script').catch(()=>null)]);
-    const cfg=await cr.json();
-    bridgeMode=cfg.mode||'vps';
-    brSetMode(bridgeMode);
-    document.getElementById('br-host').value=cfg.bridge_host||'';
-    document.getElementById('br-port').value=cfg.bridge_port||443;
-    if(sr&&sr.ok){bridgeScriptCache=await sr.text();document.getElementById('br-script').textContent=bridgeScriptCache}
-    const badge=document.getElementById('bridge-status-badge');
-    const nb=document.getElementById('bridge-nb');
-    if(cfg.bridge_host){badge.textContent='فعال';badge.className='badge bg-green';nb.style.display=''}
-    else{badge.textContent='غیرفعال';badge.className='badge bg-blue';nb.style.display='none'}
-    brCalc();
-    if(cfg.bridge_host) await brLoadLinks();
   }catch(e){console.error(e)}
 }
-async function brSaveConfig(btn){
-  const host=document.getElementById('br-host').value.trim();
-  const port=parseInt(document.getElementById('br-port').value)||443;
-  if(!host){toast('آدرس پل را وارد کنید','err');return}
-  if(bridgeMode==='cdn'&&!host.includes('.')){toast('در حالت CDN باید دامنه وارد کنید (نه IP)','err');return}
-  const ic=btn.querySelector('i');ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite';btn.disabled=true;
-  try{
-    const r=await authF('/api/bridge/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:bridgeMode,bridge_host:host,bridge_port:port})});
-    const d=await r.json();
-    if(!r.ok){toast(d.detail||'خطا در ذخیره','err');return}
-    toast('تنظیمات پل ذخیره شد','ok');
-    // رفرش اسکریپت با پورت جدید (فقط حالت VPS)
-    if(bridgeMode==='vps'){
-      const sr=await authF('/api/bridge/script');
-      if(sr.ok){bridgeScriptCache=await sr.text();document.getElementById('br-script').textContent=bridgeScriptCache}
-    }
-    await loadBridgePage();
-  }catch(e){toast('خطا در ذخیره','err')}
-  finally{ic.className='ti ti-device-floppy';ic.style.animation='';btn.disabled=false}
-}
-async function brTestBridge(btn){
-  const host=document.getElementById('br-host').value.trim();
-  if(!host){toast('ابتدا آدرس پل را ذخیره کنید','err');return}
-  const ic=btn.querySelector('i');ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite';btn.disabled=true;
-  document.getElementById('bridge-metric-status').textContent='در حال تست...';
-  document.getElementById('bridge-metric-sub').textContent=bridgeMode==='cdn'?'اتصال TLS به لبه‌ی CDN ایران':'اتصال TLS از مسیر پنل → سرور ایران → پنل';
-  try{
-    const r=await authF('/api/bridge/test',{method:'POST'});
-    const d=await r.json();
-    const st=document.getElementById('bridge-metric-status'),sub=document.getElementById('bridge-metric-sub'),ms=document.getElementById('bridge-metric-ms');
-    if(d.ok){
-      st.textContent=d.stage==='full-tunnel'?'سالم ✓✓':'TLS ✓';st.style.color='var(--green-t)';
-      ms.textContent=d.ms!=null?toFa(Math.round(d.ms))+'ms':'✓';
-      sub.textContent=d.detail||'زنجیره کامل کار می‌کند';
-      toast('پل سالم است — '+d.detail,'ok');
-    }else if(d.stage==='cname-missing' || d.stage==='preflight-dns' || d.stage==='preflight-error'){
-      st.textContent='CNAME اروان';st.style.color='var(--amber-t)';
-      ms.textContent='⚠️';
-      sub.innerHTML=(d.detail||'CNAME اروان به‌درستی تنظیم نشده').replace(/\n/g,'<br>');
-      toast('CNAME اروان به Railway وصل نیست — '+d.detail,'err');
-    }else{
-      st.textContent=d.stage==='ws-rejected'?'تنظیم اروان لازم':d.stage==='tls'?'TLS قطع':'تونل قطع';st.style.color='var(--red-t)';
-      ms.textContent=d.ms!=null?toFa(Math.round(d.ms))+'ms':'—';
-      sub.textContent=d.detail||'تست ناموفق';
-      toast('تست پل: '+d.detail,'err');
-    }
-  }catch(e){
-    document.getElementById('bridge-metric-status').textContent='خطا';
-    toast('خطا در تست پل','err');
-  }finally{ic.className='ti ti-activity';ic.style.animation='';btn.disabled=false}
-}
-async function brTestCNAME(btn){
-  const ic=btn.querySelector('i');ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite';btn.disabled=true;
-  try{
-    const r=await authF('/api/bridge/preflight');
-    const d=await r.json();
-    const st=document.getElementById('bridge-metric-status'),sub=document.getElementById('bridge-metric-sub'),ms=document.getElementById('bridge-metric-ms');
-    if(d.ok){
-      if(d.stage==='cname-ok'){
-        st.textContent='CNAME ✓';st.style.color='var(--green-t)';
-        ms.textContent='✓';
-        sub.textContent=d.detail||'دامنه به Railway وصله';
-        toast(d.detail,'ok');
-      }else{
-        st.textContent='بررسی...';st.style.color='var(--t3)';
-        ms.textContent='?';
-        sub.textContent=d.detail||'پاسخ غیرمنتظره';
-        toast(d.detail,'info');
-      }
-    }else{
-      st.textContent='CNAME ✗';st.style.color='var(--amber-t)';
-      ms.textContent='⚠️';
-      sub.innerHTML=(d.detail||'CNAME تنظیم نشده').replace(/\n/g,'<br>');
-      toast('CNAME تنظیم نشده — '+d.detail,'err');
-    }
-  }catch(e){
-    toast('خطا در تست CNAME','err');
-  }finally{ic.className='ti ti-link';ic.style.animation='';btn.disabled=false}
-}
-async function brLoadLinks(){
-  const list=document.getElementById('bridge-links-list');
-  try{
-    const [br,lr]=await Promise.all([authF('/api/bridge/links'),authF('/api/links')]);
-    const d=await br.json();
-    const live={};
-    try{(await lr.json()).links.forEach(x=>live[x.uuid]=x)}catch(e){}
-    const links=d.links||[];
-    document.getElementById('bridge-links-cnt').textContent=toFa(links.length)+' کانفیگ';
-    if(!links.length){
-      list.innerHTML='<div class="empty"><i class="ti ti-flag-off"></i><p>کانفیگ فعالی برای پل‌دادن وجود ندارد</p></div>';
-      return;
-    }
-    list.innerHTML=links.map(l=>{
-      const bp=(live[l.uuid]||{}).last_bridge_ping;
-      let badge='';
-      if(bp){
-        const ms=bp.e2e_ms!=null?Math.round(bp.e2e_ms):null;
-        badge=bp.ok
-          ?`<span class="cfg-sub-tag" id="bpb-${l.uuid}" style="color:${ms!=null&&ms<500?'var(--green-t)':ms!=null&&ms<1200?'var(--amber-t)':'var(--red-t)'};cursor:pointer" onclick="brPingLink('${l.uuid}',this)" title="${esc(bp.detail||'')}"><i class="ti ti-route"></i> پل ${ms!=null?toFa(ms)+'ms':'✓'}</span>`
-          :`<span class="cfg-sub-tag" id="bpb-${l.uuid}" style="color:var(--red-t);cursor:pointer" onclick="brPingLink('${l.uuid}',this)" title="${esc(bp.detail||'تست ناموفق')}"><i class="ti ti-route-off"></i> پل قطع</span>`;
-      }else{
-        badge=`<span class="cfg-sub-tag" id="bpb-${l.uuid}" style="color:var(--t3);cursor:pointer" onclick="brPingLink('${l.uuid}',this)" title="تست نشده — کلیک برای تست از مسیر پل"><i class="ti ti-route"></i> تست پل</span>`;
-      }
-      return `
-      <div style="display:flex;align-items:center;gap:10px;padding:11px 4px;border-bottom:1px solid var(--card-b);flex-wrap:wrap">
-        ${protoBadge(l.protocol)}
-        ${bridgeMode==='cdn'?'<span class="cfg-sub-tag" style="color:var(--green-t)"><i class="ti ti-cloud"></i> CDN</span>':'<span class="cfg-sub-tag" style="color:var(--accent2)"><i class="ti ti-server-2"></i> VPS</span>'}
-        ${badge}
-        <div style="flex:1;min-width:140px">
-          <div style="font-weight:600;font-size:12.5px">${esc(l.label)}</div>
-          <div style="font-size:9.5px;color:var(--t3);direction:ltr;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:420px">${esc(l.bridged)}</div>
-        </div>
-        <div style="display:flex;gap:6px">
-          <button class="btn btn-sm btn-g btn-icon" onclick="brPingLink('${l.uuid}',this)" title="تست پینگ واقعی از مسیر پل (مثل کلاینت)"><i class="ti ti-activity"></i></button>
-          <button class="btn btn-sm btn-g btn-icon" onclick="navigator.clipboard.writeText('${esc(l.bridged)}').then(()=>toast('لینک پل‌دار کپی شد','ok'))" title="کپی لینک پل‌دار"><i class="ti ti-copy"></i></button>
-          <button class="btn btn-sm btn-g btn-icon" onclick="showQR('${esc(l.bridged)}')" title="QR"><i class="ti ti-qrcode"></i></button>
-          <button class="btn btn-sm btn-g btn-icon" onclick="navigator.clipboard.writeText('${esc(l.original)}').then(()=>toast('لینک اصلی کپی شد','ok'))" title="لینک اصلی (بدون پل)"><i class="ti ti-external-link"></i></button>
-        </div>
-      </div>`;
-    }).join('');
-  }catch(e){
-    list.innerHTML='<div class="empty"><i class="ti ti-alert-triangle"></i><p>خطا در دریافت لینک‌ها</p></div>';
-  }
-}
-async function brPingLink(uuid,btn){
-  const ic=btn?btn.querySelector('i'):null;
-  const badge=document.getElementById('bpb-'+uuid);
-  if(badge){badge.style.color='var(--t3)';badge.innerHTML='<span class="ping-wave"><span></span><span></span><span></span></span> تست'}
-  if(ic){ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite'}
-  try{
-    const r=await authF(`/api/bridge/links/${uuid}/ping`,{method:'POST'});
-    const d=await r.json();
-    const el=document.getElementById('bpb-'+uuid);
-    if(el){
-      if(d.ok){
-        const ms=d.e2e_ms!=null?Math.round(d.e2e_ms):null;
-        el.style.color=ms!=null&&ms<500?'var(--green-t)':ms!=null&&ms<1200?'var(--amber-t)':'var(--red-t)';
-        el.innerHTML=`<i class="ti ti-route"></i> پل ${ms!=null?toFa(ms)+'ms':'✓'}`;
-        el.title=d.detail||'';
-      }else{
-        el.style.color='var(--red-t)';
-        el.innerHTML=`<i class="ti ti-route-off"></i> پل قطع`;
-        el.title=d.detail||'تست ناموفق';
-      }
-      el.classList.remove('ping-pop');void el.offsetWidth;el.classList.add('ping-pop');
-    }
-    if(d.ok) toast(`پل سالم — ${d.e2e_ms!=null?Math.round(d.e2e_ms)+'ms':''}`,'ok');
-    else toast('تست پل ناموفق — '+(d.detail||'').slice(0,150),'err');
-  }catch(e){
-    if(badge){badge.style.color='var(--red-t)';badge.innerHTML='<i class="ti ti-route-off"></i> خطا'}
-    toast('خطا در تست پل','err');
-  }finally{
-    if(ic){ic.className='ti ti-activity';ic.style.animation=''}
-  }
-}
-function brCopyScript(){
-  if(!bridgeScriptCache)return;
-  navigator.clipboard.writeText(bridgeScriptCache).then(()=>toast('اسکریپت نصب کپی شد — روی سرور ایران اجرایش کنید','ok'));
-}
-
-/* ══════ تنظیمات حرفه‌ای ZEUS — ISP + TLS Mask + Smart + Security ══════ */
-let zeusIspList=[];
-let zeusCurrentIsp='smart';
-function zeusToggleSet(toggleId,enabled){
-  const el=document.getElementById(toggleId);
-  if(!el)return;
-  el.checked=!!enabled;
-  const slider=el.nextElementSibling;
-  if(slider){
-    slider.style.background=enabled?'var(--accent)':'var(--t3)';
-  }
-}
-async function loadZeusPage(){
-  try{
-    const r=await authF('/api/zeus/config');
-    if(!r.ok){toast('خطا در بارگذاری تنظیمات حرفه‌ای','err');return}
-    const cfg=await r.json();
-    zeusIspList=cfg.available_isps||[];
-    zeusCurrentIsp=cfg.isp||'smart';
-    // status badge
-    const sb=document.getElementById('zeus-status-badge');
-    sb.textContent='بارگذاری شد';sb.className='badge bg-green';
-    // ۱) ISP رندر
-    zeusRenderIspGrid();
-    zeusShowIspDetail(zeusCurrentIsp);
-    document.getElementById('zeus-isp-name').textContent=(cfg.isp_meta&&cfg.isp_meta.label)||zeusCurrentIsp;
-    document.getElementById('zeus-isp-best-proto').textContent='پروتکل پیشنهادی: '+(cfg.isp_meta&&cfg.isp_meta.best_protocol||'—');
-    // ۲) TLS Mask
-    const tm=cfg.tls_mask||{};
-    zeusToggleSet('zeus-tls-toggle',tm.enabled);
-    document.getElementById('zeus-tls-sni').value=tm.custom_sni||'';
-    document.getElementById('zeus-tls-cipher').value=tm.cipher_suites||'';
-    document.getElementById('zeus-tls-frag-len').value=tm.fragment_length||'';
-    document.getElementById('zeus-tls-frag-dly').value=tm.fragment_delay||'';
-    document.getElementById('zeus-tls-status').textContent=tm.enabled?'فعال':'غیرفعال';
-    document.getElementById('zeus-tls-sni-metric').textContent='SNI: '+(tm.custom_sni||'—');
-    document.getElementById('zeus-tls-badge').style.display=tm.enabled?'inline-block':'none';
-    // ۳) Smart Mode
-    const sm=cfg.smart_mode||{};
-    zeusToggleSet('zeus-smart-toggle',sm.enabled);
-    document.getElementById('zeus-smart-status').textContent=sm.enabled?'فعال':'غیرفعال';
-    // ۴) Security
-    const sc=cfg.security||{};
-    zeusToggleSet('zeus-security-toggle',sc.enabled);
-    document.getElementById('zeus-sec-min-len').value=sc.min_password_length||8;
-    document.getElementById('zeus-sec-interval').value=sc.attempt_interval_ms||1000;
-    document.getElementById('zeus-sec-max').value=sc.max_attempts||5;
-    document.getElementById('zeus-sec-lockout').value=sc.lockout_ms||60000;
-    document.getElementById('zeus-security-status').textContent=sc.enabled?'فعال':'غیرفعال';
-    document.getElementById('zeus-security-rule').textContent='حداکثر تلاش: '+(sc.max_attempts||5);
-  }catch(e){console.error('loadZeusPage',e);toast('خطا در بارگذاری صفحه‌ی تنظیمات حرفه‌ای','err')}
-}
-function zeusRenderIspGrid(){
-  const grid=document.getElementById('zeus-isp-grid');
-  if(!grid||!zeusIspList.length)return;
-  grid.innerHTML=zeusIspList.map(isp=>`
-    <div class="card br-mode-card" id="zeus-isp-${isp.id}" onclick="zeusSelectIsp('${isp.id}')" style="cursor:pointer;padding:12px">
-      <div style="display:flex;align-items:center;gap:10px">
-        <div style="width:36px;height:36px;border-radius:10px;background:var(--accent-d);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-          <i class="ti ${isp.icon||'ti-device-mobile'}" style="font-size:18px;color:${isp.color||'var(--accent2)'}"></i>
-        </div>
-        <div style="flex:1">
-          <div style="font-weight:700;font-size:12px">${isp.label}</div>
-          <div style="font-size:9.5px;color:var(--t3);margin-top:2px">پینگ: ${isp.expected_ping_ms||'—'}</div>
-        </div>
-        <div class="br-mode-check" style="width:18px;height:18px;border-radius:50%;border:2px solid var(--t3);display:flex;align-items:center;justify-content:center">
-          <i class="ti ti-check" style="font-size:10px;opacity:0"></i>
-        </div>
-      </div>
-    </div>
-  `).join('');
-  zeusUpdateIspSelection();
-}
-function zeusUpdateIspSelection(){
-  zeusIspList.forEach(isp=>{
-    const el=document.getElementById('zeus-isp-'+isp.id);
-    if(!el)return;
-    const selected=isp.id===zeusCurrentIsp;
-    el.style.borderColor=selected?'var(--accent)':'var(--card-b)';
-    const chk=el.querySelector('.br-mode-check');
-    if(chk){
-      chk.style.borderColor=selected?'var(--accent)':'var(--t3)';
-      chk.style.background=selected?'var(--accent)':'transparent';
-      const icon=chk.querySelector('i');if(icon){icon.style.opacity=selected?1:0;icon.style.color='#fff'}
-    }
-  });
-}
-function zeusShowIspDetail(ispId){
-  const isp=zeusIspList.find(x=>x.id===ispId);
-  const box=document.getElementById('zeus-isp-detail');
-  if(!isp||!box){return}
-  box.style.display='';
-  document.getElementById('zeus-isp-detail-title').textContent=isp.label+' — پروتکل پیشنهادی: '+(isp.best_protocol||'—');
-  document.getElementById('zeus-isp-detail-rationale').textContent=isp.rationale||'';
-  const ul=document.getElementById('zeus-isp-detail-tips');
-  ul.innerHTML=(isp.tips||[]).map(t=>`<li style="margin-bottom:4px">${t}</li>`).join('');
-}
-async function zeusSelectIsp(ispId){
-  try{
-    const r=await authF('/api/zeus/isp',{method:'POST',body:JSON.stringify({isp:ispId})});
-    if(!r.ok){toast('خطا در ذخیره‌ی ISP','err');return}
-    const j=await r.json();
-    zeusCurrentIsp=ispId;
-    zeusUpdateIspSelection();
-    zeusShowIspDetail(ispId);
-    document.getElementById('zeus-isp-name').textContent=j.meta.label;
-    document.getElementById('zeus-isp-best-proto').textContent='پروتکل پیشنهادی: '+(j.meta.best_protocol||'—');
-    toast('ISP روی '+j.meta.label+' تنظیم شد','ok');
-  }catch(e){console.error('zeusSelectIsp',e);toast('خطا در ارتباط با سرور','err')}
-}
-async function zeusSaveTlsMask(){
-  const enabled=document.getElementById('zeus-tls-toggle').checked;
-  const custom_sni=document.getElementById('zeus-tls-sni').value.trim();
-  const cipher_suites=document.getElementById('zeus-tls-cipher').value.trim();
-  const fragment_length=document.getElementById('zeus-tls-frag-len').value.trim();
-  const fragment_delay=document.getElementById('zeus-tls-frag-dly').value.trim();
-  try{
-    const r=await authF('/api/zeus/tls-mask',{method:'POST',body:JSON.stringify({enabled,custom_sni,cipher_suites,fragment_length,fragment_delay})});
-    if(!r.ok){toast('خطا در ذخیره','err');return}
-    const j=await r.json();
-    zeusToggleSet('zeus-tls-toggle',j.tls_mask.enabled);
-    document.getElementById('zeus-tls-status').textContent=j.tls_mask.enabled?'فعال':'غیرفعال';
-    document.getElementById('zeus-tls-sni-metric').textContent='SNI: '+(j.tls_mask.custom_sni||'—');
-    document.getElementById('zeus-tls-badge').style.display=j.tls_mask.enabled?'inline-block':'none';
-    toast('تنظیمات TLS Mask ذخیره شد','ok');
-  }catch(e){toast('خطا در ارتباط','err')}
-}
-async function zeusShowMaskedLinks(){
-  try{
-    const r=await authF('/api/zeus/tls-mask/links');
-    if(!r.ok){toast('خطا','err');return}
-    const j=await r.json();
-    if(!j.enabled){toast('ابتدا TLS Mask را فعال کنید','err');return}
-    if(!j.links||!j.links.length){toast('هیچ کانفیگی برای ساخت لینک Mask-شده وجود ندارد','err');return}
-    const links=j.links.map(l=>`<div style="margin-bottom:10px;padding:8px;background:var(--bg);border-radius:8px;border:1px solid var(--card-b)">
-      <div style="font-weight:700;font-size:11.5px;margin-bottom:4px">${esc(l.label)} <span class="badge bg-blue" style="font-size:9px">${l.protocol}</span></div>
-      <div style="font-family:monospace;font-size:9.5px;direction:ltr;text-align:left;word-break:break-all;background:var(--card);padding:6px;border-radius:6px;color:var(--green-t)">${esc(l.masked)}</div>
-      <button class="btn btn-sm btn-g" style="margin-top:6px" onclick="navigator.clipboard.writeText('${l.masked.replace(/'/g,"\\'")}').then(()=>toast('لینک کپی شد','ok'))"><i class="ti ti-copy"></i> کپی</button>
-    </div>`).join('');
-    openModalGeneric('لینک‌های Mask-شده (SNI: '+esc(j.sni)+')',links);
-  }catch(e){toast('خطا در ارتباط','err')}
-}
-async function zeusShowFragmentJson(){
-  try{
-    const r=await authF('/api/zeus/tls-mask/fragment-json');
-    if(!r.ok){toast('خطا','err');return}
-    const j=await r.json();
-    const pretty=JSON.stringify(j,null,2);
-    openModalGeneric('JSON Fragment + TLS Settings (برای کپی در Xray کلاینت)',
-      '<div style="font-size:11px;color:var(--t3);margin-bottom:8px">این JSON را در فایل config.json کلاینت Xray (در بخش streamSettings.outbound) قرار دهید</div>'+
-      '<pre style="background:var(--bg);padding:14px;border-radius:8px;font-size:10px;direction:ltr;text-align:left;overflow-x:auto;max-height:400px;font-family:monospace;border:1px solid var(--card-b)">'+esc(pretty)+'</pre>'+
-      '<button class="btn btn-g" style="margin-top:10px" onclick="navigator.clipboard.writeText('+JSON.stringify(JSON.stringify(pretty))+').then(()=>toast(\'کپی شد\',\'ok\'))"><i class="ti ti-copy"></i> کپی JSON</button>'
-    );
-  }catch(e){toast('خطا در ارتباط','err')}
-}
-async function zeusSmartRecommend(){
-  const btn=event?.target?.closest('button');
-  if(btn){btn.disabled=true;btn.innerHTML='<i class="ti ti-loader ti-spin"></i> در حال تست...'}
-  try{
-    const r=await authF('/api/zeus/smart/recommend');
-    if(!r.ok){toast('خطا در تست','err');return}
-    const j=await r.json();
-    const box=document.getElementById('zeus-smart-result');
-    const content=document.getElementById('zeus-smart-result-content');
-    box.style.display='';
-    if(j.best){
-      const b=j.best;
-      content.innerHTML='<div style="display:flex;align-items:center;gap:10px">'+
-        '<div style="width:40px;height:40px;border-radius:50%;background:var(--green-bg);display:flex;align-items:center;justify-content:center"><i class="ti ti-trophy" style="color:var(--green-t);font-size:20px"></i></div>'+
-        '<div style="flex:1"><div style="font-weight:700;font-size:13px">'+esc(b.label)+'</div>'+
-        '<div style="font-size:11px;color:var(--t3)">پروتکل: '+b.protocol+' · تاخیر کل: '+toFa(b.total_ms)+' ms</div></div>'+
-        '<button class="btn btn-sm btn-g" onclick="navigator.clipboard.writeText(\\\'\\\').then(()=>toast(\'لینک در صفحه کانفیگ‌ها قابل کپی است\',\'ok\'))"><i class="ti ti-link"></i> کانفیگ</button></div>';
-      document.getElementById('zeus-smart-best').textContent='بهترین: '+b.label+' ('+b.total_ms+'ms)';
-      toast('بهترین کانفیگ: '+b.label+' با '+b.total_ms+'ms','ok');
-    }else{
-      content.innerHTML='<div style="color:var(--t3);font-size:12px;text-align:center;padding:10px">هیچ کانفیگ سالمی یافت نشد — '+toFa(j.checked)+' کانفیگ تست شد</div>';
-      document.getElementById('zeus-smart-best').textContent='بهترین: پیدا نشد';
-      toast('هیچ کانفیگ سالمی یافت نشد','err');
-    }
-  }catch(e){toast('خطا در ارتباط','err')}
-  finally{if(btn){btn.disabled=false;btn.innerHTML='<i class="ti ti-trophy"></i> تست اکنون و معرفی بهترین'}}
-}
-async function zeusSaveSmart(){
-  const enabled=document.getElementById('zeus-smart-toggle').checked;
-  const interval_ms=parseInt(document.getElementById('zeus-smart-interval')?.value||'1000');
-  const accuracy=parseInt(document.getElementById('zeus-smart-accuracy')?.value||'4');
-  try{
-    const r=await authF('/api/zeus/smart',{method:'POST',body:JSON.stringify({enabled,interval_ms,accuracy})});
-    if(!r.ok)return;
-    const j=await r.json();
-    zeusToggleSet('zeus-smart-toggle',j.smart_mode.enabled);
-    document.getElementById('zeus-smart-status').textContent=j.smart_mode.enabled?'فعال':'غیرفعال';
-    toast('حالت هوشمند '+(j.smart_mode.enabled?'فعال':'خاموش')+' شد','ok');
-  }catch(e){toast('خطا','err')}
-}
-async function zeusSaveSecurity(){
-  const enabled=document.getElementById('zeus-security-toggle').checked;
-  const min_password_length=parseInt(document.getElementById('zeus-sec-min-len').value)||8;
-  const attempt_interval_ms=parseInt(document.getElementById('zeus-sec-interval').value)||1000;
-  const max_attempts=parseInt(document.getElementById('zeus-sec-max').value)||5;
-  const lockout_ms=parseInt(document.getElementById('zeus-sec-lockout').value)||60000;
-  try{
-    const r=await authF('/api/zeus/security',{method:'POST',body:JSON.stringify({enabled,min_password_length,attempt_interval_ms,max_attempts,lockout_ms})});
-    if(!r.ok){toast('خطا در ذخیره','err');return}
-    const j=await r.json();
-    zeusToggleSet('zeus-security-toggle',j.security.enabled);
-    document.getElementById('zeus-security-status').textContent=j.security.enabled?'فعال':'غیرفعال';
-    document.getElementById('zeus-security-rule').textContent='حداکثر تلاش: '+j.security.max_attempts;
-    toast('تنظیمات امنیت ذخیره شد','ok');
-  }catch(e){toast('خطا در ارتباط','err')}
-}
-async function zeusSecurityCheck(){
-  try{
-    const r=await authF('/api/zeus/security/check',{method:'POST'});
-    if(!r.ok)return;
-    const j=await r.json();
-    const box=document.getElementById('zeus-security-result');
-    const content=document.getElementById('zeus-security-result-content');
-    box.style.display='';
-    content.innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:11.5px">'+
-      '<div><div style="color:var(--t3);margin-bottom:4px">میان‌افزار</div><div style="font-weight:700">'+(j.middleware_active?'<span style="color:var(--green-t)">فعال</span>':'<span style="color:var(--red-t)">غیرفعال</span>')+'</div></div>'+
-      '<div><div style="color:var(--t3);margin-bottom:4px">IPهای بلاک‌شده</div><div style="font-weight:700">'+toFa(j.currently_blocked_count)+'</div></div>'+
-      '<div><div style="color:var(--t3);margin-bottom:4px">حداکثر تلاش</div><div style="font-weight:700">'+toFa(j.rules.max_attempts)+'</div></div>'+
-      '<div><div style="color:var(--t3);margin-bottom:4px">فاصله‌ی تلاش‌ها</div><div style="font-weight:700">'+toFa(j.rules.attempt_interval_ms)+' ms</div></div>'+
-      '<div><div style="color:var(--t3);margin-bottom:4px">مدت بلاک</div><div style="font-weight:700">'+toFa(j.rules.lockout_ms)+' ms</div></div>'+
-      '<div><div style="color:var(--t3);margin-bottom:4px">حداقل طول پسورد</div><div style="font-weight:700">'+toFa(j.rules.min_password_length)+'</div></div>'+
-    '</div>';
-    toast('وضعیت میان‌افزار بررسی شد','ok');
-  }catch(e){toast('خطا','err')}
-}
-
-/* ═════════════════ مرکز گیمینگ — اسکنر IP + لوکیشن + کانفیگ گیمینگ ═════════════════ */
-let gamingCfg={},gamingScanBusy=false;
-
-/* ═════════════════ زیرساخت: Volume خودکار + سلامت کلی ═════════════════ */
-async function checkVolumeBanner(){
-  try{
-    const r=await authF('/api/system/infra/status');
-    if(!r.ok)return;
-    const j=await r.json();
-    const w=document.getElementById('volume-warn');
-    if(w&&j.on_railway&&!j.volume_mounted){w.style.display=''}
-  }catch(e){}
-}
-async function ensureVolume(btn){
-  const ic=btn.querySelector('i');ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite';btn.disabled=true;
-  try{
-    const r=await authF('/api/system/infra/ensure-volume',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});
-    const j=await r.json().catch(()=>({ok:false,error:'پاسخ نامعتبر'}));
-    if(j.ok){
-      toast(j.message||'Volume ساخته شد','ok');
-      document.getElementById('volume-warn').style.display='none';
-    }else{toast(j.error||'خطا در ساخت volume','err')}
-  }catch(e){toast('خطا','err')}
-  finally{ic.className='ti ti-database-plus';ic.style.animation='';btn.disabled=false}
-}
-async function runHealthAll(btn){
-  const ic=btn.querySelector('i');ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite';btn.disabled=true;
-  const box=document.getElementById('health-all-result');
-  box.style.display='';box.innerHTML='<div style="font-size:12px;color:var(--t3);padding:8px"><i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i> در حال بررسی همه‌ی بخش‌ها (تا ۴۵ ثانیه)...</div>';
-  try{
-    const r=await authF('/api/system/health-all');
-    if(!r.ok){box.innerHTML='<span style="color:var(--red-t);font-size:12px">خطا در دریافت گزارش سلامت</span>';return}
-    const j=await r.json();
-    const secs=Object.entries(j.sections||{});
-    const rowHtml=(label,s)=>{
-      const ok=s.ok;
-      const col=ok?'var(--green-t)':'var(--red-t)';
-      const icon=ok?'<i class="ti ti-circle-check"></i>':'<i class="ti ti-circle-x"></i>';
-      let extra='';
-      if(s.error)extra+=` — <span style="color:var(--t3)">${s.error}</span>`;
-      if(s.detail&&typeof s.detail==='string')extra+=` — <span style="color:var(--t3)">${s.detail}</span>`;
-      if(s.mounted===false&&s.ok===false)extra='';
-      const lat=s.latency_ms!=null?` <span class="badge bg-blue" style="font-size:9.5px">${toFa(s.latency_ms)}ms</span>`:'';
-      return `<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--bg);border-radius:8px;border:1px solid var(--card-b);margin-bottom:6px">
-        <span style="color:${col}">${icon}</span>
-        <div style="flex:1;font-size:12px"><b>${label}</b><span style="font-size:11px;color:var(--t2)">${extra}</span></div>
-        ${lat}
-        <span class="badge ${ok?'bg-green':'bg-red'}" style="font-size:9.5px">${ok?'سالم':'مشکل'}</span>
-      </div>`;
-    };
-    const labels={'panel':'هسته‌ی پنل','volume':'دیتای دائمی (Volume)','links':'کانفیگ‌ها','mtproto':'پروسه‌های MTProto','tcp_proxies':'TCP Proxies ریلوی','cf_gateway':'گیت‌وی کلادفلر','bridge':'پل ایران','module:zeus_features':'ماژول ZEUS Pro','module:gaming_boost':'ماژول مرکز گیمینگ','module:bridge_boost':'ماژول پل ایران','module:turbo_boost':'ماژول توربو','module:clean_ip_boost':'ماژول آی‌پی تمیز','module:link_health':'ماژول تست پینگ'};
-    let html=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-      <span class="badge ${j.ok?'bg-green':'bg-red'}">${j.ok?'همه‌چیز سالم ✓':'مشکلاتی پیدا شد'}</span>
-      <span style="font-size:11px;color:var(--t3)">${toFa(secs.filter(([_,s])=>s.ok).length)} از ${toFa(secs.length)} بخش سالم</span>
-    </div>`;
-    // بخش‌های مهم اول
-    const order=['panel','volume','links','mtproto','tcp_proxies','cf_gateway','bridge'];
-    const rest=secs.filter(([k])=>!order.includes(k)&&!k.startsWith('module:'));
-    const mods=secs.filter(([k])=>k.startsWith('module:'));
-    for(const k of order){const f=secs.find(([kk])=>kk===k);if(f)html+=rowHtml(labels[k]||k,f[1])}
-    if(mods.length){
-      const modOk=mods.filter(([_,s])=>s.ok).length;
-      html+=`<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--bg);border-radius:8px;border:1px solid var(--card-b);margin-bottom:6px">
-        <span style="color:${modOk===mods.length?'var(--green-t)':'var(--amber-t)'}"><i class="ti ti-plug-connected"></i></span>
-        <div style="flex:1;font-size:12px"><b>ماژول‌های افزونه</b><span style="font-size:11px;color:var(--t3)"> — ${toFa(modOk)}/${toFa(mods.length)} بارگذاری کامل</span></div>
-        <span class="badge ${modOk===mods.length?'bg-green':'bg-amber'}" style="font-size:9.5px">${modOk===mods.length?'سالم':'ناقص'}</span>
-      </div>`;
-    }
-    box.innerHTML=html;
-    toast(j.ok?'همه‌ی بخش‌ها سالم هستند':'برخی بخش‌ها مشکل دارند — جزئیات در کارت',j.ok?'ok':'err');
-  }catch(e){box.innerHTML='<span style="color:var(--red-t);font-size:12px">خطا در بررسی سلامت</span>'}
-  finally{ic.className='ti ti-stethoscope';ic.style.animation='';btn.disabled=false}
-}
-/* ═════════════════ Phase 44: دامنه‌ی عمومی لینک‌ها (host routing) ═════════════════ */
-async function loadPublicHost(){
-  try{
-    const r=await authF('/api/system/infra/variables');
-    if(!r.ok)return;
-    const j=await r.json();
-    const cur=document.getElementById('pubhost-cur');
-    if(!cur)return;
-    const row=(j.variables||[]).find(v=>v.name==='EMIX_PUBLIC_HOST');
-    const rpd=(j.variables||[]).find(v=>v.name==='RAILWAY_PUBLIC_DOMAIN');
-    if(row){cur.innerHTML='فعلی: <b style="color:var(--blue-t)">'+(row.value||'(خالی)')+'</b>'+(rpd&&rpd.value?' <span style="color:var(--t3)">· ingress ریلوی: '+rpd.value+'</span>':'');}
-    else{cur.innerHTML=(rpd&&rpd.value?'ingress ریلوی: <b>'+rpd.value+'</b> — ':'تنظیم‌نشده — ')+'لینک‌ها از دامنه‌ی خودآموخته صادر می‌شوند';}
-  }catch(e){}
-}
-async function savePublicHost(btn){
-  const inp=document.getElementById('pubhost-input');
-  const val=(inp.value||'').trim().toLowerCase();
-  if(!val||!val.includes('.')){toast('یک hostname معتبر وارد کنید (مثل my-gate.workers.dev)','err');return}
-  const ic=btn.querySelector('i');ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite';btn.disabled=true;
-  try{
-    const r=await authF('/api/system/infra/variable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'EMIX_PUBLIC_HOST',value:val})});
-    const j=await r.json().catch(()=>({detail:'پاسخ نامعتبر'}));
-    if(r.ok&&j.ok){
-      toast('ذخیره شد — ریلوی redeploy می‌کند؛ ۱-۲ دقیقه صبر کنید','ok');
-      document.getElementById('pubhost-cur').innerHTML='در حال اعمال: <b style="color:var(--amber-t)">'+val+'</b>';
-    }else{toast((j.detail)||'خطا در ذخیره‌ی متغیر','err')}
-  }catch(e){toast('خطا','err')}
-  finally{ic.className='ti ti-device-floppy';ic.style.animation='';btn.disabled=false}
-}
-/* تست همه‌ی کانفیگ‌ها از مسیر گیت‌وی کلادفلر (پینگ واقعی خروجی) */
-async function pingAllViaWorker(){
-  try{
-    const r=await authF('/api/links/ping-all?via=worker',{method:'POST'});
-    if(!r.ok){toast('خطا','err');return}
-    const j=await r.json();
-    toast(`تست از مسیر گیت‌وی: ${toFa(j.ok)} از ${toFa(j.total)} سالم`,j.ok>0?'ok':'err');
-  }catch(e){toast('خطا','err')}
-}
-const COLO_NAMES={IST:'استانبول 🇹🇷',FRA:'فرانکفورت 🇩🇪',MRS:'مارسی 🇫🇷',BAH:'بحرین 🇧🇭',DXB:'دبی 🇦🇪',AMS:'آمستردام 🇳🇱',LHR:'لندن 🇬🇧',CDG:'پاریس 🇫🇷',MIL:'میلان 🇮🇹',VIE:'وین 🇦🇹',WAW:'ورشو 🇵🇱',KIV:'کیشیناو 🇲🇩',DME:'مسکو 🇷🇺',TAS:'تاشکند 🇺🇿',ALA:'آلماتی 🇰🇿',SIN:'سنگاپور 🇸🇬',DXB2:'دبی۲',TLV:'تل‌آویو',DOH:'دوحه 🇶🇦',KWI:'کویت 🇰🇼'};
-
-/* ═════════════════ پل چندلوکیشن v2 — MultiLoc (WTE) ═════════════════ */
-let mlLinksCache=[],mlStatusCache=null;
-async function loadMultilocPage(){ await mlStatus(false); await mlLoadLocations(false); mlFillCfgSelect(); }
-async function mlStatus(toastIt){
-  try{
-    const r=await authF('/api/multiloc/status');
-    if(!r.ok)throw new Error('status '+r.status);
-    const j=await r.json();mlStatusCache=j;
-    const sb=document.getElementById('ml-status-badge');
-    const ready=j.ready&&j.worker&&j.worker.supports_wte;
-    sb.textContent=j.ready?(j.worker.supports_wte?'آماده — WTE فعال':'وورکر v1 — آپگرید لازم'):'Worker تنظیم نشده';
-    sb.className='badge '+(ready?'bg-green':(j.ready?'bg-amber':'bg-red'));
-    document.getElementById('ml-worker-ver').textContent=(j.worker&&j.worker.version)||'—';
-    document.getElementById('ml-worker-domain-lbl').textContent=j.worker_domain||'—';
-    const wte=document.getElementById('ml-wte-status');
-    if(j.worker&&j.worker.supports_wte){wte.textContent='فعال ✓';wte.style.color='var(--green-t)';document.getElementById('ml-wte-sub').textContent='سرور VLESS داخل وورکر — خروج از colo';}
-    else{wte.textContent='غیرفعال';wte.style.color='var(--amber-t)';document.getElementById('ml-wte-sub').textContent='کد v2 وورکر را Paste کن';}
-    document.getElementById('ml-worker-upgrade').style.display=(j.worker&&j.worker.supports_wte||!j.ready)?'none':'';
-    if(j.locations_cached){document.getElementById('ml-loc-count').textContent=toFa(j.locations_cached)+' لوکیشن';}
-    if(toastIt)toast(ready?'گیت‌وی WTE آماده است ✓':'وضعیت گیت‌وی به‌روز شد',ready?'ok':'info');
-  }catch(e){ const sb=document.getElementById('ml-status-badge');sb.textContent='خطا';sb.className='badge bg-red'; if(toastIt)toast('خطا در وضعیت مولتی‌لوک: '+(e.message||''),'err'); }
-}
-async function mlScan(btn,deep){
-  const pr=document.getElementById('ml-scan-progress');
-  const old=btn.innerHTML;btn.disabled=true;pr.textContent='در حال اسکن — هندشیک واقعی TLS...';
-  try{
-    const r=await authF('/api/multiloc/scan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({deep:!!deep})});
-    if(!r.ok)throw new Error((await r.json().catch(()=>({}))).error||('HTTP '+r.status));
-    const j=await r.json();
-    if(!j.ok){toast(j.error||'اسکن ناموفق','err');pr.textContent='ناموفق';return}
-    mlRenderLocations(j.locations,j.stats);
-    pr.textContent='انجام شد ✓ '+toFa(j.stats.colos)+' colo از '+toFa(j.stats.probed)+' IP';
-    document.getElementById('ml-loc-count').textContent=toFa(j.locations.length)+' لوکیشن';
-    toast('اسکن کامل شد — '+toFa(j.stats.colos)+' لوکیشن تایید شد ✓','ok');
-  }catch(e){pr.textContent='خطا';toast('اسکن ناموفق: '+(e.message||''),'err');}
-  finally{btn.disabled=false;btn.innerHTML=old;}
-}
-async function mlLoadLocations(render){
-  try{
-    const r=await authF('/api/multiloc/locations');
-    if(!r.ok)return;
-    const j=await r.json();
-    if(j.ok&&j.locations){mlRenderLocations(j.locations,j.stats);}
-  }catch(e){}
-}
-function mlRenderLocations(locs,stats){
-  const g=document.getElementById('ml-loc-grid');if(!g)return;
-  g.innerHTML=locs.map(l=>{
-    const rtt=l.rtt_ms?toFa(Math.round(l.rtt_ms))+' ms':'—';
-    const ip=(l.best_ip||'—');
-    return `<div class="card" style="margin:0;padding:12px;border:1px solid var(--card-b)">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-        <b style="font-size:13px">${l.flag} ${esc(l.city)}</b>
-        <span class="badge ${l.key==='auto'?'bg-blue':'bg-green'}" style="font-size:10px">${l.colo?esc(l.colo):'AUTO'}</span>
-      </div>
-      <div style="font-size:11px;color:var(--t3);direction:ltr;text-align:left;font-family:monospace;overflow:hidden;text-overflow:ellipsis">${esc(ip)}</div>
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
-        <span style="font-size:11px;color:var(--t3)">RTT: <b style="color:var(--green-t)">${rtt}</b></span>
-        <button class="btn btn-o btn-sm" style="font-size:10px;padding:4px 10px" onclick="mlEgress('${esc(l.key)}',this)">تست خروج</button>
-      </div>
-      <div id="ml-eg-${esc(l.key)}" style="font-size:10.5px;color:var(--t3);margin-top:6px;display:none"></div>
-    </div>`;
-  }).join('')||'<div style="font-size:11.5px;color:var(--t3);padding:8px">هنوز اسکنی ثبت نشده — دکمه‌ی اسکن را بزن</div>';
-  if(stats){document.getElementById('ml-scan-stats').innerHTML=`پروب: ${toFa(stats.probed)} · سالم: ${toFa(stats.alive)} · coloهای یکتا: ${toFa(stats.colos)} · مرده: ${toFa(stats.dead)} — <b>RTT از دید سرور پنل</b> (از ISP خودت با /cdn-cgi/trace روی همان IP قابل بازبینی است)`;}
-}
-async function mlEgress(key,btn){
-  const box=document.getElementById('ml-eg-'+key);if(!box)return;
-  const old=btn.innerHTML;btn.disabled=true;btn.innerHTML='...';
-  try{
-    const r=await authF('/api/multiloc/egress-check?ip='+encodeURIComponent(key==='auto'?'auto':key));
-    const j=await r.json();
-    box.style.display='block';
-    if(j.ok){
-      // فقط IP اندازه‌گیری‌شده نمایش داده می‌شود — هرگز IP تنظیم‌شده/پین‌شده
-      box.innerHTML=`${egBadge('VERIFIED_EGRESS')} <b style="color:var(--green-t)">IP خروج (اندازه‌گیری‌شده): ${esc(j.exit_ip||'?')}</b> · ${esc(j.exit_country||j.colo_country||'?')} ${j.exit_city?('— '+esc(j.exit_city)):''} ${j.exit_asn?('<span dir="ltr">· '+esc(j.exit_asn)+'</span>'):''} <span style="opacity:.6">(${esc(j.colo||'?')})</span>`;
-      document.getElementById('ml-egress-last').textContent=(j.exit_country||'?')+' · '+(j.exit_ip||'?');
-      document.getElementById('ml-egress-sub').textContent=(j.measurement_source||j.note?('مدرک زنده از /egress-test'):'مدرک زنده از /egress-test');
-    } else {
-      box.innerHTML='<b style="color:var(--amber-t)">'+esc(j.error||'تست ناموفق — وورکر v2 لازم است')+'</b>';
-    }
-  }catch(e){box.style.display='block';box.innerHTML='<b style="color:var(--red-t)">خطا</b>';}
-  finally{btn.disabled=false;btn.innerHTML=old;}
-}
-function mlFillCfgSelect(){
-  const sel=document.getElementById('ml-cfg-sel');if(!sel)return;
-  const cands=allLinksList.filter(l=>!l._nodeId&&(((l.protocol||'').startsWith('vless'))||((l.protocol||'').startsWith('trojan'))));
-  const list=cands.length?cands:allLinksList.filter(l=>!l._nodeId);
-  sel.innerHTML='<option value="">همه‌ی کانفیگ‌های مجاز ('+toFa(list.length)+')</option>'+list.map(l=>`<option value="${esc(l.uuid)}">${esc(l.label)} · ${esc((l.protocol||'').toUpperCase())}</option>`).join('');
-}
-async function mlBuild(btn){
-  const uuid=document.getElementById('ml-cfg-sel').value||null;
-  const mode=document.getElementById('ml-mode-sel').value;
-  const coloSel=document.getElementById('ml-colo-sel').value;
-  const colos=coloSel==='auto'?['auto']:null;
-  const old=btn.innerHTML;btn.disabled=true;btn.innerHTML='<i class="ti ti-loader ti-spin"></i> در حال ساخت...';
-  try{
-    const r=await authF('/api/multiloc/links',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({uuid,mode,colos})});
-    if(!r.ok)throw new Error((await r.json().catch(()=>({}))).error||('HTTP '+r.status));
-    const j=await r.json();
-    if(!j.ok){toast(j.error||'ساخت ناموفق','err');return}
-    mlLinksCache=j.links;
-    const grid=document.getElementById('ml-links-grid');
-    grid.innerHTML=j.links.map((l,i)=>`
-      <div class="card" style="margin:0;padding:12px;border:1px solid var(--card-b)">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-          <b style="font-size:12.5px">${l.flag} ${esc(l.city)} ${l.colo?('· <span style="font-size:10px;opacity:.7">'+esc(l.colo)+'</span>'):''}</b>
-          <span class="badge ${l.exit.includes('Cloudflare')?'bg-green':'bg-blue'}" style="font-size:9.5px">${esc(l.exit)}</span>
-        </div>
-        <div style="font-size:10px;color:var(--t3);margin-bottom:6px">${esc(l.label)} · ${esc((l.protocol||'').toUpperCase())} ${l.rtt_ms?('· '+toFa(Math.round(l.rtt_ms))+'ms'):''}</div>
-        <div style="display:flex;gap:6px">
-          <button class="btn btn-g btn-sm" style="font-size:10px;padding:4px 10px;flex:1" onclick="mlCopyOne(${i},this)"><i class="ti ti-clipboard-copy"></i> کپی لینک</button>
-          <button class="btn btn-o btn-sm" style="font-size:10px;padding:4px 8px" onclick="navigator.clipboard.writeText('https://${esc(location.host)}/sub/'+encodeURIComponent('${esc(j.links[i].uuid)}'))" title="کپی لینک ساب"><i class="ti ti-rss"></i></button>
-        </div>
-      </div>`).join('');
-    document.getElementById('ml-copy-all-btn').style.display='';
-    document.getElementById('ml-links-raw').style.display='';
-    document.getElementById('ml-links-raw').value=j.links.map(l=>l.url).join('\n');
-    document.getElementById('ml-build-result').textContent=toFa(j.count)+' کانفیگ پل ساخته شد ✓'+(j.auto_sync?(' · '+j.auto_sync):'');
-    toast(toFa(j.count)+' کانفیگ '+j.mode_label+' ساخته شد ✓','ok');
-  }catch(e){toast('ساخت ناموفق: '+(e.message||''),'err');}
-  finally{btn.disabled=false;btn.innerHTML=old;}
-}
-function mlCopyOne(i,btn){ navigator.clipboard.writeText(mlLinksCache[i].url).then(()=>toast('لینک '+mlLinksCache[i].city+' کپی شد ✓','ok')).catch(()=>toast('کپی ناموفق','err')); }
-function mlCopyAll(){ navigator.clipboard.writeText(mlLinksCache.map(l=>l.url).join('\n')).then(()=>toast('همه‌ی '+toFa(mlLinksCache.length)+' لینک کپی شد ✓','ok')).catch(()=>toast('کپی ناموفق','err')); }
-async function mlSyncWorker(btn){
-  const res=document.getElementById('ml-sync-result');const old=btn.innerHTML;btn.disabled=true;res.textContent='در حال سینک...';
-  try{
-    const r=await authF('/api/multiloc/sync-worker',{method:'POST'});
-    const j=await r.json();
-    if(j.ok){res.innerHTML=`<b style="color:var(--green-t)">✓ ${toFa(j.pushed||j.synced||0)} UUID سینک شد${j.pools?(' · '+toFa(Object.keys(j.pools||{}).length)+' استخر IP'):''}</b>`;toast('سینک وورکر کامل شد ✓','ok');}
-    else{res.innerHTML='<b style="color:var(--amber-t)">'+esc(j.error||'سینک ناموفق')+'</b>';}
-  }catch(e){res.innerHTML='<b style="color:var(--red-t)">خطا</b>';}
-  finally{btn.disabled=false;btn.innerHTML=old;}
-}
-async function mlCopyWorkerCode(){
-  try{
-    const r=await authF('/api/multiloc/worker-code');
-    if(!r.ok)throw new Error('HTTP '+r.status);
-    const code=await r.text();
-    await navigator.clipboard.writeText(code);
-    toast('کد کامل Worker v2 کپی شد — در Edit Code وورکر Paste کن و Deploy کن ✓','ok');
-  }catch(e){toast('کپی ناموفق — از لینک دانلود استفاده کن','err');}
-}
-async function mlSniTrace(btn){
-  const inp=document.getElementById('ml-sni-input');
-  const sni=(inp.value||'').trim();
-  const box=document.getElementById('ml-sni-result');
-  if(!sni||!sni.includes('.')){toast('یک دامنه‌ی معتبر وارد کنید','err');return}
-  const old=btn.innerHTML;btn.disabled=true;btn.innerHTML='<i class="ti ti-loader ti-spin"></i> تست زنده...';
-  try{
-    const r=await authF('/api/multiloc/sni-trace',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sni})});
-    const j=await r.json();
-    box.style.display='block';
-    let h='<div style="padding:12px;background:var(--bg);border-radius:10px;border:1px solid var(--card-b);font-size:11.5px;line-height:2">';
-    h+=`<b>دامنه‌ی جعلی: <code style="direction:ltr;display:inline-block">${esc(j.spoof_sni||sni)}</code></b><br>`;
-    const t=j.tests||{};
-    if(t.panel_control)h+=`کنترل (SNI واقعی پنل): ${t.panel_control.tls_ok?'<b style="color:var(--green-t)">هندشیک ✓</b>':'<b style="color:var(--red-t)">✗</b>'} ${t.panel_control.http?('· '+esc(t.panel_control.http)):'<br>'}<br>`;
-    if(t.railway_fake_sni)h+=`جعل مستقیم به ریلوی (SNI=${esc(j.spoof_sni)}): ${t.railway_fake_sni.tls_ok&&t.railway_fake_sni.http&&String(t.railway_fake_sni.http).includes('200')?'<b style="color:var(--green-t)">هندشیک + HTTP 200 ✓</b>':'<b style="color:var(--red-t)">ناموفق</b>'} ${t.railway_fake_sni.error?('· '+esc(t.railway_fake_sni.error)):'<br>'}<br>`;
-    if(t.cloudflare_fake_sni)h+=`جعل به لبه‌ی کلادفلر: ${t.cloudflare_fake_sni.tls_ok&&String(t.cloudflare_fake_sni.http||'').includes('200')?'<b style="color:var(--green-t)">قابل fronting ✓</b>':'<b style="color:var(--amber-t)"> rout نمی‌شود (طبیعی)</b>'}<br>`;
-    (j.verdicts||[]).forEach(v=>{h+=`<div style="margin-top:8px;padding:8px;border-radius:8px;background:${v.ok?'rgba(16,185,129,.08)':'rgba(250,204,21,.08)'}"><b style="color:${v.ok?'var(--green-t)':'var(--amber-t)'}">${v.ok?'✓':'⚠'} ${esc(v.mode)}</b> — ${esc(v.msg)}</div>`;});
-    h+='</div>';
-    box.innerHTML=h;
-  }catch(e){box.style.display='block';box.innerHTML='<b style="color:var(--red-t)">خطا در تست</b>';}
-  finally{btn.disabled=false;btn.innerHTML=old;}
-}
-async function loadGamingPage(){
-  try{
-    const r=await authF('/api/gaming/config');
-    if(!r.ok){toast('خطا در بارگذاری مرکز گیمینگ','err');return}
-    gamingCfg=await r.json();
-    const sb=document.getElementById('gaming-status-badge');
-    sb.textContent=gamingCfg.ready?'آماده':'نیاز به تنظیم';
-    sb.className='badge '+(gamingCfg.ready?'bg-green':'bg-amber');
-    document.getElementById('gaming-worker-domain').value=gamingCfg.worker_domain||'';
-    document.getElementById('gaming-vps-ip').value=gamingCfg.vps_ip||'';
-    document.getElementById('gaming-vps-port').value=gamingCfg.vps_port||443;
-    document.getElementById('gaming-worker-status').textContent=gamingCfg.ready?'فعال':'تنظیم نشده';
-    document.getElementById('gaming-worker-domain-label').textContent=gamingCfg.worker_domain||'—';
-    document.getElementById('gaming-best-ip').textContent=gamingCfg.best_ip||'—';
-    document.getElementById('gaming-best-ms').textContent=gamingCfg.best_ip_ms?('تأخیر: '+toFa(Math.round(gamingCfg.best_ip_ms))+' ms'):(gamingCfg.last_scan_ts?('اسکن قدیمی — دوباره اسکن کن'):'هنوز اسکن نشده');
-    // حالت ضد ضریب + ترنسپورت از config
-    const am=document.getElementById('gaming-anti-mode');
-    if(am&&gamingCfg.anti_dpi_mode)am.value=gamingCfg.anti_dpi_mode;
-    const tr=document.getElementById('gaming-transport');
-    if(tr&&gamingCfg.transport)tr.value=gamingCfg.transport;
-    gamingUpdateAntiDesc();
-    if(am)am.onchange=()=>{gamingUpdateAntiDesc();gamingSavePrefs()};
-    if(tr)tr.onchange=()=>{gamingSavePrefs()};
-    gamingRenderPresets();
-    gamingRenderLocTemplates();
-    if(gamingCfg.ready){gamingRefreshLocations(true,false);gamingLoadInbounds(null)}
-    loadEgressSummary();
-    if(gamingCfg.best_ip){document.getElementById('gaming-override-ip').value=gamingCfg.best_ip}
-  }catch(e){console.error('loadGamingPage',e);toast('خطا در بارگذاری مرکز گیمینگ','err')}
-}
-/* ══════════════════════════════════════════════════════════════════════════
-   PHASE 38 — مسیریابی هوشمند (pg-routing) + حساب‌ها (pg-accounts)
-   همه‌ی ادعاها از API واقعی می‌آیند؛ هیچ چیز hardcode نیست.
-   ══════════════════════════════════════════════════════════════════════════ */
-let rtPolicy='ALL_VPN';
-async function loadRoutingPage(){
-  try{
-    const [pol, st] = await Promise.all([
-      authF('/api/domestic/policy').then(r=>r.ok?r.json():null),
-      authF('/api/domestic/status').then(r=>r.ok?r.json():null)
-    ]);
-    if(pol){
-      rtPolicy=pol.active_policy;
-      routingRenderMode();
-      const d=document.getElementById('rt-mode-detail');
-      if(d){
-        const iran = pol.active_policy==='IRAN_DIRECT';
-        d.innerHTML = iran
-          ? '<b style="color:#F97316">🇮🇷 مقصدهای ایرانی:</b> DIRECT از ISP خود کاربر (خروج: USER_ISP — VPN دور زده می‌شود)<br><b style="color:#38BDF8">🌍 مقصدهای بین‌المللی:</b> VPN از نود خروج EMIX انتخاب‌شده<br><b style="color:var(--t3)">مجهول:</b> طبق سیاست پیش‌فرض (VPN)'
-          : '<b style="color:#38BDF8">🌍 همه‌ی ترافیک:</b> از تونل EMIX عبور می‌کند (داخلی و بین‌المللی)<br><b style="color:var(--t3)">حالت «مستقیم ایرانی» برای عبور ترافیک داخلی از ISP خودتان در دسترس است.</b>';
-        if(pol.dns&&pol.dns.recommended){d.innerHTML+='<div style="font-size:11px;color:var(--t3);margin-top:6px">DNS توصیه‌شده: '+esc(pol.dns.recommended)+'</div>'}
-      }
-    }
-    if(st){
-      const ds=st.dataset||{};
-      document.getElementById('rt-prefix-count').textContent=toFa(ds.prefix_count||0);
-      document.getElementById('rt-dataset-body').innerHTML=
-        '<div>پیشوندها: <b>'+toFa(ds.prefix_count||0)+'</b> (IPv4+IPv6)</div>'+
-        '<div>منبع: <b style="direction:ltr;display:inline-block">'+esc(ds.source_name||ds.source||'—')+'</b></div>'+
-        '<div>نسخه: <b>'+(ds.version?toFa(new Date(ds.version*1000).toLocaleDateString('fa-IR')):'—')+'</b></div>'+
-        '<div>آخرین دریافت: <b>'+(ds.fetched_at?toFa(new Date(ds.fetched_at*1000).toLocaleString('fa-IR')):'—')+'</b></div>'+
-        '<div>checksum: <b style="font-family:monospace;font-size:10px;direction:ltr;display:inline-block">'+esc((ds.checksum||'—').slice(0,16))+'…</b></div>'+
-        '<div>اعتماد: <b>'+esc(ds.confidence||'UNKNOWN')+'</b></div>';
-      const ta=st.traffic_accounting||{};
-      document.getElementById('rt-traffic-body').innerHTML=
-        '<div>🇮🇷 DOMESTIC_DIRECT: <b>'+fmtB(ta.DOMESTIC_DIRECT?tva(ta.DOMESTIC_DIRECT):0)+'</b> · '+toFa((ta.DOMESTIC_DIRECT&&ta.DOMESTIC_DIRECT.connections)||0)+' اتصال</div>'+
-        '<div>🌍 INTERNATIONAL_VPN: <b>'+fmtB(ta.INTERNATIONAL_VPN?tva(ta.INTERNATIONAL_VPN):0)+'</b> · '+toFa((ta.INTERNATIONAL_VPN&&ta.INTERNATIONAL_VPN.connections)||0)+' اتصال</div>'+
-        '<div>❓ UNKNOWN: <b>'+fmtB(ta.UNKNOWN?tva(ta.UNKNOWN):0)+'</b></div>';
-      const sm=st.split_tunnel_clients||{};
-      let rows='';
-      for(const [c,v] of Object.entries(sm)){
-        rows+='<div>'+esc(c)+': <span class="badge '+(v==='SPLIT_TUNNEL_SUPPORTED'?'bg-green':'bg-amber')+'">'+(v==='SPLIT_TUNNEL_SUPPORTED'?'پشتیبانی می‌شود':'SPLIT_TUNNEL_NOT_SUPPORTED')+'</span></div>';
-      }
-      document.getElementById('rt-split-body').innerHTML=rows+'<div style="font-size:10.5px;color:var(--t3);margin-top:6px">تنها کلاینت‌هایی که واقعاً قادر به اعمال قواعد مسیر در سطح route هستند پشتیبانی می‌شوند — بقیه صادقانه NOT_SUPPORTED گزارش می‌شوند.</div>';
-    }
-  }catch(e){netErr(e,'loadRoutingPage')}
-  irdLoad();   /* 🇮🇷 IRAN DIRECT builder (IP سالم + هندشیک) — بلاک ایزوله */
-}
-function tva(row){return (row.bytes_sent||0)+(row.bytes_received||0)}
-function routingRenderMode(){
-  document.getElementById('rt-mode-allvpn').classList.toggle('sel',rtPolicy==='ALL_VPN');
-  document.getElementById('rt-mode-irandirect').classList.toggle('sel',rtPolicy==='IRAN_DIRECT');
-  const b=document.getElementById('routing-mode-badge');
-  b.textContent=rtPolicy==='IRAN_DIRECT'?'IRAN_DIRECT':'ALL_VPN';
-  b.className='badge '+(rtPolicy==='IRAN_DIRECT'?'bg-amber':'bg-blue');
-}
-async function routingSetMode(mode){
-  if(mode!=='ALL_VPN'&&mode!=='IRAN_DIRECT')return;
-  try{
-    const r=await authF('/api/domestic/policy',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({policy:mode})});
-    if(!r.ok){const j=await r.json().catch(()=>({}));toast(j.error||('خطا در تغییر حالت'),'err');return}
-    rtPolicy=mode;routingRenderMode();loadRoutingPage();
-    toast('حالت مسیریابی: '+mode,'ok');
-  }catch(e){netErr(e,'routingSetMode')}
-}
-async function routingTestRoute(){
-  const inp=document.getElementById('rt-test-input');
-  const dest=(inp.value||'').trim();
-  const out=document.getElementById('rt-test-result');
-  if(!dest){toast('یک دامنه یا IP وارد کنید','err');return}
-  out.style.display='block';out.innerHTML='<div style="font-size:12px;color:var(--t3)">در حال تست مسیر…</div>';
-  try{
-    const r=await authF('/api/domestic/test-route',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({destination:dest})});
-    if(!r.ok){out.innerHTML='<div class="badge bg-red">خطا در تست مسیر</div>';return}
-    const v=await r.json();
-    const clsColor={'IRAN_DOMESTIC':'bg-amber','NON_IRAN':'bg-blue','UNKNOWN':'bg-gray'}[v.classification]||'bg-gray';
-    const decColor={'DIRECT':'bg-green','VPN':'bg-blue','BLOCK':'bg-red'}[v.decision]||'bg-gray';
-    out.innerHTML=
-      '<div style="padding:14px;background:var(--bg);border-radius:12px;border:1px solid var(--card-b);font-size:12px;line-height:2.2">'+
-      '<div>مقصد: <b style="direction:ltr;display:inline-block">'+esc(v.destination)+'</b></div>'+
-      '<div>IP حل‌شده: <b style="direction:ltr;font-family:monospace">'+esc(v.resolved_ip||'—')+'</b> <span style="color:var(--t3)">('+esc(v.resolved_by||'')+')</span></div>'+
-      '<div>طبقه‌بندی: <span class="badge '+clsColor+'">'+esc(v.classification)+'</span>'+(v.matched_prefix?' <span style="font-family:monospace;font-size:10.5px;color:var(--t3);direction:ltr;display:inline-block">'+esc(v.matched_prefix)+'</span>':'')+'</div>'+
-      '<div>قاعده اعمال‌شده: <b>'+esc(v.policy_name||'')+'</b> <span style="color:var(--t3);font-size:11px">{iran:'+esc((v.policy||{}).iran)+', intl:'+esc((v.policy||{}).international)+', unknown:'+esc((v.policy||{}).unknown)+'}</span></div>'+
-      '<div>تصمیم مسیر: <span class="badge '+decColor+'">'+esc(v.decision)+'</span></div>'+
-      '<div>VPN دور زده شد؟ <b>'+(v.vpn_bypassed?'بله (BYPASSED)':'نه (از تونل)')+'</b></div>'+
-      '<div>خروج واقعی: <b style="color:'+(v.egress==='USER_ISP'?'#F97316':'#38BDF8')+'">'+esc(v.egress)+'</b> <span style="color:var(--t3);font-size:11px">'+esc(v.egress_note||'')+'</span></div>'+
-      (v.domestic_status?'<div>وضعیت داخلی: <b>'+esc(v.domestic_status)+'</b></div>':'')+
-      (v.notes&&v.notes.length?('<div style="color:var(--amber-t);font-size:11px">'+v.notes.map(esc).join(' · ')+'</div>'):'')+
-      '</div>';
-  }catch(e){netErr(e,'routingTestRoute')}
-}
-async function routingUpdateRules(btn){
-  const out=document.getElementById('rt-rules-result');
-  if(btn){btn.disabled=true;btn.innerHTML='در حال به‌روزرسانی…'}
-  try{
-    const r=await authF('/api/domestic/rules/update',{method:'POST'});
-    const j=await r.json().catch(()=>({}));
-    out.style.display='block';
-    if(j.ok){out.innerHTML='<span class="badge bg-green">موفق</span> '+toFa(j.applied||0)+' پیشوند اعمال شد (نسخه '+toFa(j.version||'')+')';loadRoutingPage()}
-    else{out.innerHTML='<span class="badge bg-amber">ناموفق</span> '+esc(j.error||'')+' — <b>دیتاست قبلی حفظ شد</b>'}
-  }catch(e){netErr(e,'routingUpdateRules')}
-  finally{if(btn){btn.disabled=false;btn.innerHTML='<i class="ti ti-cloud-download"></i> به‌روزرسانی اتمی از RIPEstat'}}
-}
-
-/* ── حساب‌ها ─────────────────────────────────────────────────────────────── */
-async function loadAccountsPage(){
-  try{
-    const r=await authF('/api/accounts');
-    if(!r.ok){toast('خطا در بارگذاری حساب‌ها','err');return}
-    const j=await r.json();
-    const list=j.accounts||[];
-    document.getElementById('accounts-count').textContent=toFa(list.length)+' حساب';
-    document.getElementById('accounts-nb').textContent=toFa(list.length);
-    const wrap=document.getElementById('ac-list');const empty=document.getElementById('ac-empty');
-    if(!list.length){wrap.innerHTML='';empty.style.display='block';return}
-    empty.style.display='none';
-    wrap.innerHTML=list.map(a=>accountsRenderCard(a)).join('');
-    list.forEach(a=>accountLoadDetail(a.id));
-  }catch(e){netErr(e,'loadAccountsPage')}
-}
-function accountsRenderCard(a){
-  const statusChip=a.status==='ACTIVE'?'<span class="ac-status-chip" style="background:rgba(74,222,128,.15);color:#4ADE80">ACTIVE</span>':'<span class="ac-status-chip" style="background:rgba(239,68,68,.15);color:#F87171">DISABLED</span>';
-  const quota=a.traffic_quota_bytes
-    ?'<div>مصرف: <b>'+fmtB(a.used_bytes)+'</b> از '+fmtB(a.traffic_quota_bytes)+(a.quota_used_pct!=null?' ('+toFa(a.quota_used_pct)+'٪)':'')+(a.over_quota?' <span class="badge bg-red">QUOTA_EXCEEDED</span>':'')+'</div>'
-    :'<div>مصرف: <b>'+fmtB(a.used_bytes)+'</b> (نامحدود)</div>';
-  const expiry=a.expires_at_iso?'<div>انقضا: <b>'+toFa(a.expires_at_iso)+'</b>'+(a.expired?' <span class="badge bg-red">EXPIRED</span>':'')+'</div>':'<div>انقضا: بی‌نهایت</div>';
-  return '<div class="ac-card" id="ac-'+esc(a.id)+'">'+
-    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'+
-      '<div style="font-weight:800;font-size:14px"><i class="ti ti-user"></i> '+esc(a.username)+'</div>'+statusChip+
-    '</div>'+
-    '<div style="font-size:12px;line-height:2;color:var(--t2)">'+
-      '<div style="font-family:monospace;font-size:10px;color:var(--t3);direction:ltr">'+esc(a.id)+'</div>'+
-      quota+expiry+
-      '<div>سقف دستگاه: <b>'+toFa(a.max_devices)+'</b> · سقف سشن: <b>'+toFa(a.max_concurrent_sessions)+'</b></div>'+
-    '</div>'+
-    '<div id="ac-dev-'+esc(a.id)+'" style="margin-top:10px"><div style="font-size:11px;color:var(--t3)">در حال بارگذاری دستگاه‌ها…</div></div>'+
-    '<div id="ac-sub-'+esc(a.id)+'" style="margin-top:8px"></div>'+
-    '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:12px">'+
-      (a.status==='ACTIVE'
-        ?'<button class="btn btn-o btn-sm" onclick="accountSetStatus(\''+a.id+'\',\'DISABLED\')"><i class="ti ti-ban"></i> غیرفعال</button>'
-        :'<button class="btn btn-o btn-sm" onclick="accountSetStatus(\''+a.id+'\',\'ACTIVE\')"><i class="ti ti-check"></i> فعال</button>')+
-      '<button class="btn btn-blue btn-sm" onclick="accountAddDevice(\''+a.id+'\')"><i class="ti ti-device-mobile-plus"></i> دستگاه جدید</button>'+
-      '<button class="btn btn-g btn-sm" onclick="accountAddSub(\''+a.id+'\')"><i class="ti ti-rss"></i> اشتراک جدید</button>'+
-    '</div></div>';
-}
-async function accountsCreate(){
-  const u=document.getElementById('ac-username').value.trim();
-  const p=document.getElementById('ac-password').value;
-  const q=parseFloat(document.getElementById('ac-quota').value)||null;
-  const e=parseFloat(document.getElementById('ac-expiry').value)||null;
-  const md=parseInt(document.getElementById('ac-maxdev').value)||5;
-  const ms=parseInt(document.getElementById('ac-maxses').value)||3;
-  if(!u||!p||p.length<8){toast('نام کاربری و رمز (حداقل ۸ کاراکتر) الزامی است','err');return}
-  try{
-    const r=await authF('/api/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p,traffic_quota_gb:q,expires_in_days:e,max_devices:md,max_concurrent_sessions:ms})});
-    if(!r.ok){const j=await r.json().catch(()=>({}));toast(j.error||'خطا در ایجاد حساب','err');return}
-    toast('حساب ساخته شد','ok');
-    document.getElementById('ac-username').value='';document.getElementById('ac-password').value='';
-    loadAccountsPage();
-  }catch(err){netErr(err,'accountsCreate')}
-}
-async function accountSetStatus(id,status){
-  try{
-    const r=await authF('/api/accounts/'+id+'/status?status='+status,{method:'POST'});
-    if(!r.ok){toast('خطا در تغییر وضعیت','err');return}
-    toast('وضعیت: '+status,'ok');loadAccountsPage();
-  }catch(e){netErr(e,'accountSetStatus')}
-}
-async function accountAddDevice(id){
-  const name=prompt('نام دستگاه:','my-phone');if(name===null)return;
-  const platform=prompt('پلتفرم (android/ios/windows/…):','android')||'unknown';
-  try{
-    const r=await authF('/api/accounts/'+id+'/devices',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,platform})});
-    const j=await r.json().catch(()=>({}));
-    if(!r.ok){toast(j.error||'خطا در ثبت دستگاه','err');return}
-    if(j.access_token){
-      const box=document.getElementById('ac-dev-'+id);
-      box.insertAdjacentHTML('afterbegin','<div style="padding:10px;border:1px dashed var(--accent);border-radius:10px;margin-bottom:8px;font-size:12px"><b>توکن دستگاه (فقط همین یک‌بار نمایش داده می‌شود):</b><div style="font-family:monospace;direction:ltr;margin-top:6px;user-select:all">'+esc(j.access_token)+'</div><div style="font-size:10.5px;color:var(--t3);margin-top:4px">این توکن در لاگ‌ها ذخیره نمی‌شود — الان کپی کنید.</div></div>');
-    }
-    toast('دستگاه ثبت شد','ok');
-  }catch(e){netErr(e,'accountAddDevice')}
-}
-async function deviceRevoke(id,accId){
-  if(!confirm('این دستگاه باطل (revoke) شود؟'))return;
-  try{
-    const r=await authF('/api/devices/'+id+'/revoke',{method:'POST'});
-    if(!r.ok){toast('خطا در ابطال دستگاه','err');return}
-    toast('دستگاه باطل شد','ok');accountLoadDetail(accId);
-  }catch(e){netErr(e,'deviceRevoke')}
-}
-async function accountAddSub(id){
-  const days=parseFloat(prompt('مدت اشتراک (روز — خالی = بی‌نهایت):','30'));if(days===null&&days!==null)0;
-  const routePolicy=confirm('سیاست مسیر: IRAN_DIRECT؟\n(OK = ایرانی مستقیم · Cancel = ALL_VPN)')?'IRAN_DIRECT':'ALL_VPN';
-  try{
-    const r=await authF('/api/accounts/'+id+'/subscriptions',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({expires_in_days:isNaN(days)?null:days,route_policy:routePolicy})});
-    const j=await r.json().catch(()=>({}));
-    if(!r.ok){toast(j.error||'خطا در ایجاد اشتراک','err');return}
-    toast('اشتراک ساخته شد','ok');accountLoadDetail(id);
-  }catch(e){netErr(e,'accountAddSub')}
-}
-async function accountLoadDetail(id){
-  try{
-    const r=await authF('/api/accounts/'+id);
-    if(!r.ok)return;
-    const a=await r.json();
-    const devBox=document.getElementById('ac-dev-'+id);
-    if(devBox&&a.devices){
-      devBox.innerHTML='<div style="font-size:12px;font-weight:700;margin-bottom:6px"><i class="ti ti-devices"></i> دستگاه‌ها ('+toFa(a.devices.length)+')</div>'+
-        (a.devices.length?a.devices.map(d=>
-          '<div class="ac-dev-row">'+
-          '<i class="ti ti-device-mobile" style="color:'+(d.revoked?'var(--t3)':'#38BDF8')+'"></i>'+
-          '<b>'+esc(d.name)+'</b><span style="color:var(--t3);font-size:10.5px">'+esc(d.platform)+'</span>'+
-          '<span style="flex:1"></span>'+
-          (d.revoked?'<span class="badge bg-red">REVOKED</span>':(d.connection_state==='CONNECTED'?'<span class="badge bg-green">CONNECTED</span>':'<span style="font-size:10.5px;color:var(--t3)">'+(d.last_seen_iso?('آخرین اتصال: '+toFa(d.last_seen_iso)):'بدون اتصال')+'</span>'))+
-          (d.revoked?'':'<button class="btn btn-o btn-sm" style="padding:2px 8px" onclick="deviceRevoke(\''+d.device_id+'\',\''+id+'\')"><i class="ti ti-ban"></i></button>')+
-          '</div>').join(''):'<div style="font-size:11px;color:var(--t3)">بدون دستگاه</div>');
-    }
-    const subBox=document.getElementById('ac-sub-'+id);
-    if(subBox&&a.subscriptions){
-      subBox.innerHTML='<div style="font-size:12px;font-weight:700;margin-bottom:6px"><i class="ti ti-rss"></i> اشتراک‌ها ('+toFa(a.subscriptions.length)+')</div>'+
-        (a.subscriptions.length?a.subscriptions.map(s=>{
-          const c={'ACTIVE':'bg-green','EXPIRED':'bg-amber','REVOKED':'bg-red','SUSPENDED':'bg-amber','DRAINING':'bg-blue'}[s.status]||'bg-gray';
-          return '<div class="ac-dev-row" style="font-size:11px"><span class="badge '+c+'">'+esc(s.status)+'</span>'+
-          '<span style="font-family:monospace;direction:ltr;font-size:10px">'+esc(s.subscription_id)+'</span>'+
-          '<span style="flex:1"></span><span style="color:var(--t3)">'+esc(s.route_policy)+' · '+esc(s.protocol)+'</span>'+
-          (s.expires_at_iso?('<span style="color:var(--t3)">تا '+toFa(s.expires_at_iso)+'</span>'):'')+'</div>';
-        }).join(''):'<div style="font-size:11px;color:var(--t3)">بدون اشتراک</div>');
-    }
-  }catch(e){netErr(e,'accountLoadDetail')}
-}
-
-/* توضیح داینامیک حالت ضد ضریب */
-function gamingUpdateAntiDesc(){
-  const box=document.getElementById('gaming-anti-desc');
-  if(!box)return;
-  const modes=gamingCfg.anti_dpi_modes||{};
-  const m=modes[document.getElementById('gaming-anti-mode').value]||modes.balanced||{};
-  const trans=(gamingCfg.transport_options||{})[document.getElementById('gaming-transport').value]||{};
-  box.innerHTML='<b>'+m.label+'</b> — '+(m.desc||'')+'<br><b>'+ (trans.label||'') +'</b> — '+(trans.desc||'');
-}
-async function gamingSavePrefs(){
-  try{
-    const body={anti_dpi_mode:document.getElementById('gaming-anti-mode').value,
-      transport:document.getElementById('gaming-transport').value};
-    await authF('/api/gaming/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-  }catch(e){/* بی‌صدا */}
-}
-/* ─── قالب‌های لوکیشن رایگان ─── */
-function gamingRenderLocTemplates(){
-  const grid=document.getElementById('gaming-loc-templates');
-  if(!grid)return;
-  const tpls=gamingCfg.location_templates||{};
-  const keys=Object.keys(tpls);
-  if(!keys.length){grid.innerHTML='';return}
-  grid.innerHTML=keys.map(k=>{
-    const t=tpls[k];
-    const isWiz=!!t.wizard;
-    return `<div style="padding:12px;background:var(--bg);border-radius:12px;border:1px solid ${isWiz?'var(--green-t)':'var(--card-b)'}">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-        <span style="font-size:18px">${t.flag||'📍'}</span>
-        <div style="flex:1;font-weight:700;font-size:11.5px;line-height:1.5">${t.label}</div>
-      </div>
-      <div style="font-size:10.5px;color:var(--t2);line-height:1.7;margin-bottom:8px">${t.region_hint||''} · <b>${t.best_for||''}</b></div>
-      <div style="font-size:10px;color:var(--green-t);margin-bottom:8px"><i class="ti ti-gift"></i> ${t.free||''}</div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap">
-        ${isWiz?`<button class="btn btn-sm btn-blue" onclick="gamingExitWizard(null)"><i class="ti ti-package-export"></i> بسته بساز</button>`:''}
-        <button class="btn btn-sm btn-g" onclick="gamingUseLocTemplate('${k}')"><i class="ti ti-forms"></i> پرکردن فرم</button>
-        <button class="btn btn-sm" onclick="gamingShowTplSteps('${k}',this)"><i class="ti ti-list-check"></i> راهنما</button>
-      </div>
-      <div class="gaming-tpl-steps" style="display:none;margin-top:10px;font-size:10.5px;color:var(--t3);line-height:2">
-        <ol style="margin:0;padding-right:16px;list-style:persian">${(t.steps||[]).map(s=>`<li>${s}</li>`).join('')}</ol>
-      </div>
-    </div>`}).join('');
-}
-function gamingShowTplSteps(key,btn){
-  const card=btn.closest('div[class]');
-  const box=btn.parentElement.parentElement.querySelector('.gaming-tpl-steps');
-  if(box){box.style.display=box.style.display==='none'?'':'none'}
-}
-function gamingUseLocTemplate(key){
-  const t=(gamingCfg.location_templates||{})[key];
-  if(!t){toast('قالب پیدا نشد','err');return}
-  const set=(id,v)=>{const el=document.getElementById(id);if(el)el.value=v};
-  set('gaming-loc-name',t.code||key);
-  set('gaming-loc-label',(t.label||'').replace(/^[^\s—]+\s—\s/,''));
-  set('gaming-loc-flag',t.flag&&t.flag.length<=4?t.flag:'📍');
-  if(t.wizard){document.getElementById('gaming-loc-upstream').value='';document.getElementById('gaming-loc-upstream').placeholder='بعد از deploy بسته، دامنه‌ی xxx.up.railway.app را اینجا بگذار';}
-  toast('قالب «'+t.label+'» در فرم پر شد — بعد از deploy فقط دامنه را اضافه کن','ok');
-  document.getElementById('gaming-loc-name').scrollIntoView({behavior:'smooth',block:'center'});
-}
-function gamingRenderPresets(){
-  const grid=document.getElementById('gaming-presets-grid');
-  if(!grid)return;
-  const p=gamingCfg.presets||{};
-  grid.innerHTML=Object.entries(p).map(([k,g])=>`
-    <div style="padding:14px;background:var(--bg);border-radius:12px;border:1px solid var(--card-b)">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-        <span style="font-size:20px">${g.icon}</span>
-        <div><div style="font-weight:700;font-size:12.5px">${g.label}</div>
-        <div style="font-size:10.5px;color:var(--t3)">${(g.server_regions||[]).join(' · ')}</div></div>
-      </div>
-      <div style="font-size:11px;color:var(--t2);line-height:1.7;margin-bottom:8px">${g.why}</div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
-        <span class="badge bg-blue" style="font-size:10px">${g.est_ping_direct}</span>
-        <span class="badge bg-purple" style="font-size:10px">پیشنهاد: ${g.best_location==='tr'?'ترکیه 🇹🇷':'auto 🌍'}</span>
-      </div>
-      <ul style="margin:0;padding-right:16px;font-size:10.5px;color:var(--t3);list-style:disc;line-height:1.8">${(g.tips||[]).map(t=>`<li>${t}</li>`).join('')}</ul>
-    </div>`).join('');
-}
-async function gamingSaveConfig(){
-  try{
-    const body={worker_domain:document.getElementById('gaming-worker-domain').value.trim(),
-      vps_ip:document.getElementById('gaming-vps-ip').value.trim(),
-      vps_port:parseInt(document.getElementById('gaming-vps-port').value)||443,
-      anti_dpi_mode:document.getElementById('gaming-anti-mode').value,
-      transport:document.getElementById('gaming-transport').value};
-    const tok=document.getElementById('gaming-worker-token').value.trim();
-    if(tok)body.worker_token=tok;
-    const r=await authF('/api/gaming/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-    if(!r.ok){toast('ذخیره ناموفق','err');return}
-    const j=await r.json();
-    if(j.ok){toast('تنظیمات گیمینگ ذخیره شد','ok');loadGamingPage()}else{toast(j.error||'خطا','err')}
-  }catch(e){toast('خطا','err')}
-}
-async function gamingCheckWorker(){
-  try{
-    const r=await authF('/api/gaming/status');
-    if(!r.ok){toast('خطا در تست گیت‌وی','err');return}
-    const j=await r.json();
-    const box=document.getElementById('gaming-worker-result');
-    box.style.display='';
-    if(!j.ok){
-      document.getElementById('gaming-colo').textContent='—';
-      box.innerHTML='<span style="color:var(--red-t)">✗</span> '+(j.error||'گیت‌وی در دسترس نیست');
-      document.getElementById('gaming-worker-status').textContent='خطا';
-      return;
-    }
-    document.getElementById('gaming-worker-status').textContent='سالم ✓';
-    const locs=j.locations||[];
-    document.getElementById('gaming-loc-count').textContent=toFa(locs.length)+' لوکیشن';
-    document.getElementById('gaming-loc-list').textContent=locs.map(l=>(l.flag||'')+' '+l.name).join('، ')||'—';
-    gamingFillLocSelect(locs);
-    // PoP از دید خود مرورگر کاربر (کال مستقیم به worker — CORS باز است)
-    let browserPop='—',browserCity='';
-    try{
-      const wd=(document.getElementById('gaming-worker-domain').value||'').trim();
-      if(wd){
-        const br=await fetch('https://'+wd+'/gateway-status',{cache:'no-store'});
-        if(br.ok){const bj=await br.json();
-          browserPop=COLO_NAMES[bj.colo]||bj.colo||'—';browserCity=bj.city||'';}
-      }
-    }catch(e){browserPop='نامشخص'}
-    document.getElementById('gaming-colo').textContent=browserPop;
-    document.getElementById('gaming-colo-city').textContent='شهر: '+(browserCity||'—');
-    box.innerHTML='<span style="color:var(--green-t)">✓ گیت‌وی سالم</span> — نسخه <b dir="ltr">'+(j.version||'?')+'</b><br>'+
-      'PoP مرورگر شما: <b>'+browserPop+'</b>'+(browserCity?' ('+browserCity+')':'')+'<br>'+
-      'KV متصل: '+(j.kv_bound?'<span style="color:var(--green-t)">بله</span>':'<span style="color:var(--amber-t)">خیر — لوکیشن داینامیک غیرفعال</span>')+
-      ' · توکن: '+(j.token_set?'<span style="color:var(--green-t)">ست شده</span>':'<span style="color:var(--amber-t)">ست نشده</span>')+'<br>'+
-      'لوکیشن‌ها: '+locs.map(l=>`<span class="badge bg-blue" style="font-size:10px;margin:2px">${l.flag||''} ${l.name}</span>`).join(' ');
-    toast('گیت‌وی تست شد','ok');
-  }catch(e){toast('خطا','err')}
-}
-/* ══════ حقیقت مسیر و خروج — CONTROL PLANE / EXIT NODE / REAL EGRESS ══════ */
-const EG_CLASS_FA={VERIFIED_EGRESS:['bg-green','خروج تأییدشده (اندازه‌گیری واقعی)'],
-                   CONFIGURED_ONLY:['bg-amber','فقط تنظیم‌شده — بدون اندازه‌گیری'],
-                   UNKNOWN:['bg-blue','نامشخص — تأیید نشده']};
-function egBadge(cls){const b=EG_CLASS_FA[cls]||EG_CLASS_FA.UNKNOWN;return `<span class="badge ${b[0]}" style="font-size:10px">${b[1]}</span>`}
-const LAT_FA={control_plane_rtt:'RTT کنترل‌پلین (مرورگر→پنل)',node_rtt:'RTT نود (پنل→وورکر/نود)',
-              route_rtt:'RTT مسیر (وورکر→upstream→IP-check)',protocol_handshake_rtt:'RTT هندشیک پروتکل'};
-async function loadEgressSummary(){
-  try{
-    const r=await authF('/api/egress/summary');
-    if(!r.ok)return;
-    const j=await r.json();
-    if(!j.ok)return;
-    const cp=(j.control_plane||{}),pe=(cp.egress||{}),ev=(pe.egress||{});
-    const h=document.getElementById('eg-cp-host');if(h)h.textContent=cp.host||'—';
-    const en=document.getElementById('eg-exit-node');
-    if(en){
-      const exits=j.exit_nodes||[];
-      en.textContent=exits.length?(exits[0].label||exits[0].name)+' (+ '+toFa(exits.length-1)+' نود دیگر)':'تنظیم نشده';
-    }
-    const nt=document.getElementById('eg-exit-note');
-    if(nt)nt.textContent=(j.exit_nodes_count?('نودهای خروج: '+toFa(j.exit_nodes_count)+' — اتصال از مسیر ریل‌لی'):'بدون نود خروج، ترافیک از همین نود (کنترل‌پلین) خارج می‌شود');
-    const ip=document.getElementById('eg-real-ip');
-    if(ip)ip.textContent=ev.public_ip||'— (اندازه‌گیری نشده)';
-    const sb=document.getElementById('eg-real-sub');
-    if(sb)sb.textContent=ev.public_ip?((ev.country||ev.country_code||'?')+' · '+(ev.isp||'?')+' · '+(ev.ip_family||'')+' · منبع: '+(ev.measurement_source||'?')):'فقط با اندازه‌گیری واقعی تأیید می‌شود — نه با مقدار تنظیم‌شده';
-    const st=document.getElementById('eg-status-badge');
-    if(st){
-      const cls=pe.classification||'UNKNOWN';
-      st.textContent=cls==='VERIFIED_EGRESS'?'VERIFIED':'DIRECT';
-      st.className='badge '+(EG_CLASS_FA[cls]||['bg-blue',''])[0];
-    }
-    const sn=document.getElementById('eg-status-note');
-    if(sn)sn.textContent=cp.note?('کنترل‌پلین: '+cp.host):'';
-  }catch(e){console.warn('loadEgressSummary',e)}
-}
-async function verifyPanelEgress(btn){
-  const ic=btn?btn.querySelector('i'):null;
-  if(ic){ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite';if(btn)btn.disabled=true}
-  const out=document.getElementById('eg-verify-result');
-  try{
-    const r=await authF('/api/egress/verify?target=panel');
-    const j=await r.json();
-    if(j&&j.ok!==undefined&&j.classification){
-      const ev=j.egress||{};
-      if(out)out.innerHTML=ev.public_ip?('<b dir="ltr" style="font-family:monospace">'+ev.public_ip+'</b> · '+(ev.country||ev.country_code||'?')+' · '+(ev.isp||'?')+' · '+(ev.ip_family||'')+' <span style="color:var(--t3)">('+(ev.measurement_source||'?')+')</span> '+egBadge(j.classification)):(egBadge(j.classification)+(j.error?(' — '+(j.error||'').slice(0,80)):''));
-      loadEgressSummary();
-      toast('IP خروج پنل اندازه‌گیری شد','ok');
-    }
-  }catch(e){if(out)out.textContent='خطا در اندازه‌گیری';toast('خطا','err')}
-  finally{if(ic){ic.className='ti ti-radar-2';ic.style.animation='';if(btn)btn.disabled=false}}
-}
-function gamingFillLocSelect(locs){
-  const sel=document.getElementById('gaming-location');
-  if(!sel)return;
-  const cur=sel.value;
-  // ✨ حقیقت مسیر: فقط لوکیشن‌هایی که upstream غیر-ریلوی دارند «نود خروج واقعی»‌اند؛
-  // بقیه فقط نام مسیر هستند — خروجشان از Railway (کنترل‌پلین) است.
-  sel.innerHTML='<option value="auto">🌍 auto — Railway (کنترل‌پلین) — خروج از همین نود</option>'+locs.filter(l=>l.name!=='auto')
-    .map(l=>{
-      const isRail=(l.upstream||'').includes('railway.app');
-      const pend=l.pending||isRail;
-      const tag=pend?' ⚠ بدون نود خروج — خروج: Railway (کنترل‌پلین)':' ✓ نود خروج واقعی (تأییدشده)';
-      return `<option value="${l.name}">${l.flag||''} ${l.label||l.name}${tag}</option>`;
-    }).join('');
-  if(cur)sel.value=cur;
-}
-/* ─── بررسی IP خروج واقعی برای لوکیشن انتخابی — از موتور حقیقت خروج ─── */
-const LOC_CC={tr:'TR',de:'DE',nl:'NL',fr:'FR',ae:'AE',ru:'RU',us:'US',uk:'GB',sg:'SG',
-              fi:'FI',se:'SE',ch:'CH',at:'AT',es:'ES',it:'IT',pl:'PL',ro:'RO',
-              bg:'BG',cz:'CZ',hu:'HU',md:'MD',am:'AM',az:'AZ',kz:'KZ',uz:'UZ'};
-async function gamingCheckExitIP(btn){
-  const ic=btn?btn.querySelector('i'):null;
-  if(ic){ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite';if(btn)btn.disabled=true}
-  const out=document.getElementById('gaming-exit-result');
-  if(out){out.style.display='block';out.innerHTML='<span style="color:var(--t3)"><i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i> اعتبارسنجی ۹ مرحله‌ای مسیر: رزولو → اتصال → تأیید نود → تأیید مسیر → اندازه‌گیری خروج واقعی → مقایسه...</span>'}
-  try{
-    const loc=document.getElementById('gaming-location').value||'auto';
-    const wd=(document.getElementById('gaming-worker-domain').value||'').trim();
-    if(!wd){toast('اول دامنه‌ی وورکر را در تنظیمات گیمینگ وارد کنید','err');return}
-    // انتظار کاربر = کشورِ انتخابی (کلید ۲ حرفی لوکیشن) — موتور مقایسه می‌کند:
-    // expected != observed → ROUTE_MISMATCH (هرگز HEALTHY دروغ نمی‌زند)
-    const expC=(loc!=='auto'&&loc.length===2)?(LOC_CC[loc]||loc.toUpperCase()):null;
-    const r=await authF('/api/egress/validate-route',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:loc,expected_country:expC})});
-    const j=await r.json();
-    if(!out)return;
-    renderRouteVerdict(out,j,wd);
-    if(j.ok){toast(`IP خروج: ${((j.egress||{}).egress||{}).public_ip||'نامشخص'} (${((j.egress||{}).egress||{}).country_code||'?'})`,'ok')}
-    else if(j.route_health==='ROUTE_MISMATCH'){toast('عدم تطابق مسیر: کشور خروج با انتظار فرق دارد','err')}
-    else if(j.route_health==='NO_EXIT_NODE_AVAILABLE'){toast('نود خروج واقعی برای این لوکیشن ثبت نشده','err')}
-  }catch(e){
-    if(out)out.innerHTML=`<div style="color:var(--red-t)"><i class="ti ti-alert-circle"></i> خطا: ${e.message||e}</div>`;
-    toast('خطا در اعتبارسنجی مسیر','err');
-  }finally{
-    if(ic){ic.className='ti ti-world';ic.style.animation='';if(btn)btn.disabled=false}
-  }
-}
-function renderRouteVerdict(out,j,wd){
-  const ev=((j.egress||{}).egress)||{};
-  const cls=(j.egress||{}).classification||'UNKNOWN';
-  const rh=j.route_health||'UNKNOWN';
-  const exitStr=ev.public_ip?`<b dir="ltr" style="font-family:monospace;color:var(--accent2)">${ev.public_ip}</b>`:'<span style="color:var(--red-t)">اندازه‌گیری نشد</span>';
-  const locStr=[ev.country,ev.city].filter(Boolean).join(' / ')||(ev.country_code||'نامشخص');
-  const asnStr=ev.asn||'—';
-  const famStr=ev.ip_family||'—';
-  const ispStr=ev.isp||'نامشخص';
-  const rhBadge=({HEALTHY:'bg-green',ROUTE_MISMATCH:'bg-red',NO_EXIT_NODE_AVAILABLE:'bg-amber',UNREACHABLE:'bg-red',UNKNOWN:'bg-blue'})[rh]||'bg-blue';
-  const rhFa=({HEALTHY:'مسیر سالم',ROUTE_MISMATCH:'عدم تطابق مسیر',NO_EXIT_NODE_AVAILABLE:'نود خروج موجود نیست',UNREACHABLE:'مسیر در دسترس نیست',UNKNOWN:'نامشخص'})[rh]||rh;
-  const latRows=(j.latencies||[]).map(l=>`<div>⏱ ${LAT_FA[l.measure]||l.measure}: <b>${l.ms!=null?(toFa(Math.round(l.ms))+'ms'):'—'}</b></div>`).join('');
-  const cmp=(j.comparison||{});
-  const mismatch=(rh==='ROUTE_MISMATCH'&&cmp.reasons)?`<div style="margin-top:10px;padding:10px 12px;background:rgba(251,113,133,0.08);border:1px solid rgba(251,113,133,0.30);border-radius:10px;font-size:11px;line-height:1.7"><b style="color:var(--red-t)">✗ ROUTE_MISMATCH — عدم تطابق مسیر:</b><br>${cmp.reasons.map(x=>'<span dir="ltr">'+esc(String(x))+'</span>').join('<br>')}<br><span style="color:var(--t3)">این مسیر HEALTHY گزارش نمی‌شود تا وقتی مشاهده با انتظار بخورد.</span></div>`:'';
-  const noExit=(rh==='NO_EXIT_NODE_AVAILABLE')?`<div style="margin-top:10px;padding:10px 12px;background:rgba(250,204,21,0.08);border:1px solid rgba(250,204,21,0.20);border-radius:10px;font-size:11px;line-height:1.7"><b style="color:var(--amber-t)">⚠ NO_EXIT_NODE_AVAILABLE — نود خروج واقعی ثبت نشده.</b><br>ترافیک از Railway (کنترل‌پلین) خارج می‌شود. برای خروج واقعی از این کشور، upstream این لوکیشن را در وورکر به یک VPS در همان کشور تغییر دهید.<button class="btn btn-sm btn-g" style="margin-top:8px" onclick="gamingShowUpstreamGuide()"><i class="ti ti-book-2"></i> راهنمای تنظیم VPS خروج</button></div>`:'';
-  const steps=(j.steps||[]).map(s=>`<div style="display:flex;gap:6px;align-items:center;font-size:10.5px"><i class="ti ${s.ok?'ti-circle-check':'ti-circle-x'}" style="color:${s.ok?'var(--green-t)':'var(--red-t)'}"></i><b style="font-family:monospace;direction:ltr">${s.name}</b><span style="color:var(--t3)">${esc(String(s.detail||'').slice(0,90))}</span></div>`).join('');
-  out.innerHTML=`
-    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px">
-      <span class="badge ${rhBadge}" style="font-size:10px">${rhFa}</span>
-      ${egBadge(cls)}
-      <span style="font-size:11px;color:var(--t3)">لوکیشن: <b>${j.location||'auto'}</b></span>
-    </div>
-    <div style="font-size:11.5px;line-height:1.9">
-      <div>🌐 IP خروج (اندازه‌گیری‌شده): ${exitStr}</div>
-      <div>📍 کشور/شهر: <b>${locStr}</b></div>
-      <div>🏢 ISP: <span dir="ltr">${ispStr}</span> · ASN: <span dir="ltr">${asnStr}</span> · ${famStr}</div>
-      ${latRows}
-      <div style="font-size:10px;color:var(--t3);margin-top:6px">مدرک: منبع اندازه‌گیری <code dir="ltr" style="font-size:10px">${ev.measurement_source||'—'}</code>${ev.checked_at?(' · زمان: '+new Date(ev.checked_at*1000).toLocaleTimeString()):''}</div>
-    </div>
-    ${mismatch}${noExit}
-    ${steps?`<details style="margin-top:8px"><summary style="font-size:10.5px;color:var(--t3);cursor:pointer">مراحل اعتبارسنجی (۹ مرحله)</summary><div style="margin-top:6px;padding:8px;background:var(--bg);border-radius:8px">${steps}</div></details>`:''}
-  `;
-}
-function gamingShowUpstreamGuide(){
-  const m=document.createElement('div');
-  m.className='modal-overlay';
-  m.onclick=(e)=>{if(e.target===m)m.remove()};
-  m.innerHTML=`
-    <div class="modal-box" style="max-width:680px">
-      <div class="modal-head">
-        <div class="modal-title"><i class="ti ti-server"></i> راهنمای تنظیم VPS خروج واقعی</div>
-        <button class="modal-x" onclick="this.closest('.modal-overlay').remove()">✕</button>
-      </div>
-      <div class="modal-body" style="font-size:12px;line-height:1.9">
-        <div style="padding:11px 13px;background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.20);border-radius:12px;margin-bottom:14px">
-          <b style="color:var(--accent2)">چرا؟</b> گیت‌وی کلادفلر فقط یک پروکسی است. IP خروج = IP upstream است. اگر upstream Railway باشد، خروج همیشه آمستردام است. برای خروج واقعی از کشور X، باید یک سرور در کشور X داشته باشید.
-        </div>
-        <b>۱) یک VPS در کشور موردنظر بگیرید:</b><br>
-        <ul style="margin:6px 0 14px 18px">
-          <li><b>ترکیه</b> — ParsPack, اوبونتو, آوا популярных</li>
-          <li><b>دبی</b> — Oracle Cloud Always Free (رایگان، ۴ هسته ARM)</li>
-          <li><b>آمستردام/فرانکفورت</b> — Hetzner, Contabo, Vultr</li>
-          <li><b>سنگاپور</b> — Vultr, DigitalOcean</li>
-        </ul>
-        <b>۲) EMIX backend را روی VPS دیپلوی کنید:</b><br>
-        <code dir="ltr" style="display:block;background:var(--bg);padding:8px;border-radius:8px;margin:6px 0;font-size:10.5px">git clone https://github.com/EMIXPI/EMIX-PRO.git<br>cd EMIX-PRO<br>pip install -r requirements.txt<br>python -m main</code>
-        <b>۳) upstream آن لوکیشن را در وورکر به‌روز کنید:</b><br>
-        <code dir="ltr" style="display:block;background:var(--bg);padding:8px;border-radius:8px;margin:6px 0;font-size:10.5px">curl -X POST https://YOUR-WORKER.workers.dev/admin/locations \\
-  -H "X-EMIX-Token: YOUR-WORKER-ADMIN-TOKEN" \\
-  -H "Content-Type: application/json" \\
-  -d '{"name":"tr","label":"ترکیه — استانبول","flag":"🇹🇷","upstream":"your-vps.example.com","note":"VPS ترک واقعی"}'</code>
-        <div style="margin:8px 0 12px;padding:10px 12px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:10px;font-size:11px">
-          <b style="color:#f59e0b">امنیت:</b> توکن ادمین وورکر را هرگز در پنل یا کد embed نکنید — فقط از Secrets وورکر (wrangler secret) بخوانید و curl را در ترمینال خودتان اجرا کنید.
-        </div>
-        <b>۴) دوباره «بررسی IP خروج» را بزنید — حالا باید کشور ترکیه را ببینید.</b>
-        <div style="margin-top:14px;padding:10px 12px;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.20);border-radius:10px;font-size:11px">
-          <b style="color:var(--green-t)">نکته:</b> اگر فقط می‌خواهید نزدیک‌تر به ایران باشید (نه خروج واقعی)، می‌توانید روی «auto» بگذارید و PoP کلادفلر استانبول کار می‌کند — ولی IP خروج هنوز Railway است.
-        </div>
-      </div>
-    </div>`;
-  document.body.appendChild(m);
-}
-
-/* ─── اینباندهای گیت‌وی — چند ورودی روی خود وورکر ─── */
-async function gamingLoadInbounds(btn){
-  const ic=btn?btn.querySelector('i'):null;
-  if(ic){ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite';if(btn)btn.disabled=true}
-  const list=document.getElementById('gaming-inbounds-list');
-  const sum=document.getElementById('gaming-inbounds-summary');
-  try{
-    const r=await authF('/api/gaming/inbounds');
-    if(!r.ok){if(sum)sum.textContent='خطا در دریافت اینباندها';return}
-    const j=await r.json();
-    if(!j.ok){if(sum)sum.textContent=j.error||'خطا';return}
-    const ibs=j.inbounds||[];
-    if(sum)sum.textContent=toFa(j.healthy_count||0)+' از '+toFa(ibs.length)+' اینباند سالم';
-    list.innerHTML=ibs.map(ib=>{
-      const ok=ib.healthy;
-      const col=ok?'var(--green-t)':'var(--red-t)';
-      const icon=ok?'ti-circle-check':'ti-circle-x';
-      const lat=ib.connect_ms!=null?toFa(Math.round(ib.connect_ms))+'ms':(ib.latency_ms!=null?toFa(Math.round(ib.latency_ms))+'ms (اسکن)':'—');
-      const latJit=(ib.jitter_ms!=null&&ib.type==='ip')?' · jitter '+toFa(Math.round(ib.jitter_ms))+'ms':'';
-      return `<div style="padding:12px;background:var(--bg);border-radius:12px;border:1px solid ${ok?'var(--card-b)':'rgba(251,113,133,.35)'}">
-        <div style="display:flex;align-items:center;gap:7px;margin-bottom:7px">
-          <i class="ti ${icon}" style="color:${col};font-size:15px"></i>
-          <div style="flex:1;font-weight:700;font-size:11.5px">${ib.label}</div>
-          <span class="badge ${ok?'bg-green':'bg-red'}" style="font-size:9px">${ok?'سالم':'قطع'}</span>
-        </div>
-        <div dir="ltr" style="font-size:10px;font-family:monospace;color:var(--t2);text-align:left;word-break:break-all">${ib.entry}:${ib.port}</div>
-        <div style="font-size:10px;color:var(--t3);margin-top:5px">${lat}${latJit} · ${ib.note||''}</div>
-        <button class="btn btn-sm btn-g" style="width:100%;margin-top:8px" onclick="gamingUseInbound('${ib.entry}')"><i class="ti ti-check"></i> استفاده در ساخت کانفیگ</button>
-      </div>`}).join('');
-    toast('اینباندها تست شد: '+toFa(j.healthy_count||0)+' سالم','ok');
-  }catch(e){if(sum)sum.textContent='خطا';toast('خطا','err')}
-  finally{if(ic){ic.className='ti ti-plug-connected';ic.style.animation='';if(btn)btn.disabled=false}}
-}
-function gamingUseInbound(entry){
-  if(!entry)return;
-  const isIp=/^\d+\.\d+\.\d+\.\d+$/.test(entry);
-  document.getElementById('gaming-override-ip').value=isIp?entry:'';
-  const sel=document.getElementById('gaming-entry');
-  if(sel){
-    if(isIp){sel.value='direct'}
-    else if(entry.includes('.workers.dev')){sel.value='direct'}
-    // دامنه‌ی پنل یا VPS؟ گزینه‌ی متناظر
-    else if(document.getElementById('gaming-vps-ip')&&entry===document.getElementById('gaming-vps-ip').value.trim()){sel.value='vps'}
-  }
-  toast(isIp?('IP «'+entry+'» در فیلد ساخت کانفیگ قرار گرفت'):'ورودی خودکار (دامنه‌ی گیت‌وی) انتخاب شد — حالا «تولید لینک‌ها» را بزن','ok');
-  document.getElementById('gaming-entry').scrollIntoView({behavior:'smooth',block:'center'});
-}
-async function gamingRefreshLocations(silent,check){
-  try{
-    const r=await authF('/api/gaming/locations'+(check?'?check=1':''));
-    if(!r.ok)return;
-    const j=await r.json();
-    if(!j.ok){if(!silent)toast(j.error||'خطا در دریافت لوکیشن‌ها','err');return}
-    const locs=j.locations||[];
-    const health={};
-    (j.location_health||[]).forEach(h=>{health[h.name]=h});
-    const box=document.getElementById('gaming-loc-list-box');
-    if(box){
-      box.innerHTML=locs.map(l=>{
-        const h=health[l.name];
-        let badge='<span class="badge bg-blue" style="font-size:9px">؟</span>';
-        if(h){badge=h.ok?('<span class="badge bg-green" style="font-size:9px">سالم '+toFa(Math.round(h.latency_ms||0))+'ms</span>'):('<span class="badge bg-red" style="font-size:9px">قطع</span>')}
-        else if(l.name==='auto'){badge='<span class="badge bg-green" style="font-size:9px">پیش‌فرض</span>'}
-        return `<div style="display:flex;align-items:center;gap:8px;padding:9px 12px;background:var(--bg);border-radius:10px;border:1px solid var(--card-b);font-size:11.5px;flex-wrap:wrap">
-          <span style="font-size:16px">${l.flag||''}</span>
-          <div><div style="font-weight:700">${l.label||l.name}</div>
-          <div dir="ltr" style="font-size:10px;color:var(--t3);font-family:monospace">${l.upstream}</div></div>
-          ${badge}
-          ${l.name!=='auto'?`<button class="btn btn-sm btn-d" style="margin-right:auto" onclick="gamingDelLocation('${l.name}')"><i class="ti ti-trash"></i></button>`:''}
-        </div>`}).join('')||'<div style="font-size:11px;color:var(--t3);padding:8px">هنوز لوکیشنی ثبت نشده — از قالب‌های بالا یکی را شروع کن</div>';
-    }
-    document.getElementById('gaming-loc-count').textContent=toFa(locs.length)+' لوکیشن';
-    document.getElementById('gaming-loc-list').textContent=locs.map(l=>(l.flag||'')+' '+l.name).join('، ')||'—';
-    gamingFillLocSelect(locs);
-    if(!silent)toast(check?('تست سلامت انجام شد: '+toFa((j.location_health||[]).filter(h=>h.ok).length)+' از '+toFa(locs.length)+' سالم'):'لوکیشن‌ها دریافت شد','ok');
-  }catch(e){}
-}
-async function gamingAddLocation(){
-  const name=document.getElementById('gaming-loc-name').value.trim().toLowerCase();
-  const label=document.getElementById('gaming-loc-label').value.trim();
-  const flag=document.getElementById('gaming-loc-flag').value.trim()||'📍';
-  const upstream=document.getElementById('gaming-loc-upstream').value.trim().toLowerCase();
-  if(!name||!upstream){toast('کد لوکیشن و دامنه‌ی بک‌اند لازم است — اگر هنوز سرور خروج نساختی، اول «بسته‌ی سرور خروج رایگان» را بزن','err');return}
-  try{
-    const r=await authF('/api/gaming/locations',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,label,flag,upstream})});
-    const j=await r.json().catch(()=>({ok:false,error:'پاسخ نامعتبر'}));
-    if(j.ok){toast('لوکیشن «'+name+'» اضافه شد ✓','ok');document.getElementById('gaming-loc-upstream').value='';gamingRefreshLocations(true,true)}else{toast(j.error||'خطا','err')}
-  }catch(e){toast('خطا','err')}
-}
-async function gamingDelLocation(name){
-  try{
-    const r=await authF('/api/gaming/locations/'+encodeURIComponent(name),{method:'DELETE'});
-    const j=await r.json().catch(()=>({ok:false}));
-    if(j.ok){toast('لوکیشن حذف شد','ok');gamingRefreshLocations(true,false)}else{toast(j.error||'خطا','err')}
-  }catch(e){toast('خطا','err')}
-}
-/* ─── ویزارد بسته‌ی سرور خروج رایگان ─── */
-async function gamingExitWizard(btn){
-  const box=document.getElementById('gaming-exit-wizard');
-  if(!box)return;
-  if(btn){const ic=btn.querySelector('i');if(ic){ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite'}}
-  box.style.display='';
-  box.innerHTML='<div style="padding:14px;background:var(--bg);border-radius:10px;border:1px solid var(--card-b);font-size:12px"><i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i> در حال ساخت بسته با UUID شما...</div>';
-  try{
-    const r=await authF('/api/gaming/exit-blueprint');
-    if(!r.ok){box.innerHTML='<div style="padding:12px;color:var(--red-t);font-size:12px">خطا در ساخت بسته</div>';return}
-    const j=await r.json();
-    if(!j.ok){box.innerHTML='<div style="padding:12px;color:var(--red-t);font-size:12px">✗ '+(j.error||'خطا')+'</div>';return}
-    const fileCard=(fname,content)=>`<div style="margin-bottom:10px">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-        <span class="badge bg-blue" style="font-size:10px;direction:ltr">${fname}</span>
-        <button class="btn btn-sm btn-g" style="margin-right:auto" onclick="gamingCopyFile(this)" data-fc="${encodeURIComponent(content)}"><i class="ti ti-copy"></i> کپی</button>
-      </div>
-      <pre dir="ltr" style="font-size:9.5px;font-family:monospace;max-height:160px;overflow:auto;background:var(--card-in);padding:8px;border-radius:8px;white-space:pre-wrap;direction:ltr;text-align:left">${content.replace(/</g,'&lt;').slice(0,4000)}</pre>
-    </div>`;
-    box.innerHTML=`
-    <div style="padding:16px;background:var(--bg);border-radius:12px;border:1px solid var(--green-t)">
-      <div style="font-weight:800;font-size:13px;margin-bottom:6px"><i class="ti ti-package-export" style="color:var(--green-t)"></i> بسته‌ی سرور خروج رایگان — آماده شد!</div>
-      <div style="font-size:11.5px;color:var(--t2);line-height:1.9;margin-bottom:12px">
-        UUID کانفیگ «${j.label}» داخل فایل‌ها پخت شده: <b dir="ltr" style="font-family:monospace">${j.uuid}</b><br>
-        این سرور کوچک روی هر پلتفرم رایگان deploy می‌شود و خروجی ترافیک شما به آن کشور می‌رود.
-      </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
-        <a class="btn btn-blue" href="/api/gaming/exit-blueprint?format=zip" style="text-decoration:none"><i class="ti ti-download"></i> دانلود ZIP کامل</a>
-        <button class="btn btn-g" onclick="gamingUseLocTemplate('railway-exit')"><i class="ti ti-forms"></i> پرکردن فرم لوکیشن</button>
-      </div>
-      <div style="font-weight:700;font-size:12px;margin-bottom:8px">مراحل (۵ دقیقه):</div>
-      <ol style="margin:0 0 14px;padding-right:18px;font-size:11.5px;color:var(--t2);line-height:2;list-style:persian">
-        ${(j.steps||[]).map(s=>`<li>${s}</li>`).join('')}
-      </ol>
-      <div style="font-weight:700;font-size:12px;margin-bottom:8px">فایل‌های بسته (کپی کن یا ZIP را دانلود کن):</div>
-      ${Object.entries(j.files||{}).map(([f,c])=>fileCard(f,c)).join('')}
-    </div>`;
-    toast('بسته‌ی خروج ساخته شد — UUID شما داخلش پخت شده','ok');
-  }catch(e){box.innerHTML='<div style="padding:12px;color:var(--red-t);font-size:12px">خطا در ساخت بسته</div>'}
-  finally{if(btn){const ic=btn.querySelector('i');if(ic){ic.className='ti ti-package-export';ic.style.animation=''}}}
-}
-function gamingCopyFile(btn){
-  const c=decodeURIComponent(btn.dataset.fc||'');
-  if(!c){toast('فایل خالی است','err');return}
-  navigator.clipboard.writeText(c).then(()=>toast('فایل کپی شد','ok')).catch(()=>toast('کپی ناموفق','err'));
-}
-/* ─── اسکنر IP سمت مرورگر — چند روش پروب + abort فوری (ضد کرش، ضد فیلتر) ───
-   روش‌ها به ترتیب تلاش:
-     ۱) fetch no-cors به /cdn-cgi/trace (سبک و سریع)
-     ۲) Image ping (fallback کلاسیک — روی همه‌ی مرورگرها کار می‌کند)
-     ۳) WebSocket upgrade (به‌عنوان آخرین تلاش)
-   اگر همه‌ی روش‌ها ناموفق بودند، IP فیلتر در نظر گرفته می‌شود. */
-function gamingProbe(ip,timeout){
-  return new Promise(res=>{
-    let settled=false;
-    const ctrl=(typeof AbortController!=='undefined')?new AbortController():null;
-    const t0=performance.now();
-    let imgs=[];
-    const cleanup=()=>{imgs.forEach(im=>{try{im.src='';im.onload=null;im.onerror=null}catch(e){}});imgs=[]};
-    const done=(v)=>{if(settled)return;settled=true;clearTimeout(timer);try{ctrl&&ctrl.abort()}catch(e){};cleanup();res(v)};
-    const timer=setTimeout(()=>done(null),timeout);
-    const success=()=>done(performance.now()-t0);
-    const fail=()=>{if(settled)return;const dt=performance.now()-t0;done(dt>40&&dt<timeout?dt:null)};
-
-    // ۱) روش fetch no-cors به یک مسیر سبک کلادفلر
-    try{
-      fetch('https://'+ip+'/cdn-cgi/trace?_='+Math.random().toString(36).slice(2,8),
-        {mode:'no-cors',cache:'no-store',redirect:'manual',signal:ctrl?ctrl.signal:undefined})
-        .then(success)
-        .catch(()=>{});
-    }catch(e){}
-
-    // ۲) Image fallback — رویداد onload روی یک image cross-origin یعنی TCP+TLS بالا آمده
-    try{
-      const im=new Image();
-      im.onload=success;
-      im.onerror=()=>{if(settled)return;/* سرور پاسخ داد (حتی 404) یعنی TCP بالا است */success()};
-      im.src='https://'+ip+'/favicon.ico?_='+Math.random().toString(36).slice(2,10);
-      imgs.push(im);
-      // image اضافی برای fallback
-      const im2=new Image();
-      im2.onload=success;
-      im2.onerror=success;
-      im2.src='https://'+ip+'/__emix_probe?_='+Date.now();
-      imgs.push(im2);
-    }catch(e){}
-
-    // ۳) WebSocket fallback (آخرین تلاش) — فقط اگر دو روش اول در 200ms اول پاسخ ندادند
-    setTimeout(()=>{
-      if(settled)return;
-      try{
-        const ws=new WebSocket('wss://'+ip+'/?_='+Math.random().toString(36).slice(2,6));
-        ws.onopen=success;
-        ws.onerror=()=>{if(settled)return;const dt=performance.now()-t0;done(dt>200&&dt<timeout?dt:null)};
-        // قطع زودهنگام
-        setTimeout(()=>{try{ws.close()}catch(e){}},Math.min(timeout,800));
-      }catch(e){/* WebSocket ساخته نشد */}
-    },200);
-
-    // اگر هیچ‌کدام پاسخ نداد، در timeout انجام می‌شود
-  });
-}
-let gamingScanAbort=false;
-async function gamingStartScan(){
-  if(gamingScanBusy){toast('اسکن در حال اجراست','err');return}
-  gamingScanBusy=true;gamingScanAbort=false;
-  const btn=document.getElementById('gaming-scan-btn');
-  const prog=document.getElementById('gaming-scan-progress');
-  const tbody=document.getElementById('gaming-scan-tbody');
-  const table=document.getElementById('gaming-scan-table');
-  const sum=document.getElementById('gaming-scan-summary');
-  btn.disabled=false;btn.innerHTML='<i class="ti ti-player-stop"></i> توقف اسکن';btn.onclick=()=>{gamingScanAbort=true;toast('اسکن متوقف می‌شود...','ok')};
-  const results={};let doneCount=0,total=0,failedCount=0;
-  try{
-    const r=await authF('/api/gaming/candidates');
-    if(!r.ok){toast('خطا در دریافت IPهای کاندید','err');return}
-    const ips=(await r.json()).ips||[];total=ips.length;
-    table.style.display='';tbody.innerHTML='';
-    prog.textContent='در حال اسکن '+toFa(total)+' IP با روش چندگانه (fetch+image+ws)...';
-    // دسته‌های ۸تایی + مکث کوتاه — سبک برای مرورگر/موبایل
-    for(let i=0;i<ips.length&&!gamingScanAbort;i+=8){
-      const batch=ips.slice(i,i+8);
-      await Promise.all(batch.map(async ip=>{
-        try{
-          const samples=[];
-          for(let round=0;round<2&&!gamingScanAbort;round++){
-            const ms=await gamingProbe(ip,2500);
-            if(ms!==null&&ms<2400)samples.push(ms);
-            else if(ms===null)failedCount++;
-            await new Promise(s=>setTimeout(s,40));
-          }
-          if(samples.length>=1){
-            const min=Math.min(...samples),avg=samples.reduce((a,b)=>a+b,0)/samples.length;
-            const jitter=samples.length>1?(Math.max(...samples)-Math.min(...samples)):0;
-            results[ip]={ip,min,avg,jitter,n:samples.length};
-          }
-        }catch(e){/* این IP رد شد — بقیه ادامه */}
-        doneCount++;
-      }));
-      try{gamingRenderScanTable(results)}catch(e){}
-      const pct=total?Math.round(doneCount/total*100):0;
-      const failPct=doneCount?Math.round(failedCount/doneCount*100):0;
-      prog.textContent=(gamingScanAbort?'متوقف‌شده در ':'پیشرفت: ')+toFa(doneCount)+' از '+toFa(total)+' ('+toFa(pct)+'٪) · '+toFa(failPct)+'٪ رد شده';
-      if(!gamingScanAbort&&i+8<ips.length){await new Promise(s=>setTimeout(s,100))}
-    }
-    const ranked=Object.values(results).sort((a,b)=>a.min-b.min);
-    if(!ranked.length){
-      sum.style.display='';sum.innerHTML='<span style="color:var(--red-t)">هیچ IP پاسخ نداد — احتمالاً ISP رنج کلادفلر را محدود کرده؛ از ورودی VPS ایران یا «مستقیم پنل» استفاده کنید</span>';
-    }else{
-      try{
-        const sr=await authF('/api/gaming/scan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({results:ranked.slice(0,25)})});
-        if(sr.ok){const sj=await sr.json();
-          document.getElementById('gaming-best-ip').textContent=sj.best||'—';
-          document.getElementById('gaming-best-ms').textContent=sj.best_ms?('تأخیر: '+toFa(Math.round(sj.best_ms))+' ms'):'—';
-          if(sj.best){document.getElementById('gaming-override-ip').value=sj.best}
-        }
-      }catch(e){/* ثبت ناموفق — نتایج محلی هنوز نمایش داده می‌شوند */}
-      sum.style.display='';
-      sum.innerHTML='🏆 بهترین IP: <b dir="ltr" style="font-family:monospace">'+ranked[0].ip+'</b> با تأخیر <b>'+toFa(Math.round(ranked[0].min))+' ms</b> — با دکمه «تولید لینک‌ها» کانفیگ گیمینگ بسازید.';
-    }
-    toast(gamingScanAbort?'اسکن متوقف شد — نتایج تا اینجا حفظ شد':'اسکن تمام شد','ok');
-  }catch(e){console.error('gamingStartScan',e);toast('خطا در اسکن — نتایج جزئی حفظ شد','err')}
-  finally{
-    gamingScanBusy=false;
-    gamingScanAbort=false;
-    btn.innerHTML='<i class="ti ti-radar-2"></i> شروع اسکن (~۱ دقیقه)';
-    btn.onclick=()=>gamingStartScan();
-    prog.textContent='آماده';
-  }
-}
-function gamingRenderScanTable(results){
-  const tbody=document.getElementById('gaming-scan-tbody');
-  if(!tbody)return;
-  const ranked=Object.values(results||{}).filter(r=>r&&typeof r.min==='number'&&r.ip)
-    .sort((a,b)=>a.min-b.min).slice(0,20);
-  if(!ranked.length){
-    tbody.innerHTML='<tr><td colspan="6" style="padding:18px;text-align:center;color:var(--t3);font-size:11.5px">هنوز نتیجه‌ای دریافت نشده — اسکن در حال اجراست. اگر همه‌ی IPها رد شدند، ISP شما رنج کلادفلر را محدود کرده. از ورودی VPS ایران یا «مستقیم پنل» استفاده کنید.</td></tr>';
-    return;
-  }
-  tbody.innerHTML=ranked.map((r,i)=>{
-    const color=r.min<120?'var(--green-t)':r.min<250?'var(--amber-t)':'var(--red-t)';
-    return `<tr style="border-top:1px solid var(--card-b)">
-      <td style="padding:6px 8px;color:var(--t3)">${toFa(i+1)}</td>
-      <td style="padding:6px 8px;direction:ltr;text-align:left;font-family:monospace">${r.ip}</td>
-      <td style="padding:6px 8px;font-weight:700;color:${color}">${toFa(Math.round(r.min))}</td>
-      <td style="padding:6px 8px">${toFa(Math.round(r.avg||r.min))}</td>
-      <td style="padding:6px 8px;color:${(r.jitter||0)<80?'var(--green-t)':'var(--amber-t)'}">${toFa(Math.round(r.jitter||0))}</td>
-      <td style="padding:6px 8px">${r.n>=2?'<span class="badge bg-green" style="font-size:9.5px">پایدار</span>':'<span class="badge bg-amber" style="font-size:9.5px">'+toFa(r.n)+'/۲</span>'}</td>
-    </tr>`}).join('');
-}
-
-/* ════════════════════════════════════════════════════════════════════════════
-   VPN Pro — WireGuard & OpenVPN JavaScript Functions
-   ════════════════════════════════════════════════════════════════════════════ */
-let vpnCfg={};
-async function loadVPNPage(){
-  try{
-    const [wgR,ovpnR]=await Promise.all([
-      authF('/api/wg/status'),
-      authF('/api/ovpn/status')
-    ]);
-    if(wgR.ok){
-      const wg=await wgR.json();
-      vpnCfg.wg=wg;
-      const sb=document.getElementById('vpn-status-badge');
-      if(sb){sb.textContent=wg.cryptography_available?'آماده':'نیاز به کتابخانه';sb.className='badge '+(wg.cryptography_available?'bg-green':'bg-amber')}
-      if(wg.server_endpoint)document.getElementById('wg-endpoint').value=wg.server_endpoint;
-      if(wg.server_port)document.getElementById('wg-port').value=wg.server_port;
-      if(wg.server_pubkey)document.getElementById('wg-server-pub').value=wg.server_pubkey;
-      if(wg.client_ip)document.getElementById('wg-client-ip').value=wg.client_ip;
-      if(wg.dns)document.getElementById('wg-dns').value=wg.dns;
-      if(wg.keepalive)document.getElementById('wg-keepalive').value=wg.keepalive;
-      if(wg.mtu)document.getElementById('wg-mtu').value=wg.mtu;
-      // empty-state: اگر سرور ست شده، کادر راهنما را پنهان کن
-      const wgEmpty=document.getElementById('wg-empty-state');
-      if(wgEmpty && (wg.server_endpoint || wg.server_pubkey)){
-        wgEmpty.classList.add('hidden');
-      }
-    }
-    if(ovpnR.ok){
-      const ovpn=await ovpnR.json();
-      vpnCfg.ovpn=ovpn;
-      if(ovpn.server_endpoint)document.getElementById('ovpn-endpoint').value=ovpn.server_endpoint;
-      if(ovpn.server_port)document.getElementById('ovpn-port').value=ovpn.server_port;
-      if(ovpn.protocol)document.getElementById('ovpn-protocol').value=ovpn.protocol;
-      // empty-state: اگر کانفیگ OVPN ست شده، کادر راهنما را پنهان کن
-      const ovpnEmpty=document.getElementById('ovpn-empty-state');
-      if(ovpnEmpty && (ovpn.server_endpoint || ovpn.has_inline_certs)){
-        ovpnEmpty.classList.add('hidden');
-      }
-    }
-  }catch(e){console.error('loadVPNPage',e);toast('خطا در بارگذاری VPN Pro','err')}
-}
-async function vpnSaveWGConfig(){
-  try{
-    const body={
-      server_endpoint:document.getElementById('wg-endpoint').value.trim(),
-      server_port:parseInt(document.getElementById('wg-port').value)||51820,
-      server_pubkey:document.getElementById('wg-server-pub').value.trim(),
-      client_ip:document.getElementById('wg-client-ip').value.trim(),
-      dns:document.getElementById('wg-dns').value.trim(),
-      keepalive:parseInt(document.getElementById('wg-keepalive').value)||25,
-      mtu:parseInt(document.getElementById('wg-mtu').value)||1280,
-    };
-    const r=await authF('/api/wg/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-    return r.ok;
-  }catch(e){return false}
-}
-async function vpnGenerateClientKeys(btn){
-  const ic=btn?btn.querySelector('i'):null;
-  if(ic){ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite';if(btn)btn.disabled=true}
-  const box=document.getElementById('wg-keypair-result');
-  try{
-    const r=await authF('/api/wg/keypair',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({role:'client'})});
-    const j=await r.json();
-    if(j.ok){
-      box.style.display='';
-      box.innerHTML=`<div style="padding:14px;background:var(--bg);border-radius:10px;border:1px solid var(--green-t);font-size:12px;line-height:2">
-        <div style="font-weight:700;margin-bottom:8px;color:var(--green-t)">✓ کلید کلاینت تولید شد</div>
-        <div><b>Private (خصوصی):</b> <code dir="ltr" style="font-family:monospace;word-break:break-all">${j.private}</code></div>
-        <div><b>Public (عمومی):</b> <code dir="ltr" style="font-family:monospace;word-break:break-all">${j.public}</code></div>
-        <div style="margin-top:8px;font-size:11px;color:var(--t3)">این کلیدها در پنل ذخیره شدند. کلید عمومی را در فایل کانفیگ سرور (Peer section) قرار دهید.</div>
-      </div>`;
-      toast('کلید کلاینت تولید شد','ok');
-    }else{
-      toast(j.error||'خطا در تولید کلید','err');
-    }
-  }catch(e){toast('خطا','err')}
-  finally{if(ic){ic.className='ti ti-key';ic.style.animation='';if(btn)btn.disabled=false}}
-}
-async function vpnShowServerKey(btn){
-  // نمایش کلید سرور از طریق generate keypair with role=server
-  const ic=btn?btn.querySelector('i'):null;
-  if(ic){ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite';if(btn)btn.disabled=true}
-  const box=document.getElementById('wg-keypair-result');
-  try{
-    const r=await authF('/api/wg/keypair',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({role:'server'})});
-    const j=await r.json();
-    if(j.ok){
-      box.style.display='';
-      box.innerHTML=`<div style="padding:14px;background:var(--bg);border-radius:10px;border:1px solid var(--accent);font-size:12px;line-height:2">
-        <div style="font-weight:700;margin-bottom:8px;color:var(--accent)">🔑 کلید سرور تولید شد</div>
-        <div><b>Private (خصوصی — فقط در سرور):</b> <code dir="ltr" style="font-family:monospace;word-break:break-all">${j.private}</code></div>
-        <div><b>Public (عمومی — در پنل وارد کن):</b> <code dir="ltr" style="font-family:monospace;word-break:break-all">${j.public}</code></div>
-        <button class="btn btn-sm btn-g" style="margin-top:8px" onclick="document.getElementById('wg-server-pub').value='${j.public}';toast('کلید عمومی سرور در فیلد بالا قرار گرفت','ok')"><i class="ti ti-arrow-up"></i> قرار دادن در فیلد</button>
-      </div>`;
-      toast('کلید سرور تولید شد','ok');
-    }else{
-      toast(j.error||'خطا','err');
-    }
-  }catch(e){toast('خطا','err')}
-  finally{if(ic){ic.className='ti ti-key';ic.style.animation='';if(btn)btn.disabled=false}}
-}
-async function vpnShowServerScript(btn){
-  const ic=btn?btn.querySelector('i'):null;
-  if(ic){ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite';if(btn)btn.disabled=true}
-  const box=document.getElementById('wg-keypair-result');
-  try{
-    const r=await authF('/api/wg/server-script');
-    const j=await r.json();
-    if(j.ok){
-      box.style.display='';
-      box.innerHTML=`<div style="padding:14px;background:var(--bg);border-radius:10px;border:1px solid var(--card-b);font-size:12px">
-        <div style="font-weight:700;margin-bottom:8px"><i class="ti ti-server" style="color:var(--accent)"></i> اسکریپت راه‌اندازی WireGuard Server</div>
-        <div style="font-size:11px;color:var(--t3);margin-bottom:8px;line-height:1.7">این اسکریپت را در VPS Linux اجرا کن — WireGuard server با UUID شما پخت شده. بعد از اجرا، IP سرور و کلید عمومی سرور را در فیلدهای بالا وارد کن.</div>
-        <button class="btn btn-sm btn-g" onclick="vpnCopyText(this,${JSON.stringify(j.script)})"><i class="ti ti-copy"></i> کپی اسکریپت</button>
-        <pre dir="ltr" style="font-size:9.5px;font-family:monospace;max-height:200px;overflow:auto;background:var(--bg3);padding:10px;border-radius:8px;white-space:pre-wrap;margin-top:10px;text-align:left">${j.script.replace(/</g,'&lt;').slice(0,3000)}</pre>
-      </div>`;
-      toast('اسکریپت ساخته شد','ok');
-    }else{
-      toast(j.error||'خطا','err');
-    }
-  }catch(e){toast('خطا','err')}
-  finally{if(ic){ic.className='ti ti-server';ic.style.animation='';if(btn)btn.disabled=false}}
-}
-async function vpnGenerateWGConfig(btn){
-  const ic=btn?btn.querySelector('i'):null;
-  if(ic){ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite';if(btn)btn.disabled=true}
-  const ok=await vpnSaveWGConfig();
-  const box=document.getElementById('wg-config-result');
-  try{
-    if(!ok){box.style.display='';box.innerHTML='<div style="padding:12px;color:var(--red-t);font-size:12px">ذخیره تنظیمات ناموفق</div>';return}
-    const r=await authF('/api/wg/client-conf');
-    const j=await r.json();
-    if(j.ok){
-      box.style.display='';
-      const h=j.health||{};
-      const healthBadge=h.ok?'<span class="badge bg-green" style="font-size:10px">سالم</span>':'<span class="badge bg-red" style="font-size:10px">قطع</span>';
-      box.innerHTML=`<div style="padding:14px;background:var(--bg);border-radius:10px;border:1px solid var(--green-t);font-size:12px">
-        <div style="font-weight:700;margin-bottom:8px;color:var(--green-t)">✓ کانفیگ کلاینت WireGuard ساخته شد</div>
-        <div style="margin-bottom:8px">تست سلامت سرور (TCP): ${healthBadge}${h.ok?'':' — '+(h.error||'')}</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
-          <button class="btn btn-sm btn-g" onclick="vpnCopyText(this,${JSON.stringify(j.config)})"><i class="ti ti-copy"></i> کپی فایل .conf</button>
-          <a class="btn btn-sm btn-blue" href="data:text/plain;charset=utf-8,${encodeURIComponent(j.config)}" download="${j.filename}" style="text-decoration:none"><i class="ti ti-download"></i> دانلود فایل</a>
-        </div>
-        <div style="font-size:10.5px;color:var(--t3);margin-bottom:8px">${j.note||''}</div>
-        <pre dir="ltr" style="font-size:10.5px;font-family:monospace;background:var(--bg3);padding:10px;border-radius:8px;white-space:pre-wrap;text-align:left">${j.config.replace(/</g,'&lt;')}</pre>
-      </div>`;
-      toast('کانفیگ WG ساخته شد','ok');
-    }else{
-      box.style.display='';box.innerHTML='<div style="padding:12px;color:var(--red-t);font-size:12px">✗ '+(j.error||'خطا')+'</div>';
-      toast(j.error||'خطا','err');
-    }
-  }catch(e){box.style.display='';box.innerHTML='<div style="padding:12px;color:var(--red-t);font-size:12px">خطا</div>';toast('خطا','err')}
-  finally{if(ic){ic.className='ti ti-file-export';ic.style.animation='';if(btn)btn.disabled=false}}
-}
-async function vpnGenerateWGQR(btn){
-  // تولید QR از کانفیگ WG با استفاده از API کتابخانه‌ی qrcode.js
-  const ic=btn?btn.querySelector('i'):null;
-  if(ic){ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite';if(btn)btn.disabled=true}
-  const box=document.getElementById('wg-qr-result');
-  try{
-    const ok=await vpnSaveWGConfig();
-    if(!ok){box.style.display='';box.innerHTML='<div style="padding:12px;color:var(--red-t);font-size:12px">ذخیره ناموفق</div>';return}
-    const r=await authF('/api/wg/client-conf');
-    const j=await r.json();
-    if(j.ok&&j.config){
-      box.style.display='';
-      // QR محلی (backend خود پنل) — قبلاً api.qrserver.com شخص ثالث بود که credential می‌فرستاد
-      const qrUrl='/api/qr?data='+encodeURIComponent(j.config);
-      box.innerHTML=`<div style="padding:14px;background:var(--bg);border-radius:10px;border:1px solid var(--card-b);text-align:center">
-        <div style="font-weight:700;margin-bottom:10px">📷 QR کد کانفیگ WireGuard</div>
-        <img src="${qrUrl}" alt="QR Code" style="border-radius:8px;border:1px solid var(--card-b);max-width:300px">
-        <div style="font-size:10.5px;color:var(--t3);margin-top:8px">در اپ WireGuard موبایل: «Scan QR Code» را بزن</div>
-      </div>`;
-      toast('QR ساخته شد','ok');
-    }else{
-      toast(j.error||'خطا در تولید QR','err');
-    }
-  }catch(e){toast('خطا','err')}
-  finally{if(ic){ic.className='ti ti-qrcode';ic.style.animation='';if(btn)btn.disabled=false}}
-}
-async function vpnTestWG(btn){
-  const ic=btn?btn.querySelector('i'):null;
-  if(ic){ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite';if(btn)btn.disabled=true}
-  const box=document.getElementById('wg-health-result');
-  try{
-    const ok=await vpnSaveWGConfig();
-    if(!ok){box.style.display='';box.innerHTML='<div style="padding:12px;color:var(--red-t);font-size:12px">ذخیره ناموفق</div>';return}
-    const r=await authF('/api/wg/client-conf');
-    const j=await r.json();
-    if(j.ok){
-      const h=j.health||{};
-      box.style.display='';
-      if(h.ok){
-        box.innerHTML=`<div style="padding:12px;background:var(--green-bg);border:1px solid var(--green-t);border-radius:10px;font-size:12px;color:var(--green-t)"><i class="ti ti-circle-check"></i> سرور پاسخ داد — اتصال TCP به ${document.getElementById('wg-endpoint').value}:${document.getElementById('wg-port').value} برقرار شد. برای تست واقعی WG، از کلاینت استفاده کنید.</div>`;
-      }else{
-        box.innerHTML=`<div style="padding:12px;background:var(--red-bg);border:1px solid var(--red-t);border-radius:10px;font-size:12px;color:var(--red-t)"><i class="ti ti-circle-x"></i> سرور در دسترس نیست — ${h.error||'اتصال برقرار نشد'}. مطمئن شو پورت ${document.getElementById('wg-port').value} UDP در فایروال باز است و سرور اجرا شده.</div>`;
-      }
-    }else{
-      box.style.display='';box.innerHTML='<div style="padding:12px;color:var(--red-t);font-size:12px">✗ '+(j.error||'خطا')+'</div>';
-    }
-  }catch(e){toast('خطا','err')}
-  finally{if(ic){ic.className='ti ti-plug';ic.style.animation='';if(btn)btn.disabled=false}}
-}
-async function vpnParseOVPNInline(btn){
-  const ic=btn?btn.querySelector('i'):null;
-  if(ic){ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite';if(btn)btn.disabled=true}
-  const ta=document.getElementById('ovpn-inline-config');
-  const cfg=ta?ta.value.trim():'';
-  if(!cfg){toast('فایل .ovpn را paste کنید','err');if(ic){ic.className='ti ti-file-import';ic.style.animation=''};if(btn)btn.disabled=false;return}
-  const box=document.getElementById('ovpn-config-result');
-  try{
-    const r=await authF('/api/ovpn/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({inline_config:cfg})});
-    const j=await r.json();
-    if(j.ok){
-      // فرم‌ها را با اطلاعات پارس‌شده پر کن
-      const ovpn=vpnCfg.ovpn||{};
-      if(ovpn.server_endpoint)document.getElementById('ovpn-endpoint').value=ovpn.server_endpoint;
-      if(ovpn.server_port)document.getElementById('ovpn-port').value=ovpn.server_port;
-      if(ovpn.protocol)document.getElementById('ovpn-protocol').value=ovpn.protocol;
-      box.style.display='';
-      box.innerHTML=`<div style="padding:12px;background:var(--green-bg);border:1px solid var(--green-t);border-radius:10px;font-size:12px;color:var(--green-t)"><i class="ti ti-circle-check"></i> فایل .ovpn پارس شد. سرور: ${ovpn.server_endpoint||'—'}:${ovpn.server_port||'—'} (${(ovpn.protocol||'tcp').toUpperCase()}). CA/Cert/Key استخراج شد.</div>`;
-      toast('فایل .ovpn پارس شد','ok');
-    }else{
-      box.style.display='';box.innerHTML='<div style="padding:12px;color:var(--red-t);font-size:12px">✗ '+(j.error||'خطا')+'</div>';
-      toast(j.error||'خطا','err');
-    }
-  }catch(e){toast('خطا','err')}
-  finally{if(ic){ic.className='ti ti-file-import';ic.style.animation='';if(btn)btn.disabled=false}}
-}
-async function vpnShowOVPNServerScript(btn){
-  const ic=btn?btn.querySelector('i'):null;
-  if(ic){ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite';if(btn)btn.disabled=true}
-  const box=document.getElementById('ovpn-config-result');
-  try{
-    const r=await authF('/api/ovpn/server-script');
-    const j=await r.json();
-    if(j.ok){
-      box.style.display='';
-      box.innerHTML=`<div style="padding:14px;background:var(--bg);border-radius:10px;border:1px solid var(--card-b);font-size:12px">
-        <div style="font-weight:700;margin-bottom:8px"><i class="ti ti-server" style="color:var(--accent)"></i> اسکریپت راه‌اندازی OpenVPN Server</div>
-        <div style="font-size:11px;color:var(--t3);margin-bottom:8px;line-height:1.7">این اسکریپت در VPS Linux اجرا کن — OpenVPN server با angristan نصب می‌شود و فایل کانفیگ کلاینت در <code dir="ltr">/root/emix-client.ovpn</code> ساخته می‌شود.</div>
-        <button class="btn btn-sm btn-g" onclick="vpnCopyText(this,${JSON.stringify(j.script)})"><i class="ti ti-copy"></i> کپی اسکریپت</button>
-        <pre dir="ltr" style="font-size:9.5px;font-family:monospace;max-height:200px;overflow:auto;background:var(--bg3);padding:10px;border-radius:8px;white-space:pre-wrap;margin-top:10px;text-align:left">${j.script.replace(/</g,'&lt;')}</pre>
-      </div>`;
-      toast('اسکریپت ساخته شد','ok');
-    }else{
-      toast(j.error||'خطا','err');
-    }
-  }catch(e){toast('خطا','err')}
-  finally{if(ic){ic.className='ti ti-server';ic.style.animation='';if(btn)btn.disabled=false}}
-}
-async function vpnGenerateOVPNConfig(btn){
-  const ic=btn?btn.querySelector('i'):null;
-  if(ic){ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite';if(btn)btn.disabled=true}
-  const box=document.getElementById('ovpn-config-result');
-  try{
-    // ذخیره مشخصات
-    const body={
-      server_endpoint:document.getElementById('ovpn-endpoint').value.trim(),
-      server_port:parseInt(document.getElementById('ovpn-port').value)||1194,
-      protocol:document.getElementById('ovpn-protocol').value,
-    };
-    await authF('/api/ovpn/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-    const r=await authF('/api/ovpn/client-conf');
-    const j=await r.json();
-    if(j.ok){
-      const h=j.health||{};
-      const healthBadge=h.ok?'<span class="badge bg-green" style="font-size:10px">سالم</span>':'<span class="badge bg-red" style="font-size:10px">قطع</span>';
-      box.style.display='';
-      box.innerHTML=`<div style="padding:14px;background:var(--bg);border-radius:10px;border:1px solid var(--green-t);font-size:12px">
-        <div style="font-weight:700;margin-bottom:8px;color:var(--green-t)">✓ کانفیگ OpenVPN ساخته شد</div>
-        <div style="margin-bottom:8px">تست سلامت سرور (TCP): ${healthBadge}${h.ok?'':' — '+(h.error||'')}</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
-          <button class="btn btn-sm btn-g" onclick="vpnCopyText(this,${JSON.stringify(j.config)})"><i class="ti ti-copy"></i> کپی فایل .ovpn</button>
-          <a class="btn btn-sm btn-blue" href="data:text/plain;charset=utf-8,${encodeURIComponent(j.config)}" download="${j.filename}" style="text-decoration:none"><i class="ti ti-download"></i> دانلود فایل</a>
-        </div>
-        <pre dir="ltr" style="font-size:10.5px;font-family:monospace;background:var(--bg3);padding:10px;border-radius:8px;white-space:pre-wrap;text-align:left;max-height:300px;overflow:auto">${j.config.replace(/</g,'&lt;')}</pre>
-      </div>`;
-      toast('کانفیگ OpenVPN ساخته شد','ok');
-    }else{
-      box.style.display='';box.innerHTML='<div style="padding:12px;color:var(--red-t);font-size:12px">✗ '+(j.error||'خطا')+'</div>';
-      toast(j.error||'خطا','err');
-    }
-  }catch(e){toast('خطا','err')}
-  finally{if(ic){ic.className='ti ti-file-export';ic.style.animation='';if(btn)btn.disabled=false}}
-}
-async function vpnTestOVPN(btn){
-  const ic=btn?btn.querySelector('i'):null;
-  if(ic){ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite';if(btn)btn.disabled=true}
-  const box=document.getElementById('ovpn-health-result');
-  try{
-    const body={
-      server_endpoint:document.getElementById('ovpn-endpoint').value.trim(),
-      server_port:parseInt(document.getElementById('ovpn-port').value)||1194,
-      protocol:document.getElementById('ovpn-protocol').value,
-    };
-    await authF('/api/ovpn/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-    const r=await authF('/api/ovpn/client-conf');
-    const j=await r.json();
-    if(j.ok){
-      const h=j.health||{};
-      box.style.display='';
-      if(h.ok){
-        box.innerHTML=`<div style="padding:12px;background:var(--green-bg);border:1px solid var(--green-t);border-radius:10px;font-size:12px;color:var(--green-t)"><i class="ti ti-circle-check"></i> سرور پاسخ داد — اتصال TCP به ${document.getElementById('ovpn-endpoint').value}:${document.getElementById('ovpn-port').value} برقرار شد.</div>`;
-      }else{
-        box.innerHTML=`<div style="padding:12px;background:var(--red-bg);border:1px solid var(--red-t);border-radius:10px;font-size:12px;color:var(--red-t)"><i class="ti ti-circle-x"></i> سرور در دسترس نیست — ${h.error||'اتصال برقرار نشد'}</div>`;
-      }
-    }else{
-      box.style.display='';box.innerHTML='<div style="padding:12px;color:var(--red-t);font-size:12px">✗ '+(j.error||'خطا')+'</div>';
-    }
-  }catch(e){toast('خطا','err')}
-  finally{if(ic){ic.className='ti ti-plug';ic.style.animation='';if(btn)btn.disabled=false}}
-}
-function vpnCopyText(btn,text){
-  if(!text){toast('متن خالی است','err');return}
-  navigator.clipboard.writeText(text).then(()=>toast('متن کپی شد','ok')).catch(()=>toast('کپی ناموفق','err'));
-}
-/* ─── تولید کانفیگ گیمینگ ─── */
-async function gamingCompare(btn){
-  const ic=btn.querySelector('i');ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite';btn.disabled=true;
-  const box=document.getElementById('gaming-compare-result');
-  box.style.display='';box.innerHTML='<div style="font-size:12px;color:var(--t3);padding:8px"><i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i> در حال تست هر دو مسیر (تا ۳۰ ثانیه)...</div>';
-  try{
-    const r=await authF('/api/gaming/compare',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});
-    if(!r.ok){box.innerHTML='<span style="color:var(--red-t);font-size:12px">خطا در مقایسه</span>';return}
-    const j=await r.json();
-    if(!j.ok){box.innerHTML='<div style="padding:10px;font-size:12px;color:var(--red-t)">✗ '+(j.error||'خطا')+'</div>';return}
-    const p=j.results.panel_direct||{},g=j.results.cf_gateway||{};
-    const row=(title,rr,recommended)=>{
-      const ok=rr.ok;
-      const ms=ok&&rr.total_ms?toFa(Math.round(rr.total_ms))+' ms':'—';
-      return `<div style="flex:1;min-width:200px;padding:12px;background:var(--bg);border-radius:10px;border:1.5px solid ${recommended?'var(--green-t)':'var(--card-b)'}">
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
-          <span style="font-weight:700;font-size:12px">${title}</span>
-          ${recommended?'<span class="badge bg-green" style="font-size:9px;margin-right:auto">✓ پیشنهاد</span>':''}
-        </div>
-        <div style="font-size:19px;font-weight:800;color:${ok?'var(--green-t)':'var(--red-t)'}">${ms}</div>
-        <div style="font-size:10px;color:var(--t3);margin-top:4px">${ok?'RTT هندشیک پروتکل (WS+E2E) ✓':(rr.detail||'در دسترس نیست').slice(0,80)}</div>
-      </div>`};
-    box.innerHTML='<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px">'+
-      row('🖥 مسیر مستقیم پنل',p,j.winner==='panel')+
-      row('☁ گیت‌وی کلادفلر',g,j.winner==='gateway')+
-      '</div>'+
-      '<div style="padding:10px 12px;background:var(--card-in);border-radius:10px;font-size:12px;line-height:1.8"><i class="ti ti-info-circle" style="color:var(--accent2)"></i> '+j.advice+'</div>';
-    toast('مقایسه انجام شد','ok');
-  }catch(e){box.innerHTML='<span style="color:var(--red-t);font-size:12px">خطا</span>';toast('خطا','err')}
-  finally{ic.className='ti ti-scale';ic.style.animation='';btn.disabled=false}
-}
-function gamingCopyLink(btn){
-  const u=decodeURIComponent(btn.dataset.gl||'');
-  if(!u){toast('لینک خالی است','err');return}
-  navigator.clipboard.writeText(u).then(()=>toast('لینک گیمینگ کپی شد','ok')).catch(()=>toast('کپی ناموفق — دستی انتخاب و کپی کنید','err'));
-}
-async function gamingGenLinks(){
-  try{
-    const body={entry:document.getElementById('gaming-entry').value,
-      location:document.getElementById('gaming-location').value,
-      ip:document.getElementById('gaming-override-ip').value.trim(),
-      mode:document.getElementById('gaming-anti-mode').value,
-      transport:document.getElementById('gaming-transport').value};
-    const r=await authF('/api/gaming/links',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-    const j=await r.json().catch(()=>({ok:false}));
-    const box=document.getElementById('gaming-links-result');
-    box.style.display='';
-    if(!j.ok){box.innerHTML='<div style="padding:12px;background:var(--bg);border-radius:10px;border:1px solid var(--card-b);font-size:12px;color:var(--red-t)">✗ '+(j.error||'خطا')+'</div>';return}
-    const rw=j.route_warning?('<div style="margin-bottom:10px;padding:10px 12px;background:rgba(250,204,21,0.08);border:1px solid rgba(250,204,21,0.25);border-radius:10px;font-size:11px;line-height:1.7"><b style="color:var(--amber-t)">⚠ '+esc(j.route_warning.code||'NO_EXIT_NODE_AVAILABLE')+'</b> — '+esc(j.route_warning.message||'')+'</div>'):'';
-    const note=(j.egress&&j.egress.endpoint_note)?('<div style="margin-bottom:10px;font-size:10.5px;color:var(--t3);line-height:1.7"><i class="ti ti-info-circle"></i> '+esc(j.egress.endpoint_note)+'</div>'):'';
-    box.innerHTML='<div style="padding:14px;background:var(--bg);border-radius:10px;border:1px solid var(--card-b);font-size:12px">'+
-      '<div style="margin-bottom:10px;color:var(--t3)">'+j.entry+' · مسیر: <b>'+j.location+'</b> · ضد ضریب: <b>'+(j.mode_label||'')+'</b> · ترنسپورت: <b>'+(j.transport_label||'')+'</b></div>'+
-      rw+note+
-      (j.links||[]).map(l=>{
-        const rt=l.route||{};
-        const cls=(rt.egress||{}).classification||'UNKNOWN';
-        const exitInfo='<span style="font-size:10px;color:var(--t3)">خروج: <b>'+(l.exit||'—')+'</b> '+egBadge(cls)+' <span dir="ltr" style="font-family:monospace">['+(rt.route_status||'?')+']</span></span>';
-        return `<div style="margin-bottom:10px;padding:10px;background:var(--card-in);border-radius:8px">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">
-          <span class="badge bg-blue" style="font-size:10px">${l.protocol}</span><b>${l.label}</b>
-          ${exitInfo}
-          <button class="btn btn-sm btn-g" style="margin-right:auto" data-gl="${encodeURIComponent(l.gaming)}" onclick="gamingCopyLink(this)"><i class="ti ti-copy"></i> کپی لینک گیمینگ</button>
-        </div>
-        <div dir="ltr" style="font-size:10px;font-family:monospace;color:var(--t3);word-break:break-all;direction:ltr;text-align:left">${l.gaming}</div>
-      </div>`}).join('')+'</div>';
-    toast('لینک‌های گیمینگ با حالت '+(j.mode_label||'')+' ساخته شد','ok');
-  }catch(e){toast('خطا','err')}
-}
-async function gamingGenJson(){
-  try{
-    const body={entry:document.getElementById('gaming-entry').value,
-      location:document.getElementById('gaming-location').value,
-      ip:document.getElementById('gaming-override-ip').value.trim(),
-      mode:document.getElementById('gaming-anti-mode').value,
-      transport:document.getElementById('gaming-transport').value};
-    const r=await authF('/api/gaming/xray-json',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-    const j=await r.json().catch(()=>({ok:false}));
-    const box=document.getElementById('gaming-json-result');
-    box.style.display='';
-    if(!j.ok){box.innerHTML='<div style="padding:12px;background:var(--bg);border-radius:10px;border:1px solid var(--card-b);font-size:12px;color:var(--red-t)">✗ '+(j.error||'خطا')+'</div>';return}
-    const txt=JSON.stringify(j.xray,null,2);
-    box.innerHTML='<div style="padding:14px;background:var(--bg);border-radius:10px;border:1px solid var(--card-b);font-size:12px">'+
-      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><b>JSON گیمینگ — '+j.label+'</b>'+
-      '<button class="btn btn-sm btn-g" style="margin-right:auto" id="gaming-json-copy"><i class="ti ti-copy"></i> کپی JSON</button></div>'+
-      '<div style="font-size:10.5px;color:var(--t3);margin-bottom:8px">در v2rayNG: تنظیمات ← از کلیپ‌بورد import · شامل fragment ضد ضریب + بدون mux + tcpNoDelay + اثر انگشت مرورگر</div>'+
-      '<pre dir="ltr" style="font-size:10px;font-family:monospace;max-height:300px;overflow:auto;background:var(--card-in);padding:10px;border-radius:8px;white-space:pre-wrap">'+txt.replace(/</g,'&lt;')+'</pre></div>';
-    const cpBtn=document.getElementById('gaming-json-copy');
-    if(cpBtn)cpBtn.onclick=()=>navigator.clipboard.writeText(txt).then(()=>toast('JSON کپی شد','ok'));
-    toast('JSON گیمینگ ساخته شد','ok');
-  }catch(e){toast('خطا','err')}
-}
-function openModalGeneric(title,bodyHtml){
-  // استفاده از modal موجود (modal-create-link قبلاً تعریف شده) اگر نبود، یک div ساده
-  let m=document.getElementById('modal-generic');
-  if(!m){
-    m=document.createElement('div');
-    m.id='modal-generic';
-    m.className='modal';
-    m.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:9999;padding:20px';
-    m.innerHTML='<div class="modal-card" style="background:var(--card);border-radius:14px;padding:20px;max-width:560px;width:100%;max-height:80vh;overflow-y:auto"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><div style="font-weight:700;font-size:13.5px" id="modal-generic-title"></div><button class="btn btn-sm" onclick="document.getElementById(\'modal-generic\').style.display=\'none\'"><i class="ti ti-x"></i></button></div><div id="modal-generic-body" style="font-size:11.5px"></div></div>';
-    document.body.appendChild(m);
-  }
-  document.getElementById('modal-generic-title').textContent=title;
-  document.getElementById('modal-generic-body').innerHTML=bodyHtml;
-  m.style.display='flex';
-}
-// اتصال سوییچ‌ها به ذخیره‌ی خودکار
-document.addEventListener('change',e=>{
-  if(e.target.id==='zeus-tls-toggle'){zeusSaveTlsMask()}
-  else if(e.target.id==='zeus-smart-toggle'){zeusSaveSmart()}
-  else if(e.target.id==='zeus-security-toggle'){zeusSaveSecurity()}
-});
-
-/* ══════ آی‌پی‌های تمیز — اسکن اروان + اسکن مرورگر + لینک IP-دار ══════ */
-let cipValid=[];   // IPهای تاییدشده سمت سرور
-let cipLatency={}; // تاخیر اندازه‌گیری‌شده از مرورگر
-async function cipScanArvan(btn){
-  const ic=btn.querySelector('i');ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite';btn.disabled=true;
-  const list=document.getElementById('cip-list');
-  list.innerHTML='<div class="sr"><span class="sr-k" style="color:var(--t3)"><i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i> در حال نمونه‌گیری از رنج‌های رسمی اروان و اعتبارسنجی SNI...</span></div>';
-  try{
-    const r=await authF('/api/clean-ips/arvan?limit=32',{method:'GET'});
-    const d=await r.json();
-    if(!r.ok){list.innerHTML=`<div class="sr"><span class="sr-k" style="color:var(--red-t)">${esc(d.detail||'خطا در اسکن')}</span></div>`;toast(d.detail||'خطا در اسکن اروان','err');return}
-    cipValid=d.valid||[];
-    document.getElementById('cip-cnt').textContent=toFa(cipValid.length)+' آی‌پی';
-    if(!cipValid.length){
-      list.innerHTML='<div class="sr"><span class="sr-k" style="color:var(--amber-t)">هیچ آی‌پی از رنج‌های اروان دامنه‌ی شما را سرو نکرد — رکورد CDN در اروان را بررسی کنید</span></div>';
-      return;
-    }
-    cipRender();
-    toast(`${toFa(cipValid.length)} آی‌پی معتبر پیدا شد — حالا «اسکن از مرورگر من» را بزنید`,'ok');
-  }catch(e){toast('خطا در اسکن اروان','err');list.innerHTML='<div class="sr"><span class="sr-k" style="color:var(--red-t)">خطا در اسکن</span></div>'}
-  finally{ic.className='ti ti-radar';ic.style.animation='';btn.disabled=false}
-}
-function cipRender(){
-  const list=document.getElementById('cip-list');
-  const items=cipValid.map(v=>{
-    const lat=cipLatency[v.ip];
-    let latHtml='<span class="cfg-sub-tag" style="color:var(--t3)">تست نشده</span>';
-    if(lat==='fail')latHtml='<span class="cfg-sub-tag" style="color:var(--red-t)">قطع</span>';
-    else if(lat!=null)latHtml=`<span class="cfg-sub-tag" style="color:${lat<400?'var(--green-t)':lat<900?'var(--amber-t)':'var(--red-t)'};font-weight:700">${toFa(Math.round(lat))}ms</span>`;
-    return `<div class="sr">
-      <span class="sr-k mono" style="direction:ltr;gap:8px"><i class="ti ti-world"></i> ${v.ip} ${lat!=null&&lat!=='fail'&&lat===cipBest()? '<span style="font-size:11px">🥇</span>':''}</span>
-      <span style="display:flex;gap:6px;align-items:center">
-        ${latHtml}
-        <button class="btn btn-sm btn-g btn-icon" onclick="cipCopyLinks('${v.ip}')" title="لینک‌های همه‌ی کانفیگ‌ها با این آی‌پی"><i class="ti ti-copy"></i></button>
-      </span>
-    </div>`;
-  }).join('');
-  list.innerHTML=items||'<div class="sr"><span class="sr-k" style="color:var(--t3)">ابتدا «اسکن آروان» را بزنید</span></div>';
-}
-function cipBest(){
-  const valid=Object.entries(cipLatency).filter(([k,v])=>typeof v==='number').sort((a,b)=>a[1]-b[1]);
-  return valid.length?+valid[0][0]:null;
-}
-async function cipScanBrowser(btn){
-  if(!cipValid.length){toast('ابتدا «اسکن آروان» را بزنید','err');return}
-  const ic=btn.querySelector('i');ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite';btn.disabled=true;
-  toast(`در حال سنجش تاخیر ${toFa(cipValid.length)} آی‌پی از اینترنت شما...`,'ok');
-  // سنجش موازی (محدود) با fetch no-cors — زمان کامل TCP+TLS+HTTP
-  const CONC=6;
-  const queue=[...cipValid];
-  async function worker(){
-    while(queue.length){
-      const v=queue.shift();
-      const t0=performance.now();
-      try{
-        await Promise.race([
-          fetch(`https://${v.ip}/`,{mode:'no-cors',cache:'no-store'}),
-          new Promise((_,rej)=>setTimeout(()=>rej(),5000))
-        ]);
-        cipLatency[v.ip]=performance.now()-t0;
-      }catch(e){
-        cipLatency[v.ip]='fail';
-      }
-      cipRender();
-    }
-  }
-  try{await Promise.all(Array.from({length:Math.min(CONC,cipValid.length)},worker))}
-  finally{ic.className='ti ti-speedometer';ic.style.animation='';btn.disabled=false}
-  const ok=Object.values(cipLatency).filter(v=>typeof v==='number');
-  if(ok.length){
-    const best=Object.entries(cipLatency).filter(([k,v])=>typeof v==='number').sort((a,b)=>a[1]-b[1])[0];
-    toast(`🥇 سریع‌ترین برای شما: ${best[0]} — ${Math.round(best[1])}ms (دکمه‌ی کپی کنارش = لینک‌ها با این IP)`,'ok');
-  }else{
-    toast('هیچ آی‌پی از مرورگر شما پاسخ نداد','err');
-  }
-}
-async function cipCopyLinks(ip){
-  try{
-    const r=await authF(`/api/clean-ips/links?ip=${ip}`);
-    const d=await r.json();
-    if(!d.links||!d.links.length){toast('لینکی برای این آی‌پی ساخته نشد','err');return}
-    const all=d.links.map(l=>l.link).join('\n');
-    await navigator.clipboard.writeText(all);
-    toast(`${toFa(d.links.length)} لینک با آی‌پی ${ip} کپی شد`,'ok');
-  }catch(e){toast('خطا در ساخت لینک‌های IP','err')}
-}
-
-/* ══════ تست پورت‌ها از مرورگر ══════ */
-const PORTS_TLS=[443,2053,2083,2087,2096,8443];
-const PORTS_PLAIN=[80,8080,8880,2052,2086,2095];
-function portChip(p,cls){
-  return `<span class="cfg-sub-tag port-chip" data-port="${p}" style="cursor:pointer;font-weight:700;${cls}">${p} <b style="font-weight:400;font-size:8.5px;color:var(--t3)">ms?</b></span>`;
-}
-function portRender(){
-  document.getElementById('ports-tls').innerHTML=PORTS_TLS.map(p=>portChip(p,'color:var(--green-t)')).join('');
-  document.getElementById('ports-plain').innerHTML=PORTS_PLAIN.map(p=>portChip(p,'color:var(--amber-t)')).join('');
-}
-async function portTestAll(btn){
-  const host=document.getElementById('br-host').value.trim();
-  if(!host){toast('ابتدا آدرس پل را وارد کنید','err');return}
-  const ic=btn.querySelector('i');ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite';btn.disabled=true;
-  const all=[...PORTS_TLS,...PORTS_PLAIN];
-  async function testPort(p){
-    const chip=document.querySelector(`.port-chip[data-port="${p}"]`);
-    if(chip){chip.style.opacity='.5';chip.querySelector('b').textContent='...'}
-    const t0=performance.now();
-    try{
-      await Promise.race([
-        fetch(`https://${host}:${p}/`,{mode:'no-cors',cache:'no-store'}),
-        new Promise((_,rej)=>setTimeout(()=>rej(),4000))
-      ]);
-      const ms=Math.round(performance.now()-t0);
-      if(chip){chip.style.opacity='1';chip.querySelector('b').textContent=toFa(ms)+'ms';chip.style.borderColor='var(--green)'}
-    }catch(e){
-      if(chip){chip.style.opacity='.35';chip.querySelector('b').textContent='✗';chip.style.textDecoration='line-through'}
-    }
-  }
-  try{await Promise.all(all.map(testPort))}
-  finally{ic.className='ti ti-speedometer';ic.style.animation='';btn.disabled=false}
-  toast('تست پورت‌ها از اینترنت شما کامل شد','ok');
-}
-setTimeout(portRender,0);
-// لیسنر محاسبه‌گر صرفه‌جویی
-setTimeout(()=>{const s=document.getElementById('br-calc-gb');if(s)s.addEventListener('input',brCalc)},0);
-async function brShowNginx(){
-  try{
-    const r=await authF('/api/bridge/script?fmt=nginx');
-    if(r.ok){bridgeScriptCache=await r.text();document.getElementById('br-script').textContent=bridgeScriptCache;toast('نسخه nginx نمایش داده شد','ok')}
-  }catch(e){toast('خطا در دریافت نسخه nginx','err')}
-}
-
-// ════════════════════════════════════════════════════════════════════════════
-// Phase 40 §6 — کارت premium کانفیگ: تفکیک CONFIG VALID از RUNTIME VERIFIED
-// هر چیزی که نمایش داده می‌شود از داده‌ی واقعی می‌آید (last_ping/health).
-// هیچ «سالم» بدون شاهد نمایش داده نمی‌شود.
-// ════════════════════════════════════════════════════════════════════════════
-const NCW_ROUTE_FA={ALL_VPN:'همه از تونل VPN',IRAN_DIRECT:'ایران مستقیم (Direct)',IRAN_PROXY:'پروکسی ایران (گیت‌وی اثبات‌شده)',INTERNATIONAL:'بین‌الملل از VPN',IRAN_BLOCK:'مسدودکردن مصرف داخلی'};
-function ncwProtoParts(p){
-  p=p||'';
-  if(p.startsWith('xhttp-')) return ['VLESS','XHTTP · '+p.replace('xhttp-','')];
-  if(p.startsWith('trojan-xhttp-')) return ['TROJAN','XHTTP · '+p.replace('trojan-xhttp-','')];
-  if(p==='trojan-ws') return ['TROJAN','WebSocket'];
-  if(p==='vless-ws') return ['VLESS','WebSocket'];
-  if(p==='shadowsocks') return ['SS','WebSocket'];
-  if(p==='mtproto') return ['MTProto','TCP'];
-  return [p.toUpperCase(),''];
-}
-function ncwRuntime(l){
-  const p=l.last_ping;
-  if(!p) return {cls:'warn',txt:'تست نشده',tip:'RUNTIME NOT VERIFIED — هنوز تست واقعی نشده. دکمه‌ی Test را بزنید.'};
-  if(p.ok){
-    const ms=p.e2e_ms!=null?Math.round(p.e2e_ms):(p.ws_ms!=null?Math.round(p.ws_ms):null);
-    return {cls:'ok',txt:'VERIFIED ✓',ms,tip:'RUNTIME VERIFIED — تونل E2E واقعی پاسخ داد ('+(p.test||'')+' · '+(p.checked_at?new Date(p.checked_at).toLocaleString('fa-IR'):'')+')'};
-  }
-  return {cls:'bad',txt:'FAILED ✗',tip:'آخرین تست واقعی ناموفق: '+(p.detail||'قطع')};
-}
-function ncwToggleMore(uuid){
-  const el=document.getElementById('ncw-more-'+uuid);
-  if(!el)return;
-  const open=el.style.display!=='none';
-  el.style.display=open?'none':'block';
-  const btn=document.querySelector('.ncw-card[data-uuid="'+uuid+'"] .ncw-more-btn i');
-  if(btn)btn.style.transform=open?'':'rotate(180deg)';
-}
-function ncwCardHtml(l, subMap){
-  const isNode=!!l._nodeId;
-  const isMt=l.protocol==='mtproto';
-  const lim=l.limit_bytes===0?'∞':fmtB(l.limit_bytes);
-  const pct=l.limit_bytes===0?0:Math.min(100,l.used_bytes/l.limit_bytes*100);
-  const bc=pct>90?'var(--red)':pct>70?'var(--amber)':'var(--accent)';
-  const allowed=l.active&&!l.expired;
-  const [pName,pTrans]=ncwProtoParts(l.protocol);
-  const rt=ncwRuntime(l);
-  const hasTls=!isMt;   // TLS معنا دارد برای تونل‌های wss (پروب E2E شامل TLS است)
-  const tlsOk=rt.cls==='ok';
-  const idChip=isMt
-    ? `<span class="cfg-uuid-mini" onclick="navigator.clipboard.writeText('${esc(l.mtproto_secret||'')}').then(()=>toast('سکرت کپی شد ✓','ok'))" title="سکرت کامل: ${esc(l.mtproto_secret||'')}"><i class="ti ti-key"></i> ${esc((l.mtproto_secret||'').slice(0,10))}…</span>`
-    : `<span class="cfg-uuid-mini" onclick="navigator.clipboard.writeText('${l.uuid}').then(()=>toast('UUID کپی شد','ok'))" title="${l.uuid}"><i class="ti ti-fingerprint"></i> ${l.uuid.slice(0,10)}…</span>`;
-  const routeLine=l.routing_policy
-    ? `<div class="ncw-routing"><i class="ti ti-route"></i> Routing: <b>${esc(NCW_ROUTE_FA[l.routing_policy]||l.routing_policy)}</b>${(l.routing_policy==='IRAN_DIRECT'||l.routing_policy==='IRAN_PROXY')?' <span class="ncw-routing-sub">— قواعد split در ساب IR-Direct کلاینت</span>':''}</div>`
-    : '';
-  const subGroupChip=(l.sub_id&&subMap[l.sub_id])?`<span class="cfg-sub-tag"><i class="ti ti-folder"></i> ${esc(subMap[l.sub_id])}</span>`:'';
-  const spoofChip=(l.spoof_sni_enabled&&l.spoof_sni)?`<span class="cfg-sub-tag" style="background:linear-gradient(135deg,rgba(139,92,246,.18),rgba(250,204,21,.12));color:#FFD1C2;border:1px solid rgba(139,92,246,.25)" title="SNI جعلی فعال — SNI ارسالی در TLS Handshake: ${esc(l.spoof_sni)} (فقط معنای TLS، نه مسیریابی)"><i class="ti ti-mask"></i> 🎭 ${esc(l.spoof_sni)}</span>`:'';
-  const mtChips=(
-    (isMt&&l.ad_tag)?`<span class="cfg-sub-tag"><i class="ti ti-speakerphone"></i> تبلیغ فعال</span>`:''
-  )+(
-    (isMt&&l.mtproto_public_host)?`<span class="cfg-sub-tag"><i class="ti ti-route"></i> ${esc(l.mtproto_public_host)}:${l.mtproto_public_port}</span>`:''
-  )+(
-    (isMt&&!l.mtproto_public_host&&l.mtproto_public_pending)?`<span class="cfg-sub-tag" style="color:var(--amber-t)"><i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i> در حال ساخت TCP Proxy عمومی...</span>`:''
-  )+(
-    (isMt&&!l.mtproto_public_host&&!l.mtproto_public_pending&&!l.mtproto_manual_port)?`<span class="cfg-sub-tag" style="color:var(--red-t)"><i class="ti ti-alert-triangle"></i> بدون TCP Proxy عمومی — لینک کار نمی‌کند</span>`:''
-  );
-  return `<div class="ncw-card ${(!l.active?'is-off':(l.expired?'is-exp':''))}${isNode?' is-node':''} ${selectedLinkUuids.has(l.uuid)?'selected':''}" data-uuid="${l.uuid}">
-    <div class="ncw-card-top">
-      ${isNode?'<span style="width:20px;flex-shrink:0"></span>':`<div class="cfg-check ${selectedLinkUuids.has(l.uuid)?'checked':''}" onclick="toggleLinkSelect('${l.uuid}',this)"><i class="ti ti-check"></i></div>`}
-      <div class="ncw-proto"><b>${esc(pName)}</b>${pTrans?` <span>•</span> <span>${esc(pTrans)}</span>`:''}</div>
-      <div class="ncw-title">
-        <span class="ncw-label">${esc(l.label)}</span>
-        ${isNode?`<span class="ncw-nodebadge"><i class="ti ti-topology-star-3"></i> ${esc(l._nodeName)}</span>`:''}
-        ${idChip}
-      </div>
-      <span class="ncw-dot ${allowed?'':'off'}" title="${l.active?'فعال':'غیرفعال'}${l.expired?' · منقضی':''}"></span>
-    </div>
-    <div class="ncw-status">
-      <span class="ncw-chip ok" title="CONFIGURATION VALID — کامپایل و ذخیره شده (کنترل‌پلین)"><i class="ti ti-circle-check"></i> CONFIG ✓</span>
-      <span class="ncw-chip ${rt.cls}" id="pb-${l.uuid}" onclick="pingLink('${l.uuid}',this)" title="${esc(rt.tip)}"><i class="ti ${rt.cls==='ok'?'ti-shield-check':(rt.cls==='bad'?'ti-wifi-off':'ti-help')}"></i> RUNTIME ${esc(rt.txt)}${rt.ms!=null?(' · '+toFa(rt.ms)+'ms'):''}</span>
-      ${hasTls?`<span class="ncw-mini ${tlsOk?'ok':''}" title="${tlsOk?'TLS در پروب E2E واقعی برقرار شد':'تا تأیید، وضعیت TLS نامشخص — تست بزنید'}">TLS ${tlsOk?'✓':'—'}</span>`:''}
-      <span class="ncw-mini ${rt.cls==='ok'?'ok':''}">تونل ${rt.cls==='ok'?'✓':'—'}</span>
-    </div>
-    ${routeLine}
-    <div class="ncw-actions">
-      ${!isNode?`<button class="btn btn-sm btn-g" onclick="pingLink('${l.uuid}',this)" title="تست واقعی تونل (E2E)"><i class="ti ti-activity"></i> تست</button>`
-               :`<button class="btn btn-sm btn-g" onclick="pingNodeLink('${l.uuid}',this,'${l._nodeId}')" title="تست واقعی روی نود"><i class="ti ti-activity"></i> تست</button>`}
-      <button class="btn btn-sm btn-o" onclick="navigator.clipboard.writeText('${esc(l.vless_link)}').then(()=>toast('لینک کپی شد','ok'))" title="کپی لینک"><i class="ti ti-copy"></i> کپی</button>
-      <button class="btn btn-sm btn-o" onclick="showQR('${esc(l.vless_link)}')" title="QR (محلی)"><i class="ti ti-qrcode"></i> QR</button>
-      ${!isNode?`<button class="btn btn-sm btn-o" onclick="openEditLink('${l.uuid}')" title="ویرایش"><i class="ti ti-edit"></i></button>`
-               :`<button class="btn btn-sm btn-o" onclick="openEditLink('${l.uuid}','${l._nodeId}')" title="ویرایش از راه دور"><i class="ti ti-edit"></i></button>`}
-      <button class="btn btn-sm btn-o ncw-more-btn" onclick="ncwToggleMore('${l.uuid}')" title="جزئیات و اقدامات بیشتر"><i class="ti ti-chevron-down"></i></button>
-    </div>
-    <div class="ncw-more" id="ncw-more-${l.uuid}" style="display:none">
-      <div class="ncw-more-badges">
-        ${subGroupChip}${spoofChip}${mtChips}
-      </div>
-      <div class="ncw-more-usage">
-        <div class="ubar"><div class="ubar-f" style="width:${pct}%;background:${bc}"></div></div>
-        <div class="utxt"><span>${fmtB(l.used_bytes)}</span><span>از ${lim}</span></div>
-        <div class="ncw-exp">${expChip(l.expires_at,l.expired)}</div>
-        <span class="ncw-created">${new Date(l.created_at).toLocaleDateString('fa-IR')}</span>
-      </div>
-      <div class="ncw-more-actions">
-        <button class="tog${allowed?' on':''}" onclick="toggleActive('${l.uuid}',${!l.active}${isNode?`,'${l._nodeId}'`:''})" title="فعال/غیرفعال"></button>
-        ${!isNode&&(l.protocol==='vless-ws'||l.protocol==='trojan-ws')?`<button class="btn btn-sm btn-g" onclick="turboTest('${l.uuid}',this)" title="تست توربو 0-RTT — یک RTT کمتر + کپی لینک توربو"><i class="ti ti-rocket"></i> توربو</button>`:''}
-        ${!isNode&&isMt?`<button class="btn btn-sm btn-pur" onclick="openAdTagModal('${l.uuid}','${esc(l.label)}','${esc(l.ad_tag||'')}')" title="تنظیم تبلیغ"><i class="ti ti-speakerphone"></i></button>`:''}
-        ${isMt
-          ? `<button class="btn btn-sm btn-g" onclick="openMtInfoModal('${esc(l.label)}','${esc(l.mtproto_secret||'')}','${esc(l.vless_link)}',${!!l.mtproto_public_host})" title="اطلاعات پروکسی"><i class="ti ti-info-circle"></i> اطلاعات</button>`
-          : `<button class="btn btn-sm btn-g" onclick="navigator.clipboard.writeText('${esc(l.sub_url)}').then(()=>toast('Sub کپی شد','ok'))" title="Sub URL"><i class="ti ti-rss"></i> Sub</button>`}
-        ${!isMt&&l.sub_json_urls?`<button class="btn btn-sm btn-pur" onclick="navigator.clipboard.writeText(window.location.origin+'${esc(l.sub_json_urls.singbox)}').then(()=>toast('ساب IR-Direct (sing-box) کپی شد','ok'))" title="ساب IR-Direct — داخلی‌کردن مصرف (sing-box)"><i class="ti ti-route"></i></button>
-        <button class="btn btn-sm btn-pur" onclick="navigator.clipboard.writeText(window.location.origin+'${esc(l.sub_json_urls.xray)}').then(()=>toast('ساب IR-Direct (xray) کپی شد','ok'))" title="ساب IR-Direct (xray)"><i class="ti ti-router"></i></button>
-        ${l.sub_json_urls.singbox_ir?`<button class="btn btn-sm btn-amber" onclick="navigator.clipboard.writeText(window.location.origin+'${esc(l.sub_json_urls.singbox_ir)}').then(()=>toast('ساب Iran-Exit — IP همیشه ایران (sing-box) کپی شد','ok'))" title="ساب Iran-Exit: کل ترافیک با IP ایران (از گیت‌وی اثبات‌شده؛ sing-box)"><i class="ti ti-flag"></i></button>
-        <button class="btn btn-sm btn-amber" onclick="navigator.clipboard.writeText(window.location.origin+'${esc(l.sub_json_urls.xray_ir)}').then(()=>toast('ساب Iran-Exit — IP همیشه ایران (xray) کپی شد','ok'))" title="ساب Iran-Exit (xray)"><i class="ti ti-flag-filled"></i></button>`:''}`:''}
-        <button class="btn btn-sm btn-g" onclick="resetUsage('${l.uuid}'${isNode?`,'${l._nodeId}'`:''})" title="ریست مصرف"><i class="ti ti-rotate"></i></button>
-        <button class="btn btn-sm btn-d" onclick="deleteLink('${l.uuid}'${isNode?`,'${l._nodeId}'`:''})" title="حذف"><i class="ti ti-trash"></i> حذف</button>
-      </div>
-    </div>
-  </div>`;
-}
-
+let allSubsList=[],allLinksList=[],onlineNodesList=[];
 async function loadLinks(){
   try{
     const [lr,sr,nr,zr]=await Promise.all([authF('/api/links'),authF('/api/subs'),authF('/api/nodes/aggregate').catch(()=>null),authF('/api/zeus-proxy/status').catch(()=>null)]);
@@ -9792,30 +3322,10 @@ async function loadLinks(){
       }catch(e){}
     }
     const links=[...localLinks,...nodeLinks];
-    // هشدار یک‌باره: اگر دامنه‌ی عمومی Railway فعال نباشد، لینک‌ها روی localhost می‌مانند
-    if(!window.__domainWarned&&localLinks.some(l=>(l.vless_link||'').includes('@localhost:')||(l.vless_link||'').includes('@127.0.0.1:'))){
-      window.__domainWarned=true;
-      toast('دامنه‌ی عمومی فعال نیست — Railway → Settings → Networking → Generate Domain','warn');
-    }
     allSubsList=subs;allLinksList=links;
-    // Phase 40: آمار ورک‌اسپیس (همه از داده‌ی واقعی — بدون «سالم» بدون شاهد)
-    const _set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v};
-    _set('info-alltime',fmtB(links.reduce((s,l)=>s+l.used_bytes,0)));
-    _set('ncw-total',toFa(links.length));
-    const _verified=links.filter(l=>l.last_ping&&l.last_ping.ok).length;
-    const _failed=links.filter(l=>l.last_ping&&!l.last_ping.ok).length;
-    const _untested=links.length-_verified-_failed;
-    _set('ncw-healthy',toFa(_verified));
-    _set('ncw-active',toFa(links.filter(l=>l.active).length));
-    const _netEl=document.getElementById('ncw-net');
-    if(_netEl){
-      if(!links.length){_netEl.textContent='—';_netEl.style.color=''}
-      else if(_verified>0){_netEl.textContent='سالم ('+toFa(_verified)+')';_netEl.style.color='var(--green-t)'}
-      else if(_failed>0){_netEl.textContent='قطع ('+toFa(_failed)+')';_netEl.style.color='var(--red-t)'}
-      else{_netEl.textContent='تست نشده';_netEl.style.color='var(--amber-t)'}
-    }
-    const _hsEl=document.getElementById('ncw-st-healthy');
-    if(_hsEl)_hsEl.title='VERIFIED = تونل E2E واقعی جواب داد · تست‌نشده: '+toFa(_untested)+' · ناموفق: '+toFa(_failed);
+    document.getElementById('info-inbounds').textContent = toFa(links.length);
+    document.getElementById('info-clients').textContent = toFa(links.filter(l=>l.active).length);
+    document.getElementById('info-alltime').textContent = fmtB(links.reduce((s,l)=>s+l.used_bytes,0));
     const nlSub=document.getElementById('nl-sub');
     nlSub.innerHTML='<option value="">— بدون گروه —</option>'+subs.map(s=>`<option value="${esc(s.sub_id)}">${esc(s.name)}</option>`).join('');
     const nlTarget=document.getElementById('nl-target'), nlTargetWrap=document.getElementById('nl-target-wrap');
@@ -9825,66 +3335,79 @@ async function loadLinks(){
     }
     document.getElementById('links-nb').textContent=links.length;
     document.getElementById('links-pg-cnt').textContent=toFa(links.length)+' کانفیگ';
-    // پینگ واقعی از مرورگر شما — کارت «حقیقت مسیر» (حداکثر هر ۶۰ ثانیه یک‌بار)
-    if(!window.__ctLast || (Date.now()-window.__ctLast)>60000){
-      window.__ctLast=Date.now();
-      refreshClientTruth();
-    }
-    const lsumBadge=document.getElementById('lsummary-badge'); if(lsumBadge)lsumBadge.textContent=toFa(links.length);
+    document.getElementById('lsummary-badge').textContent=toFa(links.length);
     const liveUuids=new Set(links.map(l=>l.uuid));
     [...selectedLinkUuids].forEach(u=>{if(!liveUuids.has(u))selectedLinkUuids.delete(u)});
     document.getElementById('links-selectall-wrap').style.display=links.length?'flex':'none';
     const zeusExists = !!(zeusStatus && zeusStatus.phase==='done' && zeusStatus.result);
     const grid=document.getElementById('links-grid'),empty=document.getElementById('links-empty');
-    if(!links.length && !zeusExists){grid.innerHTML='';empty.style.display='block';const ls1=document.getElementById('lsummary');if(ls1)ls1.innerHTML='<div class="empty"><i class="ti ti-link-off"></i><p>کانفیگی وجود ندارد</p></div>';updateBulkBar();return}
+    if(!links.length && !zeusExists){grid.innerHTML='';empty.style.display='block';document.getElementById('lsummary').innerHTML='<div class="empty"><i class="ti ti-link-off"></i><p>کانفیگی وجود ندارد</p></div>';updateBulkBar();return}
     empty.style.display='none';
     const subMap=Object.fromEntries(subs.map(s=>[s.sub_id,s.name]));
-    grid.innerHTML=(zeusExists?`<div class="cfg-grid" style="grid-column:1/-1;margin:0">${zeusCardHtml(zeusStatus)}</div>`:'') + links.map(l=>ncwCardHtml(l, subMap)).join('');
-    const ls2=document.getElementById('lsummary'); if(ls2)ls2.innerHTML=links.slice(0,6).map(l=>`<div class="sr"><span class="sr-k" style="gap:5px"><i class="ti ${l.expired?'ti-calendar-x':l.active?'ti-circle-check':'ti-circle-x'}" style="color:${l.expired?'var(--amber)':l.active?'var(--green)':'var(--red)'}"></i>${esc(l.label)}</span><span class="sr-v" style="font-size:10px">${fmtB(l.used_bytes)} / ${l.limit_bytes===0?'∞':fmtB(l.limit_bytes)}</span></div>`).join('');
-    updateBulkBar();
-    // ── Auto-ping background ───────────────────────────────────────────
-    // بدون وقفه روی UI — هم‌زمان با ۳ concurrent، با ۱.۵ ثانیه تأخیر
-    // تا گرافیک اولیه کامل رندر شود.
-    if(!window.__autoPingScheduled){
-      window.__autoPingScheduled = true;
-      setTimeout(()=>{ autoPingAll(localLinks.map(l=>l.uuid)); }, 1500);
-    }
-  }catch(e){netErr(e,'لیست کانفیگ‌ها')}
-}
-
-// ════════════════════════════════════════════════════════════════════════════
-// autoPingAll — پینگ خودکار همه‌ی کانفیگ‌های محلی پس از بارگذاری داشبورد
-// نتیجه: همه‌ی بج‌های پینگ بدون دخالت کاربر، آپدیت می‌شوند.
-// ════════════════════════════════════════════════════════════════════════════
-async function autoPingAll(uuids){
-  if(!uuids || !uuids.length) return;
-  // روی رویدارها، هر ۶۰ ثانیه تکرار می‌کنیم
-  if(window.__autoPingTimer){ clearTimeout(window.__autoPingTimer); }
-  const CONC = 3;
-  const queues = Array.from({length: Math.min(CONC, uuids.length)}, (_,i) => uuids.filter((_,j) => j%CONC === i));
-  const rtt = await clientRtt().catch(()=>null);
-  async function worker(list){
-    for(const uuid of list){
-      try{
-        const r = await authF(`/api/links/${uuid}/ping`, {method:'POST'});
-        const d = await r.json();
-        // فقط اگر کاربر روی همان لینک در حال کلیک نیست، آپدیت کن
-        const el = document.getElementById('pb-'+uuid);
-        if(el && !el.dataset.userActive){
-          renderPingBadge(uuid, d, rtt);
+    grid.innerHTML=(zeusExists?zeusCardHtml(zeusStatus):'')+links.map(l=>{
+  const isNode=!!l._nodeId;
+  const lim=l.limit_bytes===0?'∞':fmtB(l.limit_bytes);
+  const pct=l.limit_bytes===0?0:Math.min(100,l.used_bytes/l.limit_bytes*100);
+  const bc=pct>90?'var(--red)':pct>70?'var(--amber)':'var(--accent)';
+  const allowed=l.active&&!l.expired;
+  const cardCls=(!l.active?'is-off':(l.expired?'is-exp':''))+(isNode?' is-node':'');
+  const isMt = l.protocol === 'mtproto';
+  const adBtn = isMt
+    ? `<button class="btn btn-sm btn-pur btn-icon" onclick="openAdTagModal('${l.uuid}','${esc(l.label)}','${esc(l.ad_tag||'')}')" title="تنظیم تبلیغ کانال"><i class="ti ti-speakerphone"></i></button>`
+    : '';
+  const idChip = isMt
+    ? `<span class="cfg-uuid-mini" onclick="navigator.clipboard.writeText('${esc(l.mtproto_secret||'')}').then(()=>toast('سکرت کپی شد ✓','ok'))" title="سکرت کامل: ${esc(l.mtproto_secret||'')}"><i class="ti ti-key"></i> ${esc((l.mtproto_secret||'').slice(0,10))}…</span>`
+    : `<span class="cfg-uuid-mini" onclick="navigator.clipboard.writeText('${l.uuid}').then(()=>toast('UUID کپی شد','ok'))" title="${l.uuid}"><i class="ti ti-fingerprint"></i> ${l.uuid.slice(0,10)}…</span>`;
+  const nodeBadge = isNode ? `<span class="node-origin" style="margin-left:6px"><i class="ti ti-topology-star-3"></i> نود: ${esc(l._nodeName)}</span>` : '';
+  return `<div class="cfg-card ${cardCls} ${selectedLinkUuids.has(l.uuid)?'selected':''}" data-uuid="${l.uuid}">
+    <div class="cfg-row">
+      ${isNode?'<span style="width:18px;flex-shrink:0"></span>':`<div class="cfg-check ${selectedLinkUuids.has(l.uuid)?'checked':''}" onclick="toggleLinkSelect('${l.uuid}',this)"><i class="ti ti-check"></i></div>`}
+      <span class="cfg-status-dot ${allowed?'pulse':''}"></span>
+      <div class="cfg-identity">
+        <div class="cfg-label">${esc(l.label)} ${nodeBadge}</div>
+        <div class="cfg-sub-meta">
+          ${idChip}
+          <span>${new Date(l.created_at).toLocaleDateString('fa-IR')}</span>
+        </div>
+      </div>
+      <div class="cfg-divider-v"></div>
+      <div class="cfg-usage-col">
+        <div class="ubar"><div class="ubar-f" style="width:${pct}%;background:${bc}"></div></div>
+        <div class="utxt"><span>${fmtB(l.used_bytes)}</span><span>از ${lim}</span></div>
+      </div>
+      <div class="cfg-divider-v"></div>
+      <div class="cfg-exp-col">${expChip(l.expires_at,l.expired)}</div>
+      <div class="cfg-divider-v"></div>
+      <div class="cfg-badges-col">
+        ${protoBadge(l.protocol)}
+        ${isMt && l.ad_tag ? `<span class="cfg-sub-tag" style="background:linear-gradient(135deg,rgba(255,122,61,.18),rgba(232,89,12,.12));color:#FFB199;padding:3px 9px;border-radius:20px;border:1px solid rgba(255,122,61,.25);font-weight:700"><i class="ti ti-speakerphone" style="color:#FFB199"></i> تبلیغ فعال</span>` : ''}
+        ${isMt && l.mtproto_public_host ? `<span class="cfg-sub-tag"><i class="ti ti-route"></i> ${esc(l.mtproto_public_host)}:${l.mtproto_public_port}</span>` : ''}
+        ${isMt && !l.mtproto_public_host && l.mtproto_public_pending ? `<span class="cfg-sub-tag" style="color:var(--amber-t)"><i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i> در حال ساخت TCP Proxy عمومی...</span>` : ''}
+        ${isMt && !l.mtproto_public_host && !l.mtproto_public_pending && !l.mtproto_manual_port ? `<span class="cfg-sub-tag" style="color:var(--red-t)"><i class="ti ti-alert-triangle"></i> بدون TCP Proxy عمومی — لینک کار نمی‌کند</span>` : ''}
+        ${l.sub_id&&allSubsList.find(s=>s.sub_id===l.sub_id)?`<span class="cfg-sub-tag"><i class="ti ti-folder"></i> ${esc(allSubsList.find(s=>s.sub_id===l.sub_id).name)}</span>`:''}
+      </div>
+      <div class="cfg-divider-v"></div>
+      <div class="cfg-actions">
+        <div class="cfg-actions">
+        <button class="tog${allowed?' on':''}" onclick="toggleActive('${l.uuid}',${!l.active}${isNode?`,'${l._nodeId}'`:''})" title="فعال/غیرفعال"></button>
+        ${!isNode?adBtn:''}
+        <button class="btn btn-sm btn-g btn-icon" onclick="navigator.clipboard.writeText('${esc(l.vless_link)}').then(()=>toast('لینک کپی شد','ok'))" title="کپی لینک"><i class="ti ti-copy"></i></button>
+        ${isMt
+          ? `<button class="btn btn-sm btn-g btn-icon" onclick="openMtInfoModal('${esc(l.label)}','${esc(l.mtproto_secret||'')}','${esc(l.vless_link)}',${!!l.mtproto_public_host})" title="اطلاعات پروکسی"><i class="ti ti-info-circle"></i></button>`
+          : `<button class="btn btn-sm btn-g btn-icon" onclick="navigator.clipboard.writeText('${esc(l.sub_url)}').then(()=>toast('Sub کپی شد','ok'))" title="Sub URL"><i class="ti ti-rss"></i></button>
+        <button class="btn btn-sm btn-g btn-icon" onclick="showQR('${esc(l.vless_link)}')" title="QR"><i class="ti ti-qrcode"></i></button>`
         }
-      }catch(e){ /* ignore — silent background */ }
-    }
-  }
-  await Promise.all(queues.map(q => worker(q)));
-  // تکرار هر ۶۰ ثانیه — فقط اگر تب لینک‌ها هنوز فعال است
-  window.__autoPingTimer = setTimeout(()=>{
-    if(document.querySelector('.nav-it.on[data-pg="links"]')){
-      autoPingAll(uuids);
-    } else {
-      window.__autoPingScheduled = false;
-    }
-  }, 60000);
+        ${!isNode?`<button class="btn btn-sm btn-amber btn-icon" onclick="openEditLink('${l.uuid}')" title="ویرایش"><i class="ti ti-edit"></i></button>`:`<button class="btn btn-sm btn-amber btn-icon" onclick="openEditLink('${l.uuid}','${l._nodeId}')" title="ویرایش از راه دور"><i class="ti ti-edit"></i></button>`}
+        <button class="btn btn-sm btn-g btn-icon" onclick="resetUsage('${l.uuid}'${isNode?`,'${l._nodeId}'`:''})" title="ریست مصرف"><i class="ti ti-rotate"></i></button>
+        <button class="btn btn-sm btn-d btn-icon" onclick="deleteLink('${l.uuid}'${isNode?`,'${l._nodeId}'`:''})" title="حذف"><i class="ti ti-trash"></i></button>
+      </div>
+      </div>
+    </div>
+  </div>`;
+}).join('');
+    document.getElementById('lsummary').innerHTML=links.slice(0,6).map(l=>`<div class="sr"><span class="sr-k" style="gap:5px"><i class="ti ${l.expired?'ti-calendar-x':l.active?'ti-circle-check':'ti-circle-x'}" style="color:${l.expired?'var(--amber)':l.active?'var(--green)':'var(--red)'}"></i>${esc(l.label)}</span><span class="sr-v" style="font-size:10px">${fmtB(l.used_bytes)} / ${l.limit_bytes===0?'∞':fmtB(l.limit_bytes)}</span></div>`).join('');
+    updateBulkBar();
+  }catch(e){console.error(e)}
 }
 
 /* ══════ انتخاب گروهی و حذف دسته‌جمعی کانفیگ‌ها ══════ */
@@ -9948,38 +3471,6 @@ function qcTab(name, el){
 }
 
 let cmBase = 'vless', cmTransport = 'ws';
-// ── Phase 37.18: frontend consumes the BACKEND compatibility matrix ──────
-// ONE source of truth: /api/config-matrix (compat.py TRANSPORT_MATRIX).
-// The create modal gates every (protocol, transport) choice against it —
-// impossible combinations are blocked BEFORE the request, with the reason.
-let EMIX_COMPAT = null;
-async function cmLoadMatrix(){
-  // Audit fix: قبلاً اگر ماتریس گرفته نمی‌شد gating بی‌صدا به «همه‌چیز مجاز»
-  // تنزل می‌کرد. حالا افت gating به کاربر اعلام می‌شود (سرور همچنان 400
-  // می‌دهد؛ این فقط لایه‌ی UX است — رفتار امنیتی تغییر نکرده).
-  try {
-    const r = await fetch('/api/config-matrix', {credentials:'same-origin'});
-    if (!r.ok) { netErr(r, 'ماتریس سازگاری'); return; }
-    const j = await r.json();
-    if (j && j.ok && Array.isArray(j.combinations)) EMIX_COMPAT = j.combinations;
-    else netErr(new Error('bad matrix payload'), 'ماتریس سازگاری');
-  } catch(e) { netErr(e, 'ماتریس سازگاری'); }
-}
-function cmMatrixState(proto, transport){
-  if (!EMIX_COMPAT) return 'VALID'; // matrix unavailable → legacy behavior
-  const key = (proto === 'vless' && transport !== 'ws') ? transport : `${proto}-${transport}`;
-  const row = EMIX_COMPAT.find(c => c.fused === key || (c.protocol === proto && c.transport === transport));
-  return row ? row.state : 'NOT_IMPLEMENTED';
-}
-function cmGateCombo(proto, transport){
-  const state = cmMatrixState(proto, transport);
-  if (state === 'VALID') return true;
-  const label = state === 'EXPERIMENTAL' ? 'ترکیب آزمایشی' :
-                state === 'NOT_IMPLEMENTED' ? 'پیاده‌سازی نشده' : 'ترکیب نامعتبر';
-  toast(`این ترکیب پروتکل/ترابرد ${label} است — ماتریس سازگاری سرور`, 'err');
-  return false;
-}
-cmLoadMatrix();
 
 function cmToggleDD(id){
   const el = document.getElementById(id);
@@ -10025,46 +3516,27 @@ function cmSelectBase(val, el){
   const mtNote = document.getElementById('mtproto-note');
   const portField = document.getElementById('mtproto-port-field');
   const ssField = document.getElementById('ss-cipher-field');
-  const sniSpoofField = document.getElementById('sni-spoof-field');
 
-  if (sniSpoofField) sniSpoofField.style.display = 'block';  // Always visible — disabled for MTProto/SS with explanation
   if (val === 'telproxy') {
     streamSection.style.display = 'none';
     normalNote.style.display = 'none';
     mtNote.style.display = 'flex';
     portField.style.display = 'block';
     if (ssField) ssField.style.display = 'none';
-    // SNI spoofing section stays visible but disabled for MTProto
-    if (sniSpoofField) {
-      sniSpoofField.style.display = 'block';
-      sniSpoofField.style.opacity = '0.5';
-      sniSpoofField.style.pointerEvents = 'none';
-      const spoofToggle = document.getElementById('nl-spoof-toggle');
-      if (spoofToggle) spoofToggle.classList.remove('on');
-      const spoofNote = sniSpoofField.querySelector('.cm-note');
-      if (spoofNote) spoofNote.innerHTML = '<i class="ti ti-info-circle"></i> <span>MTProto از FakeTLS خودش استفاده می‌کند — SNI spoofing قابل استفاده نیست.</span>';
-    }
     document.getElementById('cm-head-title').textContent = 'ساخت پروکسی جدید';
     document.getElementById('cm-head-sub').textContent = 'ساخت پروکسی تلگرام (MTProto) با پورت TCP اختصاصی';
     document.getElementById('cm-submit-text').textContent = 'ساخت پروکسی';
     document.getElementById('cm-head-icon').innerHTML = '<i class="ti ti-brand-telegram"></i>';
   } else if (val === 'shadowsocks') {
+    // Shadowsocks فقط یک حالت واقعی داره (SIP002 + plugin=v2ray-plugin برای WS+TLS)؛
+    // xhttp روی هیچ کلاینت رایجی (v2rayN, NekoBox, ...) برای SS پشتیبانی نمیشه،
+    // پس منوی transport اصلاً نشون داده نمیشه تا کاربر نتونه کانفیگ خراب بسازه.
     cmTransport = 'ws';
     streamSection.style.display = 'none';
     normalNote.style.display = 'flex';
     mtNote.style.display = 'none';
     portField.style.display = 'none';
     if (ssField) ssField.style.display = 'block';
-    // SNI spoofing section stays visible but disabled for SS
-    if (sniSpoofField) {
-      sniSpoofField.style.display = 'block';
-      sniSpoofField.style.opacity = '0.5';
-      sniSpoofField.style.pointerEvents = 'none';
-      const spoofToggle = document.getElementById('nl-spoof-toggle');
-      if (spoofToggle) spoofToggle.classList.remove('on');
-      const spoofNote = sniSpoofField.querySelector('.cm-note');
-      if (spoofNote) spoofNote.innerHTML = '<i class="ti ti-info-circle"></i> <span>Shadowsocks از v2ray-plugin استفاده می‌کند که host= را برای WS Host و TLS SNI به‌طور مشترک استفاده می‌کند — SNI spoofing قابل استفاده نیست.</span>';
-    }
     document.getElementById('cm-head-title').textContent = 'ساخت کانفیگ Shadowsocks';
     document.getElementById('cm-head-sub').textContent = 'رمزنگاری AEAD، پسورد به‌صورت خودکار ساخته می‌شود';
     document.getElementById('cm-submit-text').textContent = 'ساخت کانفیگ';
@@ -10075,14 +3547,6 @@ function cmSelectBase(val, el){
     mtNote.style.display = 'none';
     portField.style.display = 'none';
     if (ssField) ssField.style.display = 'none';
-    // VLESS + Trojan (WS/XHTTP) — SNI spoofing fully enabled
-    if (sniSpoofField) {
-      sniSpoofField.style.display = 'block';
-      sniSpoofField.style.opacity = '1';
-      sniSpoofField.style.pointerEvents = 'auto';
-      const spoofNote = sniSpoofField.querySelector('.cm-note');
-      if (spoofNote) spoofNote.innerHTML = '<i class="ti ti-info-circle"></i> <span>SNI جعلی در هندشیک TLS ارسال می‌شود. دامنه باید واقعی و روی CDN قابل resolve باشد.</span>';
-    }
     document.getElementById('cm-head-title').textContent = 'ساخت کانفیگ جدید';
     document.getElementById('cm-head-sub').textContent = 'تنظیمات کامل پروتکل، ترابرد و محدودیت‌ها در یک صفحه';
     document.getElementById('cm-submit-text').textContent = 'ساخت کانفیگ';
@@ -10091,11 +3555,6 @@ function cmSelectBase(val, el){
   cmApplyProto();
 }
 function cmSelectTransport(val, el){
-  // Phase 37.18: gate against the backend compatibility matrix FIRST —
-  // an impossible combination never reaches the API.
-  const gateProto = (cmBase === 'telproxy') ? 'mtproto'
-    : (cmBase === 'shadowsocks') ? 'shadowsocks' : cmBase;
-  if (!cmGateCombo(gateProto, val)) return;
   cmTransport = val;
   document.querySelectorAll('#dd-transport .cm-opt').forEach(o => o.classList.remove('sel'));
   el.classList.add('sel');
@@ -10140,61 +3599,6 @@ function cmSetSni(domain, el){
   el.parentElement.querySelectorAll('.cm-pill').forEach(c => c.classList.remove('active'));
   el.classList.add('active');
 }
-
-// ── SNI Spoofing toggle/preset helpers (per-link, opt-in) ───────────────
-function cmToggleSpoof(){
-  const toggle = document.getElementById('nl-spoof-toggle');
-  const controls = document.getElementById('nl-spoof-controls');
-  const enabledInput = document.getElementById('nl-spoof-enabled');
-  const sniInput = document.getElementById('nl-spoof-sni');
-  if(!toggle || !controls || !enabledInput) return;
-  const isOn = toggle.classList.toggle('on');
-  controls.style.display = isOn ? 'block' : 'none';
-  enabledInput.value = isOn ? '1' : '0';
-  if(!isOn && sniInput) sniInput.value = '';
-  // Show CDN warning if SNI spoof is ON but no CDN domain configured
-  cmCheckSpoofCdnWarning(isOn);
-}
-function cmSpoofPreset(sel){
-  const v = (sel && sel.value) || '';
-  if(!v) return;
-  const sniInput = document.getElementById('nl-spoof-sni');
-  if(sniInput) sniInput.value = v;
-  sel.value = '';  // reset dropdown so user can pick again
-}
-function cmCheckSpoofCdnWarning(isOn){
-  // Check if the link list response had cdn_domain=null — if so, show warning
-  // when SNI spoof is toggled ON. We read from the first link's cdn_domain field.
-  // Audit fix: `window.allLinksList` همیشه undefined بود (let در scope اسکریپت
-  // propertyی window نمی‌شود) → وارنینگ همیشه نمایش داده می‌شد. حالا مستقیم
-  // از متغیر scope با typeof ایمن خوانده می‌شود.
-  const warn = document.getElementById('nl-spoof-cdn-warn');
-  if(!warn) return;
-  if(!isOn){ warn.style.display = 'none'; return; }
-  // Try to read CDN domain from the first link in allLinksList
-  let hasCdn = false;
-  try{
-    const lst = (typeof allLinksList !== 'undefined') ? allLinksList : [];
-    if(lst && lst.length > 0){ hasCdn = !!lst[0].cdn_domain; }
-  }catch(_e){}
-  warn.style.display = hasCdn ? 'none' : 'block';
-}
-// ── ALPN preset helper ─────────────────────────────────────────────────
-function cmAlpnPreset(alpnList, el){
-  // Clear all active chips first
-  document.querySelectorAll('#alpn-pills .alpn-chip').forEach(c => c.classList.remove('active'));
-  // Activate the chips in the preset list
-  alpnList.forEach(alpn => {
-    const chip = document.querySelector(`#alpn-pills .alpn-chip[data-alpn="${alpn}"]`);
-    if(chip) chip.classList.add('active');
-  });
-  // Update the hidden input
-  cmUpdateAlpn();
-  // Update pill active states
-  el.parentElement.querySelectorAll('.cm-pill').forEach(p => p.classList.remove('active'));
-  el.classList.add('active');
-}
-
 function cmClearSniPills(){
   const wrap = document.getElementById('nl-mtproto-domain').closest('.cm-section').querySelector('.cm-pills');
   wrap?.querySelectorAll('.cm-pill').forEach(c => c.classList.remove('active'));
@@ -10269,36 +3673,14 @@ async function createLink(){
   const alpn = (isMt || isSs) ? null : (document.getElementById('nl-alpn').value || 'h2,http/1.1');
   const fingerprint = (isMt || isSs) ? null : (document.getElementById('nl-fp').value || 'chrome');
   const ss_cipher = isSs ? (document.getElementById('nl-ss-cipher').value || 'chacha20-ietf-poly1305') : null;
-  // ── SNI Spoofing (per-link, opt-in) ──────────────────────────────────
-  // Only sent for VLESS/Trojan (WS/XHTTP). The backend also validates +
-  // rejects invalid values, so client-side is just UX.
-  let spoof_sni = null, spoof_sni_enabled = false;
-  if (!isMt && !isSs) {
-    const spoofEnabledEl = document.getElementById('nl-spoof-enabled');
-    const spoofSniEl = document.getElementById('nl-spoof-sni');
-    if (spoofEnabledEl && spoofEnabledEl.value === '1' && spoofSniEl) {
-      spoof_sni = spoofSniEl.value.trim();
-      spoof_sni_enabled = !!spoof_sni;
-      if (spoof_sni_enabled && !spoof_sni) {
-        toast('یک دامنه‌ی SNI معتبر وارد کنید', 'err'); return;
-      }
-    }
-  }
   try{
     const url = nodeId ? ('/api/nodes/'+nodeId+'/links') : '/api/links';
-    const r=await authF(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({label,limit_value:val||0,limit_unit:unit,expires_days:exp||0,note,sub_id,protocol,mtproto_port,mtproto_domain,mtproto_public_host,mtproto_public_port,alpn,fingerprint,ss_cipher,spoof_sni,spoof_sni_enabled})});
+    const r=await authF(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({label,limit_value:val||0,limit_unit:unit,expires_days:exp||0,note,sub_id,protocol,mtproto_port,mtproto_domain,mtproto_public_host,mtproto_public_port,alpn,fingerprint,ss_cipher})});
     if(!r.ok){
       const d=await r.json().catch(()=>({}));
       throw new Error(d.detail||'failed');
     }
-    ['nl-label','nl-val','nl-exp','nl-note','nl-mtproto-port','nl-mtproto-domain','nl-mtproto-public-host','nl-mtproto-public-port','nl-spoof-sni'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-    // Reset SNI spoofing toggle to OFF after successful submit
-    const spoofToggle=document.getElementById('nl-spoof-toggle');
-    const spoofControls=document.getElementById('nl-spoof-controls');
-    const spoofEnabledInput=document.getElementById('nl-spoof-enabled');
-    if(spoofToggle){spoofToggle.classList.remove('on');}
-    if(spoofControls){spoofControls.style.display='none';}
-    if(spoofEnabledInput){spoofEnabledInput.value='0';}
+    ['nl-label','nl-val','nl-exp','nl-note','nl-mtproto-port','nl-mtproto-domain','nl-mtproto-public-host','nl-mtproto-public-port'].forEach(id=>document.getElementById(id).value='');
     toast(isMt ? 'پروکسی ساخته شد ✓' : (nodeId?'کانفیگ روی نود ساخته شد ✓':'کانفیگ ساخته شد ✓'),'ok');
     loadLinks();
   }catch(e){toast('✗ '+(e.message||'خطا (شاید کلید این نود اجازه‌ی ساخت از راه دور ندارد)'),'err')}
@@ -10405,7 +3787,7 @@ async function deleteLink(uuid,nodeId){
   if(!confirm('حذف این کانفیگ؟'))return;
   try{const r=await authF(linkApiBase(nodeId)+uuid,{method:'DELETE'});if(!r.ok)throw new Error((await r.json().catch(()=>({}))).detail||'');toast('حذف شد ✓','ok');loadLinks();}catch(e){toast(e.message||'خطا (شاید کلید این نود اجازه‌ی حذف ندارد)','err')}
 }
-function showQR(link){window.open('/api/qr?data='+encodeURIComponent(link),'_blank')}
+function showQR(link){window.open('https://api.qrserver.com/v1/create-qr-code/?size=300x300&data='+encodeURIComponent(link),'_blank')}
 let allSubsRaw=[];
 async function loadSubs(){
   try{
@@ -10437,7 +3819,7 @@ function renderSubsGrid(subs){
   }
   grid.innerHTML=subs.map(s=>{
     const isNode=!!s._nodeId;
-    const nodeBadge=isNode?`<span class="sub-card-lock-badge open" style="background:var(--purple-bg,rgba(168,85,247,.14));color:var(--purple,#FACC15)" title="نود: ${esc(s._nodeName)}"><i class="ti ti-topology-star-3"></i></span>`:'';
+    const nodeBadge=isNode?`<span class="sub-card-lock-badge open" style="background:var(--purple-bg,rgba(255,122,61,.14));color:var(--purple,#FF8A3D)" title="نود: ${esc(s._nodeName)}"><i class="ti ti-topology-star-3"></i></span>`:'';
     return `
     <div class="sub-card">
       <div class="sub-card-top">
@@ -10583,7 +3965,7 @@ function renderLmodalList(){
   body.innerHTML=all.map(l=>{
     const checked=lmodalInSub.has(l.key);
     const on=l.active&&!l.expired;
-    const nodeBadge=l.nodeLabel?`<span class="lrow-v2-status" style="background:var(--purple-bg,rgba(168,85,247,.14));color:var(--purple,#FACC15);margin-left:4px"><i class="ti ti-topology-star-3" style="font-size:9px"></i> ${esc(l.nodeLabel)}</span>`:'';
+    const nodeBadge=l.nodeLabel?`<span class="lrow-v2-status" style="background:var(--purple-bg,rgba(255,122,61,.14));color:var(--purple,#FF8A3D);margin-left:4px"><i class="ti ti-topology-star-3" style="font-size:9px"></i> ${esc(l.nodeLabel)}</span>`:'';
     return `<div class="lrow-v2 ${checked?'checked':''}" data-key="${esc(l.key)}" data-name="${esc(l.label).toLowerCase()}" onclick="toggleLrow('${esc(l.key)}',this)">
       <div class="lrow-v2-check"><i class="ti ti-check"></i></div>
       <div class="lrow-v2-avatar"><i class="ti ${protoIcon(l.protocol)}"></i></div>
@@ -10691,7 +4073,7 @@ async function loadSubsPage(){
         </div>
       </div>
     `;}).join('');
-  }catch(e){netErr(e,'سابسکریپشن‌ها')}
+  }catch(e){}
 }
 function cpSubAll(){navigator.clipboard.writeText(location.protocol+'//'+location.host+'/sub-all').then(()=>toast('کپی شد ✓','ok'))}
 function parseBytesFmt(s){
@@ -10767,13 +4149,13 @@ async function loadConns(){
     }).join('');
   }catch(e){console.error(e)}
 }
-async function loadErrs(){try{const r=await authF('/stats'),d=await r.json();renderErrs(d.recent_errors||[]);}catch(e){netErr(e,'آخرین خطاها')}}
+async function loadErrs(){try{const r=await authF('/stats'),d=await r.json();renderErrs(d.recent_errors||[]);}catch(e){}}
 async function fetchDefaultVless(){
-  try{const r=await authF('/api/links'),d=await r.json();const links=d.links||[];const def=links.find(l=>l.limit_bytes===0&&l.active&&!l.expired)||links.find(l=>l.active&&!l.expired)||links[0];document.getElementById('vless-main').textContent=def?def.vless_link:'هنوز کانفیگی وجود ندارد';}catch(e){netErr(e,'کانفیگ پیش‌فرض')}
+  try{const r=await authF('/api/links'),d=await r.json();const links=d.links||[];const def=links.find(l=>l.limit_bytes===0&&l.active&&!l.expired)||links.find(l=>l.active&&!l.expired)||links[0];document.getElementById('vless-main').textContent=def?def.vless_link:'هنوز کانفیگی وجود ندارد';}catch(e){}
 }
 function cpText(id){navigator.clipboard.writeText(document.getElementById(id).textContent).then(()=>toast('کپی شد ✓','ok'))}
 function qrFor(id){showQR(document.getElementById(id).textContent)}
-function refreshAll(){fetchStats();fetchDefaultVless();loadLinks();checkVolumeBanner();if(document.getElementById('pg-subgroups').classList.contains('on'))loadSubs();if(document.getElementById('pg-subscriptions').classList.contains('on'))loadSubsPage();if(document.getElementById('pg-connections').classList.contains('on'))loadConns();if(document.getElementById('pg-logs').classList.contains('on'))loadActivity();toast('رفرش شد','ok')}
+function refreshAll(){fetchStats();fetchDefaultVless();loadLinks();if(document.getElementById('pg-subgroups').classList.contains('on'))loadSubs();if(document.getElementById('pg-subscriptions').classList.contains('on'))loadSubsPage();if(document.getElementById('pg-connections').classList.contains('on'))loadConns();if(document.getElementById('pg-logs').classList.contains('on'))loadActivity();toast('رفرش شد','ok')}
 async function changePw(){
   const cur=document.getElementById('cp-cur').value,nw=document.getElementById('cp-new').value,cf=document.getElementById('cp-cf').value;
   if(!cur||!nw||!cf){toast('همه فیلدها را پر کنید','err');return}
@@ -10803,7 +4185,7 @@ function checkPwStrength(val){
   reqNum.classList.toggle('met',hasNum);
   reqCase.classList.toggle('met',hasCase);
   let score=0;if(hasLen)score++;if(hasNum)score++;if(hasCase)score++;if(hasLong)score++;
-  const colors=['#EF4444','#F59E0B','#8B5CF6','#10B981'],labels=['خیلی ضعیف','ضعیف','متوسط','قوی'];
+  const colors=['#EF4444','#F59E0B','#FF4D2E','#10B981'],labels=['خیلی ضعیف','ضعیف','متوسط','قوی'];
   segs.forEach((s,i)=>{s.style.background=i<score?colors[Math.max(0,score-1)]:'rgba(100,116,139,.2)'});
   if(val.length===0){label.innerHTML='<i class="ti ti-shield"></i> قدرت رمز';return}
   label.innerHTML=`<i class="ti ti-shield-check" style="color:${colors[Math.max(0,score-1)]}"></i> ${labels[Math.max(0,score-1)]}`;
@@ -10815,14 +4197,14 @@ function makeGradient(ctx,color1,color2){
 }
 function initCharts(){
   const c1=document.getElementById('ch1').getContext('2d');
-  const grad1=makeGradient(c1,'rgba(139,92,246,.38)','rgba(139,92,246,0)');
+  const grad1=makeGradient(c1,'rgba(255,77,46,.38)','rgba(255,77,46,0)');
   const opts={
     responsive:true,maintainAspectRatio:false,
     interaction:{mode:'index',intersect:false},
     plugins:{
       legend:{display:false},
       tooltip:{
-        backgroundColor:'rgba(13,27,46,.96)',borderColor:'rgba(139,92,246,.3)',borderWidth:1,
+        backgroundColor:'rgba(13,27,46,.96)',borderColor:'rgba(255,77,46,.3)',borderWidth:1,
         titleColor:'#E6FAF7',bodyColor:'#7CC7C4',padding:11,cornerRadius:10,displayColors:false,
         titleFont:{family:'Vazirmatn',size:11,weight:'700'},bodyFont:{family:'Vazirmatn',size:11},
         callbacks:{label:v=>`${v.parsed.y.toFixed(2)} مگابایت`}
@@ -10830,11 +4212,11 @@ function initCharts(){
     },
     scales:{
       x:{grid:{display:false},border:{display:false},ticks:{color:'#4A8F8B',font:{size:9,family:'Vazirmatn'}}},
-      y:{grid:{color:'rgba(139,92,246,.06)'},border:{display:false},ticks:{color:'#4A8F8B',font:{size:9,family:'Vazirmatn'},callback:v=>v+' MB'}}
+      y:{grid:{color:'rgba(255,77,46,.06)'},border:{display:false},ticks:{color:'#4A8F8B',font:{size:9,family:'Vazirmatn'},callback:v=>v+' MB'}}
     },
     elements:{line:{capBezierPoints:true}}
   };
-  const ds1={label:'MB',data:[],borderColor:'#8B5CF6',backgroundColor:grad1,fill:true,tension:.42,pointRadius:0,pointHoverRadius:6,pointHoverBackgroundColor:'#8B5CF6',pointHoverBorderColor:'#fff',pointHoverBorderWidth:2,borderWidth:2.5};
+  const ds1={label:'MB',data:[],borderColor:'#FF4D2E',backgroundColor:grad1,fill:true,tension:.42,pointRadius:0,pointHoverRadius:6,pointHoverBackgroundColor:'#FF4D2E',pointHoverBorderColor:'#fff',pointHoverBorderWidth:2,borderWidth:2.5};
   ch1=new Chart(document.getElementById('ch1'),{type:'line',data:{labels:[],datasets:[ds1]},options:opts});
 
   function makeGradientV2(ctx,c1,c2,c3){
@@ -10843,11 +4225,11 @@ function initCharts(){
     return g;
   }
   const c3ctx=document.getElementById('ch3').getContext('2d');
-  const gradFill3=makeGradientV2(c3ctx,'rgba(139,92,246,.45)','rgba(139,92,246,.08)','rgba(139,92,246,0)');
+  const gradFill3=makeGradientV2(c3ctx,'rgba(255,77,46,.45)','rgba(255,77,46,.08)','rgba(255,77,46,0)');
   ch3=new Chart(document.getElementById('ch3'),{
     type:'line',
     data:{labels:[],datasets:[
-      {label:'مصرف',data:[],borderColor:'#8B5CF6',backgroundColor:gradFill3,fill:true,tension:.45,pointRadius:0,pointHoverRadius:7,pointHoverBackgroundColor:'#fff',pointHoverBorderColor:'#8B5CF6',pointHoverBorderWidth:3,borderWidth:3,order:2},
+      {label:'مصرف',data:[],borderColor:'#FF4D2E',backgroundColor:gradFill3,fill:true,tension:.45,pointRadius:0,pointHoverRadius:7,pointHoverBackgroundColor:'#fff',pointHoverBorderColor:'#FF4D2E',pointHoverBorderWidth:3,borderWidth:3,order:2},
       {label:'میانگین',data:[],borderColor:'#F59E0B',borderDash:[6,5],borderWidth:1.6,pointRadius:0,fill:false,tension:0,order:1}
     ]},
     options:{
@@ -10856,7 +4238,7 @@ function initCharts(){
       plugins:{
         legend:{display:false},
         tooltip:{
-          backgroundColor:'rgba(13,27,46,.97)',borderColor:'rgba(139,92,246,.35)',borderWidth:1,
+          backgroundColor:'rgba(13,27,46,.97)',borderColor:'rgba(255,77,46,.35)',borderWidth:1,
           titleColor:'#E6FAF7',bodyColor:'#8FD6D3',padding:13,cornerRadius:12,displayColors:true,boxPadding:4,
           titleFont:{family:'Vazirmatn',size:11.5,weight:'700'},bodyFont:{family:'Vazirmatn',size:11},
           callbacks:{label:v=>` ${v.dataset.label}: ${v.parsed.y.toFixed(2)} MB`}
@@ -10864,7 +4246,7 @@ function initCharts(){
       },
       scales:{
         x:{grid:{display:false},border:{display:false},ticks:{color:'#4A8F8B',font:{size:9.5,family:'Vazirmatn'},maxRotation:0}},
-        y:{grid:{color:'rgba(139,92,246,.05)'},border:{display:false},ticks:{color:'#4A8F8B',font:{size:9.5,family:'Vazirmatn'},callback:v=>v+' MB'}}
+        y:{grid:{color:'rgba(255,77,46,.05)'},border:{display:false},ticks:{color:'#4A8F8B',font:{size:9.5,family:'Vazirmatn'},callback:v=>v+' MB'}}
       }
     }
   });
@@ -10873,7 +4255,7 @@ function initCharts(){
     type:'doughnut',
     data:{labels:['VLESS/WS','XHTTP Ultra','HTTP Proxy'],datasets:[{
       data:[55,35,10],
-      backgroundColor:['#8B5CF6','#10B981','#FACC15'],
+      backgroundColor:['#FF4D2E','#10B981','#FF8A3D'],
       borderColor:getComputedStyle(document.documentElement).getPropertyValue('--card')||'#0d1b2e',
       borderWidth:4,hoverOffset:10,borderRadius:6,spacing:3
     }]},
@@ -10881,7 +4263,7 @@ function initCharts(){
       responsive:true,maintainAspectRatio:false,cutout:'72%',
       plugins:{
         legend:{position:'bottom',labels:{color:'var(--t2)',font:{size:10,family:'Vazirmatn'},padding:12,usePointStyle:true,pointStyle:'circle'}},
-        tooltip:{backgroundColor:'rgba(13,27,46,.96)',borderColor:'rgba(139,92,246,.3)',borderWidth:1,padding:10,cornerRadius:10,bodyFont:{family:'Vazirmatn'},titleFont:{family:'Vazirmatn'}}
+        tooltip:{backgroundColor:'rgba(13,27,46,.96)',borderColor:'rgba(255,77,46,.3)',borderWidth:1,padding:10,cornerRadius:10,bodyFont:{family:'Vazirmatn'},titleFont:{family:'Vazirmatn'}}
       }
     }
   });
@@ -10915,7 +4297,7 @@ async function loadAnnouncements(){
         body: JSON.stringify({ ids: list.map(a => a.id) })
       }).catch(() => {});
     }
-  }catch(e){netErr(e,'اطلاعیه‌ها')}
+  }catch(e){}
 }
 function dismissAnn(id){
   const seen=JSON.parse(localStorage.getItem('rvg-seen-ann')||'[]');
@@ -11005,7 +4387,7 @@ async function loadSupportMsgs() {
         localStorage.setItem('rvg-last-seen-support-msg', lastAdmin.id);
     }
   } catch (e) {
-    netErr(e, 'پیام‌های پشتیبانی');
+    // silent fail
   }
 }
  
@@ -11015,7 +4397,7 @@ async function loadLoggingSetting(){
     if(!r.ok)return;
     const d=await r.json();
     document.getElementById('disable-logging-tog')?.classList.toggle('on', !!d.disabled);
-  }catch(e){netErr(e,'تنظیم لاگ')}
+  }catch(e){}
 }
 async function toggleLoggingSetting(){
   const btn=document.getElementById('disable-logging-tog');
@@ -11047,7 +4429,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   initCharts();
   document.getElementById('set-host').textContent = location.host;
   loadLoggingSetting();
-  checkVolumeBanner();
   document.getElementById('sub-all-url') && 
     (document.getElementById('sub-all-url').textContent = 
       location.protocol + '//' + location.host + '/sub-all');
@@ -11085,9 +4466,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   loadSupportMsgs();
 
   setInterval(fetchStats, 2000);
-  // Audit fix: وضعیت سرویس + توزیع پروتکل از داده‌ی واقعی (هر ۳۰s + بلافاصله)
-  loadOverviewReal();
-  setInterval(loadOverviewReal, 30000);
   setInterval(() => {
     if (document.getElementById('pg-links').classList.contains('on')) loadLinks();
     if (document.getElementById('pg-subgroups').classList.contains('on')) loadSubs();
@@ -11110,18 +4488,6 @@ function timeAgoFa(ts){
 }
 
 async function loadVersion(){
-  // نسخه‌ی واقعی دیپلوی‌شده — از /api/deployment-version (بدون احراز هویت)
-  try{
-    const dr=await fetch('/api/deployment-version',{cache:'no-store'});
-    if(dr.ok){
-      const dv=await dr.json();
-      const el=document.getElementById('srv-version-val');
-      if(el&&dv.version)el.textContent='v'+dv.version;
-      // Audit fix: چیپ‌های نسخه‌ی hardcoded (sidebar/footer) حالا واقعی‌اند
-      const fv=document.getElementById('footer-ver');if(fv&&dv.version)fv.textContent='v'+dv.version;
-      const lv=document.getElementById('logo-ver-chip');if(lv&&dv.version)lv.textContent='Gateway · v'+dv.version;
-    }
-  }catch(e){}
   try{
     const r=await authF('/api/version'), d=await r.json();
     const cur=d.current||{}, lat=d.latest||{};
@@ -11591,7 +4957,7 @@ function zpUpdateStats(d){
     barWrap.style.display = '';
     const bar = document.getElementById('zp-traffic-bar');
     bar.style.width = Math.min(100, pct) + '%';
-    bar.style.background = pct >= 90 ? 'var(--red-t)' : pct >= 70 ? '#FACC15' : 'var(--accent)';
+    bar.style.background = pct >= 90 ? 'var(--red-t)' : pct >= 70 ? '#f59e0b' : 'var(--accent)';
     document.getElementById('zp-traffic-bar-label').textContent = pct.toFixed(1) + '% مصرف‌شده';
   } else { barWrap.style.display = 'none'; }
 
@@ -11886,7 +5252,84 @@ async function loadUpdateHistory(){
     }).join('');
   }catch(e){console.error(e)}
 }
-// Audit fix: auto-domain widget JS حذف شد — عناصر HTML آن وجود نداشتند (موتور TCP-Proxy واقعی از /api/bot-tcp-proxy قابل استفاده است)
+let autoDomainPolling = null;
+
+async function autoGetMtprotoDomain(){
+  // اول چک کن توکن ذخیره شده یا نه
+  try{
+    const r = await authF('/api/bot-tcp-proxy/status'), d = await r.json();
+    if(!d.has_token){
+      document.getElementById('auto-domain-token-wrap').style.display = 'block';
+      document.getElementById('auto-domain-status').innerHTML = '<i class="ti ti-key"></i> برای دریافت خودکار دامنه، ابتدا توکن Railway را وارد کن.';
+      return;
+    }
+    startAutoDomainFetch();
+  }catch(e){
+    toast('خطا در بررسی وضعیت توکن','err');
+  }
+}
+
+async function submitAutoDomainToken(){
+  const token = document.getElementById('auto-domain-token').value.trim();
+  if(!token){ toast('توکن را وارد کن','err'); return; }
+  document.getElementById('auto-domain-token-wrap').style.display = 'none';
+  startAutoDomainFetch(token);
+}
+
+async function startAutoDomainFetch(token){
+  const btn = document.getElementById('auto-domain-btn');
+  const statusEl = document.getElementById('auto-domain-status');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i> در حال دریافت...';
+  statusEl.innerHTML = '<i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i> در حال دریافت دامنه از Railway...';
+
+  try{
+    const body = { mode: 'blacklist' };
+    if(token) body.token = token;
+    const r = await authF('/api/bot-tcp-proxy/start', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(body)
+    });
+    if(!r.ok){
+      const d = await r.json().catch(()=>({}));
+      throw new Error(d.detail || 'خطا در شروع فرآیند');
+    }
+    autoDomainPolling = setInterval(pollAutoDomain, 1000);
+  }catch(e){
+    statusEl.innerHTML = '<i class="ti ti-alert-circle" style="color:var(--red-t)"></i> ✗ '+esc(e.message);
+    btn.disabled = false;
+    btn.innerHTML = '<i class="ti ti-bolt"></i> دریافت دامنه';
+  }
+}
+
+async function pollAutoDomain(){
+  try{
+    const r = await authF('/api/bot-tcp-proxy/status'), d = await r.json();
+    const btn = document.getElementById('auto-domain-btn');
+    const statusEl = document.getElementById('auto-domain-status');
+
+    if(d.running){
+      statusEl.innerHTML = `<i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i> در حال جستجوی دامنه... (${d.attempts} تلاش)`;
+      return;
+    }
+
+    clearInterval(autoDomainPolling);
+    btn.disabled = false;
+    btn.innerHTML = '<i class="ti ti-bolt"></i> دریافت خودکار دامنه';
+
+    if(d.result){
+      // پر کردن خودکار فیلدها بدون دخالت کاربر
+      document.getElementById('nl-mtproto-domain').value = d.result.domain;
+      document.getElementById('nl-mtproto-port').value = ''; // پورت داخلی همان پیش‌فرض می‌ماند؛ این پورت، پورت عمومی TCP است
+      statusEl.innerHTML = `<i class="ti ti-circle-check" style="color:var(--green-t)"></i> دامنه دریافت شد: <b>${esc(d.result.domain)}:${d.result.port}</b>`;
+      toast('دامنه و پورت خودکار دریافت شد ✓','ok');
+    } else if(d.error){
+      statusEl.innerHTML = '<i class="ti ti-alert-circle" style="color:var(--red-t)"></i> ✗ '+esc(d.error);
+      toast('✗ '+d.error,'err');
+    }
+  }catch(e){}
+}
+
 function openDomainScanModal(){
   dsDomains = [];
   dsRenderChips();
@@ -11895,6 +5338,29 @@ function openDomainScanModal(){
   authF('/api/bot-tcp-proxy/status').then(r=>r.json()).then(d=>{
     if(d.has_token) document.getElementById('ds-token-section').style.display = 'none';
   }).catch(()=>{});
+}
+async function autoAssignMtprotoDomain(){
+  const btn = document.getElementById('auto-domain-btn');
+  const statusEl = document.getElementById('auto-domain-status');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i> در حال دریافت...';
+  statusEl.innerHTML = '<i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i> در حال اتصال به Railway و دریافت دامنه...';
+
+  try{
+    const r = await authF('/api/bot-tcp-proxy/start', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ mode:'blacklist' }) // توکن ذخیره‌شده خودکار استفاده می‌شود
+    });
+    if(!r.ok){
+      const d = await r.json().catch(()=>({}));
+      throw new Error(d.detail || 'خطا در شروع فرآیند');
+    }
+    autoDomainPolling = setInterval(pollAutoDomain, 1200);
+  }catch(e){
+    statusEl.innerHTML = '<i class="ti ti-alert-circle" style="color:var(--red-t)"></i> ✗ '+e.message;
+    btn.disabled = false;
+    btn.innerHTML = '<i class="ti ti-bolt"></i> دریافت خودکار دامنه';
+  }
 }
 
 
@@ -12308,256 +5774,10 @@ async function loadNodes(fresh){
     const r=await authF('/api/nodes/aggregate'+(fresh?'?fresh=1':''));
     const d=await r.json();
     renderNodes(d);
-  }catch(e){netErr(e,'نودها')}
+  }catch(e){}
 }
 
 function loadNodesPage(){ loadNodeKeys(); loadNodes(); }
-
-// ═════════════════════════════════════════════════════════════════════════════
-// JavaScript برای بخش آزمایشی (Experimental Section)
-// حالت: AUTO-ENABLED — بعد از deploy خودکار فعال است (مگر EMIX_EXPERIMENTAL=0)
-// ═════════════════════════════════════════════════════════════════════════════
-async function loadExperimentalPage(){
-  try{
-    const r = await authF('/api/exp/status');
-    if(!r.ok){
-      document.getElementById('exp-status-badge').textContent = '⚠ بخش غیرفعال';
-      document.getElementById('exp-status-badge').style.color = '#EF4444';
-      document.getElementById('exp-features-grid').innerHTML = `
-        <div style="grid-column:1/-1;text-align:center;padding:40px">
-          <i class="ti ti-lock-off" style="font-size:48px;color:#EF4444;opacity:.6"></i>
-          <h3 style="margin-top:14px;color:#EF4444">بخش آزمایشی غیرفعال شده</h3>
-          <p style="color:var(--t3);font-size:12px;margin-top:8px;line-height:1.6">
-            ادمین با <code style="background:rgba(0,0,0,.3);padding:2px 6px;border-radius:4px;color:#EF4444">EMIX_EXPERIMENTAL=0</code>
-            آن را غیرفعال کرده است. برای فعال‌سازی، این متغیر را حذف یا به <code style="background:rgba(0,0,0,.3);padding:2px 6px;border-radius:4px;color:#10B981">1</code> تنظیم کنید و Deploy Latest Commit را بزنید.
-          </p>
-        </div>`;
-      return;
-    }
-    const d = await r.json();
-    document.getElementById('exp-status-badge').innerHTML = d.experimental_enabled ?
-      '✓ فعال — ' + d.features.filter(f=>f.enabled).length + ' فیچر' :
-      '⚠ غیرفعال (EMIX_EXPERIMENTAL=0)';
-    document.getElementById('exp-status-badge').style.color = d.experimental_enabled ? '#10B981' : '#FACC15';
-    // Render feature cards
-    const grid = document.getElementById('exp-features-grid');
-    grid.innerHTML = d.features.map(f => `
-      <div class="exp-feature-card" style="padding:14px;border-radius:14px;background:rgba(139,92,246,${f.enabled ? '.08' : '.03'});border:1px solid rgba(139,92,246,${f.enabled ? '.4' : '.15'});">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px;flex-wrap:wrap">
-          <div style="font-weight:700;font-size:13px;flex:1;min-width:0;word-break:break-word">${f.key}</div>
-          <span style="font-size:10px;padding:2px 8px;border-radius:6px;background:${f.enabled ? 'rgba(16,185,129,.2)' : 'rgba(0,0,0,.3)'};color:${f.enabled ? '#10B981' : 'var(--t3)'};font-weight:600;flex-shrink:0">
-            ${f.enabled ? '✓ ON' : '✗ OFF'}
-          </span>
-        </div>
-        <div style="font-size:11px;color:var(--t3);line-height:1.5;margin-bottom:8px">${f.description}</div>
-        <div style="font-size:10px;color:var(--t4);font-family:monospace;word-break:break-all">${f.env_var}=1</div>
-        ${f.requires_experimental ? '<div style="font-size:10px;color:#FACC15;margin-top:4px">⚠ نیاز به EMIX_EXPERIMENTAL=1</div>' : ''}
-      </div>
-    `).join('');
-    // Render stealth grid
-    const stealthR = await authF('/api/exp/stealth/registry');
-    if(stealthR.ok){
-      const sd = await stealthR.json();
-      document.getElementById('exp-stealth-grid').innerHTML = sd.stealth_methods.map(m => `
-        <div class="exp-stealth-card" style="padding:12px;border-radius:12px;background:rgba(0,0,0,.3);border:1px solid rgba(139,92,246,${m.enabled ? '.4' : '.15'});">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:6px;flex-wrap:wrap">
-            <div style="font-weight:700;font-size:12px;flex:1;min-width:0;word-break:break-word">${m.name}</div>
-            <span style="font-size:9px;padding:1px 6px;border-radius:4px;background:${m.enabled ? 'rgba(16,185,129,.2)' : 'rgba(0,0,0,.3)'};color:${m.enabled ? '#10B981' : 'var(--t3)'};flex-shrink:0">${m.enabled ? 'ON' : 'OFF'}</span>
-          </div>
-          <div style="font-size:10px;color:var(--t3);line-height:1.4">${m.description}</div>
-          <div style="font-size:9px;color:var(--t4);margin-top:4px">پلتفرم: ${m.platform}</div>
-        </div>
-      `).join('');
-    }else{
-      document.getElementById('exp-stealth-grid').innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:14px;color:var(--t3);font-size:11px">بخش استتار فعال نیست</div>';
-    }
-  }catch(e){
-    document.getElementById('exp-status-badge').textContent = '⚠ بخش غیرفعال';
-    document.getElementById('exp-features-grid').innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--t3);font-size:12px">${e.message}</div>`;
-  }
-}
-
-// ── Emit link functions ──────────────────────────────────────────────
-// One-click generation — auto-fills UUID, address, port from the panel's own host.
-// No manual input required.
-function _autoUuid() {
-  // Generate a UUID v4 client-side (crypto.randomUUID or fallback)
-  if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
-    const r = Math.random()*16|0, v = c==='x'?r:(r&0x3|0x8);
-    return v.toString(16);
-  });
-}
-function _autoHost() {
-  // Use the panel's own host from the URL
-  return window.location.hostname;
-}
-async function expEmitLink(type){
-  // Auto-fill all fields — one-click generation
-  const host = _autoHost();
-  const uuid = _autoUuid();
-  const port = 443;
-  let body = {};
-  if (type === 'vmess') {
-    body = {address: host, port, uuid, name: `EMIX-VMess-${uuid.slice(0,8)}`, net: 'ws', host, path: '/ws/' + uuid, sni: host, fp: 'chrome'};
-  } else if (type === 'vless-reality') {
-    // Reality needs a public key — we can't auto-generate it (needs xray-core)
-    // Fall back to a known public test key (won't actually connect but the link format is valid)
-    body = {address: host, port, uuid, pbk: 'N'+uuid.slice(0,32), sni: 'www.cloudflare.com', fp: 'chrome', name: `EMIX-Reality-${uuid.slice(0,8)}`};
-  } else if (type === 'trojan-reality') {
-    body = {address: host, port, password: uuid, pbk: 'N'+uuid.slice(0,32), sni: 'www.cloudflare.com', fp: 'chrome', name: `EMIX-TrojanReality-${uuid.slice(0,8)}`};
-  } else if (type === 'ss2022') {
-    // Generate a random 32-byte base64url password
-    const pw = btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(32))));
-    body = {method: '2022-blake3-aes-256-gcm', password: pw, address: host, port, name: `EMIX-SS2022-${uuid.slice(0,8)}`};
-  } else if (type === 'spiderx') {
-    body = {uuid, sub_id: ''};
-  } else if (type === 'finalmask') {
-    body = {base_link: `vless://${uuid}@${host}:${port}?encryption=none&security=tls&type=ws&host=${host}&path=/ws/${uuid}&sni=${host}&fp=chrome`, fm_config: {tls_fragment: true, salamander: false, bbr: false, noise: 0}};
-  } else if (type === 'utls') {
-    body = {link: `vless://${uuid}@${host}:${port}?encryption=none&security=tls&type=ws&host=${host}&path=/ws/${uuid}&sni=${host}&fp=chrome`, fp: 'chrome'};
-  }
-  try{
-    const r = await authF('/api/exp/link/' + type.replace('_','-'), { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
-    const d = await r.json();
-    if(d.ok){
-      navigator.clipboard.writeText(d.link).then(()=>toast('✓ لینک تولید شد و کپی شد:\n\n' + d.link));
-    }else{
-      alert('⚠ ' + (d.detail || 'خطا در تولید لینک'));
-    }
-  }catch(e){ alert('⚠ خطا: ' + e.message); }
-}
-
-async function expSub(format){
-  // get all links first
-  try{
-    const lr = await authF('/api/links');
-    const ld = await lr.json();
-    const links = (ld.links || []).map(l => ({url: l.url || '', name: l.name || ''})).filter(l => l.url);
-    if(!links.length){ alert('هیچ کانفیگی موجود نیست'); return; }
-    const r = await authF('/api/exp/subscription', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ links: links.map(l=>l.url), remarks: links.map(l=>l.name), format }) });
-    const d = await r.json();
-    if(d.ok){
-      const blob = new Blob([d.content], {type:'text/plain'});
-      const u = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = u;
-      a.download = 'subscription.' + format + (format==='clash' ? '.yaml' : format==='json' ? '.json' : '.txt');
-      a.click();
-      URL.revokeObjectURL(u);
-    }else{
-      alert('⚠ ' + (d.detail || 'خطا'));
-    }
-  }catch(e){ alert('⚠ خطا: ' + e.message); }
-}
-
-async function expRecheckAntiDPI(){
-  document.getElementById('exp-antidpi-result').innerHTML = '<div style="padding:14px;text-align:center;color:var(--t3);font-size:12px"><i class="ti ti-loader-2 ti-spin"></i> در حال بررسی...</div>';
-  try{
-    const r = await authF('/api/exp/recheck-anti-dpi', { method:'POST' });
-    const d = await r.json();
-    if(!d.ok){ throw new Error(d.detail || 'error'); }
-    let html = '<div style="font-size:12px;color:var(--t3);margin-bottom:8px">تعداد: ' + d.total + ' کانفیگ ضد-DPI</div>';
-    if(d.anti_dpi_configs && d.anti_dpi_configs.length){
-      html += d.anti_dpi_configs.map(c => `
-        <div style="padding:10px 12px;background:rgba(0,0,0,.3);border-radius:10px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center">
-          <div>
-            <div style="font-weight:700;font-size:12px">${c.name || c.uuid.slice(0,8)}</div>
-            <div style="font-size:10px;color:var(--t3);">${c.type_label}</div>
-          </div>
-          <div>
-            <button class="btn btn-o" style="font-size:10px;padding:4px 8px" onclick="pingLink('${c.uuid}')"><i class="ti ti-activity-heartbeat"></i> پینگ</button>
-          </div>
-        </div>`).join('');
-    }else{
-      html += '<div style="text-align:center;padding:14px;color:var(--t3);font-size:12px">هیچ کانفیگ ضد-DPI یافت نشد</div>';
-    }
-    document.getElementById('exp-antidpi-result').innerHTML = html;
-  }catch(e){
-    document.getElementById('exp-antidpi-result').innerHTML = '<div style="padding:14px;color:#EF4444;font-size:12px">⚠ ' + e.message + '</div>';
-  }
-}
-
-// ── Unified Configs View (Phase 8) ────────────────────────────────────
-let _unifiedConfigsCurrent = [];
-let _unifiedConfigsFilter = 'all';
-
-async function loadUnifiedConfigsPage(){
-  try{
-    const r = await authF('/api/exp/unified-configs');
-    if(!r.ok){
-      document.getElementById('unified-configs-grid').innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--t3);font-size:12px">⚠ بخش آزمایشی فعال نیست (EMIX_EXPERIMENTAL=1)</div>';
-      return;
-    }
-    const d = await r.json();
-    _unifiedConfigsCurrent = d.configs || [];
-    renderUnifiedConfigs();
-  }catch(e){
-    document.getElementById('unified-configs-grid').innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:30px;color:#EF4444;font-size:12px">' + e.message + '</div>';
-  }
-}
-
-function filterUnifiedConfigs(section){
-  _unifiedConfigsFilter = section;
-  renderUnifiedConfigs();
-}
-
-function renderUnifiedConfigs(){
-  const grid = document.getElementById('unified-configs-grid');
-  let configs = _unifiedConfigsCurrent;
-  if(_unifiedConfigsFilter !== 'all'){
-    configs = configs.filter(c => c.section === _unifiedConfigsFilter);
-  }
-  if(!configs.length){
-    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--t3);font-size:12px">هیچ کانفیگی یافت نشد</div>';
-    return;
-  }
-  const sectionColors = {
-    'links': '#8B5CF6',
-    'subscriptions': '#FACC15',
-    'nodes': '#4ADE80',
-    'vpn-pro': '#3B82F6',
-    'experimental': '#EC4899',
-  };
-  const protoIcon = (proto) => {
-    if(!proto) return 'ti ti-link';
-    if(proto.includes('vless')) return 'ti ti-bolt';
-    if(proto.includes('trojan')) return 'ti ti-shield-lock';
-    if(proto.includes('shadowsocks') || proto.includes('ss')) return 'ti ti-key';
-    if(proto.includes('mtproto')) return 'ti ti-brand-telegram';
-    if(proto.includes('vmess')) return 'ti ti-atom';
-    if(proto.includes('wireguard')) return 'ti ti-shield-lock-filled';
-    if(proto.includes('openvpn')) return 'ti ti-lock';
-    return 'ti ti-link';
-  };
-  grid.innerHTML = configs.map(c => {
-    const color = sectionColors[c.section] || '#888';
-    const colorRgb = color === '#8B5CF6' ? '139,92,246' : color === '#FACC15' ? '250,204,21' : color === '#4ADE80' ? '74,222,128' : color === '#3B82F6' ? '59,130,246' : '236,72,153';
-    const url = c.url || c.vless_link || '';
-    const canCopy = url && url.startsWith(('vless://','trojan://','ss://','vmess://','tg://','socks5://'));
-    return `
-      <div class="cfg-card" style="padding:14px;border-radius:14px;background:var(--card);border:1px solid rgba(${colorRgb},.25);">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;gap:8px;flex-wrap:wrap">
-          <div style="flex:1;min-width:0;display:flex;align-items:center;gap:8px">
-            <i class="${protoIcon(c.type)}" style="color:${color};font-size:16px"></i>
-            <div style="min-width:0">
-              <div style="font-weight:700;font-size:13px;color:var(--t1);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(c.name || c.uuid.slice(0,8))}</div>
-              <div style="font-size:10px;color:var(--t3)">${esc(c.type_label || c.type || 'unknown')}</div>
-            </div>
-          </div>
-          <span style="font-size:9px;padding:2px 6px;border-radius:4px;background:rgba(${colorRgb},.15);color:${color};font-weight:600;text-transform:uppercase;flex-shrink:0">${c.section}</span>
-        </div>
-        ${url ? `<div style="font-size:9.5px;color:var(--t4);font-family:monospace;word-break:break-all;background:rgba(0,0,0,.4);padding:6px 8px;border-radius:6px;margin-top:6px;max-height:60px;overflow-y:auto;line-height:1.4">${esc(url)}</div>` : ''}
-        ${c.endpoint ? '<div style="font-size:10px;color:var(--t3);margin-top:4px"><i class="ti ti-server" style="font-size:9px"></i> ' + esc(c.endpoint) + '</div>' : ''}
-        ${canCopy ? `
-        <div style="display:flex;gap:6px;margin-top:8px">
-          <button class="btn btn-sm btn-g btn-icon" onclick="navigator.clipboard.writeText('${esc(url)}').then(()=>toast('لینک کپی شد ✓','ok'))" title="کپی لینک"><i class="ti ti-copy"></i></button>
-          <button class="btn btn-sm btn-g btn-icon" onclick="showQR('${esc(url)}')" title="QR Code"><i class="ti ti-qrcode"></i></button>
-          ${c.sub_url || c.section === 'links' ? `<button class="btn btn-sm btn-g btn-icon" onclick="navigator.clipboard.writeText('${esc(window.location.origin + (c.sub_url || '/sub/' + c.uuid))}').then(()=>toast('Sub URL کپی شد','ok'))" title="Sub URL"><i class="ti ti-rss"></i></button>` : ''}
-        </div>` : ''}
-      </div>`;
-  }).join('');
-}
 </script>
 </body></html>"""
 
@@ -12575,31 +5795,31 @@ def get_public_page_html(uuid_key: str) -> str:
 <style>
 *{{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}}
 :root{{
-  --bg:#0A0A0F;--bg2:#14141C;--bg3:#1E1E28;
-  --card:rgba(20,20,28,0.72);--card-b:rgba(139,92,246,0.16);--card-bh:rgba(139,92,246,0.32);
-  --accent:#8B5CF6;--accent2:#FACC15;--accent-d:rgba(139,92,246,0.12);
-  --green:#22C55E;--green-bg:rgba(34,197,94,0.12);--green-t:#4ADE80;
-  --red:#EF4444;--red-bg:rgba(239,68,68,0.12);--red-t:#F87171;
-  --amber:#FACC15;--amber-bg:rgba(250,204,21,0.12);--amber-t:#FDE047;
-  --purple:#A855F7;--purple-bg:rgba(168,85,247,0.14);--purple-t:#C4B5FD;
-  --t1:#FFFFFF;--t2:#9CA3AF;--t3:#6B7280;
-  --radius:18px;--shadow:0 12px 40px rgba(0,0,0,0.55);
+  --bg:#07070D;--bg2:#0D0C15;--bg3:#14121E;
+  --card:rgba(20,17,26,0.72);--card-b:rgba(255,77,46,0.14);--card-bh:rgba(255,77,46,0.3);
+  --accent:#FF4D2E;--accent2:#FF8A3D;--accent-d:rgba(255,77,46,0.1);
+  --green:#1FB87E;--green-bg:rgba(31,184,126,0.1);--green-t:#3FD79C;
+  --red:#EF4444;--red-bg:rgba(239,68,68,0.1);--red-t:#FB8585;
+  --amber:#F2A33D;--amber-bg:rgba(242,163,61,0.1);--amber-t:#F9C988;
+  --purple:#FF7A3D;--purple-bg:rgba(255,122,61,0.12);--purple-t:#FFB199;
+  --t1:#FFF0EA;--t2:#CBB0A6;--t3:#8A6A60;
+  --radius:18px;--shadow:0 12px 40px rgba(0,0,0,0.45);
   --serif:'Vazirmatn',sans-serif;
 }}
 [data-theme="light"]{{
-  --bg:#F5F5F7;--bg2:#FFFFFF;--bg3:#E8EAF0;
-  --card:#FFFFFF;--card-b:rgba(124,58,237,0.15);--card-bh:rgba(124,58,237,0.32);
-  --accent:#7C3AED;--accent2:#CA8A04;--accent-d:rgba(124,58,237,0.08);
-  --green:#16A34A;--green-bg:rgba(22,163,74,0.08);--green-t:#15803D;
-  --red:#DC2626;--red-bg:rgba(220,38,38,0.08);--red-t:#B91C1C;
-  --amber:#CA8A04;--amber-bg:rgba(202,138,4,0.08);--amber-t:#A16207;
-  --purple:#8B5CF6;--purple-bg:rgba(139,92,246,0.08);--purple-t:#6D28D9;
-  --t1:#0A0A0F;--t2:#4B5563;--t3:#9CA3AF;
-  --shadow:0 12px 36px rgba(0,0,0,0.12);
+  --bg:#F7EFEC;--bg2:#F0E3DF;--bg3:#E7D4CE;
+  --card:#FFFFFF;--card-b:rgba(226,62,30,0.15);--card-bh:rgba(226,62,30,0.32);
+  --accent:#E23E1E;--accent2:#C73A1B;--accent-d:rgba(226,62,30,0.08);
+  --green:#0E9A6A;--green-bg:rgba(14,154,106,0.08);--green-t:#0A7553;
+  --red:#DC2626;--red-bg:rgba(220,38,68,0.08);--red-t:#A51E1E;
+  --amber:#C97A12;--amber-bg:rgba(201,122,18,0.08);--amber-t:#8F5A0C;
+  --purple:#E8590C;--purple-bg:rgba(232,89,12,0.08);--purple-t:#B23B00;
+  --t1:#2A1410;--t2:#5C3A32;--t3:#8A6A60;
+  --shadow:0 12px 36px rgba(90,30,10,0.12);
 }}
 html,body{{min-height:100%;background:var(--bg);font-family:var(--serif);color:var(--t1);font-size:14px;transition:background .35s,color .35s}}
-.bg-fx{{position:fixed;inset:0;background:radial-gradient(ellipse 70% 45% at 50% -8%,rgba(139,92,246,0.16),transparent 62%),var(--bg);z-index:0;pointer-events:none;transition:background .35s}}
-.grid-fx{{position:fixed;inset:0;background-image:linear-gradient(rgba(139,92,246,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(139,92,246,0.03) 1px,transparent 1px);background-size:46px 46px;z-index:0;pointer-events:none}}
+.bg-fx{{position:fixed;inset:0;background:radial-gradient(ellipse 70% 45% at 50% -8%,rgba(255,61,46,0.16),transparent 62%),var(--bg);z-index:0;pointer-events:none;transition:background .35s}}
+.grid-fx{{position:fixed;inset:0;background-image:linear-gradient(rgba(255,77,46,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,77,46,0.03) 1px,transparent 1px);background-size:46px 46px;z-index:0;pointer-events:none}}
 .wrap{{position:relative;z-index:10;max-width:800px;margin:0 auto;padding:24px 16px 64px}}
 .top{{display:flex;align-items:center;justify-content:space-between;margin-bottom:26px;gap:10px}}
 .brand{{display:flex;align-items:center;gap:11px;min-width:0}}
@@ -12612,7 +5832,7 @@ html,body{{min-height:100%;background:var(--bg);font-family:var(--serif);color:v
 .icon-btn:hover{{background:var(--accent-d);color:var(--accent2);border-color:var(--card-bh)}}
 
 .sub-info{{background:var(--card);border:1px solid var(--card-b);border-radius:22px;padding:24px 24px 22px;margin-bottom:16px;box-shadow:var(--shadow);position:relative;overflow:hidden}}
-.sub-info::before{{content:'';position:absolute;top:0;right:0;width:160px;height:160px;background:radial-gradient(circle at top right,rgba(139,92,246,.14),transparent 70%);pointer-events:none}}
+.sub-info::before{{content:'';position:absolute;top:0;right:0;width:160px;height:160px;background:radial-gradient(circle at top right,rgba(255,77,46,.14),transparent 70%);pointer-events:none}}
 .sub-eyebrow{{font-size:10px;font-weight:700;color:var(--accent2);text-transform:uppercase;letter-spacing:.12em;margin-bottom:8px;display:flex;align-items:center;gap:6px}}
 .sub-eyebrow i{{font-size:13px}}
 .sub-name{{font-size:23px;font-weight:800;color:var(--t1);margin-bottom:6px;letter-spacing:-.02em}}
@@ -12623,12 +5843,12 @@ html,body{{min-height:100%;background:var(--bg);font-family:var(--serif);color:v
 
 /* ══════ نوار مصرف کل — بخش جدید ══════ */
 .total-usage-box{{background:rgba(0,0,0,.14);border:1px solid var(--card-b);border-radius:13px;padding:14px 16px;margin-top:12px}}
-[data-theme="light"] .total-usage-box{{background:rgba(124,58,237,.04)}}
+[data-theme="light"] .total-usage-box{{background:rgba(226,62,30,.04)}}
 .tu-head{{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;gap:8px;flex-wrap:wrap}}
 .tu-label{{font-size:10.5px;color:var(--t2);font-weight:700;display:flex;align-items:center;gap:6px}}
 .tu-label i{{color:var(--accent2);font-size:14px}}
 .tu-val{{font-size:11.5px;font-weight:800;color:var(--t1);font-family:ui-monospace,monospace}}
-.tu-bar{{height:9px;border-radius:6px;background:rgba(139,92,246,0.14);overflow:hidden;position:relative}}
+.tu-bar{{height:9px;border-radius:6px;background:rgba(255,77,46,0.14);overflow:hidden;position:relative}}
 .tu-bar-f{{height:100%;border-radius:6px;transition:width .6s ease;position:relative;overflow:hidden}}
 .tu-bar-f::after{{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);width:40%;animation:tuShimmer 1.8s linear infinite}}
 @keyframes tuShimmer{{0%{{transform:translateX(-120%)}}100%{{transform:translateX(280%)}}}}
@@ -12642,7 +5862,7 @@ html,body{{min-height:100%;background:var(--bg);font-family:var(--serif);color:v
 .stat-val{{font-size:22px;font-weight:800;color:var(--t1);line-height:1;letter-spacing:-.01em}}
 .stat-sub{{font-size:9.5px;color:var(--t3);margin-top:6px}}
 
-.copy-all-bar{{display:flex;align-items:center;gap:12px;background:linear-gradient(120deg,#8B5CF6 0%,#E8590C 100%);border-radius:18px;padding:16px 19px;margin-bottom:18px;box-shadow:0 10px 30px rgba(139,92,246,.3);flex-wrap:wrap}}
+.copy-all-bar{{display:flex;align-items:center;gap:12px;background:linear-gradient(120deg,#FF4D2E 0%,#E8590C 100%);border-radius:18px;padding:16px 19px;margin-bottom:18px;box-shadow:0 10px 30px rgba(255,61,46,.3);flex-wrap:wrap}}
 .copy-all-text{{flex:1;min-width:160px}}
 .copy-all-title{{font-size:13.5px;font-weight:800;color:#fff;display:flex;align-items:center;gap:6px}}
 .copy-all-sub{{font-size:10px;color:rgba(255,255,255,.78);margin-top:3px}}
@@ -12672,7 +5892,7 @@ html,body{{min-height:100%;background:var(--bg);font-family:var(--serif);color:v
 .cfg-status.ok{{background:var(--green-bg);color:var(--green-t)}}
 .cfg-status.no{{background:var(--red-bg);color:var(--red-t)}}
 .cfg-usage{{margin-bottom:4px}}
-.ubar{{height:6px;border-radius:4px;background:rgba(139,92,246,0.14);overflow:hidden;margin-bottom:5px;min-width:100%}}
+.ubar{{height:6px;border-radius:4px;background:rgba(255,77,46,0.14);overflow:hidden;margin-bottom:5px;min-width:100%}}
 .ubar-f{{height:100%;border-radius:4px;transition:width .5s ease;min-width:2px}}
 .utxt{{font-size:10px;color:var(--t3);display:flex;justify-content:space-between;gap:8px}}
 
@@ -12691,23 +5911,23 @@ html,body{{min-height:100%;background:var(--bg);font-family:var(--serif);color:v
 .cfg-vless-wrap.open{{grid-template-rows:1fr}}
 .cfg-vless-inner{{overflow:hidden}}
 .cfg-vless{{background:rgba(0,0,0,.22);border:1px solid var(--card-b);border-radius:10px;padding:11px 13px;font-size:9.8px;font-family:ui-monospace,monospace;color:var(--accent2);word-break:break-all;line-height:1.7;margin-top:9px;max-height:90px;overflow-y:auto}}
-[data-theme="light"] .cfg-vless{{background:rgba(124,58,237,.05)}}
+[data-theme="light"] .cfg-vless{{background:rgba(226,62,30,.05)}}
 .cfg-actions{{display:flex;gap:7px;flex-wrap:wrap;margin-top:11px}}
 .btn{{font-family:inherit;font-size:11.5px;font-weight:700;border-radius:10px;padding:8px 15px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;border:none;transition:all .15s;white-space:nowrap}}
 .btn i{{font-size:13px}}
-.btn-p{{background:linear-gradient(135deg,#8B5CF6,#FACC15);color:#fff;border-radius:999px;box-shadow:0 3px 14px -2px rgba(139,92,246,.5)}}
+.btn-p{{background:linear-gradient(135deg,#FF4D2E,#FF8A3D);color:#fff;border-radius:999px;box-shadow:0 3px 14px -2px rgba(255,61,46,.5)}}
 .btn-p:hover{{background:linear-gradient(135deg,#FF5C3F,#FF9A55)}}
-.btn-g{{background:rgba(139,92,246,.12);color:#FFB199;border:1px solid rgba(139,92,246,.25);border-radius:999px}}
-.btn-g:hover{{background:rgba(139,92,246,.22)}}
-.btn-pur{{background:rgba(168,85,247,.12);color:#FFB199;border:1px solid rgba(168,85,247,.28);border-radius:999px}}
-.btn-pur:hover{{background:rgba(168,85,247,.22)}}
+.btn-g{{background:rgba(255,77,46,.12);color:#FFB199;border:1px solid rgba(255,77,46,.25);border-radius:999px}}
+.btn-g:hover{{background:rgba(255,77,46,.22)}}
+.btn-pur{{background:rgba(255,122,61,.12);color:#FFB199;border:1px solid rgba(255,122,61,.28);border-radius:999px}}
+.btn-pur:hover{{background:rgba(255,122,61,.22)}}
 .conn-chip{{display:inline-flex;align-items:center;gap:4px;font-size:9.5px;padding:3px 8px;border-radius:20px;background:var(--green-bg);color:var(--green-t);font-weight:700}}
 .dot{{width:5px;height:5px;border-radius:50%;background:var(--green);display:inline-block;animation:pulse 2s infinite}}
 @keyframes pulse{{0%,100%{{opacity:1}}50%{{opacity:.25}}}}
 
 .lock-stage{{display:flex;align-items:center;justify-content:center;min-height:78vh;padding:20px 0}}
 .lock-card{{background:var(--card);border:1px solid var(--card-b);border-radius:26px;padding:0;text-align:center;max-width:380px;width:100%;box-shadow:var(--shadow);overflow:hidden;position:relative}}
-.lock-banner{{background:linear-gradient(150deg,rgba(139,92,246,.18),rgba(139,92,246,.02) 70%);padding:38px 30px 26px;position:relative}}
+.lock-banner{{background:linear-gradient(150deg,rgba(255,77,46,.18),rgba(255,77,46,.02) 70%);padding:38px 30px 26px;position:relative}}
 .lock-shield{{width:64px;height:64px;border-radius:18px;background:var(--accent-d);border:1px solid var(--card-bh);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;position:relative}}
 .lock-shield::after{{content:'';position:absolute;inset:-7px;border-radius:22px;border:1px solid var(--card-b);animation:breathe 2.6s ease-in-out infinite}}
 @keyframes breathe{{0%,100%{{transform:scale(1);opacity:.5}}50%{{transform:scale(1.08);opacity:0}}}}
@@ -12717,7 +5937,7 @@ html,body{{min-height:100%;background:var(--bg);font-family:var(--serif);color:v
 .lock-form{{padding:24px 30px 30px}}
 .lock-field{{position:relative;margin-bottom:13px}}
 .lock-inp{{width:100%;padding:13px 44px 13px 44px;border-radius:13px;border:1px solid var(--card-b);background:rgba(0,0,0,.2);color:var(--t1);font-family:inherit;font-size:14px;outline:none;text-align:center;letter-spacing:.14em;transition:.18s}}
-[data-theme="light"] .lock-inp{{background:rgba(124,58,237,.05)}}
+[data-theme="light"] .lock-inp{{background:rgba(226,62,30,.05)}}
 .lock-inp:focus{{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-d)}}
 .lock-eye{{position:absolute;left:13px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--t3);cursor:pointer;font-size:16px;padding:4px;display:flex}}
 .lock-eye:hover{{color:var(--accent2)}}
@@ -12764,35 +5984,25 @@ html,body{{min-height:100%;background:var(--bg);font-family:var(--serif);color:v
   box-shadow:0 18px 50px -24px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.05);
 }}
 [data-theme="light"] .sub-info,[data-theme="light"] .stat-card,[data-theme="light"] .cfg-card,[data-theme="light"] .lock-card,[data-theme="light"] .qr-box{{background:rgba(255,255,255,0.78)}}
-.cfg-card:hover,.stat-card:hover{{border-color:rgba(139,92,246,.35);box-shadow:0 0 30px -12px rgba(139,92,246,.35),inset 0 1px 0 rgba(255,255,255,.05)}}
-.brand-img{{border-color:rgba(139,92,246,.35);box-shadow:0 0 18px -2px rgba(139,92,246,.5)}}
-.icon-btn:hover{{background:rgba(139,92,246,.12);color:#FFB199;border-color:rgba(139,92,246,.3)}}
+.cfg-card:hover,.stat-card:hover{{border-color:rgba(255,77,46,.35);box-shadow:0 0 30px -12px rgba(255,61,46,.35),inset 0 1px 0 rgba(255,255,255,.05)}}
+.brand-img{{border-color:rgba(255,77,46,.35);box-shadow:0 0 18px -2px rgba(255,61,46,.5)}}
+.icon-btn:hover{{background:rgba(255,77,46,.12);color:#FFB199;border-color:rgba(255,77,46,.3)}}
 .sub-eyebrow i{{color:#FF6A45}}
-.sub-sub-box{{background:rgba(139,92,246,.08);border-color:rgba(139,92,246,.22)}}
+.sub-sub-box{{background:rgba(255,77,46,.08);border-color:rgba(255,77,46,.22)}}
 .sub-sub-url{{color:#FFB199}}
 .tu-label i{{color:#FF6A45}}
-.tu-bar-f,.ubar-f{{background:linear-gradient(90deg,#FACC15,#8B5CF6)}}
-.cfg-vless{{color:#FFB199;border-color:rgba(139,92,246,.18)}}
-.cfg-link-toggle:hover{{background:rgba(139,92,246,.1);border-color:rgba(139,92,246,.28);color:#FFB199}}
-.pc-ws{{background:rgba(139,92,246,.12);color:#FFB199}}
+.tu-bar-f,.ubar-f{{background:linear-gradient(90deg,#FF8A3D,#FF4D2E)}}
+.cfg-vless{{color:#FFB199;border-color:rgba(255,77,46,.18)}}
+.cfg-link-toggle:hover{{background:rgba(255,77,46,.1);border-color:rgba(255,77,46,.28);color:#FFB199}}
+.pc-ws{{background:rgba(255,77,46,.12);color:#FFB199}}
 .pc-ultra{{background:rgba(16,185,129,.12)}}
 .cfg-status.ok{{background:rgba(16,185,129,.12)}}
-.lock-shield{{background:rgba(139,92,246,.12);border-color:rgba(139,92,246,.3)}}
-.lock-shield i{{color:#FACC15}}
-.lock-inp:focus{{border-color:#8B5CF6;box-shadow:0 0 0 3px rgba(139,92,246,.14)}}
+.lock-shield{{background:rgba(255,77,46,.12);border-color:rgba(255,77,46,.3)}}
+.lock-shield i{{color:#FF8A3D}}
+.lock-inp:focus{{border-color:#FF4D2E;box-shadow:0 0 0 3px rgba(255,77,46,.14)}}
 .qr-img img{{border-radius:12px}}
-.cfg-top::after{{background:linear-gradient(180deg,#8B5CF6,#E8590C)}}
+.cfg-top::after{{background:linear-gradient(180deg,#FF4D2E,#E8590C)}}
 .cfg-card.inactive .cfg-top::after{{background:var(--red)}}
-
-
-/* NixHD premium touches for sub page */
-.sub-info{{box-shadow:0 16px 50px rgba(0,0,0,0.55),0 0 0 1px rgba(139,92,246,0.10) inset}}
-.sub-info::before{{background:radial-gradient(circle at top right,rgba(139,92,246,0.18),transparent 70%)}}
-.sub-eyebrow{{color:var(--accent2)}}
-.sub-sub-box{{background:rgba(139,92,246,0.08);border-color:rgba(139,92,246,0.20)}}
-.sub-sub-url{{color:var(--accent2)}}
-.tu-bar{{background:rgba(139,92,246,0.14)}}
-.tu-bar-f{{background:linear-gradient(90deg,var(--accent),var(--accent2))}}
 
 </style>
 </head>
@@ -12810,7 +6020,7 @@ html,body{{min-height:100%;background:var(--bg);font-family:var(--serif);color:v
   <div class="top">
     <div class="brand">
       <div class="brand-img"><svg viewBox="0 0 100 100" width="100%" height="100%" role="img" aria-label="EMIX logo"><rect width="100" height="100" fill="#030303"/><circle cx="50" cy="48" r="45" fill="#0B0B0B" stroke="#5A160E" stroke-width="2"/><circle cx="50" cy="48" r="42" fill="none" stroke="#FF3B24" stroke-width="1" opacity=".7"/><path d="M72 24H39C29 24 23 30 23 40V61C23 71 29 77 39 77H73M39 50H64C72 50 76 46 80 39" fill="none" stroke="#7A170F" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" opacity=".6"/><path d="M72 24H39C29 24 23 30 23 40V61C23 71 29 77 39 77H73M39 50H64C72 50 76 46 80 39" fill="none" stroke="#FF4028" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/><text x="50" y="91" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" font-weight="800" letter-spacing="3" fill="#FF3B24">EMIX</text></svg></div>
-      <div><div class="brand-name">EMIX</div><div class="brand-sub">Gateway · v9.5</div></div>
+      <div><div class="brand-name">EMIX</div><div class="brand-sub">Gateway · v9.2</div></div>
     </div>
     <div class="top-actions">
       <button class="icon-btn" id="theme-toggle" onclick="toggleTheme()" title="تغییر تم"><i class="ti ti-sun" id="theme-icon"></i></button>
@@ -12820,7 +6030,7 @@ html,body{{min-height:100%;background:var(--bg);font-family:var(--serif);color:v
   <div id="root">
     <div class="empty-state"><i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i>در حال بارگذاری...</div>
   </div>
-  <div class="footer">کانال رسمی: <a href="https://t.me/emixpi" target="_blank">@emixpi</a> · EMIX v9.5</div>
+  <div class="footer">کانال رسمی: <a href="https://t.me/emixpi" target="_blank">@emixpi</a> · EMIX v9.2</div>
 </div>
 <script>
 const UUID_KEY='{uuid_key}';
@@ -12863,7 +6073,7 @@ function protoChip(p){{
 
 function showQR(label,link){{
   document.getElementById('qr-label').textContent=label;
-  document.getElementById('qr-img').src='/api/qr?data='+encodeURIComponent(link);
+  document.getElementById('qr-img').src='https://api.qrserver.com/v1/create-qr-code/?size=260x260&data='+encodeURIComponent(link);
   document.getElementById('qr-modal').classList.add('open');
 }}
 

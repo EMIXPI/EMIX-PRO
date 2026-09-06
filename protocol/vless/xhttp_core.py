@@ -15,7 +15,6 @@ import time
 import traceback
 from datetime import datetime, timezone
 from protocol.trojan.trojan import parse_trojan_header, find_uuid_by_trojan_hash
-from protocol.net_connect import open_connection_v4first, apply_weak_link_tuning
 
 from fastapi import Request, HTTPException
 from starlette.requests import ClientDisconnect
@@ -31,7 +30,6 @@ from main import (
     logger,
     is_link_allowed,
     save_state,
-    schedule_save,
 )
 from protocol.vless.vless import parse_vless_header, check_and_use
 
@@ -44,10 +42,10 @@ REAPER_INTERVAL = 10
 TCP_CONNECT_TIMEOUT = 10.0
 
 # ── تنظیمات موتور تطبیقی ──────────────────────────────────────────────────────
-SOCK_BUF_SIZE = 512 * 1024        # پروفایل ضعیف-لینک RVG v11.0.2 — بافر ۴MB سطح OS
-                                     # روی لینک ضعیف فقط bufferbloat و تاخیر اضافه
-                                     # می‌ساخت؛ موتور AIMD application-level است
-                                     # و همچنان تا سقف بالا رشد می‌کند
+SOCK_BUF_SIZE = 4 * 1024 * 1024     # افزایش از 2MB به 4MB برای throughput بالاتر
+                                     # (قبلاً کامنت این تغییر رو می‌گفت ولی مقدار واقعی
+                                     #  هنوز 2MB مونده بود — همینجا واقعاً به 4MB رسید،
+                                     #  هم‌راستا با نسخه‌ی Trojan که از قبل 4MB بود)
 
 # _AdaptiveFlow: بازه‌ی مجاز برای high-water تطبیقی (AIMD)
 FLOW_MIN_HW = 256 * 1024
@@ -94,13 +92,17 @@ def _resp_headers(fp: str) -> dict:
 
 
 def _tune_socket(writer: asyncio.StreamWriter):
-    """پروفایل ضعیف-لینک net_connect (RVG v11.0.2): بافر 512KB + TCP_USER_TIMEOUT 20s."""
+    """TCP_NODELAY + بافرهای بزرگ‌تر سوکت برای کاهش سربار سیستم‌عامل روی ترافیک بالا."""
     sock = writer.transport.get_extra_info("socket")
     if not sock:
         return
     try:
-        apply_weak_link_tuning(sock)
-    except Exception as e:
+        sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, SOCK_BUF_SIZE)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, SOCK_BUF_SIZE)
+        if hasattr(socket, "TCP_QUICKACK"):
+            sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_QUICKACK, 1)
+    except OSError as e:
         logger.warning(f"XHTTP _tune_socket failed: {e}")
 
 
@@ -197,7 +199,9 @@ async def _open_tcp_from_header(first_chunk: bytes, is_trojan: bool = False):
         command, address, port, payload = await parse_vless_header(first_chunk)
 
     try:
-        reader, writer = await open_connection_v4first(address, port, timeout=TCP_CONNECT_TIMEOUT)
+        reader, writer = await asyncio.wait_for(
+            asyncio.open_connection(address, port), timeout=TCP_CONNECT_TIMEOUT
+        )
     except asyncio.TimeoutError:
         logger.error(f"XHTTP TCP connect TIMEOUT -> {address}:{port} (>{TCP_CONNECT_TIMEOUT}s)")
         raise
@@ -300,19 +304,11 @@ async def _reaper():
 
 
 _reaper_started = False
-_reaper_lock = asyncio.Lock()
 
 
-async def ensure_reaper():
-    """Guarantee exactly one reaper task per process (Phase 1.6 — race fix).
-
-    Atomic check-and-set under asyncio.Lock — two concurrent callers cannot
-    both see False and both create a task.
-    """
+def ensure_reaper():
     global _reaper_started
-    async with _reaper_lock:
-        if _reaper_started:
-            return
+    if not _reaper_started:
         asyncio.create_task(_reaper())
         _reaper_started = True
 
@@ -379,7 +375,7 @@ async def _open_tcp_for_session(session_id: str, uuid: str, sess: dict, first_ch
     sess["downlink_task"] = asyncio.create_task(
         _pump_tcp_to_queue(session_id, uuid, reader, sess["down_q"], vless_prefix=vless_prefix, conn_id=sess["conn_id"])
     )
-    asyncio.create_task(schedule_save())
+    asyncio.create_task(save_state())
 
 
 def _downstream_gen(sess: dict):

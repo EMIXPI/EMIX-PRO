@@ -21,7 +21,6 @@ from main import (
     log_activity,
 )
 from protocol.vless.vless import check_and_use, _QuotaGate
-from protocol.net_connect import open_connection_v4first
 from protocol.shadowsocks.shadowsocks import (
     RELAY_BUF,
     WRITE_HIGH_WATER,
@@ -95,7 +94,6 @@ async def relay_tcp_to_ws(ws: WebSocket, reader: asyncio.StreamReader, stream: _
 async def shadowsocks_ws_tunnel(ws: WebSocket):
     await ws.accept()
     ip = _ws_client_ip(ws)
-    is_ping_test = (ws.headers.get("x-emix-ping") == "1")
     conn_id = secrets.token_urlsafe(6)
     writer = None
     uuid = None
@@ -149,8 +147,7 @@ async def shadowsocks_ws_tunnel(ws: WebSocket):
             "bytes": 0,
         }
         logger.info(f"✅ SS-WS [{conn_id}] uuid={uuid[:8]}… ip={ip} total={len(connections)}")
-        if not is_ping_test:
-            log_activity("connection", f"اتصال Shadowsocks جدید از {ip} (کانفیگ {link.get('label','?')})", "info")
+        log_activity("connection", f"اتصال Shadowsocks جدید از {ip} (کانفیگ {link.get('label','?')})", "info")
 
         # اولین chunk رمزگشایی‌شده شامل هدر SOCKS5-like آدرس مقصد + احتمالاً payload اولیه است
         first_payload = chunks[0]
@@ -165,20 +162,9 @@ async def shadowsocks_ws_tunnel(ws: WebSocket):
         connections[conn_id]["bytes"] += len(first_chunk)
         logger.info(f"➡️  [{conn_id}] SS → {address}:{port}")
 
-        # ── FAST PING PATH ───────────────────────────────────────────────
-        # تست سلامت: فقط هدر SS پارس شده (پسورد درست) + UUID معتبر + لینک فعال.
-        # بدون باز کردن TCP واقعی، پاسخ synthetic HTTP می‌فرستیم.
-        if is_ping_test:
-            try:
-                await ws.send_bytes(b"HTTP/1.1 200 OK\r\nContent-Length: 0\r\nX-EMIX-Ping: ok\r\n\r\n")
-            except Exception:
-                pass
-            await ws.close()
-            connections.pop(conn_id, None)
-            return
-        # ──────────────────────────────────────────────────────────────────
-
-        reader, writer = await open_connection_v4first(address, port, timeout=10.0)
+        reader, writer = await asyncio.wait_for(
+            asyncio.open_connection(address, port), timeout=10.0
+        )
         _tune_socket(writer)
 
         if initial_data:
@@ -203,7 +189,7 @@ async def shadowsocks_ws_tunnel(ws: WebSocket):
             except asyncio.CancelledError:
                 pass
 
-        asyncio.create_task(schedule_save())
+        asyncio.create_task(save_state())
 
     except WebSocketDisconnect:
         pass

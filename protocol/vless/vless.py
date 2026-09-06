@@ -22,23 +22,19 @@ from main import (
     LINKS_LOCK,
     stats,
     hourly_traffic,
-    _hourly_traffic_key,
     connections,
     logger,
     is_link_allowed,
     now_ir,
 )
-from protocol.net_connect import (
-    RELAY_BUF,
-    WRITE_HIGH_WATER,
-    apply_weak_link_tuning,
-)
 
 # ══════════════════════════════════════════════════════════════════════════════
 # VLESS Relay — بهینه‌شده برای حداکثر throughput و کمترین تاخیر
 # ══════════════════════════════════════════════════════════════════════════════
-# RELAY_BUF / WRITE_HIGH_WATER از net_connect.py می‌آیند (پروفایل ضعیف-لینک
-# RVG v11.0.2: چانک 256KB + درین زودهنگام 128KB — رفاه لینک‌های پرتاخیر/موبایل).
+
+RELAY_BUF = 1024 * 1024          # 1 MB — هماهنگ با Trojan/Shadowsocks/XHTTP
+SOCK_BUF = 4 * 1024 * 1024       # 4 MB بافر سوکت سطح OS
+WRITE_HIGH_WATER = 512 * 1024    # drain فقط وقتی بیشتر از 512KB در بافر باشه
 
 # تنظیمات QuotaGate تطبیقی (batched quota check به‌جای per-frame lock)
 QUOTA_MIN_BATCH = 32 * 1024
@@ -48,12 +44,16 @@ QUOTA_CHECK_INTERVAL = 0.25
 
 
 def _tune_socket(writer: asyncio.StreamWriter):
-    """TCP_NODELAY + بافرهای طبق پروفایل ضعیف-لینک + TCP_USER_TIMEOUT (RVG)."""
+    """TCP_NODELAY + بافرهای بزرگ سوکت برای کاهش overhead سیستم‌عامل و تاخیر."""
     try:
         sock = writer.transport.get_extra_info("socket")
         if sock is None:
             return
-        apply_weak_link_tuning(sock)
+        sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, SOCK_BUF)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, SOCK_BUF)
+        if hasattr(socket, "TCP_QUICKACK"):
+            sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_QUICKACK, 1)
     except Exception as e:
         logger.warning(f"VLESS _tune_socket failed: {e}")
 
@@ -146,7 +146,7 @@ async def check_and_use(uid: str, n: int) -> bool:
             return False
         link["used_bytes"] += n
         stats["total_bytes"] += n
-        hourly_traffic[_hourly_traffic_key()] += n
+        hourly_traffic[now_ir().strftime("%H:00")] += n
     return True
 
 async def relay_ws_to_tcp(ws: WebSocket, writer: asyncio.StreamWriter, conn_id: str, uid: str):

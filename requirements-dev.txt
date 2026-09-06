@@ -1,3 +1,0 @@
-# requirements-dev.txt — test-only dependencies (not deployed to Railway)
-pytest>=7.0
-pytest-asyncio>=0.21
