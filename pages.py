@@ -3140,8 +3140,8 @@ body.cascade #links-grid .cfg-card:nth-child(n+7){animation-delay:.2s}
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
         <i class="ti ti-world" style="color:var(--blue-t)"></i>
         <div style="flex:1;min-width:200px">
-          <div style="font-weight:700;font-size:12.5px">دامنه‌ی عمومی لینک‌ها (RAILWAY_PUBLIC_DOMAIN)</div>
-          <div style="font-size:10.5px;color:var(--t3);line-height:1.7">اگر ingress مستقیم Railway از شبکه‌ی شما فیلتر است، دامنه‌ی گیت‌وی Cloudflare را بگذارید تا پنل و همه‌ی کانفیگ‌ها از همان مسیر صادر شوند</div>
+          <div style="font-weight:700;font-size:12.5px">دامنه‌ی عمومی لینک‌ها (EMIX_PUBLIC_HOST)</div>
+          <div style="font-size:10.5px;color:var(--t3);line-height:1.7">اگر ingress مستقیم Railway از شبکه‌ی شما فیلتر است، دامنه‌ی گیت‌وی Cloudflare را بگذارید تا پنل و همه‌ی کانفیگ‌ها از همان مسیر صادر شوند — مثلاً دامنه‌ی Worker گیت‌وی خودتان</div>
         </div>
       </div>
       <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
@@ -8048,9 +8048,10 @@ async function loadPublicHost(){
     const j=await r.json();
     const cur=document.getElementById('pubhost-cur');
     if(!cur)return;
-    const row=(j.variables||[]).find(v=>v.name==='RAILWAY_PUBLIC_DOMAIN');
-    if(row){cur.innerHTML='فعلی: <b style="color:var(--blue-t)">'+(row.value||'(خالی)')+'</b>';}
-    else{cur.innerHTML='تنظیم‌نشده — لینک‌ها از دامنه‌ی خودآموخته صادر می‌شوند';}
+    const row=(j.variables||[]).find(v=>v.name==='EMIX_PUBLIC_HOST');
+    const rpd=(j.variables||[]).find(v=>v.name==='RAILWAY_PUBLIC_DOMAIN');
+    if(row){cur.innerHTML='فعلی: <b style="color:var(--blue-t)">'+(row.value||'(خالی)')+'</b>'+(rpd&&rpd.value?' <span style="color:var(--t3)">· ingress ریلوی: '+rpd.value+'</span>':'');}
+    else{cur.innerHTML=(rpd&&rpd.value?'ingress ریلوی: <b>'+rpd.value+'</b> — ':'تنظیم‌نشده — ')+'لینک‌ها از دامنه‌ی خودآموخته صادر می‌شوند';}
   }catch(e){}
 }
 async function savePublicHost(btn){
@@ -8059,7 +8060,7 @@ async function savePublicHost(btn){
   if(!val||!val.includes('.')){toast('یک hostname معتبر وارد کنید (مثل my-gate.workers.dev)','err');return}
   const ic=btn.querySelector('i');ic.className='ti ti-loader-2';ic.style.animation='spin 1s linear infinite';btn.disabled=true;
   try{
-    const r=await authF('/api/system/infra/variable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'RAILWAY_PUBLIC_DOMAIN',value:val})});
+    const r=await authF('/api/system/infra/variable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'EMIX_PUBLIC_HOST',value:val})});
     const j=await r.json().catch(()=>({detail:'پاسخ نامعتبر'}));
     if(r.ok&&j.ok){
       toast('ذخیره شد — ریلوی redeploy می‌کند؛ ۱-۲ دقیقه صبر کنید','ok');

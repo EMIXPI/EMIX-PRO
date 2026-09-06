@@ -343,11 +343,15 @@ async def health_all() -> dict:
 # این اندپوینت همان ست‌کردن را با توکن ذخیره‌شده برای اپراتور انجام می‌دهد.
 
 _VARIABLE_WHITELIST = {
-    "RAILWAY_PUBLIC_DOMAIN": (
+    # EMIX_PUBLIC_HOST اولویت اول get_host() است — چون ریلوی خودش
+    # RAILWAY_PUBLIC_DOMAIN را مدیریت می‌کند و مقدار دستی را موقع redeploy
+    # بازنویسی می‌کند (اندازه‌گیری زنده)، دامنه‌ی صریح اپراتور اینجا می‌نشیند.
+    "EMIX_PUBLIC_HOST": (
         "دامنه‌ی عمومی که در همه‌ی لینک‌ها/ساب‌ها نوشته می‌شود — "
         "مثلاً دامنه‌ی گیت‌وی Cloudflare (‎*.workers.dev) وقتی ingress مستقیم "
         "Railway از شبکه‌ی کاربر فیلتر است"
     ),
+    "RAILWAY_PUBLIC_DOMAIN": "دامنه‌ی عمومی سیستم ریلوی (توجه: ریلوی خودش بازنویسی می‌کند)",
     "EMIX_CDN_DOMAIN": "دامنه‌ی CDN برای مسیر Mode A لینک‌های SNI-spoof",
 }
 

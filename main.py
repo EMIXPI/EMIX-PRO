@@ -1443,7 +1443,7 @@ _LEARNED_PUBLIC_HOST: str | None = None
 async def _learn_public_host_middleware(request: Request, call_next):
     global _LEARNED_PUBLIC_HOST
     try:
-        if not os.environ.get("RAILWAY_PUBLIC_DOMAIN"):
+        if not os.environ.get("RAILWAY_PUBLIC_DOMAIN") and not os.environ.get("EMIX_PUBLIC_HOST"):
             host = (request.headers.get("host") or "").split(":")[0].strip().lower()
             if (
                 host
@@ -1474,6 +1474,12 @@ async def _learn_public_host_middleware(request: Request, call_next):
     return response
 
 def get_host() -> str:
+    # Phase 44: EMIX_PUBLIC_HOST — دامنه‌ی صریحِ اپراتور (مثلاً گیت‌وی CF).
+    # اولویت دارد چون ریلوی RAILWAY_PUBLIC_DOMAIN را خودش مدیریت می‌کند و
+    # مقدار دستی را موقع redeploy بازنویسی می‌کند (اندازه‌گیری زنده).
+    explicit = os.environ.get("EMIX_PUBLIC_HOST", "").strip().lower()
+    if explicit:
+        return explicit
     env_host = os.environ.get("RAILWAY_PUBLIC_DOMAIN")
     if env_host:
         return env_host
@@ -5812,7 +5818,7 @@ async def api_migrate_legacy_spoof():
 # تا قبل از لاگین هم قابل بررسی باشد. (از /api/version استفاده نمی‌کنیم چون
 # آن مسیر قبلاً برای بررسی به‌روزرسانی در نظر گرفته شده است.)
 # ══════════════════════════════════════════════════════════════════════════════
-EMIX_VERSION = "12.4.4-gateway-host"
+EMIX_VERSION = "12.4.5-public-host"
 EMIX_BUILD_DATE = "2026-09-04"
 
 @app.get("/api/boot-profile")

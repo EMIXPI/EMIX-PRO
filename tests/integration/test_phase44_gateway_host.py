@@ -132,7 +132,6 @@ def test_variable_whitelist_enforced(client):
                     json={"name": "RAILWAY_SERVICE_ID", "value": "x.workers.dev"})
     assert r.status_code == 403
 
-
 def test_variable_value_validation(client):
     r = client.post("/api/system/infra/variable",
                     json={"name": "RAILWAY_PUBLIC_DOMAIN", "value": "not a host!"})
@@ -211,10 +210,20 @@ def test_variables_listing_masks_non_whitelisted(client, monkeypatch):
 
 # ── §D get_host precedence — the deterministic-host cure ─────────────────────
 
-def test_get_host_env_wins_over_learned(monkeypatch):
-    monkeypatch.setenv("RAILWAY_PUBLIC_DOMAIN", GATEWAY)
+def test_get_host_explicit_env_wins_over_everything(monkeypatch):
+    # EMIX_PUBLIC_HOST — the operator-explicit host (Railway rewrites its own
+    # RAILWAY_PUBLIC_DOMAIN on redeploy, so the explicit var is the cure)
+    monkeypatch.setenv("EMIX_PUBLIC_HOST", GATEWAY)
+    monkeypatch.setenv("RAILWAY_PUBLIC_DOMAIN", RAILWAY)
     monkeypatch.setattr(main, "_LEARNED_PUBLIC_HOST", RAILWAY)
     assert main.get_host() == GATEWAY
+
+
+def test_get_host_railway_env_wins_over_learned(monkeypatch):
+    monkeypatch.delenv("EMIX_PUBLIC_HOST", raising=False)
+    monkeypatch.setenv("RAILWAY_PUBLIC_DOMAIN", RAILWAY)
+    monkeypatch.setattr(main, "_LEARNED_PUBLIC_HOST", RAILWAY)
+    assert main.get_host() == RAILWAY
 
 
 def test_get_host_learned_when_no_env(monkeypatch):
@@ -227,7 +236,7 @@ def test_get_host_learned_when_no_env(monkeypatch):
 
 def test_dashboard_serves_public_host_card(client):
     html = client.get("/dashboard").text
-    assert "RAILWAY_PUBLIC_DOMAIN" in html
+    assert "EMIX_PUBLIC_HOST" in html
     assert 'id="pubhost-input"' in html
     assert 'savePublicHost' in html
     assert 'loadPublicHost' in html
