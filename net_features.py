@@ -113,6 +113,13 @@ def validate_client_ping(body: dict) -> dict:
         measurement = "HTTPS"
     stats["measurement"] = measurement      # برچسب صادق روش اندازه‌گیری
     stats["measured_by"] = "client-browser" # صریح: مرورگرِ کاربر
+    # اولین اتصال (DNS+TCP+TLS) — گزارشِ جداگانه‌ی مرورگر، در آمار median نیست
+    try:
+        fm = float(body.get("first_ms"))
+        if math.isfinite(fm) and 0 < fm <= 30000.0:
+            stats["first_ms"] = round(fm, 1)
+    except (TypeError, ValueError):
+        pass
     stats["measured_at"] = datetime.now().isoformat()
     return stats
 
