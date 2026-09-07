@@ -97,7 +97,10 @@ async def worker_probe_upstream() -> dict:
 
 
 async def worker_full_check() -> dict:
-    """بررسی کامل Worker (اتصال، امضا، لبه، upstream) — گزارش honest."""
+    """بررسی کامل Worker (اتصال، امضا، لبه، upstream) — گزارش honest.
+
+    نتیجه‌ی هر بررسی در smart_settings («worker_check») ذخیره می‌شود تا
+    state واقعی (REGISTERED ≠ DEPLOYED ≠ HEALTHY) بین sessionها زنده بماند."""
     out = {
         "worker": WORKER_NAME,
         "base": worker_base(),
@@ -113,7 +116,74 @@ async def worker_full_check() -> dict:
         out["authenticated"] = auth_ok
         db.add_event("worker", f"worker-check: authenticated={auth_ok}, "
                                f"upstream_ok={(out['health'] or {}).get('upstream', {}).get('ok')}")
+    out["state"] = _derive_state(out)
+    _persist_check(out)
     return out
+
+
+# ── Worker state machine (طبق سند: Registered ≠ Deployed ≠ Healthy) ──────────
+# NOT_CONFIGURED : URL/کلید ثبت نشده
+# REGISTERED     : ثبت شده اما هرگز بررسی نشده
+# DEPLOYED       : Worker پاسخ می‌دهد (health ok) — اما upstream/امضا هنوز نامعلوم
+# HEALTHY        : deployed + امضای HMAC معتبر + upstream سالم
+# DEGRADED       : deployed + امضا معتبر اما upstream خراب
+# FAILED         : Worker در دسترس نیست (unreachable / غیر JSON)
+def _derive_state(check: dict) -> str:
+    if not (check.get("base") and worker_key()):
+        return "NOT_CONFIGURED"
+    h = check.get("health") or {}
+    if not isinstance(h, dict) or not h.get("ok"):
+        return "FAILED"
+    up = (h.get("upstream") or {})
+    upstream_ok = bool(up.get("ok")) if isinstance(up, dict) else False
+    auth_ok = bool(check.get("authenticated"))
+    if auth_ok and upstream_ok:
+        return "HEALTHY"
+    if auth_ok and not upstream_ok:
+        return "DEGRADED"
+    # پاسخ می‌دهد اما امضا بررسی نشده/نامعتبر → فقط «DEPLOYED» ادعا می‌شود
+    return "DEPLOYED"
+
+
+def _persist_check(check: dict) -> None:
+    h = check.get("health") or {}
+    up = (h.get("upstream") or {}) if isinstance(h, dict) else {}
+    pu = check.get("probe_upstream") or {}
+    summary = {
+        "ts": time.time(),
+        "state": check.get("state"),
+        "worker": check.get("worker"),
+        "base": check.get("base"),
+        "authenticated": bool(check.get("authenticated")),
+        "upstream_ok": bool(up.get("ok")) if isinstance(up, dict) else False,
+        "upstream_latency_ms": up.get("latency_ms") if isinstance(up, dict) else None,
+        "colo": (h.get("colo") if isinstance(h, dict) else None)
+                or (pu.get("colo") if isinstance(pu, dict) else None),
+        "edge_to_upstream_ms": (pu.get("edge_to_upstream_ms")
+                                if isinstance(pu, dict) else None),
+    }
+    try:
+        db.set_setting("worker_check", summary)
+    except Exception:
+        pass
+
+
+def worker_state() -> dict:
+    """state فعلی Worker از آخرین بررسی real (persisted) — بدون ادعای جعلی.
+
+    هیچ عدد/وضعیتی ساخته نمی‌شود؛ فقط نتیجه‌ی آخرین worker_full_check
+    واقعی برگردانده می‌شود (یا REGISTERED اگر هنوز بررسی نشده)."""
+    base = worker_base()
+    key = worker_key()
+    if not (base and key):
+        return {"state": "NOT_CONFIGURED", "worker": WORKER_NAME, "base": None,
+                "checked": False, "last_check": None}
+    last = db.get_setting("worker_check") or None
+    if not isinstance(last, dict) or not last.get("state"):
+        return {"state": "REGISTERED", "worker": WORKER_NAME, "base": base,
+                "checked": False, "last_check": None}
+    return {"state": last.get("state"), "worker": WORKER_NAME, "base": base,
+            "checked": True, "last_check": last}
 
 
 # ── verify درخواست ورودی worker → panel ─────────────────────────────────────

@@ -12,7 +12,7 @@ Coverage (طبق سند کاربر — COMPLETE = CODED + CONNECTED + VISIBLE + 
   §D  sr_route خلاصه‌ی صادق روی links list (null + reason وقتی مسیری نیست).
   §E  UI: Config Builder بخش Network با سه قابلیت جداجدا، Client Ping روی
       کارت، Ping Details، Route Details، JS سالم (node --check).
-  §F  Regression: لینک بدون feature بایت‌به‌بایت پایه؛ نسخه 13.4.0-emix-pro.
+  §F  Regression: لینک بدون feature بایت‌به‌بایت پایه؛ نسخه 13.4.1-emix-pro.
 
 Run:  python -m pytest tests/test_phase48_final_integration.py -q
 """
@@ -460,7 +460,7 @@ class TestRegression:
     def test_version_13_4(self, server, session):
         st, d = api(session, server["base"], "/api/deployment-version")
         assert st == 200
-        assert d["version"] == "13.4.0-emix-pro", d
+        assert d["version"] == "13.4.1-emix-pro", d
 
     def test_existing_login_still_works(self, server, session):
         st, d = api(session, server["base"], "/api/links")

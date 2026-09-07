@@ -3,6 +3,39 @@
 تمام تغییرات قابل‌توجه این پروژه در این فایل ثبت می‌شود.
 قالب بر اساس [Keep a Changelog](https://keepachangelog.com/) است.
 
+## [13.4.1-emix-pro] — 2026-09-07
+
+### CURRENT STATE AUDIT & FINAL INTEGRATION (Phase 49)
+
+- **EGRESS TRUTH (ممیزی مستقل)**: egress فعلی 208.77.244.84 / AS400940 Railway /
+  NL با دو منبع مستقل (ip-api از داخل تونل + ipwho.is مستقیم) تأیید شد —
+  `iran_egress_verified = false` صادق باقی می‌ماند؛ ایران هرگز از SNI / نام /
+  برچسب استنباط نمی‌شود (فقط از IP خروجیِ مشاهده‌شده‌ی دو-منبعی).
+- **MOBILE EGRESS CARDS (رفع سرریز افقی)**: جدول endpointها (min-width 820px)
+  در عرض 320/360/390/430px تا ۶۸٪ بریده می‌شد. حالا در موبایل (≤760px) جدول
+  مخفی و ردیف‌ها به **Egress Card** پاسخ‌گو تبدیل می‌شوند (IP / Country / ASN /
+  Endpoint / Health / Latency / Jitter / Loss / Score / آخرین چک + دکمه‌ی
+  verify) — بدون min-width، بدون برش، دسکتاپ بی‌تغییر.
+- **WORKER STATE MACHINE (Registered ≠ Deployed ≠ Healthy)**: بررسی واقعی
+  Worker حالا state صریح با شش حالت جدا برمی‌گرداند و **persist** می‌شود:
+  `NOT_CONFIGURED / REGISTERED / DEPLOYED / HEALTHY / DEGRADED / FAILED`.
+  کارت Worker فشرده شد (Status/Upstream/Latency/Endpoint/Edge)؛ ثبت URL/کلید
+  به بخش جمع‌شونده رفت؛ تغییر URL → state صادقانه به REGISTERED ریست می‌شود؛
+  بررسی خودکار پس‌زمینه فقط وقتی state قدیمی/بررسی‌نشده باشد؛ rate-limit →
+  پاسخ از state persisted (هرگز عدد جعلی). «ثبت‌شده» دیگر به معنی «مستقر»
+  نمایش داده نمی‌شود.
+- **IRANIAN EGRESS — برچسب صادق**: در Route Details خط «Iranian Egress»
+  اضافه شد: `Not verified — egress مشاهده‌شده: NL` (یا Verified فقط با
+  verify دو-منبعی). متریک داشبورد هم صریح: «تأییدنشده / Not verified».
+- **SEPARATE METRICS (فیلدهای مستقل)**: بلوک «SEPARATE METRICS» در Route
+  Details: `client_rtt_ms` / `route_latency_ms` / `cf_edge_latency_ms` /
+  `egress_ip` / `egress_country` / `egress_asn` / `iran_egress_verified` —
+  هیچ‌وقت زیر یک «ping» عمومی قاطی نمی‌شوند؛ `sr_route` در GET /api/links
+  هم `iran_egress_verified` + `egress_country` + `egress_asn` می‌دهد.
+- **تست**: ۲۶ تست جدید (worker state machine + persistence + reset صادق +
+  rate-limit cached + فیلدهای جدا + UI markers + regression) — کل سوئیت
+  ۱۷۲/۱۷۲ سبز.
+
 ## [13.4.0-emix-pro] — 2026-09-07
 
 ### FINAL PRODUCTION FIX & FEATURE INTEGRATION (Phase 48)

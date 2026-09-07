@@ -46,7 +46,9 @@ def register_routes(app) -> None:
             "engine": engine.engine_status(),
             "worker": {"registered": worker_client.has_worker(),
                        "url": worker_client.worker_base() or None,
-                       "name": worker_client.WORKER_NAME},
+                       "name": worker_client.WORKER_NAME,
+                       # state واقعی از آخرین بررسی persisted — Registered ≠ Deployed
+                       "state": worker_client.worker_state()},
             "pool": pool.pool_summary(),
             "iran_egress": iran.iran_egress_report(),
             "iran_direct": iran.iran_direct_summary(),
@@ -222,10 +224,13 @@ def register_routes(app) -> None:
                 if not ok:
                     raise HTTPException(400, f"worker_url نامعتبر: {reason}")
             db.set_setting("worker_url", u)
+            # تغییر Worker → نتیجه‌ی بررسی قبلی دیگر معتبر نیست (صداقت state)
+            db.set_setting("worker_check", None)
             changed.append("worker_url")
         if "worker_key" in body:
             k = str(body.get("worker_key") or "").strip()
             db.set_setting("worker_key", k)
+            db.set_setting("worker_check", None)
             changed.append("worker_key")
         if "score_weights" in body:
             w = body["score_weights"]
@@ -296,6 +301,14 @@ def register_routes(app) -> None:
     async def sr_worker_status(_=Depends(require_auth)):
         # بدون گارد env flag — بررسی Worker بخشی از راه‌اندازی است (قبل از روشن
         # کردن flag هم باید بتوان Worker را ثبت و تست کرد).
+        allowed, _ = await security.rate_limit("worker-status", max_per_window=10,
+                                               window_s=120)
+        if not allowed:
+            # بررسی تازه در جریان است / rate-limit — state persisted برگردانده
+            # می‌شود (هرگز عدد جعلی ساخته نمی‌شود).
+            return JSONResponse({"ok": True, "cached": True,
+                                 **worker_client.worker_state()},
+                                headers=_HEADERS_NO_STORE)
         report = await worker_client.worker_full_check()
         return JSONResponse({"ok": bool(report.get("authenticated")), **report},
                             headers=_HEADERS_NO_STORE)

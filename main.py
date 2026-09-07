@@ -1874,6 +1874,10 @@ async def list_links(_=Depends(require_auth)):
                         "country": ep.get("country"), "asn": ep.get("observed_asn"),
                         "egress_ip": ep.get("observed_ip"),
                         "egress_verified": bool((ep.get("verification") or {}).get("egress", {}).get("status") == "VERIFIED"),
+                        "egress_country": ep.get("observed_country"),
+                        "egress_asn": ep.get("observed_asn"),
+                        # iran_egress_verified: فقط با verify دو-منبعی (هیچ‌وقت از SNI/نام/ادعا)
+                        "iran_egress_verified": bool((ep.get("capabilities") or {}).get("IRAN_EGRESS")),
                         "latency_ms": ep.get("latency_ms"), "jitter_ms": ep.get("jitter_ms"),
                         "packet_loss": ep.get("packet_loss"),
                         "uptime_pct": ep.get("uptime_pct"), "status": ep.get("status"),

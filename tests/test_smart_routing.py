@@ -19,7 +19,7 @@ Coverage (سند SMART ROUTING NETWORK v1):
   §K  Worker جدید: static checks (بدون secret/upstream هاردکد؛ replay+ts)؛
       workerهای قبلی (emix-gateway) در سورس جدید ارجاعی ندارند.
   §L  Rate limit روی discovery/test.
-  §M  Version pin 13.4.0-emix-pro.
+  §M  Version pin 13.4.1-emix-pro.
 
 Run:  python -m pytest tests/ -q
 """
@@ -755,7 +755,7 @@ class TestRateLimit:
 class TestVersion:
     def test_version_pin(self, srv_on):
         st, d = _api(srv_on["base"], srv_on["cookie"], "GET", "/api/deployment-version")
-        assert d["version"] == "13.4.0-emix-pro"
+        assert d["version"] == "13.4.1-emix-pro"
         assert "smart-routing-v1" in d["features"]
 
     def test_module_version(self):
