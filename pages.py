@@ -6177,10 +6177,13 @@ function cpHostOf(l){
   }catch(e){ return null; }
 }
 function _cpProbe(host){
-  // HTTPS RTT واقعی از مرورگر — هر پاسخی (حتی 404/opaque) RTT معتبر است؛
+  // HTTPS RTT واقعی از مرورگر — هر پاسخی (حتی 404/405/opaque) RTT معتبر است؛
   // کش با no-store + پارامتر یکتا دور زده می‌شود.
+  // redirect:'follow' (پیش‌فرض): بعضی فرانت‌ها (مثل Worker CF) روی HEAD پاسخ
+  // غیر-۲xx می‌دهند و ترکیب redirect:'manual'+no-cors در Chrome «Failed to
+  // fetch» می‌شود (اندازه‌گیری فاز ۴۹) — opaque response همچنان RTT دقیق می‌دهد.
   return fetch('https://'+host+'/api/ping?cp='+Date.now()+'-'+Math.random().toString(36).slice(2,7),
-    {method:'HEAD',cache:'no-store',mode:'no-cors',redirect:'manual'});
+    {method:'HEAD',cache:'no-store',mode:'no-cors'});
 }
 function _cpStats(samples,firstMs,measurement){
   const okVals=samples.filter(v=>v!=null&&isFinite(v));
