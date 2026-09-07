@@ -528,6 +528,7 @@ def generate_share_link(uuid: str, host: str, remark: str = "EMIX", protocol: st
             "security": "tls", "type": "ws", "host": host,
             "path": "/trojan-ws", "sni": host, "fp": fp, "alpn": alpn,
         }
+        _apply_link_features(params, link, protocol)
         query = "&".join(f"{k}={quote(str(v))}" for k, v in params.items())
         return f"trojan://{uuid}@{host}:443?{query}#{quote(remark)}"
 
@@ -538,6 +539,7 @@ def generate_share_link(uuid: str, host: str, remark: str = "EMIX", protocol: st
             "security": "tls", "type": "xhttp", "mode": mode, "host": host,
             "path": path, "sni": host, "fp": fp, "alpn": alpn,
         }
+        _apply_link_features(params, link, protocol)
         query = "&".join(f"{k}={quote(str(v))}" for k, v in params.items())
         return f"trojan://{uuid}@{host}:443?{query}#{quote(remark)}"
 
@@ -567,8 +569,56 @@ def generate_share_link(uuid: str, host: str, remark: str = "EMIX", protocol: st
             "fp": fp,
             "alpn": alpn,
         }
+    _apply_link_features(params, link, protocol)
     query = "&".join(f"{k}={quote(str(v))}" for k, v in params.items())
     return f"vless://{uuid}@{host}:443?{query}#{quote(remark)}"
+
+# ── EMIX-PRO v13.2 — قابلیت‌های per-link روی لینک تولیدی (توربو 0-RTT + جعل SNI) ─
+# فقط با mutate کردن params بعد از ساختِ پایه — تولیدکننده‌ی پایه دست نمی‌خورد.
+def _validate_spoof_sni(value) -> str | None:
+    """اعتبارسنجی SNI جعلی (hostname معتبر؛ IP/لوکال هاست رد) — None یعنی نامعتبر."""
+    if not value or not isinstance(value, str):
+        return None
+    s = value.strip().lower().rstrip(".")
+    import re as _re
+    if not s or len(s) > 253:
+        return None
+    if s in ("localhost", "127.0.0.1", "0.0.0.0", "::1"):
+        return None
+    # شکل dotted-quad = IP — SNI جعلی IP قبول نیست (کلاینت‌ها hostname می‌خواهند)
+    if _re.match(r"^\d+\.\d+\.\d+\.\d+$", s):
+        return None
+    if not _re.match(r"^[a-z0-9]([a-z0-9\-\.]*[a-z0-9])?$", s, _re.IGNORECASE):
+        return None
+    if "." not in s:
+        return None
+    return s
+
+
+def _apply_link_features(params: dict, link: dict, protocol: str) -> None:
+    """اعمال توربو (ed=2048) و جعل SNI (Mode B) روی params لینک — درجا.
+
+    Turbo: فقط ترنسپورت ws (xray فقط برای WS از Early-Data پشتیبانی می‌کند).
+    SNI spoof: sni=<spoof> + allowInsecure=1 + host=دامنه‌ی واقعی (Mode B —
+    همان wire-فرمت اثبات‌شده). SS/MTProto عمداً هیچ اثری نمی‌گیرند (لینکشان
+    پارامتر SNI ندارد — صداقت، نه سکوت)."""
+    _link = link or {}
+    ws_like = protocol in ("vless-ws", "trojan-ws",
+                           "xhttp-packet-up", "xhttp-stream-up",
+                           "trojan-xhttp-packet-up", "trojan-xhttp-stream-up")
+    if not ws_like:
+        return
+    if _link.get("turbo_enabled") and params.get("type") == "ws":
+        p = str(params.get("path", ""))
+        if "ed=" not in p:
+            params["path"] = p + "?ed=2048"
+    if _link.get("spoof_sni_enabled"):
+        sni = _validate_spoof_sni(_link.get("spoof_sni"))
+        if sni:
+            params["sni"] = sni
+            params["allowInsecure"] = "1"
+            # host = دامنه‌ی واقعی پنل می‌ماند (مسیر TCP تغییر نمی‌کند)
+
 
 def uptime() -> str:
     secs = int(time.time() - stats["start_time"])
@@ -1753,6 +1803,56 @@ async def update_link(uid: str, request: Request, _=Depends(require_auth)):
         if "fingerprint" in body:
             fp_val = str(body["fingerprint"]).strip()
             link["fingerprint"] = fp_val if fp_val in ("chrome", "firefox", "ios") else "chrome"
+        # ── EMIX-PRO v13.2: توربو 0-RTT (تک‌شانهای — فقط یک کانفیگ هم‌زمان) ──
+        if "turbo_enabled" in body:
+            want_turbo = bool(body["turbo_enabled"])
+            proto_now = link.get("protocol", DEFAULT_PROTOCOL)
+            if want_turbo and proto_now not in ("vless-ws", "trojan-ws"):
+                raise HTTPException(
+                    status_code=400,
+                    detail="توربو فقط برای کانفیگ‌های VLESS-WS و Trojan-WS در دسترس است (xray فقط برای WS از Early-Data پشتیبانی می‌کند)",
+                )
+            if want_turbo:
+                # تک‌شانهای: فعال کردن روی این کانفیگ، بقیه را خاموش می‌کند
+                # (درخواست صریح کاربر: «در صورت نیاز یدون تداخل قابل اجرا باشه»)
+                for other_uid, other in LINKS.items():
+                    if other_uid != uid and other.get("turbo_enabled"):
+                        other["turbo_enabled"] = False
+                link["turbo_enabled"] = True
+                log_activity("link", f"توربو 0-RTT برای «{label}» فعال شد (تنها کانفیگ توربودار)", "ok")
+            else:
+                link["turbo_enabled"] = False
+        # ── EMIX-PRO v13.2: جعل SNI (Mode B — sni جعلی + allowInsecure + host واقعی) ──
+        if "spoof_sni" in body:
+            raw_sni = (str(body.get("spoof_sni") or "")).strip()
+            if raw_sni:
+                norm = _validate_spoof_sni(raw_sni)
+                if not norm:
+                    raise HTTPException(
+                        status_code=400,
+                        detail="SNI جعلی معتبر نیست — یک hostname واقعی وارد کنید (مثل www.bale.ir)؛ IP پذیرفته نمی‌شود",
+                    )
+                link["spoof_sni"] = norm
+            else:
+                link["spoof_sni"] = None
+        if "spoof_sni_enabled" in body:
+            want_spoof = bool(body["spoof_sni_enabled"])
+            proto_now = link.get("protocol", DEFAULT_PROTOCOL)
+            if want_spoof:
+                if proto_now == "shadowsocks" or proto_now == "mtproto":
+                    raise HTTPException(
+                        status_code=400,
+                        detail="جعل SNI برای این پروتکل قابل اعمال نیست (فرمت لینک Shadowsocks/MTProto پارامتر SNI ندارد)",
+                    )
+                if not _validate_spoof_sni(link.get("spoof_sni")):
+                    raise HTTPException(
+                        status_code=400,
+                        detail="اول یک SNI جعلی معتبر وارد کنید (مثل www.bale.ir یا speedtest.net)",
+                    )
+                link["spoof_sni_enabled"] = True
+                log_activity("link", f"جعل SNI برای «{label}» فعال شد (SNI={link.get('spoof_sni')})", "ok")
+            else:
+                link["spoof_sni_enabled"] = False
         if any(k in body for k in ("label", "note", "limit_value", "expires_days", "alpn", "fingerprint")):
             log_activity("link", f"کانفیگ «{link['label']}» ویرایش شد", "info")
         new_sub = body.get("sub_id", "UNCHANGED")
@@ -2767,6 +2867,25 @@ import emix_pro          # noqa: E402
 import link_health       # noqa: E402
 emix_pro.register_routes(app)
 link_health.register_routes(app)
+
+# ══════════════════════════════════════════════════════════════════════════════
+# EMIX-PRO v13.2 — توربو 0-RTT (تست A/B واقعی) + UI همیشه تازه (no-store)
+# ─────────────────────────────────────────────────────────────────────────────
+import turbo_boost       # noqa: E402
+turbo_boost.register_routes(app)
+
+
+@app.middleware("http")
+async def _fresh_html_no_store(request, call_next):
+    """مرورگر هرگز HTML پنل را از کش نمی‌خواند — بعد از هر دیپلوی،
+    UI جدید بلافاصله دیده می‌شود (رفع «بخش‌های جدید را پیدا نمی‌کنم»)."""
+    resp = await call_next(request)
+    try:
+        if (resp.headers.get("content-type") or "").startswith("text/html"):
+            resp.headers["Cache-Control"] = "no-store, must-revalidate"
+    except Exception:
+        pass
+    return resp
 
 if __name__ == "__main__":
     uvicorn.run(

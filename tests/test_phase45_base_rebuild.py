@@ -69,9 +69,11 @@ class TestBaseIntegrity:
     def test_base_core_files_identical_to_emix_reference(self):
         """هسته‌ی EMIX باید بایت‌به‌بایت با ریپوی مرجع یکی باشد (اگر مرجع حاضر باشد).
 
-        مستثنای مستند و تنها: protocol/trojan/trojan.py — رفع باگ پنهان HashCache
-        (حذف+ساخت لینک → auth لینک جدید Trojan می‌شکست؛ Phase 45 با ۳ خط،
-        با شواهد تست کامل در §B)."""
+        مستثناهای مستند:
+        * protocol/trojan/trojan.py — رفع باگ پنهان HashCache (Phase 45)
+        * protocol/{vless,trojan}/websocket.py — پشتیبانی سرور از Early-Data
+          0-RTT (ed=2048، توربو) — کاملاً سازگار با گذشته: بدون هدرِ
+          Sec-WebSocket-Protocol رفتار بایت‌به‌بایت با پایه یکسان است (Phase 46)."""
         ref = Path("/home/z/my-project/emix-healthy")
         if not ref.exists():
             pytest.skip("EMIX reference repo not present in this environment")
@@ -79,34 +81,76 @@ class TestBaseIntegrity:
                  "bottokentcpproxy.py", "zeussocks5.py", "requirements.txt"]
         for f in files:
             assert (REPO / f).read_bytes() == (ref / f).read_bytes(), f"base file changed: {f}"
+        _exceptions = {
+            "protocol/trojan/trojan.py",          # HashCache fix (Phase 45)
+            "protocol/vless/websocket.py",        # Early-Data 0-RTT (Phase 46)
+            "protocol/trojan/websocket.py",       # Early-Data 0-RTT (Phase 46)
+        }
         for pf in sorted((ref / "protocol").rglob("*.py")):
             rel = pf.relative_to(ref)
-            if str(rel) == "protocol/trojan/trojan.py":
-                continue  # تنها مستثنای مستند (رفع باگ HashCache — بالا)
+            if str(rel) in _exceptions:
+                continue  # مستثناهای مستند (بالا)
             assert (REPO / rel).read_bytes() == pf.read_bytes(), f"protocol file changed: {rel}"
 
     def test_main_pages_only_additive_diff(self):
-        """main.py / pages.py فقط درجِ افزودنی دارند — هیچ خطِ موجودِ پایه حذف نشده."""
+        """main.py / pages.py فقط درجِ افزودنی دارند — به‌جز خطوطِ مستندِ حذف‌شده.
+
+        مستثناهای مستند (Phase 46، دستور صریح کاربر):
+        * pages.py: حذف باکس «رمز پیش‌فرض سیستم» از صفحه لاگین + جایگزینی با
+          placeholder کمرنگ 123456 داخل خود کادر رمز (تم و رنگ‌ها دست‌نخورده).
+        main.py هیچ خطِ پایه‌ای از دست نداده (همه‌ی تغییرات درج هستند)."""
         ref = Path("/home/z/my-project/emix-healthy")
         if not (ref / "main.py").exists():
             pytest.skip("EMIX reference repo not present")
+        # خطوط پایه‌ای که عمداً حذف/جایگزین شده‌اند (فقط pages.py — لاگین)
+        allowed_lost = {
+            '.hint{',
+            '  display:flex;align-items:center;gap:10px;background:var(--card-in);border:1px dashed var(--border);',
+            '  border-radius:12px;padding:10px 14px;margin-bottom:22px;animation:fadeup .5s cubic-bezier(.16,1,.3,1) .24s backwards',
+            '.hint i{color:var(--dim);font-size:15px}',
+            '.hint-label{font-size:11px;color:var(--dim);flex:1}',
+            '.hint-val{',
+            "  font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;color:var(--signal);",
+            '  background:var(--glow-signal);border:1px solid rgba(255,138,61,0.35);padding:4px 11px;border-radius:7px;',
+            '  cursor:pointer;transition:.18s;letter-spacing:.06em',
+            '.hint-val:hover{filter:brightness(1.15);transform:translateY(-1px) scale(1.04)}',
+            '.hint-val:active{transform:translateY(0) scale(.96)}',
+            '    <div class="hint">',
+            '      <i class="ti ti-info-circle"></i>',
+            '      <span class="hint-label">رمز پیش‌فرض سیستم</span>',
+            "      <span class=\"hint-val\" tabindex=\"0\" role=\"button\" onclick=\"fillDefault()\" onkeydown=\"if(event.key==='Enter')fillDefault()\">123456</span>",
+            '    </div>',
+            'function fillDefault(){',
+            "  const pw = document.getElementById('pw');",
+            "  pw.value = '123456';",
+            '  pw.focus();',
+            '}',
+            '          <input type="password" id="pw" placeholder="رمز عبور را وارد کنید" autofocus required autocomplete="current-password">',
+        }
         for fname in ["main.py", "pages.py"]:
             base_lines = (ref / fname).read_text(encoding="utf-8").splitlines()
             new_lines = (REPO / fname).read_text(encoding="utf-8").splitlines()
             base_cnt = Counter(l for l in base_lines if l.strip())
             new_cnt = Counter(l for l in new_lines if l.strip())
             lost = {l: c for l, c in base_cnt.items() if new_cnt[l] < c}
-            assert not lost, f"{fname}: base lines removed: {list(lost)[:5]}"
+            unexpected = {l: c for l, c in lost.items()
+                          if fname == "main.py" or l not in allowed_lost}
+            assert not unexpected, f"{fname}: base lines removed (undocumented): {list(unexpected)[:5]}"
 
     def test_no_worker_cf_machinery_in_source(self):
-        """ماشین‌های worker/CF اضافه‌شده‌ی خود ما از سورس حذف شده‌اند."""
+        """ماشین‌های worker/CF اضافه‌شده‌ی خود ما از سورس حذف شده‌اند.
+
+        Phase 46: جعل SNI per-link (spoof_sni) به درخواست صریح کاربر بازگشته —
+        برای link_health.py نگهبانِ «spoof» حذف شد (پروب صادق مسیر کلاینت)؛
+        اما ماشین‌آلات CF/worker/gateway همچنان ممنوع‌اند."""
         guard = {
             "main.py": ["personalemixone", "emix-gateway", "EMIX_PUBLIC_HOST", "cf_gateway",
                         "cloudflare_edge", "smart_route", "sni_spoof", "iran_gateway", "multiloc"],
             "pages.py": ["personalemixone", "emix-gateway", "EMIX_PUBLIC_HOST", "cf_gateway",
                          "cloudflare_edge", "sni_spoof"],
-            "link_health.py": ["spoof", "workers.dev", "personalemixone"],
+            "link_health.py": ["workers.dev", "personalemixone"],
             "emix_pro.py": ["workers.dev", "personalemixone"],
+            "turbo_boost.py": ["workers.dev", "personalemixone", "cf_gateway"],
         }
         for fname, bads in guard.items():
             src = (REPO / fname).read_text(encoding="utf-8")
@@ -115,7 +159,7 @@ class TestBaseIntegrity:
 
     def test_version_module(self):
         import emix_pro
-        assert emix_pro.EMIX_PRO_VERSION == "13.1.0-emix-pro"
+        assert emix_pro.EMIX_PRO_VERSION == "13.2.0-emix-pro"
         assert "real-e2e-ping" in emix_pro.EMIX_PRO_FEATURES
 
 
@@ -286,7 +330,7 @@ class TestRealPingEngine:
 class TestHealthAndVersion:
     def test_deployment_version_pin(self, server):
         st, v = api(_plain_opener, server, "/api/deployment-version")
-        assert v["version"] == "13.1.0-emix-pro"
+        assert v["version"] == "13.2.0-emix-pro"
         assert "EMIX 9.2" in v["base_panel"]
         assert "real-e2e-ping" in v["features"]
 

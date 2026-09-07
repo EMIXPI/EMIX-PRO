@@ -125,20 +125,6 @@ h1{font-size:21px;font-weight:800;color:var(--text);margin-bottom:5px;letter-spa
 .sub{font-size:12.5px;color:var(--mid);margin-bottom:24px;line-height:1.7;animation:fadeup .5s cubic-bezier(.16,1,.3,1) .18s backwards}
 @keyframes fadeup{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 
-.hint{
-  display:flex;align-items:center;gap:10px;background:var(--card-in);border:1px dashed var(--border);
-  border-radius:12px;padding:10px 14px;margin-bottom:22px;animation:fadeup .5s cubic-bezier(.16,1,.3,1) .24s backwards
-}
-.hint i{color:var(--dim);font-size:15px}
-.hint-label{font-size:11px;color:var(--dim);flex:1}
-.hint-val{
-  font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;color:var(--signal);
-  background:var(--glow-signal);border:1px solid rgba(255,138,61,0.35);padding:4px 11px;border-radius:7px;
-  cursor:pointer;transition:.18s;letter-spacing:.06em
-}
-.hint-val:hover{filter:brightness(1.15);transform:translateY(-1px) scale(1.04)}
-.hint-val:active{transform:translateY(0) scale(.96)}
-
 .field{margin-bottom:18px;animation:fadeup .5s cubic-bezier(.16,1,.3,1) .3s backwards}
 .field label{display:block;font-size:10.5px;font-weight:700;color:var(--mid);margin-bottom:8px;text-transform:uppercase;letter-spacing:.08em}
 .inp-wrap{position:relative}
@@ -148,6 +134,12 @@ input[type=password],input[type=text]{
 }
 [data-theme="light"] input[type=password],[data-theme="light"] input[type=text]{background:rgba(226,62,30,.04)}
 input::placeholder{color:var(--dim)}
+/* امضای EMIX: رمز پیش‌فرض به‌صورت کمرنگ داخل خود کادر دیده می‌شود —
+   نه به‌صورت یک باکس راهنما؛ صفحه لاگین از پنل‌های مشابه متمایز می‌شود. */
+#pw::placeholder{
+  color:var(--dim);opacity:.5;font-family:monospace;font-size:12.5px;
+  letter-spacing:.45em;text-indent:.2em
+}
 input:focus{border-color:var(--accent);background:rgba(255,77,46,.07);box-shadow:0 0 0 4px var(--glow)}
 .ic-lock{position:absolute;right:15px;top:50%;transform:translateY(-50%);color:var(--dim);font-size:17px;pointer-events:none;transition:.2s}
 input:focus~.ic-lock{color:var(--accent2);animation:wiggle .4s ease}
@@ -229,17 +221,11 @@ input:focus~.ic-lock{color:var(--accent2);animation:wiggle .4s ease}
 
     <div class="err" id="err" role="alert"><i class="ti ti-alert-circle"></i><span id="err-text"></span></div>
 
-    <div class="hint">
-      <i class="ti ti-info-circle"></i>
-      <span class="hint-label">رمز پیش‌فرض سیستم</span>
-      <span class="hint-val" tabindex="0" role="button" onclick="fillDefault()" onkeydown="if(event.key==='Enter')fillDefault()">123456</span>
-    </div>
-
     <form id="form" novalidate>
       <div class="field">
         <label for="pw">رمز عبور</label>
         <div class="inp-wrap">
-          <input type="password" id="pw" placeholder="رمز عبور را وارد کنید" autofocus required autocomplete="current-password">
+          <input type="password" id="pw" placeholder="123456" autofocus required autocomplete="current-password">
           <i class="ti ti-lock ic-lock"></i>
           <i class="ti ti-eye ic-eye" id="eye-toggle" onclick="togglePw()" role="button" tabindex="0" aria-label="نمایش رمز عبور"></i>
         </div>
@@ -267,12 +253,6 @@ function toggleTheme(){
   applyTheme(isDark);
 }
 applyTheme(isDark);
-
-function fillDefault(){
-  const pw = document.getElementById('pw');
-  pw.value = '123456';
-  pw.focus();
-}
 
 function togglePw(){
   const pw = document.getElementById('pw');
@@ -2579,6 +2559,27 @@ html,body{max-width:100%;overflow-x:hidden}
       </div>
       <div class="modal-v2-field"><label><i class="ti ti-calendar-time"></i> انقضا (روز از الان، 0 = بدون تغییر/نامحدود)</label><input class="modal-v2-input" id="el-exp" type="number" min="0" step="1"></div>
       <div class="modal-v2-field" style="margin-bottom:0"><label><i class="ti ti-note"></i> یادداشت</label><input class="modal-v2-input" id="el-note"></div>
+      <div style="margin-top:14px;padding-top:13px;border-top:1px dashed var(--card-b)">
+        <div style="display:flex;align-items:center;gap:9px;margin-bottom:4px">
+          <i class="ti ti-bolt" style="color:var(--amber-t);font-size:17px"></i>
+          <span style="font-size:12.5px;font-weight:700;color:var(--t1)">توربو 0-RTT</span>
+          <span class="tog" id="el-turbo-toggle" onclick="elToggleTurbo(this)" style="margin-right:auto"></span>
+        </div>
+        <div style="font-size:10.5px;color:var(--t3);line-height:1.7">ارسال بار اولیه داخل هندشیک WebSocket (ed=2048) — حدود یک رفت‌وبرگشت (RTT) سریع‌تر در هر اتصال جدید. فقط یک کانفیگ هم‌زمان می‌تواند توربو باشد؛ فعال کردن این یکی، قبلی را خاموش می‌کند.</div>
+        <div style="display:flex;align-items:center;gap:9px;margin:12px 0 4px">
+          <i class="ti ti-mask" style="color:#C4B5FD;font-size:17px"></i>
+          <span style="font-size:12.5px;font-weight:700;color:var(--t1)">جعل SNI (SNI Spoofing)</span>
+          <span class="tog" id="el-spoof-toggle" onclick="elToggleSpoof(this)" style="margin-right:auto"></span>
+        </div>
+        <input class="modal-v2-input" id="el-spoof-sni" type="text" list="el-spoof-presets" placeholder="www.bale.ir" style="direction:ltr;text-align:left;font-family:monospace;font-size:12.5px" dir="ltr">
+        <datalist id="el-spoof-presets">
+          <option value="www.bale.ir">پیام‌رسان بله (ایران)</option>
+          <option value="www.snap.ir">اسنپ (ایران)</option>
+          <option value="speedtest.net">Speedtest</option>
+          <option value="www.cloudflare.com">Cloudflare</option>
+        </datalist>
+        <div style="font-size:10.5px;color:var(--t3);line-height:1.7;margin-top:5px">TLS با SNI جعلی زده می‌شود اما Host واقعی پنل ارسال می‌شود (allowInsecure=1). پینگ بعدی دقیقاً از همین مسیر کلاینت اندازه‌گیری می‌شود.</div>
+      </div>
       <div class="modal-v2-hint" style="margin-top:11px"><i class="ti ti-info-circle"></i><span>برای حفظ انقضای فعلی، فیلد انقضا را صفر بگذارید.</span></div>
       <div class="modal-v2-footer">
         <button class="modal-v2-btn-cancel" onclick="closeModal('modal-edit-link')">انصراف</button>
@@ -3385,6 +3386,8 @@ async function loadLinks(){
       <div class="cfg-badges-col">
         ${protoBadge(l.protocol)}
         ${pingBadge(l)}
+        ${turboBadge(l)}
+        ${spoofBadge(l)}
         ${isMt && l.ad_tag ? `<span class="cfg-sub-tag" style="background:linear-gradient(135deg,rgba(255,122,61,.18),rgba(232,89,12,.12));color:#FFB199;padding:3px 9px;border-radius:20px;border:1px solid rgba(255,122,61,.25);font-weight:700"><i class="ti ti-speakerphone" style="color:#FFB199"></i> تبلیغ فعال</span>` : ''}
         ${isMt && l.mtproto_public_host ? `<span class="cfg-sub-tag"><i class="ti ti-route"></i> ${esc(l.mtproto_public_host)}:${l.mtproto_public_port}</span>` : ''}
         ${isMt && !l.mtproto_public_host && l.mtproto_public_pending ? `<span class="cfg-sub-tag" style="color:var(--amber-t)"><i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i> در حال ساخت TCP Proxy عمومی...</span>` : ''}
@@ -3396,7 +3399,9 @@ async function loadLinks(){
         <div class="cfg-actions">
         <button class="tog${allowed?' on':''}" onclick="toggleActive('${l.uuid}',${!l.active}${isNode?`,'${l._nodeId}'`:''})" title="فعال/غیرفعال"></button>
         ${!isNode?adBtn:''}
-        ${!isNode?`<button class="btn btn-sm btn-g btn-icon" onclick="pingLink('${l.uuid}',this)" title="تست واقعی اتصال"><i class="ti ti-activity"></i></button>`:''}
+        ${!isNode?`<button class="btn btn-sm btn-g btn-icon" onclick="pingLink('${l.uuid}',this)" title="تست Real Delay (HTTP واقعی از داخل تونل)"><i class="ti ti-activity"></i></button>`:''}
+        ${( !isNode && (l.protocol==='vless-ws'||l.protocol==='trojan-ws') )?`<button class="btn btn-sm ${l.turbo_enabled?'btn-amber':'btn-g'} btn-icon" onclick="toggleTurbo('${l.uuid}',${!l.turbo_enabled})" title="توربو 0-RTT — فقط یک کانفیگ هم‌زمان"><i class="ti ti-bolt"></i></button>`:''}
+        ${( !isNode && l.protocol!=='shadowsocks' && l.protocol!=='mtproto' )?`<button class="btn btn-sm ${l.spoof_sni_enabled?'btn-pur':'btn-g'} btn-icon" onclick="toggleSpoof('${l.uuid}',${!l.spoof_sni_enabled},'${esc(l.spoof_sni||'')}')" title="جعل SNI (SNI spoofing)"><i class="ti ti-mask"></i></button>`:''}
         <button class="btn btn-sm btn-g btn-icon" onclick="navigator.clipboard.writeText('${esc(l.vless_link)}').then(()=>toast('لینک کپی شد','ok'))" title="کپی لینک"><i class="ti ti-copy"></i></button>
         ${isMt
           ? `<button class="btn btn-sm btn-g btn-icon" onclick="openMtInfoModal('${esc(l.label)}','${esc(l.mtproto_secret||'')}','${esc(l.vless_link)}',${!!l.mtproto_public_host})" title="اطلاعات پروکسی"><i class="ti ti-info-circle"></i></button>`
@@ -3706,8 +3711,19 @@ function openEditLink(uuid,nodeId){
   if(l.limit_bytes===0){document.getElementById('el-val').value='';document.getElementById('el-unit').value='GB';}
   else{document.getElementById('el-val').value=(l.limit_bytes/1024/1024).toFixed(0);document.getElementById('el-unit').value='MB';}
   document.getElementById('el-exp').value='';
+  elSetToggle('el-turbo-toggle',!!l.turbo_enabled);
+  document.getElementById('el-spoof-sni').value=l.spoof_sni||'';
+  elSetToggle('el-spoof-toggle',!!l.spoof_sni_enabled);
   openModal('modal-edit-link');
 }
+function elSetToggle(id,on){
+  const el=document.getElementById(id);
+  if(!el)return;
+  if(on){el.classList.add('on');el.dataset.on='1';}
+  else{el.classList.remove('on');el.dataset.on='';}
+}
+function elToggleTurbo(el){elSetToggle('el-turbo-toggle',el.dataset.on!=='1');}
+function elToggleSpoof(el){elSetToggle('el-spoof-toggle',el.dataset.on!=='1');}
 async function saveEditLink(){
   const uuid=document.getElementById('el-uuid').value;
   const nodeId=document.getElementById('el-node-id').value||null;
@@ -3718,6 +3734,14 @@ async function saveEditLink(){
   const exp=document.getElementById('el-exp').value;
   const body={label,note,limit_value:val||0,limit_unit:unit};
   if(exp&&Number(exp)>0)body.expires_days=Number(exp);
+  const tEl=document.getElementById('el-turbo-toggle');
+  const sEl=document.getElementById('el-spoof-toggle');
+  const sVal=document.getElementById('el-spoof-sni').value.trim();
+  if(tEl)body.turbo_enabled=!!tEl.dataset.on;
+  if(sEl){
+    if(sVal)body.spoof_sni=sVal;
+    body.spoof_sni_enabled=!!sEl.dataset.on;
+  }
   try{
     const r=await authF(linkApiBase(nodeId)+uuid,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
     if(!r.ok)throw new Error((await r.json().catch(()=>({}))).detail||'');
@@ -5794,10 +5818,62 @@ function pingBadge(l){
   if(lp.ok){
     const ms=(lp.e2e_ms!=null?lp.e2e_ms:lp.ws_ms);
     const fb=lp.fallback==='local'?' · مسیر محلی':'';
-    return `<span class="cfg-sub-tag" style="color:var(--green-t)" title="${esc(lp.reply||'')}"><i class="ti ti-circle-check"></i> تست‌شده ✓ ${toFa(ms)}ms${fb}</span>`;
+    const sp=(lp.client_path==='spoofed-sni'&&lp.spoof_sni)?` · <span style="opacity:.85" title="اندازه‌گیری از مسیر کلاینت با SNI جعلی (${esc(lp.spoof_sni)}) + Host واقعی — همان مسیر لینک">🎭 SNI جعلی</span>`:'';
+    const tt=`Real Delay: ${toFa(lp.e2e_ms!=null?lp.e2e_ms:'—')}ms (پاسخ HTTP واقعی از داخل تونل)\nهندشیک TLS+WS: ${toFa(lp.ws_ms!=null?lp.ws_ms:'—')}ms${lp.tcp_ms!=null?`\nTCP خام (فقط اتصال، غیرواقعی): ${toFa(lp.tcp_ms)}ms`:''}\n${esc(lp.reply||'')}`;
+    return `<span class="cfg-sub-tag" style="color:var(--green-t)" title="${tt}"><i class="ti ti-circle-check"></i> Real Delay ${toFa(ms)}ms${fb}${sp}</span>`;
   }
   const d=String(lp.detail||'خطا').slice(0,44);
   return `<span class="cfg-sub-tag" style="color:var(--red-t)" title="${esc(lp.detail||'')}"><i class="ti ti-circle-x"></i> قطع در تست · ${esc(d)}</span>`;
+}
+function turboBadge(l){
+  if(!l.turbo_enabled) return '';
+  return `<span class="cfg-sub-tag" style="background:linear-gradient(135deg,rgba(242,163,61,.16),rgba(255,122,61,.10));color:var(--amber-t);border:1px solid rgba(242,163,61,.28);font-weight:700" title="توربو 0-RTT فعال — بار اولیه در هندشیک WS ارسال می‌شود (ed=2048)؛ ~۱ RTT صرفه‌جویی در هر اتصال جدید"><i class="ti ti-bolt"></i> توربو 0-RTT</span>`;
+}
+function spoofBadge(l){
+  if(!l.spoof_sni_enabled||!l.spoof_sni) return '';
+  return `<span class="cfg-sub-tag" style="background:rgba(139,92,246,.10);color:#C4B5FD;border:1px solid rgba(139,92,246,.25);font-weight:700" title="SNI جعلی فعال: کلاینت با SNI=${esc(l.spoof_sni)} هندشیک TLS می‌زند (allowInsecure=1) و Host واقعی پنل را می‌فرستد"><i class="ti ti-mask"></i> SNI: ${esc(l.spoof_sni)}</span>`;
+}
+async function toggleTurbo(uuid,on){
+  try{
+    const r=await authF('/api/links/'+uuid,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({turbo_enabled:on})});
+    if(!r.ok)throw new Error((await r.json().catch(()=>({}))).detail||'');
+    if(on){
+      toast('توربو 0-RTT فعال شد — تست A/B واقعی در حال اجرا...','');
+      loadLinks();
+      try{
+        const ab=await authF('/api/links/'+uuid+'/turbo-ab',{method:'POST'});
+        const d=await ab.json();
+        if(d.ok&&d.improvement_ms!=null){
+          toast(`توربو واقعی است ✓ عادی: ${toFa(d.normal.total_ms)}ms → توربو: ${toFa(d.turbo.total_ms)}ms (اختلاف ${toFa(d.improvement_ms)}ms در این مسیر؛ در اینترنت واقعی ~۱RTT) ${d.improvement_ms<0?'(در مسیر محلی ممکن است منفی باشد)':''}`,'ok');
+        }else if(d.ok){
+          toast('توربو فعال و مسیر توربو سالم ✓ (تست A/B کامل نشد)','ok');
+        }else{
+          toast('توربو فعال شد اما مسیر توربو در تست پاس نشد — دوباره تست کنید','err');
+        }
+      }catch(e){}
+    }else{
+      toast('توربو خاموش شد','ok');loadLinks();
+    }
+  }catch(e){toast(e.message||'خطا در تغییر توربو','err')}
+}
+async function toggleSpoof(uuid,on,currentSni){
+  if(on&&!currentSni){
+    openEditLink(uuid);
+    setTimeout(()=>{
+      const el=document.getElementById('el-spoof-sni');
+      if(el){el.focus();}
+      toast('اول یک SNI جعلی وارد کنید (مثل www.bale.ir) و ذخیره کنید','');
+    },250);
+    return;
+  }
+  try{
+    const body={spoof_sni_enabled:on};
+    if(currentSni)body.spoof_sni=currentSni;
+    const r=await authF('/api/links/'+uuid,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    if(!r.ok)throw new Error((await r.json().catch(()=>({}))).detail||'');
+    toast(on?`جعل SNI فعال شد (SNI=${currentSni||''}) — پینگ بعدی از همان مسیر کلاینت اندازه‌گیری می‌شود`:'جعل SNI خاموش شد','ok');
+    loadLinks();
+  }catch(e){toast(e.message||'خطا در تغییر جعل SNI','err')}
 }
 async function pingLink(uuid,btn){
   if(btn){btn.disabled=true;btn.innerHTML='<i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i>';}
@@ -5806,9 +5882,10 @@ async function pingLink(uuid,btn){
     const d=await r.json();
     if(d.ok){
       const ms=(d.e2e_ms!=null?d.e2e_ms:d.ws_ms);
-      toast(`تست واقعی موفق ✓ ${toFa(ms)}ms${d.fallback==='local'?' (مسیر محلی)':''}`,'ok');
+      const sp=(d.client_path==='spoofed-sni')?` · مسیر SNI جعلی (${d.spoof_sni||''})`:'';
+      toast(`Real Delay: ${toFa(ms)}ms ✓ (پاسخ واقعی از داخل تونل: ${d.reply||''})${d.fallback==='local'?' (مسیر محلی)':''}${sp}`,'ok');
     }else{
-      toast('تست ناموفق — '+(d.detail||'').slice(0,70),'err');
+      toast('تست ناموفق — '+(d.detail||'').slice(0,90),'err');
     }
     loadLinks();
   }catch(e){
@@ -5860,7 +5937,7 @@ function renderHealthPingRows(d){
     const det=ok?'':`<span style="color:var(--red-t);font-size:10.5px"> — ${esc(String(p.detail||'').slice(0,52))}</span>`;
     return `<div class="sr">
       <span class="sr-k" style="gap:6px"><i class="ti ${ok?'ti-circle-check':'ti-circle-x'}" style="color:${ok?'var(--green)':'var(--red)'}"></i>${esc(r.label||'')} <span style="font-size:10px;color:var(--t3)">${esc(p.protocol||'')}</span></span>
-      <span class="sr-v" style="font-size:10.5px">${ok?`هندشیک ${ws} · رفت‌وبرگشت ${e2}${fb}`:'تست ناموفق'}${det}</span>
+      <span class="sr-v" style="font-size:10.5px">${ok?`هندشیک ${ws} · <b style="color:var(--green-t)">Real Delay ${e2}</b>${(p.client_path==='spoofed-sni')?' · 🎭 SNI جعلی':''}${fb}`:'تست ناموفق'}${det}</span>
     </div>`;
   }).join('');
   const summ=`<div style="display:flex;align-items:center;gap:8px;margin:4px 0 10px">
