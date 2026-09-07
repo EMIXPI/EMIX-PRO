@@ -17,6 +17,12 @@ from . import db, security
 WORKER_NAME = "emix-smart-routing-v1"
 
 
+# ⚠ UA: لبه‌ی Cloudflare درخواست‌های client پیش‌فرض (python-httpx/…) را با خطای 1010
+# می‌بندد (Browser Integrity Check) — UA مرورگرمانند الزامی است.
+_UA = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+                     "(KHTML, like Gecko) Chrome/126.0 Safari/537.36"}
+
+
 def worker_base() -> str:
     u = (db.get_setting("worker_url") or "").strip()
     return u.rstrip("/")
@@ -44,7 +50,7 @@ async def _signed_call(method: str, path: str, body: dict | None = None,
     headers = security.make_signed_headers(key, method, path, send_body)
     headers["Content-Type"] = "application/json"
     try:
-        async with httpx.AsyncClient(timeout=timeout) as cli:
+        async with httpx.AsyncClient(timeout=timeout, headers=_UA) as cli:
             r = await cli.request(method, base + path, headers=headers,
                                   content=send_body or None)
         try:
@@ -63,7 +69,7 @@ async def worker_health() -> dict:
     if not base:
         return {"ok": False, "error": "worker ثبت نشده"}
     try:
-        async with httpx.AsyncClient(timeout=15.0) as cli:
+        async with httpx.AsyncClient(timeout=15.0, headers=_UA) as cli:
             r = await cli.get(base + "/sr/health")
         return r.json()
     except Exception as e:

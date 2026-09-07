@@ -294,9 +294,42 @@ def register_routes(app) -> None:
 
     @app.get("/api/smart-routing/worker/status")
     async def sr_worker_status(_=Depends(require_auth)):
-        _guarded(env_flag(), "feature flag خاموش است")
+        # بدون گارد env flag — بررسی Worker بخشی از راه‌اندازی است (قبل از روشن
+        # کردن flag هم باید بتوان Worker را ثبت و تست کرد).
         report = await worker_client.worker_full_check()
         return JSONResponse({"ok": bool(report.get("authenticated")), **report},
+                            headers=_HEADERS_NO_STORE)
+
+    # ═══ فعال‌سازی env flag روی Railway (بعد از تست — سند) ═══════════════
+    @app.post("/api/smart-routing/enable-env-flag")
+    async def sr_enable_env_flag(request: Request, _=Depends(require_auth)):
+        body = {}
+        try:
+            body = await request.json()
+        except Exception:
+            body = {}
+        enable = bool(body.get("enable", True))
+        from . import railway_flag
+        result = await railway_flag.set_env_flag(enable)
+        db.add_event("engine", f"درخواست فعال‌سازی env flag (enable={enable}): "
+                               f"ok={result.get('ok')}")
+        if result.get("ok"):
+            msg = (f"SMART_ROUTING_ENABLED={enable} در Railway ثبت شد — "
+                   "redeploy خودکار در راه است (~۱-۲ دقیقه)")
+            level = "ok"
+        else:
+            msg = (f"SMART_ROUTING_ENABLED={enable} ثبت نشد — "
+                   f"{result.get('error') or result.get('manual', '')}")
+            level = "warn"
+        log_activity("system", msg, level)
+        return JSONResponse(result, headers=_HEADERS_NO_STORE)
+
+    @app.get("/api/smart-routing/env-flag")
+    async def sr_env_flag_info(_=Depends(require_auth)):
+        from . import railway_flag
+        return JSONResponse({"ok": True, "env_flag": env_flag(),
+                             "has_railway_token": railway_flag.has_railway_token(),
+                             "note": "فعال‌سازی: POST /api/smart-routing/enable-env-flag {\"enable\": true} — یا دستی در dashboard"},
                             headers=_HEADERS_NO_STORE)
 
     # ═══ iran-direct rules (دانلود پیکربندی split-routing) ════════════════
