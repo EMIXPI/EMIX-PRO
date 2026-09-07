@@ -991,6 +991,39 @@ a{color:inherit;text-decoration:none}
 .node-metric-val{font-size:19px;font-weight:800;color:var(--t1);letter-spacing:-.02em;line-height:1}
 .node-metric-sub{font-size:9.5px;color:var(--t3);margin-top:6px}
 
+/* ── Smart Routing Network (v13.3) ── */
+.sr-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:4px}
+.sr-routes-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:4px 0}
+.sr-route-card{background:rgba(0,0,0,.14);border:1px solid var(--card-b);border-radius:12px;padding:11px 13px;transition:.2s}
+.sr-route-card:hover{border-color:var(--card-bh)}
+.sr-route-head{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.sr-route-mode{font-size:11px;font-weight:800;color:var(--t1)}
+.sr-route-ep{font-family:monospace;font-size:11.5px;color:var(--accent2);direction:ltr;text-align:left;word-break:break-all}
+.sr-route-meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
+.sr-route-tag{font-size:9.5px;background:rgba(34,211,238,.08);border:1px solid rgba(34,211,238,.2);color:var(--t2);border-radius:6px;padding:2px 7px}
+.sr-route-none{font-size:11px;color:var(--t3);line-height:1.8}
+.sr-table{width:100%;border-collapse:collapse;font-size:11.5px;min-width:820px}
+.sr-table th{padding:8px 9px;text-align:right;color:var(--t3);font-size:10px;font-weight:700;border-bottom:1px solid var(--card-b);white-space:nowrap}
+.sr-table td{padding:8px 9px;border-bottom:1px solid rgba(255,77,46,.05);color:var(--t2);white-space:nowrap}
+.sr-table td.sr-ep{font-family:monospace;direction:ltr;text-align:left}
+.sr-pill{display:inline-block;font-size:9.5px;font-weight:700;border-radius:6px;padding:2px 8px}
+.sr-pill.ok{background:rgba(52,211,153,.12);color:#34D399;border:1px solid rgba(52,211,153,.25)}
+.sr-pill.warn{background:rgba(245,158,11,.12);color:#F59E0B;border:1px solid rgba(245,158,11,.25)}
+.sr-pill.bad{background:rgba(239,68,68,.12);color:#EF4444;border:1px solid rgba(239,68,68,.25)}
+.sr-pill.idle{background:rgba(148,163,184,.12);color:#94A3B8;border:1px solid rgba(148,163,184,.25)}
+.sr-cols{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.sr-field{margin-bottom:9px}
+.sr-field label{display:block;font-size:10.5px;color:var(--t3);margin-bottom:5px;font-weight:600}
+.sr-field input,.sr-field textarea{width:100%;background:rgba(0,0,0,.18);border:1px solid var(--card-b);border-radius:9px;color:var(--t1);padding:8px 10px;font-size:12px;outline:none}
+.sr-field input:focus,.sr-field textarea:focus{border-color:var(--accent)}
+.sr-weights{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.sr-weight{background:rgba(0,0,0,.14);border:1px solid var(--card-b);border-radius:10px;padding:8px 10px}
+.sr-weight label{display:flex;justify-content:space-between;font-size:10px;color:var(--t3);margin-bottom:5px}
+.sr-weight input{width:100%;accent-color:var(--accent)}
+@media(max-width:900px){.sr-metrics{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:760px){.sr-routes-grid{grid-template-columns:1fr}.sr-cols{grid-template-columns:1fr}}
+@media(max-width:520px){.sr-metrics{grid-template-columns:1fr 1fr}.sr-weights{grid-template-columns:1fr 1fr}}
+
 /* ── کلیدهای صادرشده (مینیمال) ── */
 .node-keys-card{position:relative;border-radius:16px;padding:1px;background:linear-gradient(135deg,rgba(255,77,46,.28),rgba(255,122,61,.2));margin-bottom:16px}
 .node-keys-card>.card{border-radius:15px;margin:0;border:none;background:var(--card)}
@@ -2579,6 +2612,18 @@ html,body{max-width:100%;overflow-x:hidden}
           <option value="www.cloudflare.com">Cloudflare</option>
         </datalist>
         <div style="font-size:10.5px;color:var(--t3);line-height:1.7;margin-top:5px">TLS با SNI جعلی زده می‌شود اما Host واقعی پنل ارسال می‌شود (allowInsecure=1). پینگ بعدی دقیقاً از همین مسیر کلاینت اندازه‌گیری می‌شود.</div>
+        <div style="display:flex;align-items:center;gap:9px;margin:12px 0 4px">
+          <i class="ti ti-route" style="color:#34D399;font-size:17px"></i>
+          <span style="font-size:12.5px;font-weight:700;color:var(--t1)">مسیریابی هوشمند (Smart Routing)</span>
+        </div>
+        <select class="modal-v2-input" id="el-sr-mode" style="direction:rtl">
+          <option value="OFF">خاموش — مسیر مستقیم (پیش‌فرض)</option>
+          <option value="AUTO">خودکار — بهترین امتیاز ترکیبی</option>
+          <option value="LOW_LATENCY">کم‌تأخیر — کمترین latency</option>
+          <option value="STABLE">پایدار — بهترین uptime/loss</option>
+          <option value="IRAN_OPTIMIZED">بهینه ایران — فقط با egress ایرانِ verify-شده</option>
+        </select>
+        <div style="font-size:10.5px;color:var(--t3);line-height:1.7;margin-top:5px">لینک از مسیر با بهترین امتیاز (latency/jitter/loss/egress) صادر می‌شود. مسیرها فقط بعد از verify واقعی egress فعال می‌شوند — اطلاعات لحظه‌ای در صفحه‌ی «مسیریابی هوشمند».</div>
       </div>
       <div class="modal-v2-hint" style="margin-top:11px"><i class="ti ti-info-circle"></i><span>برای حفظ انقضای فعلی، فیلد انقضا را صفر بگذارید.</span></div>
       <div class="modal-v2-footer">
@@ -2615,6 +2660,7 @@ html,body{max-width:100%;overflow-x:hidden}
     <div class="nav-it" data-pg="connections"><i class="ti ti-plug-connected"></i> اتصالات <span class="nav-badge" id="conns-nb">0</span></div>
     <div class="nav-it" data-pg="nodes"><i class="ti ti-topology-star-3"></i> نود <span class="nav-badge" id="nodes-nb">0</span></div>
     <div class="nav-sec">سیستم</div>
+    <div class="nav-it" data-pg="smart"><i class="ti ti-route"></i> مسیریابی هوشمند <span class="nav-badge" id="sr-nb" style="display:none">●</span></div>
     <div class="nav-it" data-pg="backup"><i class="ti ti-database-export"></i> بکاپ‌گیری</div>
     <div class="nav-it" data-pg="updates"><i class="ti ti-cloud-download"></i> نسخه و بروزرسانی <span class="nav-badge" id="update-nb" style="display:none">1</span></div>
     <div class="nav-it" data-pg="support"><i class="ti ti-headset"></i> پشتیبانی <span class="nav-badge" id="support-nb" style="display:none">●</span></div>
@@ -3059,6 +3105,89 @@ html,body{max-width:100%;overflow-x:hidden}
     </div>
   </div>
 </section>
+<section class="pg" id="pg-smart">
+  <div class="topbar">
+    <div>
+      <div class="tb-title"><i class="ti ti-route"></i> مسیریابی هوشمند</div>
+      <div class="tb-sub">شبکه‌ی مسیریابی هوشمند — انتخاب خودکار بهترین مسیر بر اساس latency / jitter / packet loss / egress واقعی</div>
+    </div>
+    <div class="tb-right">
+      <span class="badge" id="sr-flag-badge">…</span>
+      <button class="btn btn-p btn-sm" id="sr-toggle-btn" onclick="srToggleEngine()"><i class="ti ti-power"></i> روشن/خاموش</button>
+      <button class="btn btn-g btn-sm" onclick="srRefreshDiscovery(this)"><i class="ti ti-refresh"></i> Refresh Discovery</button>
+      <button class="btn btn-g btn-sm" onclick="srRunHealth(this)"><i class="ti ti-heartbeat"></i> Health Check</button>
+      <button class="btn btn-o btn-sm" onclick="srTestBest(this)"><i class="ti ti-bolt"></i> تست بهترین مسیر</button>
+    </div>
+  </div>
+
+  <div id="sr-flag-warn" class="cl amber" style="display:none"><i class="ti ti-alert-triangle"></i><span id="sr-flag-warn-txt"></span></div>
+
+  <div class="sr-metrics">
+    <div class="node-metric"><div class="node-metric-top"><i class="ti ti-route"></i><span class="node-metric-label">مسیرهای فعال</span></div><div class="node-metric-val" id="sr-active-routes">—</div><div class="node-metric-sub" id="sr-active-routes-sub">از ۴ حالت</div></div>
+    <div class="node-metric"><div class="node-metric-top"><i class="ti ti-heartbeat"></i><span class="node-metric-label">Endpoint سالم</span></div><div class="node-metric-val" id="sr-healthy">—</div><div class="node-metric-sub" id="sr-pool-sub">وضعیت pool</div></div>
+    <div class="node-metric"><div class="node-metric-top"><i class="ti ti-flag"></i><span class="node-metric-label">Egress ایران (واقعی)</span></div><div class="node-metric-val" id="sr-iran">—</div><div class="node-metric-sub" id="sr-iran-sub">فقط با verify دو-منبعی</div></div>
+    <div class="node-metric"><div class="node-metric-top"><i class="ti ti-bolt"></i><span class="node-metric-label">بهترین latency</span></div><div class="node-metric-val" id="sr-best-lat">—</div><div class="node-metric-sub">Real Delay (از داخل تونل)</div></div>
+    <div class="node-metric"><div class="node-metric-top"><i class="ti ti-chart-histogram"></i><span class="node-metric-label">میانگین latency</span></div><div class="node-metric-val" id="sr-avg-lat">—</div><div class="node-metric-sub" id="sr-avg-sub">میانگین مسیرهای فعال</div></div>
+    <div class="node-metric"><div class="node-metric-top"><i class="ti ti-activity"></i><span class="node-metric-label">Jitter / Loss</span></div><div class="node-metric-val" id="sr-jit-loss">—</div><div class="node-metric-sub">میانگین مسیرهای فعال</div></div>
+    <div class="node-metric"><div class="node-metric-top"><i class="ti ti-git-branch"></i><span class="node-metric-label">مسیر فعلی / جایگزین</span></div><div class="node-metric-val" style="font-size:13px" id="sr-cur-route">—</div><div class="node-metric-sub" style="font-size:11px" id="sr-fallback-route">—</div></div>
+    <div class="node-metric"><div class="node-metric-top"><i class="ti ti-clock"></i><span class="node-metric-label">آخرین discovery / چک</span></div><div class="node-metric-val" style="font-size:13px" id="sr-last-disc">—</div><div class="node-metric-sub" style="font-size:11px" id="sr-last-health">—</div></div>
+  </div>
+
+  <div class="card" style="margin-top:14px">
+    <div class="card-title"><i class="ti ti-route"></i> مسیرهای انتخاب‌شده (به تفکیک حالت) <span class="ml-auto badge bg-blue" id="sr-routes-cnt">۰</span></div>
+    <div class="sr-routes-grid" id="sr-routes-grid">—</div>
+  </div>
+
+  <div class="conn-toolbar" style="margin-top:16px">
+    <div class="conn-toolbar-title"><i class="ti ti-server-2"></i> Endpointهای کشف‌شده</div>
+    <div class="conn-live-badge"><span class="conn-live-dot"></span> <span id="sr-eps-count">—</span></div>
+  </div>
+  <div class="card" style="overflow-x:auto">
+    <table class="sr-table" id="sr-endpoints-table">
+      <thead>
+        <tr><th>Endpoint</th><th>کشور</th><th>ASN</th><th>Egress IP</th><th>Latency</th><th>Jitter</th><th>Loss</th><th>Health</th><th>Score</th><th>آخرین چک</th><th></th></tr>
+      </thead>
+      <tbody id="sr-endpoints-body"><tr><td colspan="11" style="text-align:center;color:var(--t3)">— هنوز داده‌ای نیست —</td></tr></tbody>
+    </table>
+  </div>
+
+  <div class="sr-cols" style="margin-top:16px">
+    <div class="card">
+      <div class="card-title"><i class="ti ti-cloud"></i> Worker جدید Cloudflare <span class="ml-auto badge" id="sr-worker-badge">ثبت نشده</span></div>
+      <div class="cl" style="margin-bottom:10px"><i class="ti ti-info-circle"></i><span>Worker جدید <b>emix-smart-routing-v1</b> مستقل از workerهای قبلی است. URL و کلید امضا را از خروجی deploy وارد کنید (در Volume ذخیره می‌شود — نه در کد).</span></div>
+      <div class="sr-field"><label>Worker URL</label><input id="sr-worker-url" placeholder="https://emix-smart-routing-v1.<account>.workers.dev" dir="ltr" style="direction:ltr;text-align:left;font-family:monospace;font-size:12px"></div>
+      <div class="sr-field"><label>کلید امضای مشترک (SR_SIGNING_KEY)</label><input id="sr-worker-key" type="password" placeholder="کلید HMAC از deploy" dir="ltr" style="direction:ltr;text-align:left;font-family:monospace;font-size:12px"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+        <button class="btn btn-p btn-sm" onclick="srSaveWorker(this)"><i class="ti ti-plug"></i> ثبت Worker</button>
+        <button class="btn btn-g btn-sm" onclick="srCheckWorker(this)"><i class="ti ti-radar-2"></i> بررسی Worker</button>
+      </div>
+      <div id="sr-worker-info" style="font-size:11.5px;color:var(--t2);line-height:1.8;margin-top:10px"></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><i class="ti ti-map-pin"></i> Iran Direct (مسیر داخلی) <span class="ml-auto tog" id="sr-iran-direct-tog" onclick="srToggleIranDirect(this)"></span></div>
+      <div class="cl"><i class="ti ti-info-circle"></i><span>مقصدهای ایرانی از مسیر مستقیم کاربر و بقیه از تونل — با قواعد routing واقعی (GeoIP/دامنه) در قالب پیکربندی کلاینت. IP کاربر جعل نمی‌شود.</span></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+        <button class="btn btn-g btn-sm" onclick="srDownloadIranRules(this)"><i class="ti ti-download"></i> دانلود قواعد (JSON)</button>
+      </div>
+      <div id="sr-iran-info" style="font-size:11.5px;color:var(--t2);line-height:1.8;margin-top:10px"></div>
+    </div>
+  </div>
+
+  <div class="sr-cols" style="margin-top:16px">
+    <div class="card">
+      <div class="card-title"><i class="ti ti-calculator"></i> وزن‌های امتیازدهی</div>
+      <div class="sr-weights" id="sr-weights">…</div>
+      <button class="btn btn-g btn-sm" style="margin-top:10px" onclick="srSaveWeights(this)"><i class="ti ti-device-floppy"></i> ذخیره وزن‌ها</button>
+      <div class="sr-field" style="margin-top:12px"><label>تعداد پروب هر تست (jitter/loss واقعی)</label><input id="sr-probe-rounds" type="number" min="2" max="10" style="width:90px"></div>
+      <div class="sr-field" style="margin-top:8px"><label>Endpointهای دستی (هر خط: host[:port])</label><textarea id="sr-manual" rows="3" dir="ltr" style="direction:ltr;text-align:left;font-family:monospace;font-size:12px" placeholder="relay.example.com:443"></textarea></div>
+      <button class="btn btn-g btn-sm" style="margin-top:8px" onclick="srSaveAdvanced(this)"><i class="ti ti-device-floppy"></i> ذخیره</button>
+    </div>
+    <div class="card">
+      <div class="card-title"><i class="ti ti-history"></i> رخدادهای مسیریابی</div>
+      <div class="log-timeline" id="sr-events" style="max-height:340px;overflow-y:auto">—</div>
+    </div>
+  </div>
+</section>
 <section class="pg" id="pg-settings">
   <div class="topbar"><div><div class="tb-title"><i class="ti ti-settings"></i> تنظیمات</div></div></div>
   <div class="g2">
@@ -3212,6 +3341,8 @@ function navTo(name){
   document.querySelectorAll('.nav-it').forEach(n=>n.classList.toggle('on',n.dataset.pg===name));
   document.querySelectorAll('.pg').forEach(p=>p.classList.toggle('on',p.id==='pg-'+name));
   const loaders={links:loadLinks,connections:loadConns,errors:loadErrs,subscriptions:loadSubsPage,subgroups:loadSubs,logs:loadActivity,updates:loadVersion,support:loadSupportMsgs,nodes:loadNodesPage};  if(loaders[name])loaders[name]();
+  // EMIX-PRO v13.3 — loader صفحه‌ی مسیریابی هوشمند (خط افزودنی — پایه بالا دست‌نخورده)
+  if(name==='smart')loadSmart();
   closeSb();window.scrollTo({top:0,behavior:'smooth'});
 }
 document.querySelectorAll('.nav-it').forEach(el=>el.addEventListener('click',()=>navTo(el.dataset.pg)));
@@ -3388,6 +3519,7 @@ async function loadLinks(){
         ${pingBadge(l)}
         ${turboBadge(l)}
         ${spoofBadge(l)}
+        ${srBadge(l)}
         ${isMt && l.ad_tag ? `<span class="cfg-sub-tag" style="background:linear-gradient(135deg,rgba(255,122,61,.18),rgba(232,89,12,.12));color:#FFB199;padding:3px 9px;border-radius:20px;border:1px solid rgba(255,122,61,.25);font-weight:700"><i class="ti ti-speakerphone" style="color:#FFB199"></i> تبلیغ فعال</span>` : ''}
         ${isMt && l.mtproto_public_host ? `<span class="cfg-sub-tag"><i class="ti ti-route"></i> ${esc(l.mtproto_public_host)}:${l.mtproto_public_port}</span>` : ''}
         ${isMt && !l.mtproto_public_host && l.mtproto_public_pending ? `<span class="cfg-sub-tag" style="color:var(--amber-t)"><i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i> در حال ساخت TCP Proxy عمومی...</span>` : ''}
@@ -3714,6 +3846,14 @@ function openEditLink(uuid,nodeId){
   elSetToggle('el-turbo-toggle',!!l.turbo_enabled);
   document.getElementById('el-spoof-sni').value=l.spoof_sni||'';
   elSetToggle('el-spoof-toggle',!!l.spoof_sni_enabled);
+  const srSel=document.getElementById('el-sr-mode');
+  if(srSel){
+    const proto=l.protocol||'vless-ws';
+    const srOk=proto==='vless-ws'||proto==='trojan-ws';
+    srSel.value=(srOk&&l.smart_routing_mode)||'OFF';
+    srSel.disabled=!srOk;
+    srSel.title=srOk?'':'فقط VLESS-WS و Trojan-WS پشتیبانی می‌شوند';
+  }
   openModal('modal-edit-link');
 }
 function elSetToggle(id,on){
@@ -3738,6 +3878,8 @@ async function saveEditLink(){
   const sEl=document.getElementById('el-spoof-toggle');
   const sVal=document.getElementById('el-spoof-sni').value.trim();
   if(tEl)body.turbo_enabled=!!tEl.dataset.on;
+  const srSel=document.getElementById('el-sr-mode');
+  if(srSel&&!srSel.disabled)body.smart_routing_mode=srSel.value||'OFF';
   if(sEl){
     if(sVal)body.spoof_sni=sVal;
     body.spoof_sni_enabled=!!sEl.dataset.on;
@@ -5832,6 +5974,299 @@ function turboBadge(l){
 function spoofBadge(l){
   if(!l.spoof_sni_enabled||!l.spoof_sni) return '';
   return `<span class="cfg-sub-tag" style="background:rgba(139,92,246,.10);color:#C4B5FD;border:1px solid rgba(139,92,246,.25);font-weight:700" title="SNI جعلی فعال: کلاینت با SNI=${esc(l.spoof_sni)} هندشیک TLS می‌زند (allowInsecure=1) و Host واقعی پنل را می‌فرستد"><i class="ti ti-mask"></i> SNI: ${esc(l.spoof_sni)}</span>`;
+}
+function srBadge(l){
+  const m=l.smart_routing_mode;
+  if(!m||m==='OFF') return '';
+  const lbl={AUTO:'خودکار',LOW_LATENCY:'کم‌تأخیر',STABLE:'پایدار',IRAN_OPTIMIZED:'بهینه ایران'}[m]||m;
+  return `<span class="cfg-sub-tag" style="background:rgba(52,211,153,.10);color:#34D399;border:1px solid rgba(52,211,153,.25);font-weight:700" title="مسیریابی هوشمند (${lbl}): لینک از مسیر verified با بهترین امتیاز صادر می‌شود — جزئیات در صفحه‌ی «مسیریابی هوشمند»"><i class="ti ti-route"></i> مسیر: ${lbl}</span>`;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   EMIX-PRO v13.3 — Smart Routing Network (شبکه‌ی مسیریابی هوشمند)
+   discovery/verify واقعی + pool پویا + failover + Worker جدید Cloudflare
+   ═══════════════════════════════════════════════════════════════════════════ */
+let srState=null,srWeights=null;
+function srAgo(ts){
+  if(!ts)return '—';
+  const s=Math.max(0,Math.floor(Date.now()/1000-ts));
+  if(s<60)return toFa(s)+' ثانیه پیش';
+  if(s<3600)return toFa(Math.floor(s/60))+' دقیقه پیش';
+  if(s<86400)return toFa(Math.floor(s/3600))+' ساعت پیش';
+  return toFa(Math.floor(s/86400))+' روز پیش';
+}
+function srPill(status){
+  const map={ACTIVE:['ok','سالم'],DEGRADED:['warn','افت‌دار'],UNHEALTHY:['bad','خراب'],
+             QUARANTINED:['warn','قرنطینه'],INVALID:['bad','نامعتبر'],UNKNOWN:['idle','ناشناخته']};
+  const [cls,txt]=map[status]||['idle',status||'—'];
+  return `<span class="sr-pill ${cls}">${txt}</span>`;
+}
+function srHealthPill(h){
+  const map={HEALTHY:['ok','HEALTHY'],UNHEALTHY:['bad','UNHEALTHY'],DEGRADED_HEALTH:['warn','DEGRADED']};
+  const [cls,txt]=map[h]||['idle',h||'—'];
+  return `<span class="sr-pill ${cls}">${txt}</span>`;
+}
+async function loadSmart(){
+  try{
+    const [rs,rr,re,rh]=await Promise.all([
+      authF('/api/smart-routing/status').then(r=>r.json()).catch(()=>null),
+      authF('/api/smart-routing/routes').then(r=>r.json()).catch(()=>null),
+      authF('/api/smart-routing/endpoints').then(r=>r.json()).catch(()=>null),
+      authF('/api/smart-routing/health').then(r=>r.json()).catch(()=>null),
+    ]);
+    srState=rs;srWeights=(rs&&rs.settings)||null;
+    window.__srRoutes=(rr&&rr.routes)||[];
+    srRenderStatus(rs);
+    srRenderRoutes(rr&&rr.routes||[]);
+    srRenderEndpoints(re&&re.endpoints||[]);
+    srRenderHealth(rh);
+    const rset=await authF('/api/smart-routing/settings').then(r=>r.json()).catch(()=>null);
+    if(rset&&rset.settings){srRenderSettings(rset.settings);}
+  }catch(e){}
+}
+function srRenderStatus(st){
+  if(!st)return;
+  const eng=st.engine||{};
+  const on=!!(eng.settings_enabled&&eng.env_flag);
+  const flagB=document.getElementById('sr-flag-badge');
+  if(flagB){
+    flagB.textContent=on?'● فعال':(eng.env_flag?'flag روشن · تنظیمات خاموش':'SMART_ROUTING_ENABLED خاموش');
+    flagB.style.cssText=on?'background:rgba(52,211,153,.14);color:#34D399':'background:rgba(245,158,11,.14);color:#FFC06B';
+  }
+  const warn=document.getElementById('sr-flag-warn'),wtxt=document.getElementById('sr-flag-warn-txt');
+  if(!eng.env_flag){
+    warn.style.display='';wtxt.innerHTML='موتور روشن نیست: متغیر محیطی <b>SMART_ROUTING_ENABLED=true</b> در Railway ست نشده (پیش‌فرض خاموش — طبق سند، بعد از تست فعال می‌شود). صفحه و تنظیمات کار می‌کنند اما مسیریابی اعمال نمی‌شود تا flag روشن شود. SNI Spoofing مستقل است و بی‌تغییر می‌ماند.';
+  } else if(!eng.settings_enabled){
+    warn.style.display='';wtxt.innerHTML='flag روشن است اما موتور با دکمه‌ی «روشن/خاموش» هنوز فعال نشده — برای شروع discovery و پایش، روشنش کنید.';
+  } else warn.style.display='none';
+  const pool=eng.pool||{};
+  document.getElementById('sr-healthy').textContent=toFa(pool.ACTIVE||0);
+  document.getElementById('sr-pool-sub').textContent=`کل ${toFa(pool.total||0)} · ${toFa(pool.UNHEALTHY||0)} خراب · ${toFa(pool.QUARANTINED||0)} قرنطینه`;
+  const ir=st.iran_egress||{};
+  document.getElementById('sr-iran').textContent=toFa(ir.count||0);
+  document.getElementById('sr-iran-sub').textContent=ir.count?'egress ایران verify-شده':'هیچ egress ایرانِ واقعی (جعل ممنوع)';
+  document.getElementById('sr-iran-sub').style.color=ir.count?'#34D399':'var(--t3)';
+  document.getElementById('sr-last-disc').textContent=srAgo(eng.last_discovery);
+  document.getElementById('sr-last-health').textContent='چک سلامت: '+srAgo(eng.last_health_pass);
+  const nb=document.getElementById('sr-nb');
+  if(nb){nb.style.display=on?'':'none';}
+  const tb=document.getElementById('sr-toggle-btn');
+  if(tb){tb.innerHTML=on?'<i class="ti ti-power"></i> خاموش کردن':'<i class="ti ti-power"></i> روشن کردن';}
+}
+function srRenderRoutes(routes){
+  const grid=document.getElementById('sr-routes-grid');
+  const cnt=document.getElementById('sr-routes-cnt');
+  if(!grid)return;
+  cnt.textContent=toFa(routes.filter(r=>r.route_id).length)+' مسیر';
+  const lbl={AUTO:'خودکار (امتیاز ترکیبی)',LOW_LATENCY:'کم‌تأخیر',STABLE:'پایدار',IRAN_OPTIMIZED:'بهینه ایران'};
+  grid.innerHTML=routes.map(r=>{
+    if(!r.route_id)return `<div class="sr-route-card"><div class="sr-route-head"><i class="ti ti-route" style="color:var(--t3)"></i><span class="sr-route-mode">${lbl[r.mode]||r.mode}</span></div><div class="sr-route-none">${esc(r.note||'مسیر معتبری نیست')}</div></div>`;
+    return `<div class="sr-route-card">
+      <div class="sr-route-head"><i class="ti ti-route" style="color:#34D399"></i><span class="sr-route-mode">${lbl[r.mode]||r.mode}</span><span class="ml-auto sr-pill ${r.status==='ACTIVE'?'ok':'idle'}">امتیاز ${toFa(Math.round(r.score||0))}</span></div>
+      <div class="sr-route-ep">${esc(r.endpoint||'')}</div>
+      <div class="sr-route-meta">
+        <span class="sr-route-tag">⏱ ${r.latency_ms!=null?toFa(r.latency_ms)+'ms':'—'}</span>
+        <span class="sr-route-tag">🌐 ${esc(r.country||'—')}</span>
+        <span class="sr-route-tag">ASN ${esc(r.asn||'—').slice(0,26)}</span>
+        <span class="sr-route-tag">PWR ${esc(r.transport||'ws')}</span>
+        ${r.iran_egress?'<span class="sr-route-tag" style="background:rgba(52,211,153,.14);color:#34D399;border-color:rgba(52,211,153,.3)">🇮🇷 egress ایران (verified)</span>':''}
+      </div>
+      ${r.mode==='IRAN_OPTIMIZED'&&r.reason?`<div class="sr-route-none" style="margin-top:6px">${esc(r.reason)}</div>`:''}
+    </div>`;
+  }).join('');
+}
+function srRenderEndpoints(eps){
+  const body=document.getElementById('sr-endpoints-body');
+  const cnt=document.getElementById('sr-eps-count');
+  if(!body)return;
+  cnt.textContent=toFa(eps.length)+' endpoint';
+  if(!eps.length){body.innerHTML='<tr><td colspan="11" style="text-align:center;color:var(--t3)">— endpoint کشف نشده (Discovery را اجرا کنید) —</td></tr>';return;}
+  body.innerHTML=eps.map(e=>`<tr>
+    <td class="sr-ep">${esc(e.endpoint)}:${toFa(e.port||443)}<div style="font-size:9px;color:var(--t3)">${esc(e.source||'')}</div></td>
+    <td>${e.country?`🌐 ${esc(e.country)}`:'—'}</td>
+    <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis" title="${esc(e.asn||'')}">${esc((e.asn||'—').slice(0,24))}</td>
+    <td class="sr-ep">${esc(e.egress_ip||'—')}</td>
+    <td>${e.latency_ms!=null?toFa(e.latency_ms)+'ms':'—'}</td>
+    <td>${e.jitter_ms!=null?toFa(e.jitter_ms)+'ms':'—'}</td>
+    <td>${e.packet_loss!=null?toFa(Math.round(e.packet_loss*100))+'%':'—'}</td>
+    <td>${srHealthPill(e.health)}</td>
+    <td><b>${e.score!=null?toFa(Math.round(e.score)):'—'}</b> ${srPill(e.status)}</td>
+    <td style="color:var(--t3)">${srAgo(e.last_check)}</td>
+    <td><button class="btn btn-g btn-sm btn-icon" onclick="srTestEndpoint('${esc(e.id)}',this)" title="اجرای pipeline کامل verify (egress/latency/jitter/loss)"><i class="ti ti-radar-2"></i></button></td>
+  </tr>`).join('');
+}
+function srRenderHealth(h){
+  if(!h)return;
+  const m=h.metrics||{};
+  document.getElementById('sr-best-lat').textContent=m.best_latency_ms!=null?toFa(m.best_latency_ms)+'ms':'—';
+  document.getElementById('sr-avg-lat').textContent=m.avg_latency_ms!=null?toFa(m.avg_latency_ms)+'ms':'—';
+  document.getElementById('sr-jit-loss').textContent=(m.avg_jitter_ms!=null?toFa(m.avg_jitter_ms)+'ms':'—')+' / '+(m.avg_packet_loss!=null?toFa(Math.round(m.avg_packet_loss*100))+'%':'—');
+  const ev=document.getElementById('sr-events');
+  if(ev){
+    ev.innerHTML=(h.events||[]).slice(0,20).map(e=>`<div style="padding:6px 2px;border-bottom:1px solid rgba(255,77,46,.06);font-size:11px;color:var(--t2)"><span style="color:var(--t3);font-size:9.5px">${srAgo(e.ts)}</span> · ${esc((e.message||'').slice(0,90))}</div>`).join('')||'—';
+  }
+  const rrr=window.__srRoutes||[];
+  const best=rrr.find(r=>r.route_id);
+  document.getElementById('sr-cur-route').textContent=best?best.endpoint:'—';
+  const fb=rrr.filter(r=>r.route_id&&best&&r.endpoint!==best.endpoint).map(r=>r.endpoint);
+  document.getElementById('sr-fallback-route').textContent=fb.length?'جایگزین: '+fb[0]:'جایگزینی نیست';
+}
+function srRenderSettings(s){
+  const w=s.score_weights||{latency:.3,jitter:.15,packet_loss:.2,uptime:.15,availability:.1,egress:.1};
+  const wl={latency:'Latency',jitter:'Jitter',packet_loss:'Packet Loss',uptime:'Uptime',availability:'Availability',egress:'Egress'};
+  const box=document.getElementById('sr-weights');
+  if(box&&!box.dataset.init){
+    box.innerHTML=Object.keys(w).map(k=>`<div class="sr-weight"><label><span>${wl[k]||k}</span><span id="sr-w-${k}-v">${toFa(Math.round((w[k]||0)*100))}%</span></label><input type="range" min="0" max="60" step="5" value="${Math.round((w[k]||0)*100)}" oninput="document.getElementById('sr-w-${k}-v').textContent=toFa(this.value)+'%'"></div>`).join('');
+    box.dataset.init='1';
+  }
+  const pr=document.getElementById('sr-probe-rounds');
+  if(pr&&pr.value==='')pr.value=s.probe_rounds||5;
+  const mc=document.getElementById('sr-manual');
+  if(mc&&!mc.dataset.init){mc.value=(s.manual_candidates||[]).map(c=>c.address+':'+(c.port||443)).join('\n');mc.dataset.init='1';}
+  const wu=document.getElementById('sr-worker-url'),wk=document.getElementById('sr-worker-key');
+  if(wu&&!wu.dataset.init&&s.worker_url){wu.value=s.worker_url;wu.dataset.init='1';}
+  const wb=document.getElementById('sr-worker-badge');
+  if(wb){
+    const has=!!(s.worker_url);
+    wb.textContent=has?'ثبت‌شده':'ثبت نشده';
+    wb.style.cssText=has?'background:rgba(52,211,153,.14);color:#34D399':'background:rgba(148,163,184,.14);color:#94A3B8';
+  }
+  const it=document.getElementById('sr-iran-direct-tog');
+  if(it){it.classList.toggle('on',!!s.iran_direct_enabled);it.dataset.on=s.iran_direct_enabled?'1':'';}
+  const ii=document.getElementById('sr-iran-info');
+  if(ii&&srState&&srState.iran_direct){ii.innerHTML=`قواعد: ${toFa(srState.iran_direct.domains_count||0)} دامنه + GeoIP ایران → مستقیم · بقیه → تونل.<br>${esc(srState.iran_direct.honest_note||'')}`;}
+  const wm=document.getElementById('sr-flag-warn');
+}
+async function srToggleEngine(){
+  try{
+    const st=srState&&srState.engine||{};
+    const now=st.settings_enabled;
+    const r=await authF('/api/smart-routing/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({enabled:!now})});
+    if(!r.ok)throw new Error((await r.json().catch(()=>({}))).detail||'');
+    toast(!now?'موتور مسیریابی هوشمند روشن شد ✓':'موتور خاموش شد','ok');
+    loadSmart();
+  }catch(e){toast(e.message||'خطا','err')}
+}
+async function srRefreshDiscovery(btn){
+  btn.disabled=true;btn.innerHTML='<i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i>';
+  try{
+    const r=await authF('/api/smart-routing/refresh',{method:'POST'});
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok)throw new Error(d.detail||'');
+    toast(`Discovery: ${toFa(d.discovery&&d.discovery.discovered||0)} endpoint · ${toFa((d.verified||[]).length)} verify شد`,'ok');
+    loadSmart();
+  }catch(e){toast(e.message||'خطا (شاید flag خاموش است یا rate limit)','err')}
+  btn.disabled=false;btn.innerHTML='<i class="ti ti-refresh"></i> Refresh Discovery';
+}
+async function srRunHealth(btn){
+  btn.disabled=true;
+  try{
+    const r=await authF('/api/smart-routing/test',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({})});
+    if(r.status===400){toast('ابتدا Discovery اجرا کنید','err');}
+    else{toast('چک سلامت در پس‌زمینه انجام می‌شود — لحظاتی بعد رفرش کنید','ok');setTimeout(loadSmart,4000);}
+  }catch(e){}
+  btn.disabled=false;
+}
+async function srTestBest(btn){
+  btn.disabled=true;btn.innerHTML='<i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i>';
+  try{
+    const r=await authF('/api/smart-routing/routes/best');
+    const d=await r.json().catch(()=>({}));
+    if(!d.ok){toast(d.reason||'مسیر معتبری نیست — سیستم صادقانه اعلام می‌کند','err');}
+    else{toast(`بهترین مسیر: ${d.route.endpoint} · ${toFa(d.route.latency_ms||'—')}ms · امتیاز ${toFa(Math.round(d.route.score||0))}`,'ok');}
+  }catch(e){toast('خطا','err')}
+  btn.disabled=false;btn.innerHTML='<i class="ti ti-bolt"></i> تست بهترین مسیر';
+}
+async function srTestEndpoint(id,btn){
+  btn.disabled=true;
+  try{
+    const r=await authF('/api/smart-routing/test',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({endpoint_id:id})});
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok)throw new Error(d.detail||'');
+    toast(d.ok?`verify کامل ✓ — score ${toFa(Math.round((d.score&&d.score.score)||0))} · ${d.status}`:`verify ناموفق — ${d.status||''}`,'ok');
+    loadSmart();
+  }catch(e){toast(e.message||'خطا','err')}
+  btn.disabled=false;
+}
+async function srSaveWorker(btn){
+  btn.disabled=true;
+  try{
+    const body={};
+    const u=document.getElementById('sr-worker-url').value.trim();
+    const k=document.getElementById('sr-worker-key').value.trim();
+    if(u)body.worker_url=u;
+    if(k)body.worker_key=k;
+    const r=await authF('/api/smart-routing/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    if(!r.ok)throw new Error((await r.json().catch(()=>({}))).detail||'');
+    toast('Worker ثبت شد ✓','ok');loadSmart();
+  }catch(e){toast(e.message||'خطا','err')}
+  btn.disabled=false;
+}
+async function srCheckWorker(btn){
+  btn.disabled=true;
+  const info=document.getElementById('sr-worker-info');
+  info.innerHTML='در حال بررسی Worker…';
+  try{
+    const r=await authF('/api/smart-routing/worker/status');
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok){info.innerHTML=`<span style="color:var(--red-t)">خطا: ${esc(d.detail||'')}</span>`;}
+    else{
+      const h=d.health||{},e=d.edge_info||{},p=d.probe_upstream||{};
+      info.innerHTML=`وضعیت: <b style="color:${h.ok?'#34D399':'var(--red-t)'}">${h.ok?'سالم':'در دسترس نیست'}</b> · upstream: ${h.upstream&&h.upstream.ok?'OK '+(h.upstream.latency_ms||'')+'ms':'FAIL'}<br>
+        لبه: ${esc(e.colo||'—')} (${esc(e.country||'—')}) · امضا: <b style="color:${d.authenticated?'#34D399':'var(--red-t)'}">${d.authenticated?'معتبر ✓':'نامعتبر'}</b><br>
+        latency لبه→پنل: ${p.ok?toFa(p.edge_to_upstream_ms)+'ms':'—'}`;
+    }
+  }catch(e){info.innerHTML='<span style="color:var(--red-t)">خطا در بررسی</span>';}
+  btn.disabled=false;
+}
+async function srToggleIranDirect(el){
+  el.classList.toggle('on');
+  const on=el.classList.contains('on');
+  try{
+    const r=await authF('/api/smart-routing/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({iran_direct_enabled:on})});
+    if(!r.ok)throw new Error((await r.json().catch(()=>({}))).detail||'');
+    toast(on?'Iran Direct روشن شد ✓':'Iran Direct خاموش شد','ok');
+  }catch(e){el.classList.toggle('on');toast(e.message||'خطا','err')}
+}
+async function srDownloadIranRules(btn){
+  try{
+    const r=await authF('/api/smart-routing/iran-direct/rules');
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok){toast(d.reason||'خطا','err');return;}
+    const blob=new Blob([JSON.stringify(d.config,null,2)],{type:'application/json'});
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);a.download='emix-iran-direct.json';a.click();
+    URL.revokeObjectURL(a.href);
+    toast('قواعد Iran Direct دانلود شد ✓','ok');
+  }catch(e){toast('خطا','err')}
+}
+async function srSaveWeights(btn){
+  btn.disabled=true;
+  try{
+    const w={};
+    ['latency','jitter','packet_loss','uptime','availability','egress'].forEach(k=>{
+      const el=document.getElementById('sr-w-'+k);
+      if(el)w[k]=(Number(el.value)||0)/100;
+    });
+    const r=await authF('/api/smart-routing/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({score_weights:w})});
+    if(!r.ok)throw new Error((await r.json().catch(()=>({}))).detail||'');
+    toast('وزن‌ها ذخیره شد ✓','ok');
+  }catch(e){toast(e.message||'خطا (جمع وزن‌ها باید ≈۱۰۰٪)','err')}
+  btn.disabled=false;
+}
+async function srSaveAdvanced(btn){
+  btn.disabled=true;
+  try{
+    const body={};
+    const pr=Number(document.getElementById('sr-probe-rounds').value);
+    if(pr)body.probe_rounds=pr;
+    const mc=document.getElementById('sr-manual').value.split('\n').map(s=>s.trim()).filter(Boolean);
+    if(mc.length)body.manual_candidates=mc;
+    const r=await authF('/api/smart-routing/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    if(!r.ok)throw new Error((await r.json().catch(()=>({}))).detail||'');
+    toast('ذخیره شد ✓','ok');loadSmart();
+  }catch(e){toast(e.message||'خطا','err')}
+  btn.disabled=false;
 }
 async function toggleTurbo(uuid,on){
   try{

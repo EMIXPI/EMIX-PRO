@@ -500,6 +500,19 @@ def generate_share_link(uuid: str, host: str, remark: str = "EMIX", protocol: st
     link = LINKS.get(uuid) or {}
     alpn = link.get("alpn", "h2")
     fp = link.get("fingerprint", "chrome")
+    # ── EMIX-PRO v13.3 — Smart Routing: آدرس لینک = فرانتِ مسیر انتخاب‌شده ────
+    # فقط وقتی مسیر هوشمندِ ACTIVE و verified برای این لینک باشد؛ در غیر این
+    # صورت None می‌رسد و host همان پایه است (صفر تغییر برای کاربران بدون SR).
+    # دامنه‌ی واقعی در snapshot لینک (_sr_real_host) نگه داشته می‌شود تا
+    # _apply_link_features هدر WS را با دامنه‌ی واقعی پنل ست کند.
+    try:
+        from smart_routing import route_front_for
+        _sr_front = route_front_for(host, link, protocol)
+        if _sr_front and _sr_front != host:
+            link = {**link, "_sr_real_host": host}
+            host = _sr_front
+    except Exception:
+        pass
 
     if protocol == "mtproto":
         secret = link.get("mtproto_secret")
@@ -618,6 +631,15 @@ def _apply_link_features(params: dict, link: dict, protocol: str) -> None:
             params["sni"] = sni
             params["allowInsecure"] = "1"
             # host = دامنه‌ی واقعی پنل می‌ماند (مسیر TCP تغییر نمی‌کند)
+    # ── EMIX-PRO v13.3 — Smart Routing params (بعد از spoof؛ تداخل مستند) ──
+    # وقتی route فعال است: sni=فرانت (cert معتبر) + host=پنل واقعی + بدون
+    # allowInsecure. spoof پشت فرانت workers.dev مضر است (فاز ۴۴) → route
+    # فعال یعنی spoof نادیده (SNI Spoofing ماژول مستقل خودش باقی می‌ماند).
+    try:
+        from smart_routing import apply_route_params
+        apply_route_params(params, _link, protocol)
+    except Exception:
+        pass
 
 
 def uptime() -> str:
@@ -1853,6 +1875,22 @@ async def update_link(uid: str, request: Request, _=Depends(require_auth)):
                 log_activity("link", f"جعل SNI برای «{label}» فعال شد (SNI={link.get('spoof_sni')})", "ok")
             else:
                 link["spoof_sni_enabled"] = False
+        # ── EMIX-PRO v13.3 — Smart Routing mode (OFF/AUTO/LOW_LATENCY/STABLE/IRAN_OPTIMIZED) ──
+        if "smart_routing_mode" in body:
+            mode = str(body.get("smart_routing_mode") or "OFF").strip().upper()
+            allowed_modes = ("OFF", "AUTO", "LOW_LATENCY", "STABLE", "IRAN_OPTIMIZED")
+            if mode not in allowed_modes:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"حالت نامعتبر — مجاز: {', '.join(allowed_modes)}",
+                )
+            if mode != "OFF" and link.get("protocol", DEFAULT_PROTOCOL) not in ("vless-ws", "trojan-ws"):
+                raise HTTPException(
+                    status_code=400,
+                    detail="Smart Routing فقط برای کانفیگ‌های VLESS-WS و Trojan-WS قابل اعمال است",
+                )
+            link["smart_routing_mode"] = mode
+            log_activity("link", f"Smart Routing «{mode}» برای «{label}» ست شد", "info")
         if any(k in body for k in ("label", "note", "limit_value", "expires_days", "alpn", "fingerprint")):
             log_activity("link", f"کانفیگ «{link['label']}» ویرایش شد", "info")
         new_sub = body.get("sub_id", "UNCHANGED")
@@ -2873,6 +2911,16 @@ link_health.register_routes(app)
 # ─────────────────────────────────────────────────────────────────────────────
 import turbo_boost       # noqa: E402
 turbo_boost.register_routes(app)
+
+# ══════════════════════════════════════════════════════════════════════════════
+# EMIX-PRO v13.3 — Smart Routing Network v1 (feature-flagged، پیش‌فرض خاموش)
+# ─────────────────────────────────────────────────────────────────────────────
+# ماژول مستقل مسیریابی هوشمند: discovery + verify واقعی (egress/geo/latency/
+# jitter/loss) + pool پویا + failover + Worker جدید Cloudflare. SNI Spoofing و
+# هسته‌ی پروتکل‌ها دست‌نخورده؛ وقتی SMART_ROUTING_ENABLED خاموش است (پیش‌فرض)
+# هیچ لینک و هیچ رفتاری تغییر نمی‌کند — rollback = خاموش کردن flag.
+import smart_routing      # noqa: E402
+smart_routing.register_routes(app)
 
 
 @app.middleware("http")

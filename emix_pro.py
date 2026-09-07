@@ -42,7 +42,7 @@ from main import (
     uptime,
 )
 
-EMIX_PRO_VERSION = "13.2.0-emix-pro"
+EMIX_PRO_VERSION = "13.3.0-emix-pro"
 EMIX_BASE_PANEL = "EMIX 9.2 (05f2f2c — healthy original state)"
 EMIX_PRO_FEATURES = [
     "real-e2e-ping",          # تست واقعی مسیر کلاینت (link_health) — با Real Delay تفکیک‌شده از TCP
@@ -53,6 +53,7 @@ EMIX_PRO_FEATURES = [
     "turbo-0rtt",             # توربو per-link (ed=2048) + تست A/B واقعی + تک‌شانهای
     "sni-spoof-per-link",     # جعل SNI هر کانفیگ (Mode B) + پینگ صادق از همان مسیر
     "fresh-ui-no-store",      # HTML پنل هرگز از کش مرورگر نمی‌آید
+    "smart-routing-v1",       # شبکه‌ی مسیریابی هوشمند (feature-flagged؛ discovery/verify/pool/failover/worker)
 ]
 
 

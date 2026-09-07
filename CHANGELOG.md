@@ -3,6 +3,75 @@
 تمام تغییرات قابل‌توجه این پروژه در این فایل ثبت می‌شود.
 قالب بر اساس [Keep a Changelog](https://keepachangelog.com/) است.
 
+## [13.3.0-emix-pro] — 2026-09-07
+
+### Smart Routing Network v1 (Phase 47) — ماژول مستقل مسیریابی هوشمند
+
+- **معماری کاملاً افزودنی (`smart_routing/` — ۱۴ زیرماژول)**: Endpoint
+  Discovery / Registry / Verification / Latency Engine / Route Scoring /
+  Proxy-Relay Pool / Route Selector / Failover / Health Monitor / Egress
+  Verification / Geo-ASN Verification / Cloudflare Worker Integration /
+  Admin UI-API. هسته‌ی EMIX و SNI Spoofing و Config Builder پایه دست‌نخورده
+  (تست‌های additive-diff فاز ۴۵ همچنان سبز؛ تغییرات main.py فقط درج است).
+- **Feature Flag**: `SMART_ROUTING_ENABLED` (env، پیش‌فرض **خاموش** طبق سند) +
+  تگل ادمین در تنظیمات. با flag خاموش: لینک‌ها بایت‌به‌بایت شکل پایه می‌مانند
+  (تست رگرسیون §A)، APIهای موتور 503، UI صفحه‌ی وضعیت صادق نشان می‌دهد.
+  Rollback = خاموش کردن flag؛ کاربران موجود هیچ تغییری نمی‌بینند.
+- **NO FAKE SUCCESS**: موفقیت یعنی route established + traffic از مسیر عبور
+  کرده + egress از بیرون دیده و از **دو منبع مستقل** verify شده (ip-api از
+  داخل تونل + ipwho.is از بیرون) + health پاس. در غیر این صورت UNVERIFIED.
+  IRAN_EGRESS فقط با تأیید هر دو منبع true می‌شود — هیچ‌گاه از SNI/هدر/کشورِ
+  تنظیمی. GeoIP spoofing به‌عنوان egress ممنوع.
+- **Endpoint Discovery بدون اسکن کنترل‌نشده**: فقط منابع allowlist‌شده —
+  لینک‌های خود پنل، Worker ثبت‌شده، candidateهای دستی اپراتور، و URLهای
+  https منابع عمومی (پیش‌فرض خالی). همه‌ی candidateها SSRF-guard می‌شوند
+  (localhost/RFC1918/metadata/CGNAT مسدود — حتی resolve به IP خصوصی).
+- **متریک‌های واقعی چند-پروبی**: latency = Real Delay (پاسخ HTTP واقعی از
+  داخل تونل، همان موتور link_health)، jitter = انحراف معیار ≥۲ پروب،
+  packet_loss = نسبت شکست، tcp_ms جداگانه (تفکیک صادق).
+- **Scoring ترکیبی با وزن‌های قابل‌تنظیم** (پیش‌فرض: Latency 30% / Jitter 15%
+  / Loss 20% / Uptime 15% / Availability 10% / Egress 10%) + penalties
+  (jitter بالا، instability، unverified-egress؛ verify ناموفق = score صفر +
+  INVALID). حالت‌ها: OFF/AUTO/LOW_LATENCY/STABLE/IRAN_OPTIMIZED.
+- **Pool پویا**: UNKNOWN→ACTIVE فقط بعد از verify کامل؛ DEGRADED/UNHEALTHY/
+  QUARANTINED با خروج/بازگشت خودکار؛ تاریخچه‌ی ۲۰ چک آخر مبنای امتیاز است.
+- **Failover بدون oscillation**: hysteresis (فاصله‌ی امتیاز ≥۱۰٪ قابل تنظیم
+  + cooldown ۱۲۰ث)؛ مرده شدن مسیر → انتخاب مجدد فوری + event؛ کاربر با
+  refresh ساب لینک جدید می‌گیرد (بدون کانفیگ جدید).
+- **Worker جدید Cloudflare `emix-smart-routing-v1`** (کاملاً مستقل —
+  workerهای قبلی EMIX دست‌نخورده): relay شفاف WS/HTTP به upstream +
+  /sr/health + /sr/edge-info + /sr/egress-test (برچسب صادق
+  worker-fetch-egress) + /sr/probe-upstream (edge→upstream) + Cron گزارش
+  دوره‌ای. KV جدید SR_STATE (nonce replay)؛ اسرار فقط از bindings؛
+  امضای HMAC-SHA256 (ts±۹۰s + nonce یک‌بارمصرف + sha256 body) هر دو جهت.
+- **ذخیره‌سازی**: SQLite افزودنی `smart_routing.db` در DATA_DIR (Railway
+  volume) — جداول smart_endpoints/smart_routes/route_health_checks/
+  route_events/route_selections/smart_settings؛ migration فقط CREATE IF NOT
+  EXISTS (غیر destructive؛ rvg_state.json هرگز دست نمی‌خورد).
+- **Iran Direct (DOMESTIC_ROUTE)**: قابلیت خاموش/روشن + تولید پیکربندی
+  split-routing واقعی کلاینت (geoip:private/geoip:ir + دامنه‌های ایرانی →
+  مستقیم؛ بقیه → تونل). IP کاربر جعل نمی‌شود؛ server پنل مسیر ترافیک محلی
+  کاربر را تغییر نمی‌دهد (صادقانه در UI اعلام شده).
+- **Config Builder integration (فقط لایه‌ی افزودنی)**: فیلد حالت در مودال
+  ویرایش + PATCH /api/links/{uid} + بج مسیر روی کارت. وقتی route فعال
+  است: آدرس لینک = فرانتِ 443-only، sni=فرانت (cert معتبر)، host=دامنه‌ی
+  واقعی پنل. تداخل مستند با SNI Spoofing: route فعال = spoof نادیده (پشت
+  فرانت workers.dev مضر است — اندازه‌گیری فاز ۴۴)؛ spoof روی لینک‌های بدون
+  route بی‌تغییر و کاملاً مستقل می‌ماند.
+- **API** (احراز هویت فعلی EMIX — require_auth): status/routes/routes/best/
+  endpoints/health/test/refresh/select/egress + settings + worker/status +
+  worker/report (امضاشده) + iran-direct/rules. Rate limit روی discovery/test.
+- **UI**: صفحه‌ی «مسیریابی هوشمند» (nav + بخش pg-smart) — داشبورد متریک‌ها،
+  جدول endpointها (responsive)، کارت مسیرها به تفکیک حالت، ثبت Worker،
+  Iran-Direct، وزن‌های امتیاز، رخدادها؛ دکمه‌های Refresh Discovery /
+  Run Health Check / Test Best Route / روشن-خاموش. موبایل کاملاً responsive.
+- **تست‌ها**: `tests/test_smart_routing.py` (۵۴ تست): رگرسیون flag-off
+  بایت‌به‌بایت، SSRF، scoring، pool، migration امن، E2E واقعی pipeline
+  (verify کامل با egress واقعی از داخل تونل)، امضای HMAC + replay،
+  failover/hysteresis، integration لینک‌ساز (فرانت 443 + ترکیب spoof)،
+  Iran صادق، static-checkهای Worker (بدون secret هاردکد؛ بدون ارجاع به
+  workerهای قبلی)، rate limit، version pin. کل سوئیت: ۱۰۷/۱۰۷ ×۲ متوالی.
+
 ## [13.2.0-emix-pro] — 2026-09-07
 
 ### قابلیت‌های سفارش‌شده‌ی کاربر (Phase 46) — توربو، جعل SNI، Real Delay، لاگین
