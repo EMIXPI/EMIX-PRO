@@ -1973,13 +1973,13 @@ html,body{max-width:100%;overflow-x:hidden}
     </div>
     <div class="modal-v2-body">
       <div class="sdev-grid">
-        <a href="https://github.com/EMIXPI/EMIX" target="_blank" rel="noopener" class="sdev-card">
+        <a href="https://github.com/EMIXPI/EMIX-PRO" target="_blank" rel="noopener" class="sdev-card">
           <span class="sdev-ic" style="background:linear-gradient(135deg,#24292F,#444D56)">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="#fff"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.09 3.29 9.4 7.86 10.93.57.1.78-.25.78-.55 0-.27-.01-1.17-.02-2.12-3.2.7-3.88-1.36-3.88-1.36-.52-1.34-1.28-1.7-1.28-1.7-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.19-3.08-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11.02 11.02 0 0 1 5.79 0c2.2-1.49 3.17-1.18 3.17-1.18.64 1.59.24 2.76.12 3.05.74.8 1.19 1.82 1.19 3.08 0 4.41-2.7 5.38-5.27 5.67.42.36.78 1.07.78 2.15 0 1.56-.01 2.81-.01 3.19 0 .3.21.66.79.55A10.52 10.52 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5Z"/></svg>
           </span>
           <span class="sdev-txt">
-            <span class="sdev-t">استار در گیت‌هاب</span>
-            <span class="sdev-s">حمایت رایگان با یه ستاره ⭐</span>
+            <span class="sdev-t">استار در گیت‌هاب (EMIX-PRO)</span>
+            <span class="sdev-s">همین پروژه‌ای که داریم بهبودش می‌دیم — حمایت رایگان با یه ستاره ⭐</span>
           </span>
           <i class="ti ti-external-link sdev-go"></i>
         </a>
@@ -3284,7 +3284,7 @@ html,body{max-width:100%;overflow-x:hidden}
         <div class="sr-wk-cell" style="grid-column:1/-1"><div class="sr-wk-k">Endpoint</div><div class="sr-wk-v" id="sr-wk-endpoint">—</div></div>
         <div class="sr-wk-cell" style="grid-column:1/-1"><div class="sr-wk-k">Edge</div><div class="sr-wk-v" id="sr-wk-edge">—</div></div>
       </div>
-      <div class="cl" style="margin-top:10px"><i class="ti ti-info-circle"></i><span>ثبت‌شده (REGISTERED) یعنی فقط URL/کلید ذخیره شده — مستقر (DEPLOYED) و سالم (HEALTHY) فقط با بررسی واقعی (پاسخ Worker + امضای HMAC + upstream) تأیید می‌شوند. Worker <b>emix-smart-routing-v1</b> مستقل از workerهای قبلی است؛ URL/کلید در Volume ذخیره می‌شود (نه در کد).</span></div>
+      <div class="cl" style="margin-top:10px"><i class="ti ti-info-circle"></i><span>ثبت‌شده (REGISTERED) یعنی فقط URL/کلید ذخیره شده — مستقر (DEPLOYED) و سالم (HEALTHY) فقط با بررسی واقعی (پاسخ Worker + امضای HMAC + upstream) تأیید می‌شوند. Worker <b>emix-smart-routing-v1</b> مستقل از workerهای قبلی است؛ <b>URL پیش‌فرض این نسخه ست شده است</b> (با ثبت دستی override می‌شود) و کلید امضا از متغیر <b>SR_SIGNING_KEY</b> یا فرم «ثبت/ویرایش» خوانده می‌شود — در Volume ذخیره می‌شود (نه در کد).</span></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
         <button class="btn btn-g btn-sm" onclick="srCheckWorker(this)"><i class="ti ti-radar-2"></i> بررسی Worker</button>
         <button class="btn btn-o btn-sm" onclick="document.getElementById('sr-worker-reg').open=true"><i class="ti ti-plug"></i> ثبت/ویرایش</button>
@@ -6479,6 +6479,8 @@ async function loadSmart(){
     if(rset&&rset.settings){srRenderSettings(rset.settings);}
     // بررسی خودکار Worker در پس‌زمینه (فقط اگر قدیمی/بررسی‌نشده — state واقعی)
     srAutoCheckWorker();
+    // v13.5: به‌روزرسانی زنده — هر ۳۰ ثانیه فقط وقتی صفحه‌ی smart باز است
+    if(!window.__srLiveTimer){window.__srLiveTimer=setInterval(()=>{try{const pg=document.getElementById('pg-smart');if(pg&&pg.classList.contains('on')&&!document.hidden)loadSmart();}catch(e){}},30000);}
   }catch(e){}
 }
 function srRenderStatus(st){
@@ -6492,7 +6494,7 @@ function srRenderStatus(st){
   }
   const warn=document.getElementById('sr-flag-warn'),wtxt=document.getElementById('sr-flag-warn-txt');
   if(!eng.env_flag){
-    warn.style.display='';wtxt.innerHTML='موتور روشن نیست: متغیر محیطی <b>SMART_ROUTING_ENABLED=true</b> در Railway ست نشده (پیش‌فرض خاموش — طبق سند، بعد از تست فعال می‌شود). صفحه و تنظیمات کار می‌کنند اما مسیریابی اعمال نمی‌شود تا flag روشن شود. SNI Spoofing مستقل است و بی‌تغییر می‌ماند.';
+    warn.style.display='';wtxt.innerHTML='موتور روشن نیست: متغیر <b>SMART_ROUTING_ENABLED=false</b> صریحاً ست شده (پیش‌فرض این نسخه روشن است). آن را true کنید یا حذفش کنید و سرویس را redeploy کنید — یا دکمه‌ی «روشن/خاموش» را بزنید تا خودکار روی Railway فعال شود. SNI Spoofing مستقل است و بی‌تغییر می‌ماند.';
   } else if(!eng.settings_enabled){
     warn.style.display='';wtxt.innerHTML='flag روشن است اما موتور با دکمه‌ی «روشن/خاموش» هنوز فعال نشده — برای شروع discovery و پایش، روشنش کنید.';
   } else warn.style.display='none';
@@ -6648,7 +6650,7 @@ function srRenderWorkerState(wk){
   };
   const [color,bg,label]=map[state]||map.NOT_CONFIGURED;
   const stateEl=document.getElementById('sr-wk-state');
-  if(stateEl)stateEl.innerHTML=`<span class="sr-wk-state" style="background:${bg};color:${color}"><span class="sr-wk-dot" style="background:${color}"></span> ${state}</span>`;
+  if(stateEl)stateEl.innerHTML=`<span class="sr-wk-state" style="background:${bg};color:${color}"><span class="sr-wk-dot" style="background:${color}"></span> ${state}</span>`+(st.key_missing?`<div style="font-size:9.5px;color:var(--t3);margin-top:3px">کلید امضا (SR_SIGNING_KEY یا فرم ثبت) موجود نیست — بررسی HMAC ممکن نیست، اما مسیر Worker فعال است</div>`:'');
   const wb=document.getElementById('sr-worker-badge');
   if(wb){wb.textContent=state==='NOT_CONFIGURED'?'ثبت نشده':label;wb.style.cssText=`background:${bg};color:${color}`;}
   const epEl=document.getElementById('sr-wk-endpoint');
@@ -6680,8 +6682,19 @@ async function srToggleEngine(){
     const now=st.settings_enabled;
     const r=await authF('/api/smart-routing/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({enabled:!now})});
     if(!r.ok)throw new Error((await r.json().catch(()=>({}))).detail||'');
-    toast(!now?'موتور مسیریابی هوشمند روشن شد ✓':'موتور خاموش شد','ok');
+    toast(!now?'موتور مسیریابی هوشمند روشن شد ✓ — discovery در حال اجراست':'موتور خاموش شد','ok');
+    // v13.5: اگر env flag صریحاً خاموش ست شده → فعال‌سازی خودکار روی Railway (redeploy خودکار)
+    if(!now&&st.env_flag===false){
+      try{
+        const ef=await authF('/api/smart-routing/enable-env-flag',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({enable:true})});
+        const ed=await ef.json().catch(()=>({}));
+        if(ed.ok){toast('SMART_ROUTING_ENABLED روی Railway فعال شد — سرویس ~۱-۲ دقیقه بعد ری‌استارت و روشن می‌ماند','ok');}
+        else{toast('flag env خاموش است: '+(ed.manual||ed.error||'در Railway dashboard SMART_ROUTING_ENABLED=true ست کنید'),'err');}
+      }catch(e){}
+    }
     loadSmart();
+    // discovery/verify واقعی چند ثانیه طول می‌کشد → رفرش تأخیری تا بخش‌ها پر شوند
+    if(!now){setTimeout(loadSmart,5000);setTimeout(loadSmart,15000);}
   }catch(e){toast(e.message||'خطا','err')}
 }
 async function srRefreshDiscovery(btn){

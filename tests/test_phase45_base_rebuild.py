@@ -98,11 +98,14 @@ class TestBaseIntegrity:
         مستثناهای مستند (Phase 46، دستور صریح کاربر):
         * pages.py: حذف باکس «رمز پیش‌فرض سیستم» از صفحه لاگین + جایگزینی با
           placeholder کمرنگ 123456 داخل خود کادر رمز (تم و رنگ‌ها دست‌نخورده).
+        مستثناهای مستند (Phase 50، دستور صریح کاربر):
+        * pages.py: پاپ‌آپ «حمایت از سازنده» — لینک/متن کارت گیت‌هاب از
+          پروژه‌ی پایه‌ی EMIX به پروژه‌ی فعلی EMIX-PRO تغییر کرد (۳ خط جایگزین).
         main.py هیچ خطِ پایه‌ای از دست نداده (همه‌ی تغییرات درج هستند)."""
         ref = Path("/home/z/my-project/emix-healthy")
         if not (ref / "main.py").exists():
             pytest.skip("EMIX reference repo not present")
-        # خطوط پایه‌ای که عمداً حذف/جایگزین شده‌اند (فقط pages.py — لاگین)
+        # خطوط پایه‌ای که عمداً حذف/جایگزین شده‌اند (pages.py — لاگین + پاپ‌آپ حمایت Phase 50)
         allowed_lost = {
             '.hint{',
             '  display:flex;align-items:center;gap:10px;background:var(--card-in);border:1px dashed var(--border);',
@@ -126,6 +129,12 @@ class TestBaseIntegrity:
             '  pw.focus();',
             '}',
             '          <input type="password" id="pw" placeholder="رمز عبور را وارد کنید" autofocus required autocomplete="current-password">',
+        }
+        # Phase 50 (دستور صریح کاربر): پاپ‌آپ حمایت از سازنده → لینک پروژه‌ی فعلی EMIX-PRO
+        allowed_lost |= {
+            '        <a href="https://github.com/EMIXPI/EMIX" target="_blank" rel="noopener" class="sdev-card">',
+            '            <span class="sdev-t">استار در گیت‌هاب</span>',
+            '            <span class="sdev-s">حمایت رایگان با یه ستاره ⭐</span>',
         }
         for fname in ["main.py", "pages.py"]:
             base_lines = (ref / fname).read_text(encoding="utf-8").splitlines()
@@ -159,7 +168,7 @@ class TestBaseIntegrity:
 
     def test_version_module(self):
         import emix_pro
-        assert emix_pro.EMIX_PRO_VERSION == "13.4.1-emix-pro"
+        assert emix_pro.EMIX_PRO_VERSION == "13.5.0-emix-pro"
         assert "real-e2e-ping" in emix_pro.EMIX_PRO_FEATURES
 
 
@@ -186,6 +195,7 @@ def server(tmp_path_factory):
         "PYTHONPATH": str(REPO),
     })
     env.pop("RAILWAY_PUBLIC_DOMAIN", None)
+    env["SMART_ROUTING_ENABLED"] = "false"  # v13.5: pre-default ON — tests stay hermetic
     proc = subprocess.Popen(
         [sys.executable, "main.py"], cwd=REPO, env=env,
         stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
@@ -330,7 +340,7 @@ class TestRealPingEngine:
 class TestHealthAndVersion:
     def test_deployment_version_pin(self, server):
         st, v = api(_plain_opener, server, "/api/deployment-version")
-        assert v["version"] == "13.4.1-emix-pro"
+        assert v["version"] == "13.5.0-emix-pro"
         assert "EMIX 9.2" in v["base_panel"]
         assert "real-e2e-ping" in v["features"]
 

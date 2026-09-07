@@ -27,20 +27,27 @@
 #   api            → اندپوینت‌های /api/smart-routing/*
 #
 # 🚩 Feature Flag:
-#   SMART_ROUTING_ENABLED (env، پیش‌فرض false) + settings.enabled (تگل ادمین).
+#   SMART_ROUTING_ENABLED (env) + settings.enabled (تگل ادمین).
+#   v13.5.0: پیش‌فرض flag «روشن» است — قابلیت GA شد و روی fresh-deploy
+#   بدون تنظیم دستی کار می‌کند (علت complaint کاربر: تگل ظاهراً «زود
+#   خاموش می‌شد» چون env پیش‌فرض خاموش بود). opt-out صریح:
+#   SMART_ROUTING_ENABLED=false (برای rollback کامل).
 #   وقتی خاموش است: هیچ لینکی تغییر نمی‌کند، هیچ حلقه‌ای اجرا نمی‌شود،
 #   کاربران موجود هیچ تفاوتی نمی‌بینند (rollback = false کردن flag).
 # ══════════════════════════════════════════════════════════════════════════════
 
 import os
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 MODULE_NAME = "smart-routing"
 
-# ── Feature flag (سند: پیش‌فرض false؛ بعد از تست فعال می‌شود) ──────────────────
+# ── Feature flag (v13.5.0: پیش‌فرض روشن — GA؛ opt-out با false) ──────────────────
 def env_flag() -> bool:
-    """SMART_ROUTING_ENABLED از env — پیش‌فرض false (طبق سند کاربر)."""
-    return os.environ.get("SMART_ROUTING_ENABLED", "false").strip().lower() in ("1", "true", "yes", "on")
+    """SMART_ROUTING_ENABLED از env — پیش‌فرض روشن (v13.5.0 GA).
+
+    مقدارهای false/0/no/off → خاموش (rollback صریح)؛
+    متغیر ست نشده → روشن (fresh-deploy بدون قدم دستی کار می‌کند)."""
+    return os.environ.get("SMART_ROUTING_ENABLED", "true").strip().lower() not in ("0", "false", "no", "off")
 
 
 # ── hookهای integration برای main.py (fail-safe — هرگز لینک‌سازی را نمی‌شکنند) ──

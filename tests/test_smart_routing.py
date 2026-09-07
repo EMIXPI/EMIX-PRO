@@ -1,4 +1,4 @@
-"""Phase 47 — pytest suite for EMIX-PRO Smart Routing Network v1 (13.4.0).
+"""Phase 47 — pytest suite for EMIX-PRO Smart Routing Network v1 (13.5.0 default-on).
 
 Coverage (سند SMART ROUTING NETWORK v1):
   §A  REGRESSION: flag خاموش (پیش‌فرض) → لینک‌ها بایت‌به‌بایت شکل پایه؛
@@ -19,7 +19,7 @@ Coverage (سند SMART ROUTING NETWORK v1):
   §K  Worker جدید: static checks (بدون secret/upstream هاردکد؛ replay+ts)؛
       workerهای قبلی (emix-gateway) در سورس جدید ارجاعی ندارند.
   §L  Rate limit روی discovery/test.
-  §M  Version pin 13.4.1-emix-pro.
+  §M  Version pin 13.5.0-emix-pro (v13.5: flag default-on, worker default URL).
 
 Run:  python -m pytest tests/ -q
 """
@@ -47,7 +47,7 @@ sys.path.insert(0, str(REPO))
 # (db.py مسیر را یک‌بار در import می‌خواند) — سرورهای subprocess دایرکتوری خودشان را در env می‌گیرند.
 _INPROC_DIR = Path(tempfile.mkdtemp(prefix="sr_inproc_"))
 os.environ["DATA_DIR"] = str(_INPROC_DIR)
-os.environ.pop("SMART_ROUTING_ENABLED", None)
+os.environ["SMART_ROUTING_ENABLED"] = "false"  # v13.5: پیش‌فرض روشن — تست‌های در-پروسه صریحاً خاموش
 os.environ.pop("SR_ALLOW_LOCAL_ENDPOINTS", None)
 
 
@@ -68,7 +68,7 @@ def _boot_server(tmp_path, env_extra=None):
         "PYTHONPATH": str(REPO),
     })
     env.pop("RAILWAY_PUBLIC_DOMAIN", None)
-    env.pop("SMART_ROUTING_ENABLED", None)
+    env["SMART_ROUTING_ENABLED"] = "false"  # v13.5: پیش‌فرض روشن — تست hermetic (env_extra override می‌کند)
     env.pop("SR_ALLOW_LOCAL_ENDPOINTS", None)
     for k, v in (env_extra or {}).items():
         env[k] = v
@@ -130,7 +130,8 @@ def srv_on(tmp_path_factory):
 
 @pytest.fixture(scope="session")
 def srv_off(tmp_path_factory):
-    srv = _boot_server(tmp_path_factory.mktemp("sr_off"))
+    srv = _boot_server(tmp_path_factory.mktemp("sr_off"),
+                       {"SMART_ROUTING_ENABLED": "false"})
     srv["cookie"] = _login(srv["base"])
     yield srv
     srv["proc"].kill()
@@ -575,7 +576,7 @@ class TestConfigBuilderIntegration:
     def test_emission_flag_off_identical(self, inproc, monkeypatch):
         import main
         import smart_routing.db as db
-        monkeypatch.delenv("SMART_ROUTING_ENABLED", raising=False)
+        monkeypatch.setenv("SMART_ROUTING_ENABLED", "false")  # v13.5: خاموش صریح (پیش‌فرض روشن شد)
         db.set_setting("enabled", True)
         uid = "05bdffc0-a663-05fa-3797-a0b0335909ff"
         main.LINKS[uid] = {"label": "t2", "protocol": "vless-ws", "active": True,
@@ -755,9 +756,9 @@ class TestRateLimit:
 class TestVersion:
     def test_version_pin(self, srv_on):
         st, d = _api(srv_on["base"], srv_on["cookie"], "GET", "/api/deployment-version")
-        assert d["version"] == "13.4.1-emix-pro"
+        assert d["version"] == "13.5.0-emix-pro"
         assert "smart-routing-v1" in d["features"]
 
     def test_module_version(self):
         import smart_routing
-        assert smart_routing.__version__ == "1.0.0"
+        assert smart_routing.__version__ == "1.1.0"

@@ -8,6 +8,7 @@
 # ══════════════════════════════════════════════════════════════════════════════
 
 import json
+import os
 import time
 
 import httpx
@@ -15,6 +16,10 @@ import httpx
 from . import db, security
 
 WORKER_NAME = "emix-smart-routing-v1"
+
+# v13.5.0: Worker پیش‌فرض پروژه — روی fresh-deploy بدون ثبت دستی، discovery و
+# مسیریابی از همین فرانت شروع می‌شوند (public URL؛ secret هرگز hardcode نمی‌شود).
+DEFAULT_WORKER_URL = "https://emix-smart-routing-v1.personalemixone.workers.dev"
 
 
 # ⚠ UA: لبه‌ی Cloudflare درخواست‌های client پیش‌فرض (python-httpx/…) را با خطای 1010
@@ -24,12 +29,24 @@ _UA = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
 
 
 def worker_base() -> str:
+    """URL پایه‌ی Worker — ثبت ادمین، یا پیش‌فرض پروژه (v13.5.0).
+
+    تمایز صادق: row ثبت‌نشده → پیش‌فرض (fresh-deploy کار می‌کند)؛
+    ثبتِ خالیِ صریح (پاک‌کردن از UI) → غیرفعال‌سازی (NOT_CONFIGURED)."""
     u = (db.get_setting("worker_url") or "").strip()
-    return u.rstrip("/")
+    if u:
+        return u.rstrip("/")
+    if db.has_setting("worker_url"):
+        return ""                  # ادمین صریحاً پاک کرده
+    return DEFAULT_WORKER_URL
 
 
 def worker_key() -> str:
-    return (db.get_setting("worker_key") or "").strip()
+    """کلید HMAC — DB (ثبت UI/API) یا env SR_SIGNING_KEY (Railway variable)."""
+    k = (db.get_setting("worker_key") or "").strip()
+    if k:
+        return k
+    return (os.environ.get("SR_SIGNING_KEY") or "").strip()
 
 
 def has_worker() -> bool:
@@ -129,7 +146,9 @@ async def worker_full_check() -> dict:
 # DEGRADED       : deployed + امضا معتبر اما upstream خراب
 # FAILED         : Worker در دسترس نیست (unreachable / غیر JSON)
 def _derive_state(check: dict) -> str:
-    if not (check.get("base") and worker_key()):
+    # v13.5.0: بدون URL → NOT_CONFIGURED؛ با URL ولی بدون کلید، Worker هنوز
+    # بررسی‌پذیر است (health بدون امضا) → DEPLOYED/FAILED صادقانه (نه NOT_CONFIGURED).
+    if not check.get("base"):
         return "NOT_CONFIGURED"
     h = check.get("health") or {}
     if not isinstance(h, dict) or not h.get("ok"):
@@ -172,18 +191,20 @@ def worker_state() -> dict:
     """state فعلی Worker از آخرین بررسی real (persisted) — بدون ادعای جعلی.
 
     هیچ عدد/وضعیتی ساخته نمی‌شود؛ فقط نتیجه‌ی آخرین worker_full_check
-    واقعی برگردانده می‌شود (یا REGISTERED اگر هنوز بررسی نشده)."""
+    واقعی برگردانده می‌شود (یا REGISTERED اگر هنوز بررسی نشده).
+    v13.5.0: key_missing → کلید امضا (DB/env) موجود نیست — بررسی HMAC
+    ممکن نیست، اما URL ثبت/پیش‌فرض شده است."""
     base = worker_base()
     key = worker_key()
-    if not (base and key):
+    if not base:
         return {"state": "NOT_CONFIGURED", "worker": WORKER_NAME, "base": None,
-                "checked": False, "last_check": None}
+                "checked": False, "key_missing": not key, "last_check": None}
     last = db.get_setting("worker_check") or None
     if not isinstance(last, dict) or not last.get("state"):
         return {"state": "REGISTERED", "worker": WORKER_NAME, "base": base,
-                "checked": False, "last_check": None}
+                "checked": False, "key_missing": not key, "last_check": None}
     return {"state": last.get("state"), "worker": WORKER_NAME, "base": base,
-            "checked": True, "last_check": last}
+            "checked": True, "key_missing": not key, "last_check": last}
 
 
 # ── verify درخواست ورودی worker → panel ─────────────────────────────────────

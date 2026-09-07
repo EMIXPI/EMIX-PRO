@@ -3,6 +3,34 @@
 تمام تغییرات قابل‌توجه این پروژه در این فایل ثبت می‌شود.
 قالب بر اساس [Keep a Changelog](https://keepachangelog.com/) است.
 
+## [13.5.0-emix-pro] — 2026-09-07
+
+### SMART ROUTING DEFAULT-ON (GA) + UX Fixes
+
+- **ریشه‌ی «تگل زود خاموش می‌شد»**: روی fresh-deploy متغیر
+  `SMART_ROUTING_ENABLED` پیش‌فرض خاموش بود → ادمین تگل را روشن می‌کرد،
+  اما `active = settings_enabled && env_flag` بعد از رفرش دوباره خاموش
+  دیده می‌شد. **v13.5.0: پیش‌فرض flag روشن است** (GA)؛ opt-out صریح با
+  `SMART_ROUTING_ENABLED=false` (rollback کامل، همان رفتار قبلی).
+- **Worker Cloudflare به‌طور پیش‌فرض ست شد**: `worker_url` پیش‌فرض =
+  `https://emix-smart-routing-v1.personalemixone.workers.dev` (public URL —
+  secret نیست)؛ کلید امضا از env `SR_SIGNING_KEY` یا فرم ثبت خوانده می‌شود.
+  Discovery بدون ثبت دستی، endpoint فرانت Worker را کشف می‌کند — بخش
+  «Endpointهای کشف‌شده» دیگر روی نسخه‌ی تازه خالی نمی‌ماند.
+- **`settings.enabled` پیش‌فرض روشن**: fresh-deploy بدون تگل دستی، discovery
+  و health-loop را از boot شروع می‌کند (row DB → override ادمین حفظ می‌شود).
+- **Worker state machine صادق‌تر**: بدون کلید امضا، Worker هنوز
+  DEPLOYED/FAILED قابل-بررسی است (health بدون امضا) — `key_missing` در
+  پاسخ state برگردانده می‌شود و UI توضیح می‌دهد «بررسی HMAC ممکن نیست».
+- **UI مسیریابی هوشمند**: تگل «روشن/خاموش» حالا اگر env flag صریحاً خاموش
+  باشد، خودکار `enable-env-flag` را روی Railway صدا می‌زند (redeploy خودکار)؛
+  رفرش‌های تأخیری (۵s/۱۵s) بعد از روشن‌کردن تا بخش‌ها با discovery واقعی
+  پر شوند؛ **به‌روزرسانی زنده هر ۳۰ ثانیه** وقتی صفحه باز است؛ متن
+  هشدار flag برای معنای جدید به‌روز شد.
+- **پاپ‌آپ «حمایت از سازنده»**: لینک گیت‌هاب به پروژه‌ی فعلی
+  **EMIX-PRO** (`github.com/EMIXPI/EMIX-PRO`) تغییر کرد — لینک قبلی به
+  پروژه‌ی پایه‌ی EMIX اشاره می‌کرد.
+
 ## [13.4.1-emix-pro] — 2026-09-07
 
 ### CURRENT STATE AUDIT & FINAL INTEGRATION (Phase 49)

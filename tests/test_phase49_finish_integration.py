@@ -1,6 +1,6 @@
 # tests/test_phase49_finish_integration.py
 # ══════════════════════════════════════════════════════════════════════════════
-# EMIX-PRO v13.4.1 — «CURRENT STATE AUDIT & FINAL INTEGRATION» (Phase 49)
+# EMIX-PRO v13.5.0 — DEFAULT-ON GA + finish-integration regression (Phase 49/50)
 # پوشش سند کاربر (AUDIT AND FINISH — نه پیاده‌سازی موازی):
 #
 #   §1  Worker state machine — حالت‌های جدا و صادق:
@@ -37,7 +37,7 @@ sys.path.insert(0, str(REPO))
 
 _PROC_DIR = Path(tempfile.mkdtemp(prefix="p49_inproc_"))
 os.environ["DATA_DIR"] = str(_PROC_DIR)
-os.environ.pop("SMART_ROUTING_ENABLED", None)
+os.environ["SMART_ROUTING_ENABLED"] = "false"  # v13.5: پیش‌فرض روشن شد — تست‌ها صریحاً خاموش (hermetic)
 os.environ.pop("SR_ALLOW_LOCAL_ENDPOINTS", None)
 
 
@@ -71,7 +71,7 @@ def _boot_server(tmp_path, env_extra=None):
         "PYTHONPATH": str(REPO),
     })
     env.pop("RAILWAY_PUBLIC_DOMAIN", None)
-    env.pop("SMART_ROUTING_ENABLED", None)
+    env["SMART_ROUTING_ENABLED"] = "false"  # v13.5: پیش‌فرض روشن — تست hermetic می‌ماند (مگر env_extra override کند)
     env.pop("SR_ALLOW_LOCAL_ENDPOINTS", None)
     for k, v in (env_extra or {}).items():
         env[k] = v
@@ -410,4 +410,4 @@ class TestRegressionCore49:
 
     def test_version_bumped(self):
         src = (REPO / "emix_pro.py").read_text(encoding="utf-8")
-        assert "13.4.1-emix-pro" in src, "نسخه باید 13.4.1 باشد"
+        assert "13.5.0-emix-pro" in src, "نسخه باید 13.5.0 باشد"

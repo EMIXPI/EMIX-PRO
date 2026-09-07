@@ -50,6 +50,7 @@ def server(tmp_path_factory):
         "PYTHONPATH": str(REPO),
     })
     env.pop("RAILWAY_PUBLIC_DOMAIN", None)
+    env["SMART_ROUTING_ENABLED"] = "false"  # v13.5: pre-default ON — tests stay hermetic
     proc = subprocess.Popen(
         [sys.executable, "main.py"], cwd=REPO, env=env,
         stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
@@ -460,7 +461,7 @@ class TestRegression:
     def test_version_13_4(self, server, session):
         st, d = api(session, server["base"], "/api/deployment-version")
         assert st == 200
-        assert d["version"] == "13.4.1-emix-pro", d
+        assert d["version"] == "13.5.0-emix-pro", d
 
     def test_existing_login_still_works(self, server, session):
         st, d = api(session, server["base"], "/api/links")

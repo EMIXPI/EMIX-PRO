@@ -157,9 +157,9 @@ def _add_column_safe(table: str, column: str, ddl: str) -> None:
 
 # ── settings ──────────────────────────────────────────────────────────────────
 DEFAULT_SETTINGS = {
-    "enabled": False,               # تگل ادمین (فقط وقتی env flag هم روشن است اثر دارد)
-    "worker_url": "",               # https://emix-smart-routing-v1.<account>.workers.dev
-    "worker_key": "",               # کلید HMAC مشترک (ثبت‌شده از UI/API — هرگز hardcode)
+    "enabled": True,               # v13.5.0: پیش‌فرض روشن — fresh-deploy بدون تگل دستی کار می‌کند (row DB → override ادمین)
+    "worker_url": "https://emix-smart-routing-v1.personalemixone.workers.dev",  # v13.5.0: Worker پیش‌فرض پروژه (public URL — secret نیست)
+    "worker_key": "",               # کلید HMAC مشترک (ثبت‌شده از UI/API یا env SR_SIGNING_KEY — هرگز hardcode)
     "score_weights": {              # وزن‌های قابل‌تنظیم (جمع = 1)
         "latency": 0.30, "jitter": 0.15, "packet_loss": 0.20,
         "uptime": 0.15, "availability": 0.10, "egress": 0.10,
@@ -188,6 +188,18 @@ def get_setting(key: str, default=None):
         return json.loads(row["value"])
     except Exception:
         return DEFAULT_SETTINGS.get(key, default)
+
+
+def has_setting(key: str) -> bool:
+    """آیا row تنظیم وجود دارد؟ (تمایز «هرگز ثبت نشده» از «ثبتِ خالیِ صریح»)"""
+    try:
+        with _LOCK:
+            row = _connect().execute(
+                "SELECT value FROM smart_settings WHERE key=?", (key,)
+            ).fetchone()
+        return row is not None
+    except Exception:
+        return False
 
 
 def set_setting(key: str, value) -> None:

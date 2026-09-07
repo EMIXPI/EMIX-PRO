@@ -98,8 +98,13 @@ async def discover_from_panel_links() -> list[dict]:
 
 
 async def discover_from_worker() -> list[dict]:
-    """منبع ۲ — Worker جدید (emix-smart-routing-v1)؛ فقط اگر URL ثبت شده باشد."""
-    wurl = (db.get_setting("worker_url") or "").strip()
+    """منبع ۲ — Worker جدید (emix-smart-routing-v1).
+
+    v13.5.0: از worker_client.worker_base() خوانده می‌شود — یعنی URL ثبت‌شده‌ی
+    ادمین «یا پیش‌فرض پروژه»؛ روی fresh-deploy بدون ثبت دستی، فرانت Worker
+    کشف می‌شود (بخش خالی نمی‌ماند)."""
+    from . import worker_client
+    wurl = worker_client.worker_base().strip()
     if not wurl:
         return []
     ok, reason = security.ssrf_safe_url(wurl)
