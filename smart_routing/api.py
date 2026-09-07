@@ -27,11 +27,21 @@ def register_routes(app) -> None:
     from main import require_auth, LINKS, LINKS_LOCK, log_activity, save_state, \
         generate_share_link, get_host
 
-    # ── startup: schema additive + شروع حلقه‌ها فقط اگر flag+settings روشن ────
+    # ── startup: schema additive + پیش‌فرض‌های پروژه + شروع حلقه‌ها ─────────
     @app.on_event("startup")
     async def _sr_startup():
         try:
             db.ensure_schema()
+            # v13.6.0: مقادیر پیش‌فرض پروژه در «هر دیپلوی/ری‌دیپلوی» به‌صورت row
+            # واقعی در DB ست می‌شوند (idempotent — مقدار ادمین هرگز بازنویسی
+            # نمی‌شود؛ فقط کلیدهای غایب پر می‌شوند).
+            try:
+                written = db.materialize_defaults()
+                if written:
+                    db.add_event("engine", "پیش‌فرض‌های پروژه ست شد: " + ", ".join(written)
+                                 + " (v13.6.0 — با هر دیپلوی خودکار اعمال می‌شود)")
+            except Exception as e:
+                db.add_event("engine", f"materialize_defaults خطا: {str(e)[:80]}")
             db.add_event("engine", f"Smart Routing v{__import__('smart_routing').__version__} "
                                    f"بارگذاری شد (env_flag={env_flag()})")
             engine.start_background()      # فقط وقتی env flag + settings هر دو روشن

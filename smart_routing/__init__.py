@@ -38,10 +38,25 @@
 
 import os
 
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 MODULE_NAME = "smart-routing"
 
-# ── Feature flag (v13.5.0: پیش‌فرض روشن — GA؛ opt-out با false) ──────────────────
+# ── Project-baked defaults (v13.6.0) ──────────────────────────────────────────
+# درخواست صریح مالک پروژه: «مقادیر با هر دیپلوی/ری‌دیپلوی خودکار ست شوند».
+# این کلید امضای HMAC پیش‌فرضِ پروژه است تا fresh-deploy بدون هیچ قدم دستی،
+# Worker را HEALTHY ببیند (URL + کلید هر دو از پروژه می‌آیند).
+#
+# 🔐 ملاحظه‌ی امنیتی صادقانه: این کلید «سری» نیست (repo عمومی است)؛ فقط
+# یک shared-secret تشخیصی است که اندپوینت‌های /sr/* دیاگنوستیک Worker و
+# report ورودی پنل را ضد سوءاستفاده/گزارش جعلی می‌گیرد — به هیچ داده‌ی
+# حساسی دسترسی نمی‌دهد. اپراتور که کلید اختصاصی می‌خواهد: SR_SIGNING_KEY
+# (env Railway) یا فرم ثبت کلید در UI → هر دو بر این پیش‌فرض اولویت دارند.
+PROJECT_SIGNING_KEY = "emix-sr-v1-PgoGyDWhGeJHKiuH4aPU3K0nSns_TzJ4Vn56_4s1phM"
+
+# پیش‌فرض فرانت Cloudflare Worker پروژه (public — سرویس تشخیصی است)
+PROJECT_WORKER_URL = "https://emix-smart-routing-v1.personalemixone.workers.dev"
+
+
 def env_flag() -> bool:
     """SMART_ROUTING_ENABLED از env — پیش‌فرض روشن (v13.5.0 GA).
 

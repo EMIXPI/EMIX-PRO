@@ -311,6 +311,13 @@ async def startup():
     )
     await load_state()
     await _restart_mtproto_instances()
+    # v13.6.0 — Volume ریلوی: تشخیص پایداری + پیوست خودکار در صورت نبود
+    # (برای boot هرگز بلاک‌کننده نیست؛ در محیط لوکال/با mount موجود = no-op)
+    try:
+        import volume_bootstrap
+        asyncio.create_task(volume_bootstrap.ensure_volume())
+    except Exception as e:
+        logger.warning(f"volume bootstrap skipped: {e}")
     log_activity("system", "سرور راه‌اندازی شد", "ok")
     logger.info(f"EMIX v9.2 started on port {CONFIG['port']}")
 
@@ -3051,10 +3058,16 @@ turbo_boost.register_routes(app)
 # ─────────────────────────────────────────────────────────────────────────────
 # ماژول مستقل مسیریابی هوشمند: discovery + verify واقعی (egress/geo/latency/
 # jitter/loss) + pool پویا + failover + Worker جدید Cloudflare. SNI Spoofing و
-# هسته‌ی پروتکل‌ها دست‌نخورده؛ وقتی SMART_ROUTING_ENABLED خاموش است (پیش‌فرض)
-# هیچ لینک و هیچ رفتاری تغییر نمی‌کند — rollback = خاموش کردن flag.
+# هسته‌ی پروتکل‌ها دست‌نخورده؛ وقتی SMART_ROUTING_ENABLED خاموش است (opt-out
+# صریح) هیچ لینک و هیچ رفتاری تغییر نمی‌کند — rollback = خاموش کردن flag.
 import smart_routing      # noqa: E402
 smart_routing.register_routes(app)
+
+# ══════════════════════════════════════════════════════════════════════════════
+# EMIX-PRO v13.6 — Volume ریلوی: تشخیص پایداری + پیوست خودکار (در boot)
+# ─────────────────────────────────────────────────────────────────────────────
+import volume_bootstrap   # noqa: E402
+volume_bootstrap.register_routes(app)
 
 
 @app.middleware("http")

@@ -19,6 +19,9 @@ from pathlib import Path
 # circular import؛ سمت پروداکشن Railway آن را /data ست می‌کند).
 DB_FILE = Path(os.environ.get("DATA_DIR", "/data")) / "smart_routing.db"
 
+# مقدارهای پیش‌فرض پروژه از پکیج (v13.6.0 — در یک منبع واحد تعریف می‌شوند)
+from . import PROJECT_SIGNING_KEY as _PROJECT_KEY, PROJECT_WORKER_URL as _PROJECT_WORKER_URL  # noqa: E402
+
 _LOCK = threading.RLock()
 _CONN: sqlite3.Connection | None = None
 
@@ -158,8 +161,8 @@ def _add_column_safe(table: str, column: str, ddl: str) -> None:
 # ── settings ──────────────────────────────────────────────────────────────────
 DEFAULT_SETTINGS = {
     "enabled": True,               # v13.5.0: پیش‌فرض روشن — fresh-deploy بدون تگل دستی کار می‌کند (row DB → override ادمین)
-    "worker_url": "https://emix-smart-routing-v1.personalemixone.workers.dev",  # v13.5.0: Worker پیش‌فرض پروژه (public URL — secret نیست)
-    "worker_key": "",               # کلید HMAC مشترک (ثبت‌شده از UI/API یا env SR_SIGNING_KEY — هرگز hardcode)
+    "worker_url": _PROJECT_WORKER_URL,   # v13.6.0: Worker پیش‌فرض پروژه (public URL)
+    "worker_key": _PROJECT_KEY,   # v13.6.0: کلید HMAC پیش‌فرض پروژه — fresh-deploy بدون قدم دستی HEALTHY (env/DB ادمین مقدم‌اند)
     "score_weights": {              # وزن‌های قابل‌تنظیم (جمع = 1)
         "latency": 0.30, "jitter": 0.15, "packet_loss": 0.20,
         "uptime": 0.15, "availability": 0.10, "egress": 0.10,
@@ -230,6 +233,30 @@ def all_settings() -> dict:
         out["worker_key_masked"] = (k[:4] + "…" + k[-4:]) if len(k) > 8 else "…"
     out.pop("worker_key", None)
     return out
+
+
+# ── materialize_defaults (v13.6.0) ─────────────────────────────────────────────
+# درخواست مالک پروژه: «مقادیر با هر دیپلوی/ری‌دیپلوی خودکار ست شوند».
+# در هر boot اجرا می‌شود و پیش‌فرض‌های پروژه را به‌صورت row واقعی در DB می‌نویسد
+# — فقط وقتی row وجود ندارد (هرگز مقدار ادمین را بازنویسی نمی‌کند؛ idempotent).
+MATERIALIZED_KEYS = ("enabled", "worker_url", "worker_key")
+
+
+def materialize_defaults() -> list[str]:
+    """پیش‌فرض‌های پروژه را در DB «ست» می‌کند (فقط کلیدهای غایب).
+
+    برمی‌گرداند: لیست کلیدهایی که در این boot نوشته شدند (برای event/log).
+    Volume پایدار → rowها موجودند → هیچ‌چیز نوشته نمی‌شود (رفتار موجود
+    دست‌نخورده). fresh-deploy/Volume تازه → همه‌ی مقادیر پروژه ست می‌شوند."""
+    written = []
+    for key in MATERIALIZED_KEYS:
+        try:
+            if not has_setting(key) and key in DEFAULT_SETTINGS:
+                set_setting(key, DEFAULT_SETTINGS[key])
+                written.append(key)
+        except Exception:
+            pass
+    return written
 
 
 # ── endpoints ─────────────────────────────────────────────────────────────────

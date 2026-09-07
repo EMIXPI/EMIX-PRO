@@ -3,7 +3,8 @@
 # Worker: emix-smart-routing-v1 (کاملاً جدید — workerهای قبلی EMIX دست‌نخورده‌اند).
 #   • panel → worker: درخواست امضاشده (HMAC + ts + nonce + replay protection)
 #   • worker → panel: همان طرح در جهت برگشت (گزارش cron)
-#   • secret: هرگز hardcode — ثبت از UI/API در smart_settings (ذخیره در Volume)
+#   • secret: v13.6.0 — پیش‌فرض پروژه (PROJECT_SIGNING_KEY) + override با env
+#     SR_SIGNING_KEY یا ثبت UI/API در smart_settings (هر دو مقدم‌اند).
 #   • Worker فقط component شبکه‌ای/control-plane است — «VPN exit جادویی» نیست.
 # ══════════════════════════════════════════════════════════════════════════════
 
@@ -14,12 +15,15 @@ import time
 import httpx
 
 from . import db, security
+from . import PROJECT_SIGNING_KEY, PROJECT_WORKER_URL
 
 WORKER_NAME = "emix-smart-routing-v1"
 
 # v13.5.0: Worker پیش‌فرض پروژه — روی fresh-deploy بدون ثبت دستی، discovery و
-# مسیریابی از همین فرانت شروع می‌شوند (public URL؛ secret هرگز hardcode نمی‌شود).
-DEFAULT_WORKER_URL = "https://emix-smart-routing-v1.personalemixone.workers.dev"
+# مسیریابی از همین فرانت شروع می‌شوند (public URL).
+# v13.6.0: URL + کلید امضا هر دو از پروژه می‌آیند (درخواست مالک: مقادیر با
+# هر دیپلوی خودکار ست شوند) — کلید اختصاصی اپراتور (env/DB) اولویت دارد.
+DEFAULT_WORKER_URL = PROJECT_WORKER_URL
 
 
 # ⚠ UA: لبه‌ی Cloudflare درخواست‌های client پیش‌فرض (python-httpx/…) را با خطای 1010
@@ -42,11 +46,42 @@ def worker_base() -> str:
 
 
 def worker_key() -> str:
-    """کلید HMAC — DB (ثبت UI/API) یا env SR_SIGNING_KEY (Railway variable)."""
-    k = (db.get_setting("worker_key") or "").strip()
+    """کلید HMAC — ترتیب اولویت: DB (ثبت UI/API) → env SR_SIGNING_KEY →
+    کلید پیش‌فرض پروژه (v13.6.0 — با هر دیپلوی خودکار ست می‌شود).
+
+    نتیجه: fresh-deploy بدون هیچ قدم دستی، امضای HMAC معتبر دارد و Worker
+    بلافاصله HEALTHY است. کلید اختصاصی اپراتور همیشه بر پیش‌فرض مقدم است.
+    (has_setting برای تمایز row واقعی از مقدار پیش‌فرضِ db لازم است — وگرنه
+    پیش‌فرضِ db سایه‌ی env می‌شد.)"""
+    row = db.get_setting("worker_key") if db.has_setting("worker_key") else ""
+    k = (row or "").strip()
     if k:
         return k
-    return (os.environ.get("SR_SIGNING_KEY") or "").strip()
+    k = (os.environ.get("SR_SIGNING_KEY") or "").strip()
+    if k:
+        return k
+    return PROJECT_SIGNING_KEY
+
+
+def worker_key_source() -> str:
+    """منبع کلید فعال — برای نمایش صادق در UI (db / env / project-default)."""
+    if db.has_setting("worker_key") and (db.get_setting("worker_key") or "").strip():
+        return "db"
+    if (os.environ.get("SR_SIGNING_KEY") or "").strip():
+        return "env"
+    return "project-default"
+
+
+def _candidate_keys() -> list[str]:
+    """کلیدهای کاندید برای self-heal — اولویت‌دار و بدون تکرار."""
+    seen, out = set(), []
+    for k in (worker_key(),
+              (os.environ.get("SR_SIGNING_KEY") or "").strip(),
+              PROJECT_SIGNING_KEY):
+        if k and k not in seen:
+            seen.add(k)
+            out.append(k)
+    return out
 
 
 def has_worker() -> bool:
@@ -54,12 +89,13 @@ def has_worker() -> bool:
 
 
 async def _signed_call(method: str, path: str, body: dict | None = None,
-                       timeout: float = 20.0) -> dict:
+                       timeout: float = 20.0, key: str | None = None) -> dict:
     """درخواست امضاشده به Worker — خطاها honest برمی‌گردند (نه سبز جعلی).
 
-    امضا روی «بدنه‌ی واقعاً ارسال‌شده» محاسبه می‌شود (GET بدون body → b"")."""
+    امضا روی «بدنه‌ی واقعاً ارسال‌شده» محاسبه می‌شود (GET بدون body → b"").
+    key اختیاری: برای self-heal (امتحان کاندیدهای دیگر) قابل override است."""
     base = worker_base()
-    key = worker_key()
+    key = key or worker_key()
     if not base or not key:
         return {"ok": False, "error": "worker ثبت نشده (URL/کلید)"}
     send_body = (json.dumps(body or {}, ensure_ascii=False).encode()
@@ -127,8 +163,31 @@ async def worker_full_check() -> dict:
         "probe_upstream": None,
     }
     if has_worker():
-        out["edge_info"] = await worker_edge_info()
-        out["probe_upstream"] = await worker_probe_upstream()
+        # ── self-heal کلید (v13.6.0) ──────────────────────────────────────
+        # اگر کلید فعلی (مثلاً کلید قدیمی ثبت‌شده در DB) با Worker امتبا نداشت،
+        # کاندیدهای دیگر (env / کلید پیش‌فرض پروژه) امتحان می‌شوند؛ اولین کلید
+        # معتبر در DB ذخیره می‌شود تا بررسی بعدی مستقیم کار کند.
+        active_key = worker_key()
+        out["edge_info"] = await _signed_call("GET", "/sr/edge-info", key=active_key)
+        ei = out["edge_info"] or {}
+        if not ei.get("ok") and not _auth_probably_missing_key(ei):
+            for cand in _candidate_keys()[1:]:
+                cand_ei = await _signed_call("GET", "/sr/edge-info", key=cand)
+                if (cand_ei or {}).get("ok"):
+                    out["edge_info"] = cand_ei
+                    active_key = cand
+                    try:
+                        db.set_setting("worker_key", cand)
+                        db.add_event("worker", "کلید امضای Worker خودکار به‌روزرسانی و ذخیره شد "
+                                               "(کلید فعال پروژه اعمال شد)")
+                    except Exception:
+                        pass
+                    break
+        out["probe_upstream"] = await _signed_call(
+            "POST", "/sr/probe-upstream", {"ts": time.time()}, key=active_key)
+        pu = out["probe_upstream"] or {}
+        db.add_event("worker", f"probe-upstream از Worker: ok={pu.get('ok')} "
+                               f"({pu.get('latency_ms')}ms)")
         auth_ok = bool((out["edge_info"] or {}).get("ok"))
         out["authenticated"] = auth_ok
         db.add_event("worker", f"worker-check: authenticated={auth_ok}, "
@@ -136,6 +195,14 @@ async def worker_full_check() -> dict:
     out["state"] = _derive_state(out)
     _persist_check(out)
     return out
+
+
+def _auth_probably_missing_key(edge: dict) -> bool:
+    """آیا خطای edge_info صرفاً به‌خاطر «نبودِ کلید» است؟ (نه امضای نامعتبر).
+
+    وقتی اصلاً کلیدی موجود نیست، retry بی‌معنی است — مگر کاندید دیگری باشد."""
+    r = str((edge or {}).get("error") or "").lower()
+    return "worker ثبت نشده" in r
 
 
 # ── Worker state machine (طبق سند: Registered ≠ Deployed ≠ Healthy) ──────────
@@ -196,15 +263,19 @@ def worker_state() -> dict:
     ممکن نیست، اما URL ثبت/پیش‌فرض شده است."""
     base = worker_base()
     key = worker_key()
+    src = worker_key_source()
     if not base:
         return {"state": "NOT_CONFIGURED", "worker": WORKER_NAME, "base": None,
-                "checked": False, "key_missing": not key, "last_check": None}
+                "checked": False, "key_missing": not key, "key_source": src,
+                "last_check": None}
     last = db.get_setting("worker_check") or None
     if not isinstance(last, dict) or not last.get("state"):
         return {"state": "REGISTERED", "worker": WORKER_NAME, "base": base,
-                "checked": False, "key_missing": not key, "last_check": None}
+                "checked": False, "key_missing": not key, "key_source": src,
+                "last_check": None}
     return {"state": last.get("state"), "worker": WORKER_NAME, "base": base,
-            "checked": True, "key_missing": not key, "last_check": last}
+            "checked": True, "key_missing": not key, "key_source": src,
+            "last_check": last}
 
 
 # ── verify درخواست ورودی worker → panel ─────────────────────────────────────

@@ -43,6 +43,20 @@ This policy covers the EMIX source code in this repository. Issues in third-part
 
 We're happy to credit security researchers who responsibly report valid vulnerabilities, unless they prefer to remain anonymous.
 
+## Notable Design Decisions
+
+- **PROJECT_SIGNING_KEY (v13.6.0)**: a shared HMAC key for the Smart Routing
+  Worker's diagnostic endpoints (`/sr/*`) and inbound worker reports is baked
+  into this public repository so fresh deploys work with zero manual steps
+  (explicit owner request). It is **not a secrecy boundary**: it only
+  anti-abuse-gates rate-limited/replay-protected diagnostic endpoints and
+  never grants access to user data, credentials, or the panel admin. Operators
+  who need a private key can set the `SR_SIGNING_KEY` environment variable or
+  register a key in the panel UI — both always take precedence over the baked
+  default. Admin secrets (password hash, Railway token, per-link secrets) are
+  never hardcoded and live only in the persisted volume or environment
+  variables.
+
 ---
 
 Thank you for helping keep EMIX and its users safe.

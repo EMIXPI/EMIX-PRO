@@ -42,7 +42,7 @@ from main import (
     uptime,
 )
 
-EMIX_PRO_VERSION = "13.5.0-emix-pro"
+EMIX_PRO_VERSION = "13.6.0-emix-pro"
 EMIX_BASE_PANEL = "EMIX 9.2 (05f2f2c — healthy original state)"
 EMIX_PRO_FEATURES = [
     "real-e2e-ping",          # تست واقعی مسیر کلاینت (link_health) — با Real Delay تفکیک‌شده از TCP
@@ -54,6 +54,8 @@ EMIX_PRO_FEATURES = [
     "sni-spoof-per-link",     # جعل SNI هر کانفیگ (Mode B) + پینگ صادق از همان مسیر
     "fresh-ui-no-store",      # HTML پنل هرگز از کش مرورگر نمی‌آید
     "smart-routing-v1",       # شبکه‌ی مسیریابی هوشمند (feature-flagged؛ discovery/verify/pool/failover/worker)
+    "boot-defaults",           # v13.6: مقادیر پروژه (Worker URL/کلید/SR-on) با هر دیپلوی خودکار ست می‌شوند
+    "volume-autoboot",         # v13.6: تشخیص پایداری Volume + پیوست خودکار از طریق API ریلوی
 ]
 
 
@@ -86,7 +88,13 @@ async def _section_egress() -> dict:
 
 
 def _section_volume() -> dict:
-    """بخش‌های دیسک: دیتای پایدار روی Volume ریلوی."""
+    """بخش‌های دیسک: دیتای پایدار روی Volume ریلوی + تشخیص صادقِ mount (v13.6)."""
+    try:
+        import volume_bootstrap as vb
+        st = vb.status()
+        mount = st.get("mount") or {}
+    except Exception:
+        st, mount = {}, {}
     try:
         dd = Path(DATA_DIR)
         exists = dd.exists()
@@ -100,12 +108,28 @@ def _section_volume() -> dict:
             except Exception:
                 writable = False
         state_bytes = DATA_FILE.stat().st_size if (exists and Path(DATA_FILE).exists()) else 0
+        on_railway = bool(st.get("on_railway"))
+        persistent = bool(st.get("persistent"))
+        # روی Railway بدون mount → داده‌ها موقت‌اند (رنگ قرمز صادق)؛
+        # لوکال بدون mount فقط اطلاع‌رسانی است (خبر قرمز نیست).
+        ok = exists and writable and (persistent or not on_railway)
         return {
-            "ok": exists and writable,
+            "ok": ok,
             "data_dir": str(DATA_DIR),
             "exists": exists,
             "writable": writable,
             "state_file_bytes": state_bytes,
+            "persistent": persistent,
+            "mounted": persistent,
+            "mount_fstype": mount.get("fstype") or None,
+            "on_railway": on_railway,
+            "at_risk": bool(st.get("at_risk")),
+            "auto_attach_enabled": bool(st.get("auto_attach_enabled")),
+            "note": ("Volume متصل — داده‌ها بین دیپلوی‌ها پایدارند" if persistent else
+                     ("⚠ روی Railway هستیم ولی DATA_DIR روی Volume mount نیست — "
+                      "داده‌ها با هر redeploy پاک می‌شوند؛ Volume از boot خودکار"
+                      " ساخته/وصل می‌شود اگر RAILWAY_TOKEN موجود باشد" if on_railway else
+                      "اجراهای لوکال — پایداری Volume مربوط به Railway است")),
         }
     except Exception as exc:
         return {"ok": False, "error": f"{type(exc).__name__}: {str(exc)[:100]}"}

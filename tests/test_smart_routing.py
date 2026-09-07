@@ -756,9 +756,9 @@ class TestRateLimit:
 class TestVersion:
     def test_version_pin(self, srv_on):
         st, d = _api(srv_on["base"], srv_on["cookie"], "GET", "/api/deployment-version")
-        assert d["version"] == "13.5.0-emix-pro"
+        assert d["version"] == "13.6.0-emix-pro"
         assert "smart-routing-v1" in d["features"]
 
     def test_module_version(self):
         import smart_routing
-        assert smart_routing.__version__ == "1.1.0"
+        assert smart_routing.__version__ == "1.2.0"

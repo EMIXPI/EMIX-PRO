@@ -200,11 +200,12 @@ class TestWorkerPersistenceAPI:
             H = _login(base)
             code, d = _api(base, "/api/smart-routing/status", H)
             assert code == 200
-            # state فقط از آخرین بررسی واقعی می‌آید — اینجا NOT_CONFIGURED صادق
+            # v13.6: fresh boot → URL/کلید پروژه materialize شده‌اند → registered=True
+            # صادق؛ state هنوز «REGISTERED» است چون بررسی واقعی انجام نشده.
             w = d.get("worker") or {}
             assert w.get("state", {}).get("state") in (
                 "NOT_CONFIGURED", "REGISTERED")
-            assert w.get("registered") is False
+            assert w.get("registered") is True
         finally:
             proc.kill()
 
@@ -410,4 +411,4 @@ class TestRegressionCore49:
 
     def test_version_bumped(self):
         src = (REPO / "emix_pro.py").read_text(encoding="utf-8")
-        assert "13.5.0-emix-pro" in src, "نسخه باید 13.5.0 باشد"
+        assert "13.6.0-emix-pro" in src, "نسخه باید 13.6.0 باشد"

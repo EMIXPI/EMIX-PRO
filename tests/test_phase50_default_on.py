@@ -18,6 +18,7 @@
 import importlib
 import json
 import os
+import re
 import socket
 import subprocess
 import sys
@@ -162,9 +163,10 @@ class TestWorkerClientDefaults:
 
     def test_worker_state_registered_key_missing_honest(self, tmp_path):
         sdb, wc = _reload_modules(tmp_path)
-        st = wc.worker_state()          # fresh DB → URL پیش‌فرض، بدون کلید
+        st = wc.worker_state()          # fresh DB → URL پیش‌فرض پروژه + کلید پروژه (v13.6)
         assert st["state"] == "REGISTERED"   # NOT_CONFIGURED نیست — URL هست
-        assert st["key_missing"] is True     # صداقت: بررسی HMAC ممکن نیست
+        assert st["key_missing"] is False    # v13.6: کلید پیش‌فرض پروژه موجود است
+        assert st["key_source"] == "project-default"  # منبع صادق
         assert st["base"] == wc.DEFAULT_WORKER_URL
 
     def test_worker_state_no_key_missing_when_key_present(self, tmp_path):
@@ -240,11 +242,14 @@ class TestFreshDeployEngineOn:
             assert eng["settings_enabled"] is True, "پیش‌فرض v13.5: settings روشن"
             assert eng["active"] is True, "تگل دیگر «زود خاموش» نمی‌شود"
             assert eng["running_loops"] is True, "حلقه‌های discovery/health از boot"
-            # Worker پیش‌فرض: state صادق (URL هست؛ کلید ندارد)
+            # Worker پیش‌فرض: state صادق (URL و کلید پروژه از v13.6 موجودند)
             w = d["worker"]
             assert w["url"] == "https://emix-smart-routing-v1.personalemixone.workers.dev"
             assert w["state"]["state"] in ("REGISTERED", "DEPLOYED", "HEALTHY")
-            assert w["state"].get("key_missing") is True
+            assert w["state"].get("key_missing") is False, \
+                "v13.6: کلید پروژه → بررسی HMAC از boot ممکن است"
+            assert w["state"].get("key_source") in ("db", "project-default"), \
+                "v13.6: مقدار پروژه در boot materialize شده → db (با مقدار پروژه) صادق است"
             # تنظیمات API هم پیش‌فرض‌ها را نشان می‌دهد
             code, s = _api(base, H, "GET", "/api/smart-routing/settings")
             assert code == 200 and s["settings"]["enabled"] is True
@@ -297,7 +302,7 @@ class TestUIMarkers:
         assert "__srLiveTimer" in self.PAGES, "به‌روزرسانی زنده‌ی صفحه‌ی smart"
 
     def test_worker_default_note(self):
-        assert "URL پیش‌فرض این نسخه ست شده است" in self.PAGES
+        assert "به‌طور پیش‌فرض در پروژه ست شده‌اند" in self.PAGES
         assert "SR_SIGNING_KEY" in self.PAGES
 
     def test_key_missing_hint_in_worker_state(self):
@@ -305,7 +310,15 @@ class TestUIMarkers:
 
     def test_worker_client_default_url_constant(self):
         src = (REPO / "smart_routing" / "worker_client.py").read_text(encoding="utf-8")
-        assert 'DEFAULT_WORKER_URL = "https://emix-smart-routing-v1.personalemixone.workers.dev"' in src
+        assert "DEFAULT_WORKER_URL = PROJECT_WORKER_URL" in src
+        init = (REPO / "smart_routing" / "__init__.py").read_text(encoding="utf-8")
+        assert 'PROJECT_WORKER_URL = "https://emix-smart-routing-v1.personalemixone.workers.dev"' in init
+
+    def test_project_signing_key_baked(self):
+        """v13.6: کلید پروژه در repo — با هر دیپلوی مقادیر ست می‌شوند."""
+        init = (REPO / "smart_routing" / "__init__.py").read_text(encoding="utf-8")
+        m = re.search(r'PROJECT_SIGNING_KEY = "([^"]+)"', init)
+        assert m and len(m.group(1)) >= 30, "کلید امضای پیش‌فرض پروژه باید baked باشد"
 
     def test_env_flag_default_true_in_code(self):
         src = (REPO / "smart_routing" / "__init__.py").read_text(encoding="utf-8")
@@ -313,4 +326,4 @@ class TestUIMarkers:
 
     def test_version_1350(self):
         src = (REPO / "emix_pro.py").read_text(encoding="utf-8")
-        assert 'EMIX_PRO_VERSION = "13.5.0-emix-pro"' in src
+        assert 'EMIX_PRO_VERSION = "13.6.0-emix-pro"' in src

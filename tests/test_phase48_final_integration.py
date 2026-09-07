@@ -461,7 +461,7 @@ class TestRegression:
     def test_version_13_4(self, server, session):
         st, d = api(session, server["base"], "/api/deployment-version")
         assert st == 200
-        assert d["version"] == "13.5.0-emix-pro", d
+        assert d["version"] == "13.6.0-emix-pro", d
 
     def test_existing_login_still_works(self, server, session):
         st, d = api(session, server["base"], "/api/links")

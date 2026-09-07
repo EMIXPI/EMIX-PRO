@@ -3,6 +3,49 @@
 تمام تغییرات قابل‌توجه این پروژه در این فایل ثبت می‌شود.
 قالب بر اساس [Keep a Changelog](https://keepachangelog.com/) است.
 
+## [13.6.0-emix-pro] — 2026-09-07
+
+### BOOT VALUES + VOLUME AUTO-ATTACH (درخواست مالک: «با هر دیپلوی/ری‌دیپلوی مقادیر ست شوند + Volume خودکار attach شود»)
+
+- **مقادیر پروژه داخل کد ست شدند (boot-defaults)**:
+  - `PROJECT_SIGNING_KEY` + `PROJECT_WORKER_URL` در `smart_routing/__init__.py`
+    (منبع واحد) — کلید امضای HMAC پیش‌فرض پروژه. 🔐 صادق: این کلید «سری»
+    نیست (repo عمومی)؛ فقط shared-secret تشخیصیِ اندپوینت‌های /sr/* دیاگنوستیک
+    Worker و report ورودی است — به هیچ داده‌ی حساسی دسترسی نمی‌دهد. کلید
+    اختصاصی اپراتور (env `SR_SIGNING_KEY` یا ثبت UI) همیشه مقدم است.
+  - `worker_key()` زنجیره‌ی اولویت: **DB → env SR_SIGNING_KEY → کلید پروژه**.
+    نتیجه: fresh-deploy بدون هیچ قدم دستی Worker را HEALTHY می‌بیند.
+  - `db.materialize_defaults()` — در **هر boot** (هر دیپلوی/ری‌دیپلوی)
+    پیش‌فرض‌های پروژه (`enabled` / `worker_url` / `worker_key`) به‌صورت row
+    واقعی در DB نوشته می‌شوند؛ فقط کلیدهای غایب (هرگز بازنویسی مقدار ادمین؛
+    idempotent).
+  - **Self-heal کلید Worker**: اگر کلید ثبت‌شده در DB با Worker امتبا نداشته
+    باشد (مثلاً کلید قدیمی بعد از redeploy جدید Worker)، کاندیدهای دیگر
+    (env / کلید پروژه) امتحان و اولین کلید معتبر در DB ذخیره می‌شود —
+    پروداکشن بدون دخالت دستی به کلید فعال مهاجرت می‌کند. `key_source`
+    (db/env/project-default) صادقانه در state گزارش می‌شود.
+  - Worker `emix-smart-routing-v1` با همین کلید پروژه redeploy شد (CF API) —
+    امضای HMAC از sandbox تأیید شد.
+- **Volume خودکار (volume-autoboot)** — `volume_bootstrap.py` جدید:
+  - تشخیص صادق mount از `/proc/self/mountinfo` (exact-match؛ ریشه‌ی overlay
+    mount حساب نمی‌شود) → `/api/persistence/status` + بخش volume در
+    health-all با `persistent`/`at_risk` صادق.
+  - **پیوست خودکار**: روی Railway وقتی Volume متصل نیست و پروژه هیچ Volumeی
+    ندارد و توکن موجود است → `volumeCreate` رسمی GraphQL ریلوی (mountPath=
+    DATA_DIR) + nudge یک redeploy → boot بعدی با Volume پایدار. 🔒 ضد-حلقه:
+    Volume موجود در پروژه → create/redeploy ممنوع (فقط راهنما)؛ create
+    ناموفق → redeploy نمی‌شود؛ mount موجود → no-op؛ opt-out با
+    `AUTO_VOLUME_ATTACH=false`.
+  - منبع توکن: env `RAILWAY_TOKEN` (پایدار بین redeploy) → فایل ذخیره‌ی پنل
+    (Volume) — فقط در لایه‌ی جدید `volume_bootstrap._token()` (هسته‌ی
+    bottokentcpproxy بایت‌به‌بایت با ریفرنس پایه یکسان می‌ماند — قرارداد فاز ۴۵).
+  - **UI صادق**: بنر ثابت بالای پنل وقتی روی Railway بدون Volume mount
+    هستیم («داده‌ها با هر redeploy پاک می‌شوند + راه‌حل خودکار») + سطر
+    «Volume پایدار» در سلامت سیستم با وضعیت mount (fstype) و راهنمای اقدام.
+- **رفع ریشه‌ی «مقادیر با redeploy گم می‌شوند»**: (۱) مقادیر حالا از پروژه
+  می‌آیند (بالا) و (۲) Volume که نبود، خودکار ساخته/وصل می‌شود؛ از این بعد
+  push → deploy → همه‌چیز خودکار مقدار و پایدار است.
+
 ## [13.5.0-emix-pro] — 2026-09-07
 
 ### SMART ROUTING DEFAULT-ON (GA) + UX Fixes

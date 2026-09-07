@@ -200,6 +200,28 @@ Railway → Settings → Networking → **Generate Domain**
 <td align="center">4️⃣</td>
 <td>
 
+**Persistence — automatic volume (recommended)**
+
+Add a `RAILWAY_TOKEN` variable (Railway → Variables → *New Variable*, value =
+an API token from [Railway Account Settings → API Tokens](https://railway.com/account/tokens)
+with *project-scoped* permissions). From the **next deploy onward** the panel
+creates and attaches the `/data` volume **automatically** on every deploy or
+redeploy — no manual dashboard work, data (configs/users/settings) survives:
+
+```
+RAILWAY_TOKEN = <your railway api token>
+```
+
+Without the token the panel still runs fully configured (all project values are
+baked in), but it shows an honest top banner warning that data is ephemeral
+until a volume is attached.
+
+</td>
+</tr>
+<tr>
+<td align="center">5️⃣</td>
+<td>
+
 **Open your dashboard**
 
 ```
@@ -241,8 +263,19 @@ The dashboard will be available at `http://localhost:8000/dashboard`.
 | Variable | Description | Default |
 |---|---|---|
 | `PORT` | Port the service runs on | `8000` |
-| `SECRET_KEY` | Internal security key | Randomly generated |
+| `SECRET_KEY` | Internal security key | Randomly generated (persisted) |
 | `RAILWAY_PUBLIC_DOMAIN` | Public Railway domain (auto-set) | `localhost` |
+| `DATA_DIR` | Persistent data directory (volume mount path) | `/data` |
+| `ADMIN_PASSWORD` | Panel login password | `123456` |
+| `RAILWAY_TOKEN` | Railway API token → **auto-creates & attaches the volume on every deploy/redeploy** | *(unset → honest banner)* |
+| `SMART_ROUTING_ENABLED` | Smart Routing feature flag (`false` = full rollback) | `true` |
+| `SR_SIGNING_KEY` | Private HMAC key for the SR Worker (beats the baked project key) | project key |
+| `AUTO_VOLUME_ATTACH` | Set `false` to disable automatic volume creation | `true` |
+
+> **Zero-config defaults (v13.6):** Smart Routing ON, the `emix-smart-routing-v1`
+> Cloudflare Worker URL **and** its HMAC signing key are all baked into the
+> project and re-applied on **every deploy/redeploy** (`db.materialize_defaults`).
+> No manual dashboard setup is needed anymore.
 
 <br/>
 

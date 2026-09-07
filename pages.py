@@ -3284,7 +3284,7 @@ html,body{max-width:100%;overflow-x:hidden}
         <div class="sr-wk-cell" style="grid-column:1/-1"><div class="sr-wk-k">Endpoint</div><div class="sr-wk-v" id="sr-wk-endpoint">—</div></div>
         <div class="sr-wk-cell" style="grid-column:1/-1"><div class="sr-wk-k">Edge</div><div class="sr-wk-v" id="sr-wk-edge">—</div></div>
       </div>
-      <div class="cl" style="margin-top:10px"><i class="ti ti-info-circle"></i><span>ثبت‌شده (REGISTERED) یعنی فقط URL/کلید ذخیره شده — مستقر (DEPLOYED) و سالم (HEALTHY) فقط با بررسی واقعی (پاسخ Worker + امضای HMAC + upstream) تأیید می‌شوند. Worker <b>emix-smart-routing-v1</b> مستقل از workerهای قبلی است؛ <b>URL پیش‌فرض این نسخه ست شده است</b> (با ثبت دستی override می‌شود) و کلید امضا از متغیر <b>SR_SIGNING_KEY</b> یا فرم «ثبت/ویرایش» خوانده می‌شود — در Volume ذخیره می‌شود (نه در کد).</span></div>
+      <div class="cl" style="margin-top:10px"><i class="ti ti-info-circle"></i><span>ثبت‌شده (REGISTERED) یعنی فقط URL/کلید ذخیره شده — مستقر (DEPLOYED) و سالم (HEALTHY) فقط با بررسی واقعی (پاسخ Worker + امضای HMAC + upstream) تأیید می‌شوند. Worker <b>emix-smart-routing-v1</b> مستقل از workerهای قبلی است؛ <b>URL و کلید امضای این نسخه به‌طور پیش‌فرض در پروژه ست شده‌اند</b> (با هر دیپلوی/ری‌دیپلوی خودکار اعمال می‌شوند) — کلید اختصاصی از متغیر <b>SR_SIGNING_KEY</b> یا فرم «ثبت/ویرایش» همیشه مقدم است و کلید قدیمی ناسازگار، خودکار به کلید فعال پروژه به‌روزرسانی می‌شود.</span></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
         <button class="btn btn-g btn-sm" onclick="srCheckWorker(this)"><i class="ti ti-radar-2"></i> بررسی Worker</button>
         <button class="btn btn-o btn-sm" onclick="document.getElementById('sr-worker-reg').open=true"><i class="ti ti-plug"></i> ثبت/ویرایش</button>
@@ -6949,7 +6949,11 @@ function renderHealth(d){
   h+=hRow('','IP خروج / لوکیشن',egress.ok?esc(egress.exit_ip||'')+' · '+esc(egress.country||'')+' '+esc(egress.city||''):esc(egress.error||'اندازه‌گیری ناموفق'),egress.ok);
   if(egress.ok) h+=hRow('','ISP / AS',esc(egress.isp||'—')+' · '+esc(egress.asn||'—'));
   h+='<div class="card-title" style="font-size:12px;margin:12px 0 2px"><i class="ti ti-database"></i> دیسک و زمان اجرا</div>';
-  h+=hRow('','Volume پایدار',(volume.ok?'قابل نوشتن ✓':'نوشتن ناموفق ✗')+' <span style="font-size:10px;color:var(--t3)">'+esc(volume.data_dir||'')+' · '+toFa(Math.round((volume.state_file_bytes||0)/1024))+'KB</span>',volume.ok);
+  const volMounted=volume.persistent!==false&&volume.mounted!==false;
+  const volOnRail=!!volume.on_railway;
+  const volLabel=volMounted?('پایدار ✓ ('+(volume.mount_fstype||'volume')+')'):(volOnRail?'موقت — Volume متصل نیست ⚠':'لوکال (بدون Volume)');
+  h+=hRow('','Volume پایدار',volLabel+' <span style="font-size:10px;color:var(--t3)">'+esc(volume.data_dir||'')+' · '+toFa(Math.round((volume.state_file_bytes||0)/1024))+'KB</span>',volume.ok);
+  if(!volMounted&&volOnRail) h+=hRow('','اقدام',esc(volume.note||'')+' <span style="font-size:10px;color:var(--t3)">(متغیر RAILWAY_TOKEN ست شود → Volume از boot بعدی خودکار ساخته/وصل می‌شود)</span>',false);
   h+=hRow('','زمان اجرا','Python '+esc(runtime.python||'—')+' · '+esc(runtime.platform||'')+' · '+esc(runtime.event_loop||''));
   h+='<div class="card-title" style="font-size:12px;margin:12px 0 2px"><i class="ti ti-activity"></i> تست واقعی کانفیگ‌ها (مسیر کلاینت)</div>';
   h+='<div id="health-ping-rows"><div class="sr"><span class="sr-k" style="color:var(--t3)">برای تست واقعی همه‌ی کانفیگ‌ها، دکمه‌ی پایین را بزنید — هر کانفیگ با پروتکل واقعی خودش از بیرون آزمایش می‌شود.</span></div></div>';
@@ -6967,6 +6971,29 @@ async function openHealth(){
     el.innerHTML='<div style="padding:16px;color:var(--red-t)">خطا در دریافت گزارش سلامت — دوباره تلاش کنید</div>';
   }
 }
+
+/* ═══ v13.6 — بنر پایداری داده (Volume) ═══
+   اگر روی Railway هستیم ولی DATA_DIR روی Volume mount نیست، یک بنر ثابت
+   بالای صفحه نشان داده می‌شود (صادق — نه سکوت). با mount موجود، بنر هیچ‌وقت
+   دیده نمی‌شود. */
+async function checkPersistenceBanner(){
+  try{
+    const r=await authF('/api/persistence/status');
+    if(!r.ok) return;
+    const d=await r.json();
+    if(!d||!d.at_risk) return;
+    const st=d.bootstrap&&d.bootstrap.action?esc(String(d.bootstrap.action)):'';
+    const b=document.createElement('div');
+    b.id='vol-banner';
+    b.style.cssText='position:fixed;top:0;left:0;right:0;z-index:99999;direction:rtl;font-family:Vazirmatn,sans-serif;font-size:12px;line-height:1.7;padding:10px 16px;background:linear-gradient(90deg,#7c2d12,#b45309);color:#fff;box-shadow:0 2px 14px rgba(0,0,0,.45);text-align:center';
+    b.innerHTML='<i class="ti ti-database-off" style="margin-inline-end:6px"></i><b>Volume متصل نیست — داده‌ها با هر redeploy پاک می‌شوند.</b> '
+      +(st?('· '+st+' '):'')
+      +'· راه‌حل خودکار: متغیر <span style="direction:ltr;display:inline-block">RAILWAY_TOKEN</span> را در سرویس Railway ست کنید تا Volume در boot بعدی خودکار ساخته و وصل شود.';
+    if(!document.getElementById('vol-banner')) document.body.appendChild(b);
+    document.body.style.paddingTop=(document.body.style.paddingTop||'0px');
+  }catch(e){ /* صادق: در صورت خطا سکوت — بنر فقط با اطمینان نمایش داده می‌شود */ }
+}
+document.addEventListener('DOMContentLoaded',checkPersistenceBanner);
 </script>
 
 <div class="modal-bg" id="modal-health" style="z-index:9999">
