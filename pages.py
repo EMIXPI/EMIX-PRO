@@ -6377,7 +6377,11 @@ function srBadge(l){
   if(r&&r.endpoint){
     const lat=r.latency_ms!=null?` · ${toFa(Math.round(r.latency_ms))}ms`:'';
     const c=r.country?` · ${esc(r.country)}`:'';
-    return `<span class="cfg-sub-tag" style="background:rgba(52,211,153,.10);color:#34D399;border:1px solid rgba(52,211,153,.25);font-weight:700;cursor:pointer" onclick="openRouteDetails('${l.uuid}')" title="مسیر فعال: ${esc(r.endpoint)} — کلیک برای جزئیات کامل (کشور/ASN/egress/health/score)"><i class="ti ti-route"></i> مسیر ${lbl}: ${esc(String(r.endpoint).split('.')[0])}${c}${lat}</span>`;
+    // حالت IRAN_OPTIMIZED بدون egress ایرانِ verify-شده → برچسب صادق روی کارت
+    const iranHonest=(m==='IRAN_OPTIMIZED')
+      ?(r.iran_egress_verified?' · 🇮🇷 egress verified':' · egress ایران: تأییدنشده')
+      :'';
+    return `<span class="cfg-sub-tag" style="background:rgba(52,211,153,.10);color:#34D399;border:1px solid rgba(52,211,153,.25);font-weight:700;cursor:pointer" onclick="openRouteDetails('${l.uuid}')" title="مسیر فعال: ${esc(r.endpoint)}${iranHonest?' — '+esc(iranHonest.replace(/ · /g,'')):''} — کلیک برای جزئیات کامل (کشور/ASN/egress/health/score)"><i class="ti ti-route"></i> مسیر ${lbl}: ${esc(String(r.endpoint).split('.')[0])}${c}${lat}${iranHonest}</span>`;
   }
   const reason=l.sr_route_reason||'هیچ مسیر ACTIVE/verified برای این حالت نیست — لینک پایه صادر می‌شود';
   return `<span class="cfg-sub-tag" style="background:rgba(52,211,153,.08);color:#6EE7B7;border:1px solid rgba(52,211,153,.18);font-weight:700;cursor:pointer" onclick="openRouteDetails('${l.uuid}')" title="${esc(reason)}"><i class="ti ti-route"></i> مسیر ${lbl} · بدون مسیر فعال</span>`;

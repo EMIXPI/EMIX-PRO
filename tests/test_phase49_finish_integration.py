@@ -363,6 +363,11 @@ class TestUIMarkersPhase49:
         # برچسب صادق وقتی egress ایران نیست
         assert "iran_egress_verified" in self.PAGES
 
+    def test_iran_optimized_badge_honest_marker(self):
+        # حالت IRAN_OPTIMIZED روی کارت: بدون egress ایرانِ verify-شده → «تأییدنشده»
+        assert "egress ایران: تأییدنشده" in self.PAGES
+        assert "r.iran_egress_verified?' · 🇮🇷 egress verified'" in self.PAGES
+
     def test_worker_check_auto_refresh_wired(self):
         assert "srAutoCheckWorker" in self.PAGES
         assert "srRenderWorkerState" in self.PAGES
