@@ -3,6 +3,57 @@
 تمام تغییرات قابل‌توجه این پروژه در این فایل ثبت می‌شود.
 قالب بر اساس [Keep a Changelog](https://keepachangelog.com/) است.
 
+## [13.4.0-emix-pro] — 2026-09-07
+
+### FINAL PRODUCTION FIX & FEATURE INTEGRATION (Phase 48)
+
+- **ROOT CAUSE «UI دیده نمی‌شود»**: پنل pages.py را بدون build step مستقیم سرو
+  می‌کند؛ علت واقعی نبودِ UI بود، نه cache/build قدیمی. ممیزی کامل انجام و
+  پنج شکاف فهرست شد و همه با کد+API+UI+تست پر شدند.
+- **REAL CLIENT PING (پینگ اصلی = Client RTT)**: اندازه‌گیری از **مرورگرِ
+  کاربر** به هاست واقعی کانفیگ (USER DEVICE → CONFIG ENDPOINT → RESPONSE →
+  USER DEVICE) با fetch no-cors (HTTPS RTT) — نه از Railway و نه از
+  Cloudflare. ۶ نمونه‌ی اندازه‌گیری + ۱ warmup (DNS/TLS جدا گزارش می‌شود)؛
+  آمار: min/median/avg/max/jitter/loss؛ **پینگ اصلی = MEDIAN**. برچسب صادق:
+  «Measurement: HTTPS (Browser)» — هرگز ICMP معرفی نمی‌شود. **NO FAKE PING**:
+  نبودِ اندازه‌گیری = «Ping —»، شکست = «Ping Failed»؛ عدد پیش‌فرض ممنوع.
+  سرور عدد نمی‌سازد — فقط گزارش مرورگر را صحت‌سنجی (≥۵ نمونه، بازه‌ی ۱–۱۵۰۰۰ms،
+  بازمحاسبه‌ی آمار؛ stat ناسازگار = 400 ضد-جعل) و ذخیره می‌کند (Volume).
+- **Ping UI**: پینگ کنار Config Card (● NN ms · Client) + دکمه‌ی Test Ping
+  (Testing... → عدد/failed)؛ **Ping Details** با کلیک روی بج: min/median/avg/
+  max/jitter/loss/اولین اتصال/روش/زمان — مودال جمع‌وجور و موبایل‌پسند.
+  «Test همه» اکنون Client Ping گروهی مرورگری است. Real Delay سمت سرور فقط در
+  بخش سلامت با برچسب صادق باقی مانده.
+- **CONFIG BUILDER — بخش «بهینه‌سازی شبکه (Network)»**: هر سه قابلیت
+  جداجدا (طبق سند): SNI Spoofing [toggle+SNI] / Smart Routing [toggle+mode] /
+  Iran Routing [OFF/AUTO/DIRECT] — هم در مودال ساخت (قبل از ایجاد لینک؛
+  اعمال via PATCH افزودنی روی uuid تازه — خط POST پایه دست‌نخورده) و هم
+  ویرایش. فعال/غیرفعال کردن صادقانه بر اساس پروتکل.
+- **IRAN ROUTING (مستقل)**: per-link `iran_routing` (OFF/AUTO/DIRECT).
+  OFF = همه‌ی ترافیک از تونل؛ AUTO = قواعد routing واقعی کلاینت (geoip:ir +
+  geoip:private + دامنه‌های .ir/بانک‌ها → direct، بقیه → proxy)؛ DIRECT =
+  AUTO + geosite:category-ir + اولویت مسیر مستقیم. خروجی: JSON کامل v2ray
+  (outbound از خود لینک کاربر) از `GET /api/links/{uid}/iran-config` و
+  `GET /sub/{uid}/iran` + دکمه‌ی دانلود روی کارت. **مستقل از SNI Spoofing و
+  Smart Routing؛ بدون هیچ ادعای egress ایران** (egress فقط در SR با verify
+  دو-منبعی). IP کاربر جعل نمی‌شود.
+- **ROUTE INFO روی کارت**: بج مسیر هوشمند اکنون endpoint/country/latency
+  مسیر فعال را نشان می‌دهد + مودال Route Details کامل (Route/Country/ASN/
+  Egress + VERIFIED badge/Route Latency/Client RTT/Jitter/Loss/Health/Score).
+  Client RTT ≠ Route Latency تفکیک‌شده و صریح. بدون مسیر فعال = دلیل صادق.
+- **APIهای جدید**: `POST /api/links/{uid}/client-ping`، `GET /api/links/{uid}/
+  iran-config`، `GET /sub/{uid}/iran`؛ GET /api/links اکنون `endpoint_host`
+  (هاست واقعی emitted برای پینگ مرورگر) و `sr_route`/`sr_route_reason`
+  (خلاصه‌ی مسیر) برمی‌گرداند. لینک‌های بدون feature بایت‌به‌بایت پایه (رگرسیون).
+- **ماژول جدید `net_features.py`**: اعتبارسنجی client-ping + parser لینک→
+  outbound (vless/trojan؛ ws/xhttp) + ساخت JSON ایران — کاملاً افزودنی.
+- **CI**: GitHub Actions (.github/workflows/ci.yml) — اجرای کل سوئیت تست
+  (۱۴۶) روی هر push/PR.
+- **تست**: `tests/test_phase48_final_integration.py` (۳۹): §A client-ping
+  (roundtrip/ضد-جعل/بازه‌ها/404/401/persistence) §B endpoint_host صادق §C
+  Iran Routing کامل §D sr_route صادق §E UI متصل (node --check) §F رگرسیون.
+  کل سوئیت: **۱۴۶/۱۴۶**.
+
 ## [13.3.0-emix-pro] — 2026-09-07
 
 ### Smart Routing Network v1 (Phase 47) — ماژول مستقل مسیریابی هوشمند

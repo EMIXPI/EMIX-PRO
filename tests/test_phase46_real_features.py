@@ -18,7 +18,7 @@ Coverage:
   §F  login page: faint 123456 placeholder inside the password field, hint
       box + fillDefault gone (user order), theme/colors preserved.
   §G  fresh-UI: Cache-Control no-store on HTML responses.
-  §H  version pin 13.3.0-emix-pro + feature list.
+  §H  version pin 13.4.0-emix-pro + feature list.
 
 Run:  python -m pytest tests/ -q
 """
@@ -671,7 +671,7 @@ class TestVersionPin:
     def test_deployment_version(self, server):
         with urllib.request.urlopen(f"{server['base']}/api/deployment-version", timeout=10) as r:
             d = json.loads(r.read().decode())
-        assert d["version"] == "13.3.0-emix-pro"
+        assert d["version"] == "13.4.0-emix-pro"
         assert "turbo-0rtt" in d["features"]
         assert "sni-spoof-per-link" in d["features"]
         assert "fresh-ui-no-store" in d["features"]

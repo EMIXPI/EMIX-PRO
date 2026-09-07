@@ -861,6 +861,25 @@ async def subscription_single(uuid: str):
     headers = build_sub_headers(link["label"], link.get("used_bytes", 0), link.get("limit_bytes", 0), link.get("expires_at"))
     return Response(content=content, media_type="text/plain", headers=headers)
 
+# ── EMIX-PRO v13.4 — sub با قواعد Iran Routing (JSON واقعی v2ray) ──────────────
+# endpoint جدیدِ کاملاً افزودنی (تابع پایه‌ی /sub دست‌نخورده): کلاینتی که JSON
+# کامل می‌فهمد می‌تواند split-routing واقعی ایران را import کند.
+@app.get("/sub/{uuid}/iran")
+async def subscription_single_iran(uuid: str):
+    async with LINKS_LOCK:
+        link = LINKS.get(uuid)
+    if not link or not is_link_allowed(link):
+        raise HTTPException(status_code=404, detail="not found or inactive")
+    ir_mode = (link.get("iran_routing") or "OFF").upper()
+    if ir_mode == "OFF":
+        raise HTTPException(400, "Iran Routing روی این sub خاموش است — اول AUTO/DIRECT را فعال کنید")
+    host = get_host()
+    proto = link.get("protocol", DEFAULT_PROTOCOL)
+    vless = generate_share_link(uuid, host, remark=f"EMIX-{link['label']}", protocol=proto)
+    import net_features as _nf
+    cfg = _nf.build_iran_route_config(vless, link["label"], ir_mode)
+    return JSONResponse(cfg)
+
 @app.get("/sub-all")
 async def subscription_all(_=Depends(require_auth)):
     host = get_host()
@@ -1636,6 +1655,44 @@ async def _create_link_core(body: dict) -> dict:
         "ad_tag": None,
     }
 
+    # ── EMIX-PRO v13.4 — Network/Optimization هنگام ساخت (طبق سند: Config
+    # Builder باید هر سه قابلیت را «قبل از ساخت» هم بپذیرد — نه فقط ویرایش).
+    # سه قابلیت کاملاً جدا از هم اعتبارسنجی و ذخیره می‌شوند.
+    try:
+        import net_features as _nf
+        # ۱) جعل SNI (مستقل)
+        if "spoof_sni" in body:
+            raw_sni = (str(body.get("spoof_sni") or "")).strip()
+            if raw_sni:
+                norm = _validate_spoof_sni(raw_sni)
+                if not norm:
+                    raise HTTPException(400, "SNI جعلی معتبر نیست (hostname واقعی مثل www.bale.ir) — IP پذیرفته نمی‌شود")
+                link_data["spoof_sni"] = norm
+        if "spoof_sni_enabled" in body and body.get("spoof_sni_enabled"):
+            if protocol in ("shadowsocks", "mtproto"):
+                raise HTTPException(400, "جعل SNI برای Shadowsocks/MTProto قابل اعمال نیست")
+            if not _validate_spoof_sni(link_data.get("spoof_sni")):
+                raise HTTPException(400, "اول یک SNI جعلی معتبر وارد کنید")
+            link_data["spoof_sni_enabled"] = True
+        # ۲) Smart Routing (مستقل — فقط ws-های قابل‌پروب)
+        if body.get("smart_routing_mode"):
+            mode = str(body["smart_routing_mode"]).strip().upper()
+            if mode not in ("OFF", "AUTO", "LOW_LATENCY", "STABLE", "IRAN_OPTIMIZED"):
+                raise HTTPException(400, f"حالت Smart Routing نامعتبر: {mode}")
+            if mode != "OFF" and protocol not in ("vless-ws", "trojan-ws"):
+                raise HTTPException(400, "Smart Routing فقط برای VLESS-WS و Trojan-WS قابل اعمال است")
+            link_data["smart_routing_mode"] = mode
+        # ۳) Iran Routing (مستقل — قواعد routing کلاینت؛ هیچ ادعای egress)
+        if body.get("iran_routing"):
+            ir_mode = str(body["iran_routing"]).strip().upper()
+            if ir_mode not in _nf.IRAN_ROUTING_MODES:
+                raise HTTPException(400, f"حالت Iran Routing نامعتبر: {ir_mode}")
+            if ir_mode != "OFF" and protocol == "mtproto":
+                raise HTTPException(400, "Iran Routing برای MTProto قابل اعمال نیست (لینک tg:// routing کلاینت ندارد)")
+            link_data["iran_routing"] = ir_mode
+    except HTTPException:
+        raise
+
     if protocol == "mtproto":
         raw_port = body.get("mtproto_port")
         manual_port = int(raw_port) if raw_port not in (None, "", 0, "0") else None
@@ -1701,7 +1758,8 @@ async def _create_link_core(body: dict) -> dict:
             ss_cipher = DEFAULT_CIPHER
         link_data["ss_cipher"] = ss_cipher
         link_data["ss_password"] = secrets.token_urlsafe(16)
-    
+
+
     async with LINKS_LOCK:
         LINKS[uid] = link_data
 
@@ -1727,6 +1785,38 @@ async def _create_link_core(body: dict) -> dict:
 async def create_link(request: Request, _=Depends(require_auth)):
     body = await request.json()
     return await _create_link_core(body)
+
+# ── EMIX-PRO v13.4 — CLIENT PING (Real Client RTT) ─────────────────────────────
+# مرورگرِ کاربر خودش اندازه می‌گیرد (HTTPS RTT به endpoint_host) و نتیجه را
+# گزارش می‌کند؛ این endpoint فقط اعتبارسنجی/ثبت می‌کند — هیچ عددی ساخته نمی‌شود.
+@app.post("/api/links/{uid}/client-ping")
+async def record_client_ping(uid: str, request: Request, _=Depends(require_auth)):
+    body = await request.json()
+    import net_features as _nf
+    stats = _nf.validate_client_ping(body)
+    async with LINKS_LOCK:
+        if uid not in LINKS:
+            raise HTTPException(status_code=404, detail="link not found")
+        LINKS[uid]["last_client_ping"] = stats
+    asyncio.create_task(save_state())
+    return {"ok": True, "client_ping": stats}
+
+# ── EMIX-PRO v13.4 — IRAN ROUTING CONFIG (JSON واقعی split-routing) ──────────
+@app.get("/api/links/{uid}/iran-config")
+async def get_iran_config(uid: str, _=Depends(require_auth)):
+    async with LINKS_LOCK:
+        link = dict(LINKS.get(uid) or {})
+    if not link:
+        raise HTTPException(status_code=404, detail="link not found")
+    mode = (link.get("iran_routing") or "OFF").upper()
+    if mode == "OFF":
+        raise HTTPException(400, "Iran Routing برای این کانفیگ خاموش است — اول حالت AUTO یا DIRECT را فعال کنید")
+    host = get_host()
+    proto = link.get("protocol", DEFAULT_PROTOCOL)
+    link_url = generate_share_link(uid, host, remark=f"EMIX-{link.get('label', 'EMIX')}", protocol=proto)
+    import net_features as _nf
+    cfg = _nf.build_iran_route_config(link_url, link.get("label", "EMIX"), mode)
+    return cfg
 
 @app.post("/api/node/links")
 async def node_create_link(request: Request, key_id: str = Depends(require_node_key)):
@@ -1764,6 +1854,36 @@ async def list_links(_=Depends(require_auth)):
             "vless_link": generate_share_link(uid, host, remark=f"EMIX-{d['label']}", protocol=proto),
             "sub_url": f"https://{host}/sub/{uid}",
         })
+        # ── EMIX-PRO v13.4 — داده‌های UI (Client Ping + Route info) ──
+        # endpoint_host: هاست واقعی emitted (فرانت SR یا پنل) — مرورگر برای
+        # Client RTT دقیقاً به همین می‌زند. sr_route: خلاصه‌ی مسیر فعال یا null.
+        try:
+            import net_features as _nf
+            result[-1]["endpoint_host"] = _nf.endpoint_host_for(d, host, proto)
+        except Exception:
+            result[-1]["endpoint_host"] = host
+        try:
+            from smart_routing import selector as _sr_sel
+            mode = ((d.get("smart_routing_mode") or "OFF")).upper()
+            if mode in ("AUTO", "LOW_LATENCY", "STABLE", "IRAN_OPTIMIZED"):
+                sel = _sr_sel._cached_selection(mode)
+                if sel:
+                    ep = sel["endpoint"]
+                    result[-1]["sr_route"] = {
+                        "route_id": ep.get("id"), "endpoint": ep.get("address"),
+                        "country": ep.get("country"), "asn": ep.get("observed_asn"),
+                        "egress_ip": ep.get("observed_ip"),
+                        "egress_verified": bool((ep.get("verification") or {}).get("egress", {}).get("status") == "VERIFIED"),
+                        "latency_ms": ep.get("latency_ms"), "jitter_ms": ep.get("jitter_ms"),
+                        "packet_loss": ep.get("packet_loss"),
+                        "uptime_pct": ep.get("uptime_pct"), "status": ep.get("status"),
+                        "score": ep.get("score"), "mode": mode,
+                    }
+                else:
+                    result[-1]["sr_route"] = None
+                    result[-1]["sr_route_reason"] = "هیچ مسیر ACTIVE/verified برای این حالت وجود ندارد — لینک پایه صادر می‌شود"
+        except Exception:
+            pass
     result.sort(key=lambda x: x["created_at"], reverse=True)
     return {"links": result}
 
@@ -1891,6 +2011,16 @@ async def update_link(uid: str, request: Request, _=Depends(require_auth)):
                 )
             link["smart_routing_mode"] = mode
             log_activity("link", f"Smart Routing «{mode}» برای «{label}» ست شد", "info")
+        # ── EMIX-PRO v13.4 — Iran Routing (per-link، مستقل از SNI و SR) ──
+        if "iran_routing" in body:
+            import net_features as _nf
+            ir_mode = str(body.get("iran_routing") or "OFF").strip().upper()
+            if ir_mode not in _nf.IRAN_ROUTING_MODES:
+                raise HTTPException(400, f"حالت نامعتبر — مجاز: OFF, AUTO, DIRECT")
+            if ir_mode != "OFF" and link.get("protocol", DEFAULT_PROTOCOL) == "mtproto":
+                raise HTTPException(400, "Iran Routing برای MTProto قابل اعمال نیست")
+            link["iran_routing"] = ir_mode
+            log_activity("link", f"Iran Routing «{ir_mode}» برای «{label}» ست شد (قواعد routing کلاینت — مستقل از SNI/SR)", "info")
         if any(k in body for k in ("label", "note", "limit_value", "expires_days", "alpn", "fingerprint")):
             log_activity("link", f"کانفیگ «{link['label']}» ویرایش شد", "info")
         new_sub = body.get("sub_id", "UNCHANGED")

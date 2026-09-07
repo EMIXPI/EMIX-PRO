@@ -42,7 +42,7 @@ from main import (
     uptime,
 )
 
-EMIX_PRO_VERSION = "13.3.0-emix-pro"
+EMIX_PRO_VERSION = "13.4.0-emix-pro"
 EMIX_BASE_PANEL = "EMIX 9.2 (05f2f2c — healthy original state)"
 EMIX_PRO_FEATURES = [
     "real-e2e-ping",          # تست واقعی مسیر کلاینت (link_health) — با Real Delay تفکیک‌شده از TCP

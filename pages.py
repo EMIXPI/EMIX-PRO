@@ -1859,6 +1859,50 @@ html,body{max-width:100%;overflow-x:hidden}
         </div>
       </div>
 
+      <!-- ═══ بهینه‌سازی شبکه — سه قابلیت کاملاً مستقل (سند FINAL: Config Builder
+           باید SNI Spoofing / Smart Routing / Iran Routing را جدا جدا داشته باشد) ═══ -->
+      <div class="cm-section" id="netopt-section">
+        <div class="cm-section-label"><i class="ti ti-network"></i> بهینه‌سازی شبکه (Network)</div>
+
+        <div style="display:flex;align-items:center;gap:9px;margin-bottom:4px">
+          <i class="ti ti-mask" style="color:#C4B5FD;font-size:17px"></i>
+          <span style="font-size:12.5px;font-weight:700;color:var(--t1)">جعل SNI (SNI Spoofing)</span>
+          <span class="tog" id="nl-spoof-toggle" onclick="elSetToggle('nl-spoof-toggle',this.dataset.on!=='1');nlNetoptSync()" style="margin-right:auto"></span>
+        </div>
+        <input class="cm-input" id="nl-spoof-sni" type="text" list="nl-spoof-presets" placeholder="www.bale.ir" style="direction:ltr;text-align:left;font-family:monospace;font-size:12.5px" dir="ltr">
+        <datalist id="nl-spoof-presets">
+          <option value="www.bale.ir">پیام‌رسان بله (ایران)</option>
+          <option value="www.snap.ir">اسنپ (ایران)</option>
+          <option value="speedtest.net">Speedtest</option>
+          <option value="www.cloudflare.com">Cloudflare</option>
+        </datalist>
+        <div style="font-size:10.5px;color:var(--t3);line-height:1.7;margin-top:5px">TLS با SNI جعلی زده می‌شود اما Host واقعی ارسال می‌شود (allowInsecure=1). مستقل از دو قابلیت بعدی.</div>
+
+        <div style="display:flex;align-items:center;gap:9px;margin:12px 0 4px">
+          <i class="ti ti-route" style="color:#34D399;font-size:17px"></i>
+          <span style="font-size:12.5px;font-weight:700;color:var(--t1)">مسیریابی هوشمند (Smart Routing)</span>
+          <span class="tog" id="nl-sr-toggle" onclick="elSetToggle('nl-sr-toggle',this.dataset.on!=='1');nlNetoptSync()" style="margin-right:auto"></span>
+        </div>
+        <select class="cm-input" id="nl-sr-mode" style="direction:rtl" disabled>
+          <option value="AUTO">خودکار — بهترین امتیاز ترکیبی</option>
+          <option value="LOW_LATENCY">کم‌تأخیر — کمترین latency</option>
+          <option value="STABLE">پایدار — بهترین uptime/loss</option>
+          <option value="IRAN_OPTIMIZED">بهینه ایران — فقط egress ایرانِ verify-شده</option>
+        </select>
+        <div style="font-size:10.5px;color:var(--t3);line-height:1.7;margin-top:5px">لینک از مسیر verified با بهترین امتیاز صادر می‌شود. مسیرها فقط بعد از verify واقعی egress فعال می‌شوند — جزئیات در صفحه‌ی «مسیریابی هوشمند».</div>
+
+        <div style="display:flex;align-items:center;gap:9px;margin:12px 0 4px">
+          <i class="ti ti-map-pin" style="color:var(--amber-t);font-size:17px"></i>
+          <span style="font-size:12.5px;font-weight:700;color:var(--t1)">مسیریابی ایران (Iran Routing)</span>
+        </div>
+        <select class="cm-input" id="nl-iran-mode" style="direction:rtl">
+          <option value="OFF">خاموش — همه‌ی ترافیک از تونل</option>
+          <option value="AUTO">خودکار — دامنه‌ها/GeoIP ایران مستقیم، بقیه از تونل</option>
+          <option value="DIRECT">مستقیم — split کامل داخلی + اتصال مستقیم</option>
+        </select>
+        <div style="font-size:10.5px;color:var(--t3);line-height:1.7;margin-top:5px">قواعد routing واقعی کلاینت (GeoIP/دامنه) در قالب JSON قابل import — IP شما جعل نمی‌شود و این قابلیت هیچ ربطی به جعل SNI و egress ایران ندارد (مستقل).</div>
+      </div>
+
     </div>
 
     <div class="cm-footer">
@@ -2624,6 +2668,16 @@ html,body{max-width:100%;overflow-x:hidden}
           <option value="IRAN_OPTIMIZED">بهینه ایران — فقط با egress ایرانِ verify-شده</option>
         </select>
         <div style="font-size:10.5px;color:var(--t3);line-height:1.7;margin-top:5px">لینک از مسیر با بهترین امتیاز (latency/jitter/loss/egress) صادر می‌شود. مسیرها فقط بعد از verify واقعی egress فعال می‌شوند — اطلاعات لحظه‌ای در صفحه‌ی «مسیریابی هوشمند».</div>
+        <div style="display:flex;align-items:center;gap:9px;margin:12px 0 4px">
+          <i class="ti ti-map-pin" style="color:var(--amber-t);font-size:17px"></i>
+          <span style="font-size:12.5px;font-weight:700;color:var(--t1)">مسیریابی ایران (Iran Routing)</span>
+        </div>
+        <select class="modal-v2-input" id="el-iran-mode" style="direction:rtl">
+          <option value="OFF">خاموش — همه‌ی ترافیک از تونل</option>
+          <option value="AUTO">خودکار — دامنه‌ها/GeoIP ایران مستقیم، بقیه از تونل</option>
+          <option value="DIRECT">مستقیم — split کامل داخلی + اتصال مستقیم</option>
+        </select>
+        <div style="font-size:10.5px;color:var(--t3);line-height:1.7;margin-top:5px">مستقل از جعل SNI و Smart Routing — قواعد routing واقعی کلاینت؛ JSON آن از روی کارت قابل دانلود است. هیچ ادعای egress ایران بدون verify نمی‌شود.</div>
       </div>
       <div class="modal-v2-hint" style="margin-top:11px"><i class="ti ti-info-circle"></i><span>برای حفظ انقضای فعلی، فیلد انقضا را صفر بگذارید.</span></div>
       <div class="modal-v2-footer">
@@ -2641,6 +2695,38 @@ html,body{max-width:100%;overflow-x:hidden}
   <div class="mob-right">
     <button class="theme-mob" id="theme-mob-btn" onclick="toggleTheme()"><i class="ti ti-sun" id="theme-mob-icon"></i></button>
     <button class="menu-btn" id="open-sb"><i class="ti ti-menu-2"></i></button>
+  </div>
+</div>
+
+<!-- ═══ EMIX-PRO v13.4 — مودال جزئیات پینگ (Client RTT) — compact، موبایل‌پسند ═══ -->
+<div class="modal-bg" id="modal-ping-details">
+  <div class="modal-v2" style="max-width:430px">
+    <div class="modal-v2-head">
+      <button class="modal-v2-close" onclick="closeModal('modal-ping-details')"><i class="ti ti-x"></i></button>
+      <div class="modal-v2-icon"><i class="ti ti-activity"></i></div>
+      <div class="modal-v2-title">جزئیات پینگ (Client RTT)</div>
+      <div class="modal-v2-sub" id="pd-sub">—</div>
+    </div>
+    <div class="modal-v2-body" id="pd-body">—</div>
+    <div class="modal-v2-footer">
+      <button class="btn btn-g" style="flex:1" onclick="pdRetest()"><i class="ti ti-refresh"></i> تست مجدد</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ EMIX-PRO v13.4 — مودال جزئیات مسیر هوشمند (Route Details) ═══ -->
+<div class="modal-bg" id="modal-route-details">
+  <div class="modal-v2" style="max-width:470px">
+    <div class="modal-v2-head">
+      <button class="modal-v2-close" onclick="closeModal('modal-route-details')"><i class="ti ti-x"></i></button>
+      <div class="modal-v2-icon"><i class="ti ti-route"></i></div>
+      <div class="modal-v2-title">مسیر هوشمند انتخاب‌شده</div>
+      <div class="modal-v2-sub" id="rd-sub">—</div>
+    </div>
+    <div class="modal-v2-body" id="rd-body">—</div>
+    <div class="modal-v2-footer">
+      <button class="btn btn-o" style="flex:1" onclick="closeModal('modal-route-details')">بستن</button>
+    </div>
   </div>
 </div>
 <div class="overlay" id="overlay"></div>
@@ -2745,8 +2831,8 @@ html,body{max-width:100%;overflow-x:hidden}
       <button class="btn btn-g" id="zeus-nav-btn" style="margin-right:8px" onclick="openModal('modal-zeus-proxy');zpCheckTokenState()">
         <i class="ti ti-bolt"></i> Zeus proxy
       </button>
-      <button class="btn btn-o" id="ping-all-btn" style="margin-right:8px" onclick="pingAll(this)">
-        <i class="ti ti-activity"></i> تست همه‌ی کانفیگ‌ها
+      <button class="btn btn-o" id="ping-all-btn" style="margin-right:8px" onclick="pingAll(this)" title="Client Ping همه — اندازه‌گیری Client RTT از همین مرورگر (HTTPS RTT، median هر کانفیگ)">
+        <i class="ti ti-activity"></i> Client Ping همه
       </button>
     </div>
     <div class="tb-right">
@@ -3520,6 +3606,7 @@ async function loadLinks(){
         ${turboBadge(l)}
         ${spoofBadge(l)}
         ${srBadge(l)}
+        ${iranBadge(l)}
         ${isMt && l.ad_tag ? `<span class="cfg-sub-tag" style="background:linear-gradient(135deg,rgba(255,122,61,.18),rgba(232,89,12,.12));color:#FFB199;padding:3px 9px;border-radius:20px;border:1px solid rgba(255,122,61,.25);font-weight:700"><i class="ti ti-speakerphone" style="color:#FFB199"></i> تبلیغ فعال</span>` : ''}
         ${isMt && l.mtproto_public_host ? `<span class="cfg-sub-tag"><i class="ti ti-route"></i> ${esc(l.mtproto_public_host)}:${l.mtproto_public_port}</span>` : ''}
         ${isMt && !l.mtproto_public_host && l.mtproto_public_pending ? `<span class="cfg-sub-tag" style="color:var(--amber-t)"><i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i> در حال ساخت TCP Proxy عمومی...</span>` : ''}
@@ -3531,7 +3618,8 @@ async function loadLinks(){
         <div class="cfg-actions">
         <button class="tog${allowed?' on':''}" onclick="toggleActive('${l.uuid}',${!l.active}${isNode?`,'${l._nodeId}'`:''})" title="فعال/غیرفعال"></button>
         ${!isNode?adBtn:''}
-        ${!isNode?`<button class="btn btn-sm btn-g btn-icon" onclick="pingLink('${l.uuid}',this)" title="تست Real Delay (HTTP واقعی از داخل تونل)"><i class="ti ti-activity"></i></button>`:''}
+        ${!isNode?`<button class="btn btn-sm btn-g btn-icon" onclick="clientPing('${l.uuid}',this)" title="تست Client RTT — اندازه‌گیری از همین مرورگر (HTTPS RTT)"><i class="ti ti-activity"></i></button>`:''}
+        ${(!isNode && l.iran_routing && l.iran_routing!=='OFF')?`<button class="btn btn-sm btn-amber btn-icon" onclick="downloadIranConfig('${l.uuid}',this)" title="دانلود کانفیگ ایران (JSON با قواعد routing واقعی)"><i class="ti ti-map-pin"></i></button>`:''}
         ${( !isNode && (l.protocol==='vless-ws'||l.protocol==='trojan-ws') )?`<button class="btn btn-sm ${l.turbo_enabled?'btn-amber':'btn-g'} btn-icon" onclick="toggleTurbo('${l.uuid}',${!l.turbo_enabled})" title="توربو 0-RTT — فقط یک کانفیگ هم‌زمان"><i class="ti ti-bolt"></i></button>`:''}
         ${( !isNode && l.protocol!=='shadowsocks' && l.protocol!=='mtproto' )?`<button class="btn btn-sm ${l.spoof_sni_enabled?'btn-pur':'btn-g'} btn-icon" onclick="toggleSpoof('${l.uuid}',${!l.spoof_sni_enabled},'${esc(l.spoof_sni||'')}')" title="جعل SNI (SNI spoofing)"><i class="ti ti-mask"></i></button>`:''}
         <button class="btn btn-sm btn-g btn-icon" onclick="navigator.clipboard.writeText('${esc(l.vless_link)}').then(()=>toast('لینک کپی شد','ok'))" title="کپی لینک"><i class="ti ti-copy"></i></button>
@@ -3696,6 +3784,7 @@ function cmSelectBase(val, el){
     document.getElementById('cm-head-icon').innerHTML = '<i class="ti ti-square-rounded-plus"></i>';
   }
   cmApplyProto();
+  nlNetoptSync();
 }
 function cmSelectTransport(val, el){
   cmTransport = val;
@@ -3823,10 +3912,67 @@ async function createLink(){
       const d=await r.json().catch(()=>({}));
       throw new Error(d.detail||'failed');
     }
+    // ── v13.4 افزودنی — اعمال بهینه‌سازی شبکه روی کانفیگ تازه‌ساخت (PATCH).
+    // خطِ POST پایه دقیقاً دست‌نخورده مانده (قرارداد فاز ۴۵: فقط افزودنی).
+    try{
+      const created=await r.json().catch(()=>null);
+      const netopt=nlNetoptCollect(isSs,isMt);
+      const hasAny=Object.keys(netopt).length>0&&(netopt.spoof_sni_enabled||netopt.spoof_sni||(netopt.smart_routing_mode&&netopt.smart_routing_mode!=='OFF')||(netopt.iran_routing&&netopt.iran_routing!=='OFF'));
+      if(created&&created.uuid&&hasAny){
+        const pr=await authF(linkApiBase(nodeId)+created.uuid,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(netopt)});
+        if(!pr.ok){
+          const pd=await pr.json().catch(()=>({}));
+          toast('کانفیگ ساخته شد ولی بهینه‌سازی شبکه اعمال نشد: '+(pd.detail||'').slice(0,80),'err');
+        }
+      }
+    }catch(e){/* PATCH اختیاری است — ساخت موفق مانده */}
     ['nl-label','nl-val','nl-exp','nl-note','nl-mtproto-port','nl-mtproto-domain','nl-mtproto-public-host','nl-mtproto-public-port'].forEach(id=>document.getElementById(id).value='');
+  nlNetoptReset();
     toast(isMt ? 'پروکسی ساخته شد ✓' : (nodeId?'کانفیگ روی نود ساخته شد ✓':'کانفیگ ساخته شد ✓'),'ok');
     loadLinks();
   }catch(e){toast('✗ '+(e.message||'خطا (شاید کلید این نود اجازه‌ی ساخت از راه دور ندارد)'),'err')}
+}
+
+/* ═══ EMIX-PRO v13.4 — جمع‌آوری/ریست/همگام‌سازی بهینه‌سازی شبکه در Config Builder ═══ */
+function nlNetoptCollect(isSs,isMt){
+  const out={};
+  const proto=document.getElementById('nl-proto').value||'vless-ws';
+  const spoofOn=!!document.getElementById('nl-spoof-toggle')?.dataset.on;
+  const spoofVal=(document.getElementById('nl-spoof-sni')?.value||'').trim();
+  if(spoofOn&&spoofVal&&!isSs&&!isMt) out.spoof_sni=spoofVal;
+  if(!isSs&&!isMt){ out.spoof_sni_enabled=spoofOn; }
+  const srOn=!!document.getElementById('nl-sr-toggle')?.dataset.on;
+  if(proto==='vless-ws'||proto==='trojan-ws'){
+    out.smart_routing_mode=srOn?(document.getElementById('nl-sr-mode').value||'AUTO'):'OFF';
+  }
+  const iran=document.getElementById('nl-iran-mode')?.value||'OFF';
+  if(!isMt) out.iran_routing=iran;
+  return out;
+}
+function nlNetoptReset(){
+  elSetToggle('nl-spoof-toggle',false);
+  elSetToggle('nl-sr-toggle',false);
+  const si=document.getElementById('nl-spoof-sni'); if(si) si.value='';
+  const sm=document.getElementById('nl-sr-mode'); if(sm) sm.value='AUTO';
+  const im=document.getElementById('nl-iran-mode'); if(im) im.value='OFF';
+  nlNetoptSync();
+}
+function nlNetoptSync(){
+  // فعال/غیرفعال کردن کنترل‌ها بر اساس پروتکل انتخابی (صادقانه)
+  const proto=document.getElementById('nl-proto').value||'vless-ws';
+  const isSs=proto==='shadowsocks', isMt=proto==='mtproto';
+  const wsLike=proto==='vless-ws'||proto==='trojan-ws';
+  const spoofT=document.getElementById('nl-spoof-toggle'), spoofI=document.getElementById('nl-spoof-sni');
+  const srT=document.getElementById('nl-sr-toggle'), srM=document.getElementById('nl-sr-mode');
+  const irM=document.getElementById('nl-iran-mode');
+  const dis=(el,dis_on,title)=>{ if(!el)return; el.style.opacity=dis_on?'.45':''; el.style.pointerEvents=dis_on?'none':''; el.title=dis_on?(title||''):(el.dataset.baseTitle||''); };
+  dis(spoofT,isSs||isMt,'Shadowsocks/MTProto پارامتر SNI ندارند');
+  dis(spoofI,isSs||isMt,'Shadowsocks/MTProto پارامتر SNI ندارند');
+  dis(srT,!wsLike,'فقط VLESS-WS و Trojan-WS');
+  dis(srM,!wsLike,'فقط VLESS-WS و Trojan-WS');
+  dis(irM,isMt,'MTProto routing کلاینت ندارد');
+  const srOn=!!(srT&&srT.dataset.on&&wsLike);
+  if(srM) srM.disabled=!srOn;
 }
 
 
@@ -3854,6 +4000,13 @@ function openEditLink(uuid,nodeId){
     srSel.disabled=!srOk;
     srSel.title=srOk?'':'فقط VLESS-WS و Trojan-WS پشتیبانی می‌شوند';
   }
+  const irSel=document.getElementById('el-iran-mode');
+  if(irSel){
+    const irOk=(l.protocol||'vless-ws')!=='mtproto';
+    irSel.value=(irOk&&l.iran_routing)||'OFF';
+    irSel.disabled=!irOk;
+    irSel.title=irOk?'':'MTProto routing کلاینت ندارد';
+  }
   openModal('modal-edit-link');
 }
 function elSetToggle(id,on){
@@ -3880,6 +4033,8 @@ async function saveEditLink(){
   if(tEl)body.turbo_enabled=!!tEl.dataset.on;
   const srSel=document.getElementById('el-sr-mode');
   if(srSel&&!srSel.disabled)body.smart_routing_mode=srSel.value||'OFF';
+  const irSel=document.getElementById('el-iran-mode');
+  if(irSel&&!irSel.disabled)body.iran_routing=irSel.value||'OFF';
   if(sEl){
     if(sVal)body.spoof_sni=sVal;
     body.spoof_sni_enabled=!!sEl.dataset.on;
@@ -5954,18 +6109,209 @@ function loadNodesPage(){ loadNodeKeys(); loadNodes(); }
 /* ═══════════════════════════════════════════════════════════════════════════
    EMIX-PRO v13.1 — تست واقعی پینگ + سلامت سیستم (افزودنی؛ هسته دست‌نخورده)
    ═══════════════════════════════════════════════════════════════════════════ */
-function pingBadge(l){
-  const lp=l.last_ping;
-  if(!lp||typeof lp!=='object') return '';
-  if(lp.ok){
-    const ms=(lp.e2e_ms!=null?lp.e2e_ms:lp.ws_ms);
-    const fb=lp.fallback==='local'?' · مسیر محلی':'';
-    const sp=(lp.client_path==='spoofed-sni'&&lp.spoof_sni)?` · <span style="opacity:.85" title="اندازه‌گیری از مسیر کلاینت با SNI جعلی (${esc(lp.spoof_sni)}) + Host واقعی — همان مسیر لینک">🎭 SNI جعلی</span>`:'';
-    const tt=`Real Delay: ${toFa(lp.e2e_ms!=null?lp.e2e_ms:'—')}ms (پاسخ HTTP واقعی از داخل تونل)\nهندشیک TLS+WS: ${toFa(lp.ws_ms!=null?lp.ws_ms:'—')}ms${lp.tcp_ms!=null?`\nTCP خام (فقط اتصال، غیرواقعی): ${toFa(lp.tcp_ms)}ms`:''}\n${esc(lp.reply||'')}`;
-    return `<span class="cfg-sub-tag" style="color:var(--green-t)" title="${tt}"><i class="ti ti-circle-check"></i> Real Delay ${toFa(ms)}ms${fb}${sp}</span>`;
+/* ═══════════════════════════════════════════════════════════════════════════
+   EMIX-PRO v13.4 — REAL CLIENT PING (طبق سند FINAL)
+   پینگ اصلی UI = CLIENT RTT: از مرورگرِ کاربر به هاست واقعی کانفیگ
+   (USER DEVICE → CONFIG ENDPOINT → RESPONSE → USER DEVICE) — نه Railway،
+   نه Cloudflare. مرورگر ICMP ندارد → روش = HTTPS RTT (fetch no-cors) و
+   همان صادقانه برچسب می‌خورد: «Measurement: HTTPS (Browser)».
+   حداقل ۵ نمونه (اینجا: ۱ warmup + ۶ اندازه‌گیری)؛ پینگ اصلی = MEDIAN.
+   هیچ عدد پیش‌فرض/جعلی وجود ندارد — نبودِ اندازه‌گیری = «—».
+   ═══════════════════════════════════════════════════════════════════════════ */
+const CP_PROBES=6, CP_GAP_MS=110;
+let pdCurrentUuid=null;
+function cpHostOf(l){
+  if(!l) return null;
+  if(l.endpoint_host) return l.endpoint_host;
+  try{
+    const u=new URL(l.vless_link||'');
+    return u.hostname||null;
+  }catch(e){ return null; }
+}
+function _cpProbe(host){
+  // HTTPS RTT واقعی از مرورگر — هر پاسخی (حتی 404/opaque) RTT معتبر است؛
+  // کش با no-store + پارامتر یکتا دور زده می‌شود.
+  return fetch('https://'+host+'/api/ping?cp='+Date.now()+'-'+Math.random().toString(36).slice(2,7),
+    {method:'HEAD',cache:'no-store',mode:'no-cors',redirect:'manual'});
+}
+function _cpStats(samples,firstMs,measurement){
+  const okVals=samples.filter(v=>v!=null&&isFinite(v));
+  const base={total:samples.length,received:okVals.length,
+    first_ms:firstMs!=null?Math.round(firstMs):null,measurement,_raw:samples};
+  if(!okVals.length) return {ok:false,min:null,median:null,avg:null,max:null,jitter:null,loss:1,...base};
+  const sv=[...okVals].sort((a,b)=>a-b), n=sv.length;
+  const median=n%2?sv[(n-1)/2]:Math.round((sv[n/2-1]+sv[n/2])/2);
+  const avg=Math.round(sv.reduce((s,v)=>s+v,0)/n*10)/10;
+  let jitter=null;
+  if(n>=2){ let d=0; for(let i=1;i<n;i++) d+=Math.abs(sv[i]-sv[i-1]); jitter=Math.round(d/(n-1)*10)/10; }
+  return {ok:true,min:sv[0],median,avg,max:sv[n-1],
+    jitter,loss:Math.round((1-n/samples.length)*1000)/1000,...base};
+}
+async function clientPing(uuid,btn){
+  const l=allLinksList.find(x=>x.uuid===uuid);
+  const host=cpHostOf(l);
+  if(!l){ toast('کانفیگ پیدا نشد','err'); return; }
+  if(!host){ toast('هاست این کانفیگ قابل اندازه‌گیری نیست (TCP Proxy عمومی ندارد)','err'); return; }
+  const oldHtml=btn?btn.innerHTML:'';
+  if(btn){btn.disabled=true;btn.innerHTML='<i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i>';}
+  try{
+    const cp=await runClientPing(host);
+    cp.uuid=uuid;
+    await reportClientPing(uuid,cp);
+    loadLinks();
+    if(cp.ok) toast(`Client RTT: ${toFa(cp.median)}ms (median از ${toFa(cp.received)} نمونه‌ی این مرورگر) ✓`,'ok');
+    else toast('Ping Failed — اندازه‌گیری از این مرورگر ناموفق بود','err');
+  }catch(e){
+    toast('خطا در تست پینگ','err');
   }
-  const d=String(lp.detail||'خطا').slice(0,44);
-  return `<span class="cfg-sub-tag" style="color:var(--red-t)" title="${esc(lp.detail||'')}"><i class="ti ti-circle-x"></i> قطع در تست · ${esc(d)}</span>`;
+  if(btn){btn.disabled=false;btn.innerHTML=oldHtml||'<i class="ti ti-activity"></i>';}
+}
+async function runClientPing(host){
+  // ۱ نمونه‌ی warmup (DNS+TCP+TLS — جدا گزارش می‌شود، در آمار نمی‌آید)
+  let firstMs=null;
+  const t0=performance.now();
+  try{ await _cpProbe(host); firstMs=performance.now()-t0; }catch(e){}
+  const samples=[];
+  for(let i=0;i<CP_PROBES;i++){
+    const s0=performance.now();
+    try{ await _cpProbe(host); samples.push(Math.round((performance.now()-s0)*10)/10); }
+    catch(e){ samples.push(null); }            // probe ناموفق = loss
+    await new Promise(r=>setTimeout(r,CP_GAP_MS));
+  }
+  return _cpStats(samples,firstMs,'HTTPS');
+}
+async function reportClientPing(uuid,cp){
+  // ثبت نتیجه‌ی مرورگر روی سرور (سرور فقط صحت‌سنجی/ذخیره می‌کند — عدد نمی‌سازد)
+  try{
+    await authF('/api/links/'+uuid+'/client-ping',{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({samples:(cp._raw||[]).map(v=>v==null?null:v),
+        median:cp.median,min:cp.min,avg:cp.avg,max:cp.max,jitter:cp.jitter,
+        measurement:cp.measurement||'HTTPS',first_ms:cp.first_ms})});
+  }catch(e){ /* ذخیره نشدنش پینگ را نامعتبر نمی‌کند — نمایش محلی صادق است */ }
+}
+
+function cpAgo(ts){
+  if(!ts) return '—';
+  const s=Math.max(0,Math.floor((Date.now()-new Date(ts).getTime())/1000));
+  if(s<60) return toFa(s)+' ثانیه پیش';
+  if(s<3600) return toFa(Math.floor(s/60))+' دقیقه پیش';
+  if(s<86400) return toFa(Math.floor(s/3600))+' ساعت پیش';
+  return toFa(Math.floor(s/86400))+' روز پیش';
+}
+function pingBadge(l){
+  // ── پینگ اصلی = CLIENT RTT (سند: «Ping اصلی UI باید CLIENT RTT باشد») ──
+  const cp=l.last_client_ping;
+  if(cp&&typeof cp==='object'){
+    if(cp.ok&&cp.median!=null){
+      const m=cp.median;
+      const color=m<120?'var(--green-t)':(m<350?'var(--amber-t)':'var(--red-t)');
+      const dot=m<120?'#34D399':(m<350?'#F59E0B':'#EF4444');
+      return `<span class="cfg-sub-tag" style="color:${color};font-weight:700;cursor:pointer" onclick="openPingDetails('${l.uuid}')" title="Client RTT (اندازه‌گیری از مرورگر شما — کلیک برای جزئیات)"><i class="ti ti-point-filled" style="color:${dot};font-size:8px;vertical-align:middle"></i> ${toFa(m)} ms · Client</span>`;
+    }
+    if(cp.total!=null&&cp.total>0){
+      return `<span class="cfg-sub-tag" style="color:var(--red-t);cursor:pointer" onclick="openPingDetails('${l.uuid}')" title="Ping Failed — اندازه‌گیری از مرورگر ناموفق بود (کلیک برای جزئیات)"><i class="ti ti-circle-x"></i> Ping Failed</span>`;
+    }
+  }
+  // هیچ اندازه‌گیری‌ای انجام نشده → «—» (هرگز عدد سرور به‌جای کلاینت نمی‌نشیند)
+  return `<span class="cfg-sub-tag" style="color:var(--t3);cursor:pointer" onclick="openPingDetails('${l.uuid}')" title="هنوز از این مرورگر پینگ گرفته نشده — دکمه‌ی پینگ را بزنید (اندازه‌گیری واقعی از دستگاه شما)"><i class="ti ti-activity"></i> Ping —</span>`;
+}
+function openPingDetails(uuid){
+  const l=allLinksList.find(x=>x.uuid===uuid);
+  if(!l) return;
+  pdCurrentUuid=uuid;
+  const cp=l.last_client_ping;
+  const host=cpHostOf(l);
+  document.getElementById('pd-sub').textContent=(l.label||'')+(host?' · '+host:'');
+  const body=document.getElementById('pd-body');
+  if(!cp||typeof cp!=='object'){
+    body.innerHTML=`<div class="cl"><i class="ti ti-info-circle"></i><span>هنوز از این مرورگر Client RTT اندازه‌گیری نشده است. دکمه‌ی «تست مجدد» را بزنید — اندازه‌گیری از دستگاه شما انجام می‌شود، نه از سرور. عدد پیش‌فرض/جعلی نمایش داده نمی‌شود.</span></div>`;
+    openModal('modal-ping-details'); return;
+  }
+  const meas=cp.measurement==='WEBSOCKET'?'WebSocket RTT (مرورگر)':'HTTPS RTT (مرورگر)';
+  const row=(k,v,hl)=>`<div class="sr"><span class="sr-k">${k}</span><span class="sr-v" ${hl?'style="color:var(--green-t);font-weight:700"':''}>${v!=null?toFa(v)+' ms':'—'}</span></div>`;
+  let h='';
+  h+=row('Client RTT (median)',cp.median,true);
+  h+=row('Min',cp.min);
+  h+=row('Median',cp.median);
+  h+=row('Average',cp.avg);
+  h+=row('Max',cp.max);
+  h+=row('Jitter',cp.jitter);
+  h+=`<div class="sr"><span class="sr-k">Packet Loss</span><span class="sr-v">${toFa(Math.round((cp.loss||0)*100))}٪</span></div>`;
+  h+=row('اولین اتصال (DNS+TLS)',cp.first_ms!=null?cp.first_ms:null);
+  h+=`<div class="sr"><span class="sr-k">Measurement</span><span class="sr-v" style="direction:ltr">${esc(meas)}</span></div>`;
+  h+=`<div class="sr"><span class="sr-k">Measured by</span><span class="sr-v">مرورگر شما (client-side)</span></div>`;
+  h+=`<div class="sr"><span class="sr-k">Tested</span><span class="sr-v">${cpAgo(cp.measured_at)}</span></div>`;
+  h+=`<div class="cl" style="margin-top:10px"><i class="ti ti-info-circle"></i><span>این عدد رفت‌وبرگشت HTTPS از دستگاه شما تا هاست کانفیگ است (DNS/TLS در نمونه‌ی اول). ICMP نیست و به‌عنوان ICMP معرفی نمی‌شود. «Real Delay» سرور (پنل→کانفیگ) جدا در بخش سلامت گزارش می‌شود.</span></div>`;
+  if(!cp.ok) h=`<div class="cl amber" style="margin-bottom:9px"><i class="ti ti-alert-triangle"></i><span>اندازه‌گیری ناموفق (${toFa(cp.total||0)} تلاش) — شبکه یا فیلترینگ مسیر را ببندند.</span></div>`+h;
+  body.innerHTML=h;
+  openModal('modal-ping-details');
+}
+async function pdRetest(){
+  if(!pdCurrentUuid) return;
+  const l=allLinksList.find(x=>x.uuid===pdCurrentUuid);
+  const host=cpHostOf(l);
+  if(!l||!host){ toast('هاست قابل اندازه‌گیری نیست','err'); return; }
+  const body=document.getElementById('pd-body');
+  if(body) body.innerHTML='<div style="text-align:center;padding:18px;color:var(--t3)"><i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i> در حال اندازه‌گیری از مرورگر شما...</div>';
+  try{
+    const cp=await runClientPing(host);
+    await reportClientPing(pdCurrentUuid,cp);
+    await loadLinks();
+    openPingDetails(pdCurrentUuid);
+  }catch(e){ toast('تست مجدد ناموفق','err'); }
+}
+let pingAllBusy=false;
+async function pingAll(btn){
+  if(pingAllBusy) return;
+  pingAllBusy=true;
+  const old=btn?btn.innerHTML:'';
+  const targets=allLinksList.filter(l=>!l._nodeId&&cpHostOf(l));
+  if(!targets.length){ toast('هیچ کانفیگ قابل پینگ‌گیری وجود ندارد','err'); pingAllBusy=false; return; }
+  if(btn){btn.disabled=true;btn.innerHTML='<i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i> در حال تست همه...';}
+  toast(`Client RTT همه‌ی ${toFa(targets.length)} کانفیگ از همین مرورگر اندازه‌گیری می‌شود (${toFa(CP_PROBES)} نمونه + ۱ اتصال اولیه هر کدام)...`,'');
+  try{
+    let done=0,ok=0;
+    for(const l of targets){
+      try{
+        const cp=await runClientPing(cpHostOf(l));
+        await reportClientPing(l.uuid,cp);
+        if(cp.ok) ok++;
+      }catch(e){}
+      done++;
+      if(btn) btn.innerHTML=`<i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i> ${toFa(done)}/${toFa(targets.length)}`;
+    }
+    toast(`Client Ping همه: ${toFa(ok)} از ${toFa(targets.length)} موفق (median هر کانفیگ روی کارتش)`,'ok');
+    loadLinks();
+  }catch(e){ toast('خطا در تست گروهی','err'); }
+  if(btn){btn.disabled=false;btn.innerHTML=old;}
+  pingAllBusy=false;
+}
+async function downloadIranConfig(uuid,btn){
+  const old=btn?btn.innerHTML:'';
+  if(btn){btn.disabled=true;btn.innerHTML='<i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i>';}
+  try{
+    const r=await authF('/api/links/'+uuid+'/iran-config');
+    if(!r.ok){
+      const d=await r.json().catch(()=>({}));
+      throw new Error(d.detail||'خطا در ساخت کانفیگ ایران');
+    }
+    const cfg=await r.json();
+    const l=allLinksList.find(x=>x.uuid===uuid);
+    const name='emix-iran-'+((l&&l.label)||uuid.slice(0,8)).replace(/[^\w\u0600-\u06FF-]+/g,'_')+'.json';
+    const blob=new Blob([JSON.stringify(cfg,null,2)],{type:'application/json'});
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob); a.download=name; a.click();
+    setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+    toast('کانفیگ Iran Routing (JSON با قواعد واقعی) دانلود شد ✓','ok');
+  }catch(e){ toast(e.message||'خطا در دانلود','err'); }
+  if(btn){btn.disabled=false;btn.innerHTML=old||'<i class="ti ti-map-pin"></i>';}
+}
+function iranBadge(l){
+  const m=l.iran_routing;
+  if(!m||m==='OFF') return '';
+  const lbl=m==='DIRECT'?'مستقیم':'خودکار';
+  return `<span class="cfg-sub-tag" style="background:rgba(245,158,11,.10);color:var(--amber-t);border:1px solid rgba(245,158,11,.25);font-weight:700" title="Iran Routing (${lbl}): قواعد routing واقعی کلاینت — داخلی مستقیم، بین‌المللی تونل. مستقل از SNI/SR؛ JSON از دکمه‌ی نقشه دانلود می‌شود"><i class="ti ti-map-pin"></i> ایران: ${lbl}</span>`;
 }
 function turboBadge(l){
   if(!l.turbo_enabled) return '';
@@ -5979,7 +6325,43 @@ function srBadge(l){
   const m=l.smart_routing_mode;
   if(!m||m==='OFF') return '';
   const lbl={AUTO:'خودکار',LOW_LATENCY:'کم‌تأخیر',STABLE:'پایدار',IRAN_OPTIMIZED:'بهینه ایران'}[m]||m;
-  return `<span class="cfg-sub-tag" style="background:rgba(52,211,153,.10);color:#34D399;border:1px solid rgba(52,211,153,.25);font-weight:700" title="مسیریابی هوشمند (${lbl}): لینک از مسیر verified با بهترین امتیاز صادر می‌شود — جزئیات در صفحه‌ی «مسیریابی هوشمند»"><i class="ti ti-route"></i> مسیر: ${lbl}</span>`;
+  const r=l.sr_route;
+  if(r&&r.endpoint){
+    const lat=r.latency_ms!=null?` · ${toFa(Math.round(r.latency_ms))}ms`:'';
+    const c=r.country?` · ${esc(r.country)}`:'';
+    return `<span class="cfg-sub-tag" style="background:rgba(52,211,153,.10);color:#34D399;border:1px solid rgba(52,211,153,.25);font-weight:700;cursor:pointer" onclick="openRouteDetails('${l.uuid}')" title="مسیر فعال: ${esc(r.endpoint)} — کلیک برای جزئیات کامل (کشور/ASN/egress/health/score)"><i class="ti ti-route"></i> مسیر ${lbl}: ${esc(String(r.endpoint).split('.')[0])}${c}${lat}</span>`;
+  }
+  const reason=l.sr_route_reason||'هیچ مسیر ACTIVE/verified برای این حالت نیست — لینک پایه صادر می‌شود';
+  return `<span class="cfg-sub-tag" style="background:rgba(52,211,153,.08);color:#6EE7B7;border:1px solid rgba(52,211,153,.18);font-weight:700;cursor:pointer" onclick="openRouteDetails('${l.uuid}')" title="${esc(reason)}"><i class="ti ti-route"></i> مسیر ${lbl} · بدون مسیر فعال</span>`;
+}
+function openRouteDetails(uuid){
+  const l=allLinksList.find(x=>x.uuid===uuid);
+  if(!l) return;
+  const r=l.sr_route;
+  document.getElementById('rd-sub').textContent=(l.label||'')+' · حالت '+(l.smart_routing_mode||'');
+  const body=document.getElementById('rd-body');
+  if(!r||!r.endpoint){
+    body.innerHTML=`<div class="cl amber"><i class="ti ti-alert-triangle"></i><span>${esc(l.sr_route_reason||'هیچ مسیر ACTIVE/verified برای این حالت وجود ندارد.')}</span></div>
+    <div class="cl"><i class="ti ti-info-circle"></i><span>مسیرها فقط بعد از verify واقعی egress (دو منبع مستقل) ACTIVE می‌شوند. تا آن موقع لینک پایه صادر می‌شود — هیچ مسیر جعلی نمایش داده نمی‌شود. با «Refresh Discovery» در صفحه‌ی مسیریابی هوشمند مسیر جدید کشف کنید.</span></div>`;
+    openModal('modal-route-details'); return;
+  }
+  const cp=l.last_client_ping;
+  const row=(k,v)=>`<div class="sr"><span class="sr-k">${k}</span><span class="sr-v" style="direction:ltr;text-align:left;max-width:60%">${v!=null&&v!==''?esc(String(v)):'—'}</span></div>`;
+  const eg=r.egress_ip?esc(r.egress_ip)+(r.egress_verified?' <span class="sr-pill ok">VERIFIED</span>':' <span class="sr-pill idle">unverified</span>'):'—';
+  let h='';
+  h+=row('Route',esc(r.route_id||'')+' · '+esc(r.endpoint||''));
+  h+=row('Country',esc(r.country||''));
+  h+=row('ASN',esc(r.asn||''));
+  h+=`<div class="sr"><span class="sr-k">Egress</span><span class="sr-v" style="direction:ltr;text-align:left;max-width:60%">${eg}</span></div>`;
+  h+=row('Route Latency',r.latency_ms!=null?toFa(Math.round(r.latency_ms))+' ms':'—');
+  h+=row('Client RTT',cp&&cp.ok&&cp.median!=null?toFa(cp.median)+' ms (مرورگر شما)':'N/A');
+  h+=row('Jitter',r.jitter_ms!=null?toFa(Math.round(r.jitter_ms))+' ms':'—');
+  h+=row('Packet Loss',r.packet_loss!=null?toFa(Math.round((r.packet_loss||0)*100))+'٪':'—');
+  h+=row('Health',esc(r.status||'')+(r.uptime_pct!=null?' · '+toFa(Math.round(r.uptime_pct))+'٪ uptime':''));
+  h+=row('Score',r.score!=null?toFa(Math.round(r.score)):'—');
+  h+=`<div class="cl" style="margin-top:10px"><i class="ti ti-info-circle"></i><span>Route Latency از vantage پنل/لبه اندازه‌گیری شده (همان عدد امتیازدهی) و Client RTT از مرورگر شما — این دو هرگز با هم قاطی نمی‌شوند. Egress فقط با verify دو-منبعی «VERIFIED» است.</span></div>`;
+  body.innerHTML=h;
+  openModal('modal-route-details');
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -6310,41 +6692,9 @@ async function toggleSpoof(uuid,on,currentSni){
     loadLinks();
   }catch(e){toast(e.message||'خطا در تغییر جعل SNI','err')}
 }
-async function pingLink(uuid,btn){
-  if(btn){btn.disabled=true;btn.innerHTML='<i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i>';}
-  try{
-    const r=await authF('/api/links/'+uuid+'/ping',{method:'POST'});
-    const d=await r.json();
-    if(d.ok){
-      const ms=(d.e2e_ms!=null?d.e2e_ms:d.ws_ms);
-      const sp=(d.client_path==='spoofed-sni')?` · مسیر SNI جعلی (${d.spoof_sni||''})`:'';
-      toast(`Real Delay: ${toFa(ms)}ms ✓ (پاسخ واقعی از داخل تونل: ${d.reply||''})${d.fallback==='local'?' (مسیر محلی)':''}${sp}`,'ok');
-    }else{
-      toast('تست ناموفق — '+(d.detail||'').slice(0,90),'err');
-    }
-    loadLinks();
-  }catch(e){
-    toast('خطا در اجرای تست','err');
-    if(btn){btn.disabled=false;btn.innerHTML='<i class="ti ti-activity"></i>';}
-  }
-}
-let pingAllBusy=false;
-async function pingAll(btn){
-  if(pingAllBusy) return;
-  pingAllBusy=true;
-  const old=btn?btn.innerHTML:'';
-  if(btn){btn.disabled=true;btn.innerHTML='<i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i> در حال تست همه...';}
-  toast('تست واقعی همه‌ی کانفیگ‌ها شروع شد (مرحله‌ای: اتصال → هندشیک → پروتکل → پاسخ تونل)...','');
-  try{
-    const r=await authF('/api/links/ping-all',{method:'POST'});
-    const d=await r.json();
-    const allOk=d.ok===d.total&&d.total>0;
-    toast(`تست واقعی همه‌ی کانفیگ‌ها: ${toFa(d.ok)} از ${toFa(d.total)} سالم`,allOk?'ok':'err');
-    loadLinks();
-  }catch(e){ toast('خطا در تست گروهی','err'); }
-  if(btn){btn.disabled=false;btn.innerHTML=old;}
-  pingAllBusy=false;
-}
+/* EMIX-PRO v13.4: pingLink قدیمی (سمت سرور) حذف شد — پینگ اصلی اکنون CLIENT RTT
+   از مرورگر است (clientPing). تست سمت سرور «Real Delay» فقط در بخش سلامت
+   (healthTestAll) با برچسب صادقانه باقی مانده است. */
 async function healthTestAll(){
   const btn=document.getElementById('health-test-btn');
   if(btn){btn.disabled=true;btn.innerHTML='<i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i> در حال تست...';}
