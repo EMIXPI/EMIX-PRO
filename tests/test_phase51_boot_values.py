@@ -504,7 +504,7 @@ class TestFreshBootValues:
             # 1) version
             with urllib.request.urlopen(base + "/api/deployment-version", timeout=10) as r:
                 d = json.loads(r.read())
-            assert d["version"] == "13.6.0-emix-pro"
+            assert d["version"] == "13.7.0-emix-pro"
             assert "boot-defaults" in d["features"] and "volume-autoboot" in d["features"]
 
             # 2) مقادیر در DB materialize شده‌اند (از API تنظیمات قابل‌مشاهده)

@@ -411,4 +411,4 @@ class TestRegressionCore49:
 
     def test_version_bumped(self):
         src = (REPO / "emix_pro.py").read_text(encoding="utf-8")
-        assert "13.6.0-emix-pro" in src, "نسخه باید 13.6.0 باشد"
+        assert "13.7.0-emix-pro" in src, "نسخه باید 13.7.0 باشد"

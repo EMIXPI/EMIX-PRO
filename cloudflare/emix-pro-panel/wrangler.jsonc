@@ -1,0 +1,37 @@
+// EMIX-PRO Panel — Cloudflare Workers edition
+// دیپلوی با wrangler:  wrangler deploy
+// (مقادیر database_id و namespace_id را با IDهای حساب خودتان جایگزین کنید)
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "emix-pro-panel",
+  "main": "worker.js",
+  "compatibility_date": "2024-09-23",
+  "bindings": [
+    {
+      "type": "d1",
+      "name": "DB",
+      "database_id": "564415a9-8177-4b6f-a607-7c9c9502110d",
+      "database_name": "emix-pro-db"
+    },
+    {
+      "type": "kv_namespace",
+      "name": "SESSIONS",
+      "namespace_id": "0d7e6dbd81e648129370e30fb3e292c6",
+      "binding": "SESSIONS"
+    },
+    {
+      "type": "service",
+      "name": "SR_WORKER",
+      "service": "emix-smart-routing-v1",
+      "environment": "production"
+    }
+  ],
+  // رمز اولیه‌ی ادمین — فقط بار اول seed می‌شود؛ تغییر بعدی از داخل پنل
+  // (برای استقرار از repo: این مقدار را به‌عنوان secret بگذارید، نه در git)
+  "vars": {
+    "SR_WORKER_URL": "https://emix-smart-routing-v1.personalemixone.workers.dev"
+  }
+  // secrets (wrangler secret put …):
+  //   ADMIN_PASSWORD      — رمز پیش‌فرض اولیه‌ی پنل
+  //   PROJECT_SIGNING_KEY — کلید HMAC probe ورکر SR (پیش‌فرض پروژه فعال)
+}

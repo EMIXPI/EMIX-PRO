@@ -672,7 +672,7 @@ class TestVersionPin:
     def test_deployment_version(self, server):
         with urllib.request.urlopen(f"{server['base']}/api/deployment-version", timeout=10) as r:
             d = json.loads(r.read().decode())
-        assert d["version"] == "13.6.0-emix-pro"
+        assert d["version"] == "13.7.0-emix-pro"
         assert "turbo-0rtt" in d["features"]
         assert "sni-spoof-per-link" in d["features"]
         assert "fresh-ui-no-store" in d["features"]

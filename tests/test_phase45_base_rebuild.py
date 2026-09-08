@@ -168,7 +168,7 @@ class TestBaseIntegrity:
 
     def test_version_module(self):
         import emix_pro
-        assert emix_pro.EMIX_PRO_VERSION == "13.6.0-emix-pro"
+        assert emix_pro.EMIX_PRO_VERSION == "13.7.0-emix-pro"
         assert "real-e2e-ping" in emix_pro.EMIX_PRO_FEATURES
 
 
@@ -340,7 +340,7 @@ class TestRealPingEngine:
 class TestHealthAndVersion:
     def test_deployment_version_pin(self, server):
         st, v = api(_plain_opener, server, "/api/deployment-version")
-        assert v["version"] == "13.6.0-emix-pro"
+        assert v["version"] == "13.7.0-emix-pro"
         assert "EMIX 9.2" in v["base_panel"]
         assert "real-e2e-ping" in v["features"]
 

@@ -326,4 +326,4 @@ class TestUIMarkers:
 
     def test_version_1350(self):
         src = (REPO / "emix_pro.py").read_text(encoding="utf-8")
-        assert 'EMIX_PRO_VERSION = "13.6.0-emix-pro"' in src
+        assert 'EMIX_PRO_VERSION = "13.7.0-emix-pro"' in src

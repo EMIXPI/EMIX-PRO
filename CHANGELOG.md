@@ -3,6 +3,16 @@
 تمام تغییرات قابل‌توجه این پروژه در این فایل ثبت می‌شود.
 قالب بر اساس [Keep a Changelog](https://keepachangelog.com/) است.
 
+## [13.7.0] — 2026-09-09 — پنل روی Cloudflare Workers (D1 + KV)
+
+### افزودنی (هسته‌ی Python دست‌نخورده)
+- **Worker جدید `emix-pro-panel`** (`cloudflare/emix-pro-panel/worker.js`): مسیر استقرار کامل پنل روی لبه‌ی کلادفلیر — ورود/سشن، داشبورد، مدیریت کانفیگ VLESS/Trojan، اشتراک‌ها، پینگ کلاینت صادق، تنظیمات — با UI جدید RTL.
+- **D1 (`emix-pro-db`)**: جدول‌های links/settings/ping_stats/events/sessions؛ اسکیما و مقادیر پیش‌فرض در اولین request هر isolate به‌صورت idempotent ساخته می‌شوند (خودآغاز در هر دیپلوی/ری‌دیپلوی).
+- **KV (`EMIX_SESSIONS`)**: کش سشن ۷روزه + محدودسازی ورود per-IP (۸ تلاش/۵ دقیقه).
+- **پروکسی واقعی روی Worker**: VLESS روی `/ws/{uuid}` و Trojan روی `/trojan-ws` (WebSocket + `connect()` رسمی کلادفلیر)؛ شمارش بایت واقعی per-کانفیگ؛ SHA-224 خالص برای Trojan؛ Early-Data ed=2048 (توربو).
+- **Service Binding `SR_WORKER`**: بررسی سلامت/probe امضادار ورکر emix-smart-routing-v1 از مسیر رسمی worker-to-worker (fetch مستقیم به *.workers.dev همان حساب → خطای 1042).
+- صداقت: جعل SNI در مسیر Worker اعمال نمی‌شود (کلادفلیر بر اساس SNI روت می‌کند — پرچم ذخیره، هرگز در لینک نمی‌نشیند)؛ UDP/MUX پشتیبانی نمی‌شود و صادقانه بسته می‌شود؛ workers.dev ممکن است در ایران فیلتر شود (دامنه‌ی سفارشی توصیه می‌شود).
+- دیپلوی: `scripts/deploy_panel_worker.py` (REST API — بدون wrangler) یا wrangler.jsonc؛ تست E2E کامل ۳۶گانه شامل تونل واقعی VLESS/Trojan.
 ## [13.6.0-emix-pro] — 2026-09-07
 
 ### BOOT VALUES + VOLUME AUTO-ATTACH (درخواست مالک: «با هر دیپلوی/ری‌دیپلوی مقادیر ست شوند + Volume خودکار attach شود»)
